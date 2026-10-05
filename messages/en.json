@@ -1,23 +1,97 @@
 {
-  "Common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "loading": "Loading...",
-    "success": "Success",
-    "error": "Error"
-  },
-  "Navigation": {
+  "nav": {
     "dashboard": "Dashboard",
+    "today": "Today",
     "contacts": "Contacts",
-    "inquiries": "Inquiries",
     "opportunities": "Opportunities",
-    "settings": "Settings"
+    "inquiries": "Inquiries",
+    "settings": "Settings",
+    "exceptions": "Exceptions"
   },
-  "Errors": {
-    "default": "An unexpected error occurred.",
-    "unauthorized": "You are not authorized to perform this action.",
-    "notFound": "Resource not found."
+  "header": {
+    "loading": "Loading...",
+    "myAgency": "My Agency",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Manage your account and agency preferences.",
+    "overview": "Overview",
+    "profile": "Profile",
+    "team": "Team",
+    "leadSources": "Lead Sources",
+    "pipelineStages": "Pipeline Stages"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "inputPlaceholder": "Search contacts, opportunities, and inquiries...",
+    "searching": "Searching...",
+    "noResults": "No results found.",
+    "results": "Results"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your BrokerCRM account",
+      "email": "Email",
+      "emailPlaceholder": "you@agency.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "loading": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "createAgency": "Create your agency"
+    },
+    "signup": {
+      "title": "Create your agency",
+      "subtitle": "Set up your BrokerCRM workspace in seconds",
+      "fullName": "Your name",
+      "fullNamePlaceholder": "Ivan Petrov",
+      "agencyName": "Agency name",
+      "agencyNamePlaceholder": "Sofia Properties",
+      "email": "Email",
+      "emailPlaceholder": "you@agency.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "At least 6 characters",
+      "submit": "Create agency",
+      "loading": "Setting up...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "Reset password",
+      "subtitle": "Enter your email address and we'll send you a link to reset your password.",
+      "successTitle": "Check your email",
+      "successSubtitle": "We've sent you a password reset link to ",
+      "returnLogin": "Return to login",
+      "email": "Email",
+      "emailPlaceholder": "you@agency.com",
+      "submit": "Send reset link",
+      "loading": "Sending link...",
+      "backToLogin": "Back to login"
+    },
+    "updatePassword": {
+      "verifying": "Verifying access...",
+      "invalidTitle": "Invalid or Expired Link",
+      "invalidSubtitle": "Your password reset or invitation link has expired or is invalid. Please request a new one.",
+      "returnLogin": "Return to login",
+      "title": "Set Your Password",
+      "subtitle": "Please enter a new password to secure your account.",
+      "password": "New Password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Save password",
+      "loading": "Saving..."
+    },
+    "onboarding": {
+      "title": "Welcome to BrokerCRM!",
+      "subtitle": "Let's finish setting up your workspace by creating your agency.",
+      "agencyName": "Agency name",
+      "agencyNamePlaceholder": "Sofia Properties",
+      "submit": "Complete setup",
+      "loading": "Creating agency..."
+    }
   }
 }

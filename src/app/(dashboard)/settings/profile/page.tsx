@@ -1,6 +1,7 @@
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import { ProfileForm } from './profile-form';
+import { LanguageSwitcher } from './language-switcher';
 
 export default async function ProfileSettingsPage() {
   const supabase = await createSupabaseServer();
@@ -14,6 +15,7 @@ export default async function ProfileSettingsPage() {
 
   const repo = new ProfileRepository(supabase);
   const profile = await repo.getProfile(user.id);
+  const bgEnabled = process.env.NEXT_PUBLIC_I18N_BG_ENABLED === 'true';
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -35,6 +37,11 @@ export default async function ProfileSettingsPage() {
 
         <ProfileForm
           currentDisplayName={profile?.display_name ?? ''}
+        />
+
+        <LanguageSwitcher
+          currentLocale={profile?.locale ?? 'en'}
+          bgEnabled={bgEnabled}
         />
       </div>
     </div>

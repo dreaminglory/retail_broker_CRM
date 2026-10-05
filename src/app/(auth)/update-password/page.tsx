@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function UpdatePasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const t = useTranslations("auth.updatePassword");
 
   const [noSession, setNoSession] = useState(false);
 
@@ -60,7 +62,7 @@ export default function UpdatePasswordPage() {
     return (
       <div className="rounded-lg border bg-card p-8 shadow-sm flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Verifying access...</p>
+        <p className="text-sm text-muted-foreground">{t("verifying")}</p>
       </div>
     );
   }
@@ -73,15 +75,15 @@ export default function UpdatePasswordPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold tracking-tight">Invalid or Expired Link</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("invalidTitle")}</h2>
         <p className="text-sm text-muted-foreground">
-          Your password reset or invitation link has expired or is invalid. Please request a new one.
+          {t("invalidSubtitle")}
         </p>
         <button
           onClick={() => router.push("/login")}
           className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          Return to login
+          {t("returnLogin")}
         </button>
       </div>
     );
@@ -90,9 +92,9 @@ export default function UpdatePasswordPage() {
   return (
     <div className="rounded-lg border bg-card p-8 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">Set Your Password</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
         <p className="text-sm text-muted-foreground">
-          Please enter a new password to secure your account.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -105,14 +107,14 @@ export default function UpdatePasswordPage() {
 
         <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium">
-            New Password
+            {t("password")}
           </label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder={t("passwordPlaceholder")}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
@@ -126,10 +128,10 @@ export default function UpdatePasswordPage() {
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {t("loading")}
             </>
           ) : (
-            "Save password"
+            t("submit")
           )}
         </button>
       </form>

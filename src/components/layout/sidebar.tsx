@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface NavItem {
-  label: string;
+  i18nKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   disabled?: boolean;
@@ -28,37 +29,37 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: "Dashboard",
+    i18nKey: "dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
-    label: "Today",
+    i18nKey: "today",
     href: "/today",
     icon: CalendarCheck,
   },
   {
-    label: "Contacts",
+    i18nKey: "contacts",
     href: "/contacts",
     icon: Users,
   },
   {
-    label: "Opportunities",
+    i18nKey: "opportunities",
     href: "/opportunities",
     icon: Briefcase,
   },
   {
-    label: "Inquiries",
+    i18nKey: "inquiries",
     href: "/inquiries",
     icon: Inbox,
   },
   {
-    label: "Settings",
+    i18nKey: "settings",
     href: "/settings",
     icon: Settings,
   },
   {
-    label: "Exceptions",
+    i18nKey: "exceptions",
     href: "/exceptions",
     icon: ShieldAlert,
     roles: ["owner", "manager"],
@@ -72,6 +73,7 @@ interface SidebarProps {
 export function Sidebar({ userRole = "broker" }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const t = useTranslations("nav");
 
   return (
     <aside
@@ -111,12 +113,12 @@ export function Sidebar({ userRole = "broker" }: SidebarProps) {
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm opacity-40 cursor-not-allowed",
                   collapsed && "justify-center px-2"
                 )}
-                title={collapsed ? `${item.label} (${item.badge})` : undefined}
+                title={collapsed ? `${t(item.i18nKey as any)} (${item.badge})` : undefined}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 {!collapsed && (
                   <>
-                    <span className="flex-1">{item.label}</span>
+                    <span className="flex-1">{t(item.i18nKey as any)}</span>
                     {item.badge && (
                       <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                         {item.badge}
@@ -139,10 +141,10 @@ export function Sidebar({ userRole = "broker" }: SidebarProps) {
                   : "text-sidebar-foreground hover:bg-sidebar-accent/50",
                 collapsed && "justify-center px-2"
               )}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? t(item.i18nKey as any) : undefined}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span>{t(item.i18nKey as any)}</span>}
             </Link>
           );
         })}

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CommandPalette } from "@/components/domain/search/command-palette";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useTranslations } from "next-intl";
 
 interface UserInfo {
   email: string;
@@ -16,6 +17,7 @@ interface UserInfo {
 
 export function Header() {
   const router = useRouter();
+  const t = useTranslations("header");
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -41,7 +43,7 @@ export function Header() {
         setUserInfo({
           email: user.email ?? "",
           fullName: user.user_metadata?.full_name ?? user.email ?? "",
-          agencyName: agencyData?.name ?? "My Agency",
+          agencyName: agencyData?.name ?? t("myAgency"),
         });
       }
     }
@@ -60,7 +62,7 @@ export function Header() {
       {/* Agency name */}
       <div className="flex-1">
         <h2 className="text-sm font-semibold text-foreground">
-          {userInfo?.agencyName ?? "Loading..."}
+          {userInfo?.agencyName ?? t("loading")}
         </h2>
       </div>
 
@@ -81,7 +83,7 @@ export function Header() {
             </AvatarFallback>
           </Avatar>
           <span className="hidden sm:inline font-medium text-foreground">
-            {userInfo?.fullName ?? "Loading..."}
+            {userInfo?.fullName ?? t("loading")}
           </span>
         </button>
 
@@ -107,14 +109,14 @@ export function Header() {
                 className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <Settings className="h-4 w-4 text-muted-foreground" />
-                Settings
+                {t("settings")}
               </Link>
               <button
                 onClick={handleSignOut}
                 className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
               >
                 <LogOut className="h-4 w-4" />
-                Sign out
+                {t("signOut")}
               </button>
             </div>
           </>

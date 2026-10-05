@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const t = useTranslations("auth.signup");
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -48,10 +50,10 @@ export default function SignupPage() {
     <div className="rounded-lg border bg-card p-8 shadow-sm">
       <div className="mb-6">
         <h2 className="text-xl font-semibold tracking-tight">
-          Create your agency
+          {t("title")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Set up your BrokerCRM workspace in seconds
+          {t("subtitle")}
         </p>
       </div>
 
@@ -64,14 +66,14 @@ export default function SignupPage() {
 
         <div className="space-y-2">
           <label htmlFor="fullName" className="text-sm font-medium">
-            Your name
+            {t("fullName")}
           </label>
           <input
             id="fullName"
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Ivan Petrov"
+            placeholder={t("fullNamePlaceholder")}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
@@ -79,14 +81,14 @@ export default function SignupPage() {
 
         <div className="space-y-2">
           <label htmlFor="agencyName" className="text-sm font-medium">
-            Agency name
+            {t("agencyName")}
           </label>
           <input
             id="agencyName"
             type="text"
             value={agencyName}
             onChange={(e) => setAgencyName(e.target.value)}
-            placeholder="Sofia Properties"
+            placeholder={t("agencyNamePlaceholder")}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
@@ -94,14 +96,14 @@ export default function SignupPage() {
 
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium">
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@agency.com"
+            placeholder={t("emailPlaceholder")}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
@@ -109,20 +111,20 @@ export default function SignupPage() {
 
         <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium">
-            Password
+            {t("password")}
           </label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
+            placeholder={t("passwordPlaceholder")}
             required
             minLength={6}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <p className="text-xs text-muted-foreground">
-            At least 6 characters
+            {t("passwordHint")}
           </p>
         </div>
 
@@ -134,21 +136,21 @@ export default function SignupPage() {
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Setting up...
+              {t("loading")}
             </>
           ) : (
-            "Create agency"
+            t("submit")
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link
           href="/login"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </div>

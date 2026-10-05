@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/command";
 import { Users, Briefcase, Phone, Search } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
@@ -24,6 +25,7 @@ export function CommandPalette() {
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [isPending, startTransition] = React.useTransition();
   const router = useRouter();
+  const t = useTranslations("search");
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -82,7 +84,7 @@ export function CommandPalette() {
       >
         <span className="flex items-center gap-2">
           <Search className="h-4 w-4" />
-          <span>Search...</span>
+          <span>{t("placeholder")}</span>
         </span>
         <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
           <span className="text-xs">⌘</span>K
@@ -92,7 +94,7 @@ export function CommandPalette() {
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command shouldFilter={false}>
           <CommandInput
-        placeholder="Search contacts, opportunities, and inquiries..."
+        placeholder={t("inputPlaceholder")}
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
@@ -100,14 +102,14 @@ export function CommandPalette() {
         {isPending && (
           <div className="py-6 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Searching...
+            {t("searching")}
           </div>
         )}
         {!isPending && searchQuery.trim().length >= 2 && results.length === 0 && (
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{t("noResults")}</CommandEmpty>
         )}
         {!isPending && results.length > 0 && (
-          <CommandGroup heading="Results">
+          <CommandGroup heading={t("results")}>
             {results.map((result) => (
               <CommandItem
                 key={`${result.type}-${result.id}`}

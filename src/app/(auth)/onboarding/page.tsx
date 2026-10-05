@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [agencyName, setAgencyName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const t = useTranslations("auth.onboarding");
 
   async function handleOnboarding(e: React.FormEvent) {
     e.preventDefault();
@@ -35,10 +37,10 @@ export default function OnboardingPage() {
     <div className="rounded-lg border bg-card p-8 shadow-sm">
       <div className="mb-6">
         <h2 className="text-xl font-semibold tracking-tight">
-          Welcome to BrokerCRM!
+          {t("title")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Let's finish setting up your workspace by creating your agency.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -51,14 +53,14 @@ export default function OnboardingPage() {
 
         <div className="space-y-2">
           <label htmlFor="agencyName" className="text-sm font-medium">
-            Agency name
+            {t("agencyName")}
           </label>
           <input
             id="agencyName"
             type="text"
             value={agencyName}
             onChange={(e) => setAgencyName(e.target.value)}
-            placeholder="Sofia Properties"
+            placeholder={t("agencyNamePlaceholder")}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
@@ -72,10 +74,10 @@ export default function OnboardingPage() {
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating agency...
+              {t("loading")}
             </>
           ) : (
-            "Complete setup"
+            t("submit")
           )}
         </button>
       </form>

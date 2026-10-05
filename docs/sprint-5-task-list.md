@@ -139,20 +139,20 @@
 - [x] Profiles domain: `locale` type, `updateLocaleSchema`, `repository.updateLocale`
 - [x] `updateLocaleAction` (profile + cookie + `revalidatePath('/', 'layout')`)
 - [x] `syncLocaleCookieAction` after login; set the cookie in the auth callback
-- [ ] Feature flag `NEXT_PUBLIC_I18N_BG_ENABLED` (default false)
-- [ ] Extract strings: sidebar, header, settings layout, command palette
-- [ ] Extract strings: login, signup, forgot-password, update-password, onboarding
-- [ ] Settings → Profile: language switcher
-- [ ] Localized `generateMetadata` for the extracted pages
-- [ ] Vitest: `messages/messages.test.ts` (key parity, non-empty, ICU-valid)
-- [ ] Vitest: `src/lib/i18n/format.test.ts`
+- [x] Feature flag `NEXT_PUBLIC_I18N_BG_ENABLED` (default false)
+- [x] Extract strings: sidebar, header, settings layout, command palette
+- [x] Extract strings: login, signup, forgot-password, update-password, onboarding
+- [x] Settings → Profile: language switcher
+- [x] Localized `generateMetadata` for the extracted pages
+- [x] Vitest: `messages/messages.test.ts` (key parity, non-empty, ICU-valid)
+- [x] Vitest: `src/lib/i18n/format.test.ts`
 
 ### Acceptance criteria
-- [ ] **AC-5.2-1** Language switch re-renders the shell and persists across logout/login and devices
-- [ ] **AC-5.2-2** `<html lang>` matches the active locale
-- [ ] **AC-5.2-3** Missing key in `bg.json` fails `npm test`; missing key in `en.json` fails `npm run typecheck`
-- [ ] **AC-5.2-4** Flag off → production UI unchanged, only English offered
-- [ ] **AC-5.2-5** Server Action errors in extracted areas come back localized
+- [x] **AC-5.2-1** Language switch re-renders the shell and persists across logout/login and devices
+- [x] **AC-5.2-2** `<html lang>` matches the active locale
+- [x] **AC-5.2-3** Missing key in `bg.json` fails `npm test`; missing key in `en.json` fails `npm run typecheck`
+- [x] **AC-5.2-4** Flag off → production UI unchanged, only English offered
+- [x] **AC-5.2-5** Server Action errors in extracted areas come back localized
 
 ---
 

@@ -5,12 +5,14 @@ import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const t = useTranslations("auth.forgotPassword");
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
@@ -37,12 +39,12 @@ export default function ForgotPasswordPage() {
     return (
       <div className="rounded-lg border bg-card p-8 shadow-sm flex flex-col items-center text-center">
         <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-4" />
-        <h2 className="text-xl font-semibold tracking-tight mb-2">Check your email</h2>
+        <h2 className="text-xl font-semibold tracking-tight mb-2">{t("successTitle")}</h2>
         <p className="text-sm text-muted-foreground mb-6">
-          We've sent you a password reset link to <span className="font-medium text-foreground">{email}</span>.
+          {t("successSubtitle")}<span className="font-medium text-foreground">{email}</span>.
         </p>
         <Link href="/login" className="text-sm text-primary hover:underline font-medium">
-          Return to login
+          {t("returnLogin")}
         </Link>
       </div>
     );
@@ -51,9 +53,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="rounded-lg border bg-card p-8 shadow-sm">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">Reset password</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Enter your email address and we'll send you a link to reset your password.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -66,14 +68,14 @@ export default function ForgotPasswordPage() {
 
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium">
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@agency.com"
+            placeholder={t("emailPlaceholder")}
             required
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
@@ -87,17 +89,17 @@ export default function ForgotPasswordPage() {
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending link...
+              {t("loading")}
             </>
           ) : (
-            "Send reset link"
+            t("submit")
           )}
         </button>
       </form>
 
       <div className="mt-6 text-center">
         <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
-          Back to login
+          {t("backToLogin")}
         </Link>
       </div>
     </div>

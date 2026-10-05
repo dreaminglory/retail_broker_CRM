@@ -1,23 +1,97 @@
 {
-  "Common": {
-    "save": "Запазване",
-    "cancel": "Отказ",
-    "delete": "Изтриване",
-    "edit": "Редактиране",
-    "loading": "Зареждане...",
-    "success": "Успех",
-    "error": "Грешка"
-  },
-  "Navigation": {
+  "nav": {
     "dashboard": "Табло",
+    "today": "Днес",
     "contacts": "Контакти",
-    "inquiries": "Запитвания",
     "opportunities": "Сделки",
-    "settings": "Настройки"
+    "inquiries": "Запитвания",
+    "settings": "Настройки",
+    "exceptions": "Изключения"
   },
-  "Errors": {
-    "default": "Възникна неочаквана грешка.",
-    "unauthorized": "Нямате права да извършите това действие.",
-    "notFound": "Ресурсът не е намерен."
+  "header": {
+    "loading": "Зареждане...",
+    "myAgency": "Моята агенция",
+    "settings": "Настройки",
+    "signOut": "Изход"
+  },
+  "settings": {
+    "title": "Настройки",
+    "description": "Управление на предпочитанията за акаунта и агенцията.",
+    "overview": "Преглед",
+    "profile": "Профил",
+    "team": "Екип",
+    "leadSources": "Източници",
+    "pipelineStages": "Етапи на фунията"
+  },
+  "search": {
+    "placeholder": "Търсене...",
+    "inputPlaceholder": "Търсене на контакти, сделки и запитвания...",
+    "searching": "Търсене...",
+    "noResults": "Няма намерени резултати.",
+    "results": "Резултати"
+  },
+  "auth": {
+    "login": {
+      "title": "Добре дошли отново",
+      "subtitle": "Влезте във вашия BrokerCRM акаунт",
+      "email": "Имейл",
+      "emailPlaceholder": "you@agency.com",
+      "password": "Парола",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Забравена парола?",
+      "submit": "Вход",
+      "loading": "Влизане...",
+      "noAccount": "Нямате акаунт?",
+      "createAgency": "Създайте вашата агенция"
+    },
+    "signup": {
+      "title": "Създайте вашата агенция",
+      "subtitle": "Настройте работното си пространство в BrokerCRM за секунди",
+      "fullName": "Вашето име",
+      "fullNamePlaceholder": "Иван Петров",
+      "agencyName": "Име на агенцията",
+      "agencyNamePlaceholder": "София Имоти",
+      "email": "Имейл",
+      "emailPlaceholder": "you@agency.com",
+      "password": "Парола",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "Най-малко 6 знака",
+      "submit": "Създаване на агенция",
+      "loading": "Настройване...",
+      "hasAccount": "Вече имате акаунт?",
+      "signIn": "Вход"
+    },
+    "forgotPassword": {
+      "title": "Нулиране на паролата",
+      "subtitle": "Въведете имейл адреса си и ние ще ви изпратим връзка за нулиране на паролата.",
+      "successTitle": "Проверете имейла си",
+      "successSubtitle": "Изпратихме ви връзка за нулиране на паролата на ",
+      "returnLogin": "Към входа",
+      "email": "Имейл",
+      "emailPlaceholder": "you@agency.com",
+      "submit": "Изпращане на връзка",
+      "loading": "Изпращане...",
+      "backToLogin": "Обратно към входа"
+    },
+    "updatePassword": {
+      "verifying": "Проверка на достъпа...",
+      "invalidTitle": "Невалидна или изтекла връзка",
+      "invalidSubtitle": "Връзката ви за нулиране на парола или покана е изтекла или е невалидна. Моля, поискайте нова.",
+      "returnLogin": "Към входа",
+      "title": "Задайте вашата парола",
+      "subtitle": "Моля, въведете нова парола, за да защитите акаунта си.",
+      "password": "Нова парола",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Запазване на паролата",
+      "loading": "Запазване..."
+    },
+    "onboarding": {
+      "title": "Добре дошли в BrokerCRM!",
+      "subtitle": "Нека приключим с настройката на работното ви пространство, като създадем вашата агенция.",
+      "agencyName": "Име на агенцията",
+      "agencyNamePlaceholder": "София Имоти",
+      "submit": "Завършване на настройката",
+      "loading": "Създаване на агенция..."
+    }
   }
 }
