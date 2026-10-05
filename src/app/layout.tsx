@@ -19,15 +19,23 @@ export const metadata: Metadata = {
     "A Bulgarian-first CRM for residential real estate agencies. Ensure every opportunity has an owner, a next action, and a complete history.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster position="bottom-right" />
+        <NextIntlClientProvider messages={messages}>
+          {children}
+          <Toaster position="bottom-right" />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

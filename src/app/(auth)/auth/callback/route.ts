@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { isSafeRelativePath } from "@/lib/safe-redirect";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const next = searchParams.get("next") ?? "/dashboard";
+  const rawNext = searchParams.get("next") ?? "/dashboard";
+  
+  // Use safe relative path or fallback to dashboard
+  const next = isSafeRelativePath(rawNext) ? rawNext : "/dashboard";
 
   const supabase = await createSupabaseServer();
 
   let isSessionEstablished = false;
   let userId = null;
 
-  // Handle PKCE flow (e.g., OAuth or standard email links with PKCE enabled)
+  // Handle PKCE flow
   if (code) {
     const { error, data } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
@@ -23,11 +28,11 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/login?error=exchange_failed&details=${encodeURIComponent(error?.message || "unknown")}`);
     }
   } 
-  // Handle OTP / Token Hash flow (e.g., Custom email templates)
+  // Handle OTP / Token Hash flow
   else if (token_hash && type) {
     const { error, data } = await supabase.auth.verifyOtp({
       token_hash,
-      type: type as any,
+      type: type as EmailOtpType,
     });
     if (!error && data.user) {
       isSessionEstablished = true;
@@ -36,7 +41,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/login?error=otp_failed&details=${encodeURIComponent(error?.message || "unknown")}`);
     }
   } else {
-    // Check if they already have a session (e.g., coming from /update-password)
+    // Check if they already have a session
     const { data } = await supabase.auth.getUser();
     if (data?.user) {
       isSessionEstablished = true;
@@ -45,25 +50,27 @@ export async function GET(request: Request) {
   }
 
   if (isSessionEstablished && userId) {
-    // Check for pending invitations and activate them
-    const { data: invitations } = await supabase
-      .from("agency_memberships")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("status", "invited");
-
-    if (invitations && invitations.length > 0) {
-      // Activate all pending invitations for this user
-      for (const inv of invitations) {
-        await supabase
-          .from("agency_memberships")
-          .update({ 
-            status: "active",
-            joined_at: new Date().toISOString()
-          })
-          .eq("id", inv.id);
-      }
+    // Check for and accept pending invitations using the secure RPC
+    const { data: activatedCount, error: rpcError } = await supabase.rpc('accept_pending_invitations');
+    
+    // Sync locale from profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('locale')
+      .eq('id', userId)
+      .single();
       
+    if (profile?.locale) {
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      cookieStore.set('NEXT_LOCALE', profile.locale, {
+        path: '/',
+        maxAge: 31536000,
+        sameSite: 'lax',
+      });
+    }
+
+    if (activatedCount && activatedCount > 0) {
       // Redirect to next path if explicit (e.g. /update-password), otherwise to profile settings
       if (next === "/update-password") {
         return NextResponse.redirect(`${origin}${next}`);

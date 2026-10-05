@@ -15,88 +15,29 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function generateSlug(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim();
-  }
-
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const supabase = createSupabaseBrowser();
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("fullName", fullName);
+    formData.append("agencyName", agencyName);
 
-    // 1. Create the auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-      },
-    });
+    const { signupAction } = await import("./actions");
+    const result = await signupAction(formData);
 
-    if (authError) {
-      setError(authError.message);
+    if (result.error) {
+      setError(result.error);
       setLoading(false);
       return;
     }
 
-    if (!authData.user) {
-      setError("Failed to create account. Please try again.");
-      setLoading(false);
+    if (result.requireConfirmation) {
+      router.push("/login?message=Check your email to confirm your account");
       return;
-    }
-
-    // 2. Create the agency
-    const slug = generateSlug(agencyName) || `agency-${Date.now()}`;
-    const agencyId = crypto.randomUUID();
-
-    const { error: agencyError } = await supabase
-      .from("agencies")
-      .insert({
-        id: agencyId,
-        name: agencyName,
-        slug: slug,
-      });
-
-    if (agencyError) {
-      setError(`Account created but agency setup failed: ${agencyError.message}`);
-      setLoading(false);
-      return;
-    }
-
-    // 3. Create the agency membership (owner, active)
-    const { error: memberError } = await supabase
-      .from("agency_memberships")
-      .insert({
-        user_id: authData.user.id,
-        agency_id: agencyId,
-        role: "owner",
-        status: "active",
-        joined_at: new Date().toISOString(),
-      });
-
-    if (memberError) {
-      setError(`Agency created but membership failed: ${memberError.message}`);
-      setLoading(false);
-      return;
-    }
-
-    // 4. Seed default lead sources and pipeline stages for the new agency
-    const { error: seedError } = await supabase.rpc("seed_agency_defaults", {
-      p_agency_id: agencyId,
-    });
-
-    if (seedError) {
-      console.error("Failed to seed defaults:", seedError);
-      // We don't block the signup flow here, but we could log it
     }
 
     router.push("/dashboard");

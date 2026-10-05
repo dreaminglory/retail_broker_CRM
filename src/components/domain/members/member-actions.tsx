@@ -39,7 +39,7 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
       formData.append("role", newRole);
       
       const result = await updateMemberRole(formData);
-      if (result.error) {
+      if (!result.success) {
         toast.error(result.error);
       } else {
         toast.success("Role updated successfully");
@@ -64,8 +64,8 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
         result = await cancelInvitation(formData);
       }
       
-      if (result?.error) {
-        toast.error(result.error);
+      if (!result?.success) {
+        toast.error(result?.error || "Unknown error");
       } else {
         toast.success(
           newStatus === "active" ? "Member reactivated" : 

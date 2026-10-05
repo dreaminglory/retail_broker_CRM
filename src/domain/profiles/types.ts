@@ -9,6 +9,7 @@ export interface Profile {
   email: string;
   display_name: string;
   avatar_url: string | null;
+  locale: string;
   created_at: string;
   updated_at: string;
 }

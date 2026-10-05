@@ -17,28 +17,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // First check if they have any pending invitations and activate them
-  // (We use admin client because RLS might prevent users from updating their own status)
-  const { createSupabaseAdmin } = await import("@/lib/supabase/server");
-  const adminDb = await createSupabaseAdmin();
-  
-  const { data: pendingInvites } = await adminDb
-    .from("agency_memberships")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("status", "invited");
-
-  if (pendingInvites && pendingInvites.length > 0) {
-    for (const inv of pendingInvites) {
-      await adminDb
-        .from("agency_memberships")
-        .update({ 
-          status: "active",
-          joined_at: new Date().toISOString()
-        })
-        .eq("id", inv.id);
-    }
-  }
+  // Automatically accept any pending invitations using the secure RPC
+  await supabase.rpc('accept_pending_invitations');
 
   // Now fetch the active membership
   const { data: membership } = await supabase
@@ -47,6 +27,10 @@ export default async function DashboardLayout({
     .eq("user_id", user.id)
     .eq("status", "active")
     .single();
+
+  if (!membership) {
+    redirect("/onboarding");
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">

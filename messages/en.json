@@ -1,0 +1,23 @@
+{
+  "Common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error"
+  },
+  "Navigation": {
+    "dashboard": "Dashboard",
+    "contacts": "Contacts",
+    "inquiries": "Inquiries",
+    "opportunities": "Opportunities",
+    "settings": "Settings"
+  },
+  "Errors": {
+    "default": "An unexpected error occurred.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "notFound": "Resource not found."
+  }
+}

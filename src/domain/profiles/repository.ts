@@ -69,6 +69,21 @@ export class ProfileRepository {
   }
 
   /**
+   * Update a user's locale.
+   */
+  async updateLocale(userId: string, locale: string): Promise<Profile> {
+    const { data, error } = await this.db
+      .from('profiles')
+      .update({ locale })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to update locale: ${error.message}`);
+    return data as Profile;
+  }
+
+  /**
    * Get all profiles for members of a given agency.
    * Joins agency_memberships → profiles to get team members.
    */

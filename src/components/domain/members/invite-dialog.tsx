@@ -28,9 +28,10 @@ import type { MemberRole } from "@/domain/members/types";
 
 interface InviteDialogProps {
   agencyId: string;
+  currentUserRole: MemberRole;
 }
 
-export function InviteDialog({ agencyId }: InviteDialogProps) {
+export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
   const [open, setOpen] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
   const [email, setEmail] = useState("");
@@ -48,7 +49,7 @@ export function InviteDialog({ agencyId }: InviteDialogProps) {
       formData.append("agencyId", agencyId);
 
       const result = await inviteMember(formData);
-      if (result.error) {
+      if (!result.success) {
         toast.error(result.error);
       } else {
         toast.success(`Invitation sent to ${email}`);
@@ -97,8 +98,12 @@ export function InviteDialog({ agencyId }: InviteDialogProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="broker">Broker</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="owner">Owner</SelectItem>
+                  {currentUserRole === "owner" && (
+                    <>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="owner">Owner</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

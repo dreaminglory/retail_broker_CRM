@@ -50,3 +50,37 @@ export async function getAuthContext(): Promise<AuthContext> {
     role: membership.role,
   };
 }
+
+// ── Error handling ────────────────────────────────────────────────────────────
+
+import { DomainError } from '@/lib/errors';
+import { getTranslations } from 'next-intl/server';
+
+/**
+ * Normalizes an unknown error into a localized action error result.
+ * Supports DomainError which maps directly to i18n keys.
+ */
+export async function toActionError(error: unknown): Promise<{ success: false, error: string }> {
+  const t = await getTranslations('Errors');
+
+  if (error instanceof DomainError) {
+    try {
+      // Try to resolve the specific domain error code
+      // We pass the params for interpolation
+      const message = t(error.code as any, error.params);
+      return { success: false, error: message || error.message };
+    } catch {
+      return { success: false, error: error.message };
+    }
+  }
+
+  if (error instanceof Error) {
+    // Basic mapping for common errors
+    if (error.message === 'Unauthorized' || error.message === 'No active agency membership') {
+      return { success: false, error: t('unauthorized') };
+    }
+    return { success: false, error: error.message };
+  }
+
+  return { success: false, error: t('default') };
+}

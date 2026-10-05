@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { MemberRepository } from "./repository";
 import type { AgencyMember, MemberRole } from "./types";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
+import type { AuthContext } from "@/lib/actions";
+import { DomainError } from "@/lib/errors";
 
 export class MemberService {
   private readonly repo: MemberRepository;
@@ -50,8 +52,12 @@ export class MemberService {
     await this.repo.updateMemberStatus(membershipId, "active");
   }
 
-  async inviteMember(agencyId: string, email: string, role: MemberRole, currentUserId: string): Promise<void> {
-    const members = await this.repo.getAgencyMembers(agencyId);
+  async inviteMember(ctx: AuthContext, email: string, role: MemberRole): Promise<void> {
+    if (ctx.role === 'manager' && role !== 'broker') {
+      throw new DomainError('members.inviteForbidden', 'Managers can only invite brokers.');
+    }
+
+    const members = await this.repo.getAgencyMembers(ctx.agencyId);
     
     const existing = members.find(m => 
       m.invitation_email?.toLowerCase() === email.toLowerCase() || 
@@ -65,8 +71,8 @@ export class MemberService {
     const adminDb = createSupabaseAdmin();
     const { data, error } = await adminDb.auth.admin.inviteUserByEmail(email, {
       data: {
-        invited_by: currentUserId,
-        agency_id: agencyId,
+        invited_by: ctx.userId,
+        agency_id: ctx.agencyId,
       },
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?next=/update-password`,
     });
@@ -79,18 +85,15 @@ export class MemberService {
       throw new Error("Failed to invite user: No user returned from Supabase.");
     }
 
-    await this.repo.createInvitation(agencyId, email, role, data.user.id, currentUserId);
+    await this.repo.createInvitation(ctx.agencyId, email, role, data.user.id, ctx.userId);
   }
 
-  async cancelInvitation(membershipId: string): Promise<void> {
+  async cancelInvitation(ctx: AuthContext, membershipId: string): Promise<void> {
     const membership = await this.repo.getMembership(membershipId);
     if (!membership) throw new Error("Membership not found.");
     if (membership.status !== "invited") throw new Error("Only pending invitations can be cancelled.");
 
     await this.repo.deleteInvitation(membershipId);
-    
-    // We could also delete the user from auth.users if they have no other memberships,
-    // but for safety we just remove the invitation membership.
   }
 
   private async ensureAnotherActiveOwnerExists(agencyId: string, excludingMembershipId: string): Promise<void> {

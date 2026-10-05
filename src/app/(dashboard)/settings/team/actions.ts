@@ -1,222 +1,144 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { MemberService } from "@/domain/members/service";
+import { getAuthContext, type ActionResult } from "@/lib/actions";
 import {
   updateMemberRoleSchema,
   deactivateMemberSchema,
   reactivateMemberSchema,
   inviteMemberSchema,
 } from "@/domain/members/validation";
+import { DomainError } from "@/lib/errors";
 
-export async function updateMemberRole(formData: FormData) {
-  const supabase = await createSupabaseServer();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "Not authenticated" };
-  }
-
-  const rawData = {
-    membershipId: formData.get("membershipId") as string,
-    role: formData.get("role") as string,
-  };
-
-  const parsed = updateMemberRoleSchema.safeParse(rawData);
-  if (!parsed.success) {
-    return { error: "Invalid role data" };
-  }
-
-  const memberService = new MemberService(supabase);
-
+export async function updateMemberRole(formData: FormData): Promise<ActionResult> {
   try {
-    await memberService.updateMemberRole(parsed.data.membershipId, parsed.data.role, user.id);
+    const ctx = await getAuthContext();
+
+    const rawData = {
+      membershipId: formData.get("membershipId") as string,
+      role: formData.get("role") as string,
+    };
+
+    const parsed = updateMemberRoleSchema.safeParse(rawData);
+    if (!parsed.success) {
+      return { success: false, error: "Invalid role data" };
+    }
+
+    const memberService = new MemberService(ctx.supabase);
+    await memberService.updateMemberRole(parsed.data.membershipId, parsed.data.role, ctx.userId);
     revalidatePath("/settings/team");
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
     if (error instanceof Error) {
-      return { error: error.message };
+      return { success: false, error: error.message };
     }
-    return { error: "Failed to update member role" };
+    return { success: false, error: "Failed to update member role" };
   }
 }
 
-export async function deactivateMember(formData: FormData) {
-  const supabase = await createSupabaseServer();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "Not authenticated" };
-  }
-
-  const rawData = {
-    membershipId: formData.get("membershipId") as string,
-  };
-
-  const parsed = deactivateMemberSchema.safeParse(rawData);
-  if (!parsed.success) {
-    return { error: "Invalid data" };
-  }
-
-  const memberService = new MemberService(supabase);
-
+export async function deactivateMember(formData: FormData): Promise<ActionResult> {
   try {
-    await memberService.deactivateMember(parsed.data.membershipId, user.id);
+    const ctx = await getAuthContext();
+
+    const rawData = {
+      membershipId: formData.get("membershipId") as string,
+    };
+
+    const parsed = deactivateMemberSchema.safeParse(rawData);
+    if (!parsed.success) {
+      return { success: false, error: "Invalid data" };
+    }
+
+    const memberService = new MemberService(ctx.supabase);
+    await memberService.deactivateMember(parsed.data.membershipId, ctx.userId);
     revalidatePath("/settings/team");
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
     if (error instanceof Error) {
-      return { error: error.message };
+      return { success: false, error: error.message };
     }
-    return { error: "Failed to deactivate member" };
+    return { success: false, error: "Failed to deactivate member" };
   }
 }
 
-export async function reactivateMember(formData: FormData) {
-  const supabase = await createSupabaseServer();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "Not authenticated" };
-  }
-
-  const rawData = {
-    membershipId: formData.get("membershipId") as string,
-  };
-
-  const parsed = reactivateMemberSchema.safeParse(rawData);
-  if (!parsed.success) {
-    return { error: "Invalid data" };
-  }
-
-  const memberService = new MemberService(supabase);
-
+export async function reactivateMember(formData: FormData): Promise<ActionResult> {
   try {
+    const ctx = await getAuthContext();
+
+    const rawData = {
+      membershipId: formData.get("membershipId") as string,
+    };
+
+    const parsed = reactivateMemberSchema.safeParse(rawData);
+    if (!parsed.success) {
+      return { success: false, error: "Invalid data" };
+    }
+
+    const memberService = new MemberService(ctx.supabase);
     await memberService.reactivateMember(parsed.data.membershipId);
     revalidatePath("/settings/team");
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
     if (error instanceof Error) {
-      return { error: error.message };
+      return { success: false, error: error.message };
     }
-    return { error: "Failed to reactivate member" };
+    return { success: false, error: "Failed to reactivate member" };
   }
 }
 
-export async function inviteMember(formData: FormData) {
-  const supabase = await createSupabaseServer();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "Not authenticated" };
-  }
-
-  const email = formData.get("email") as string;
-  const role = formData.get("role") as string;
-  const agencyId = formData.get("agencyId") as string;
-
-  if (!email || !role || !agencyId) {
-    return { error: "Missing required fields" };
-  }
-
-  const parsed = inviteMemberSchema.safeParse({ email, role });
-  if (!parsed.success) {
-    return { error: "Invalid data format" };
-  }
-
-  const memberService = new MemberService(supabase);
-
+export async function inviteMember(formData: FormData): Promise<ActionResult> {
   try {
-    await memberService.inviteMember(agencyId, parsed.data.email, parsed.data.role, user.id);
+    const ctx = await getAuthContext();
+
+    const email = formData.get("email") as string;
+    const role = formData.get("role") as string;
+
+    if (!email || !role) {
+      return { success: false, error: "Missing required fields" };
+    }
+
+    const parsed = inviteMemberSchema.safeParse({ email, role });
+    if (!parsed.success) {
+      return { success: false, error: "Invalid data format" };
+    }
+
+    const memberService = new MemberService(ctx.supabase);
+    await memberService.inviteMember(ctx, parsed.data.email, parsed.data.role);
     revalidatePath("/settings/team");
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
-    if (error instanceof Error) {
-      return { error: error.message };
+    if (error instanceof DomainError) {
+      return { success: false, error: error.message };
     }
-    return { error: "Failed to invite member" };
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to invite member" };
   }
 }
 
-export async function cancelInvitation(formData: FormData) {
-  const supabase = await createSupabaseServer();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "Not authenticated" };
-  }
-
-  const membershipId = formData.get("membershipId") as string;
-  if (!membershipId) {
-    return { error: "Missing membership ID" };
-  }
-
-  const memberService = new MemberService(supabase);
-
+export async function cancelInvitation(formData: FormData): Promise<ActionResult> {
   try {
-    // Fetch membership to verify it exists and is accessible
-    const membership = await memberService["repo"].getMembership(membershipId);
-    if (!membership) {
-      return { error: "Membership not found or unauthorized" };
+    const ctx = await getAuthContext();
+
+    const membershipId = formData.get("membershipId") as string;
+    if (!membershipId) {
+      return { success: false, error: "Missing membership ID" };
     }
+
+    const memberService = new MemberService(ctx.supabase);
+    await memberService.cancelInvitation(ctx, membershipId);
     
-    // Verify caller has permissions
-    const { data: callerMembership } = await supabase
-      .from("agency_memberships")
-      .select("role")
-      .eq("agency_id", membership.agency_id)
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .single();
-
-    if (!callerMembership || !["owner", "manager"].includes(callerMembership.role)) {
-      return { error: "Unauthorized to cancel invitations" };
-    }
-
-    if (membership.status !== "invited") {
-      return { error: "Only pending invitations can be cancelled." };
-    }
-
-    // Use admin client to bypass missing DELETE policy
-    const { createSupabaseAdmin } = await import("@/lib/supabase/server");
-    const adminDb = await createSupabaseAdmin();
-    const { error: deleteError } = await adminDb
-      .from("agency_memberships")
-      .delete()
-      .eq("id", membershipId)
-      .eq("status", "invited");
-
-    if (deleteError) {
-      throw new Error(`Failed to cancel invitation: ${deleteError.message}`);
-    }
-
     revalidatePath("/settings/team");
-    return { success: true };
+    return { success: true, data: undefined };
   } catch (error) {
-    if (error instanceof Error) {
-      return { error: error.message };
+    if (error instanceof DomainError) {
+      return { success: false, error: error.message };
     }
-    return { error: "Failed to cancel invitation" };
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to cancel invitation" };
   }
 }

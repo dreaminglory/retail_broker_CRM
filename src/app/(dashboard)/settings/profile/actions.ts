@@ -39,3 +39,42 @@ export async function updateProfile(formData: FormData) {
     return { error: message };
   }
 }
+
+import { cookies } from 'next/headers';
+import { updateLocaleSchema } from '@/domain/profiles/validation';
+import { toActionError, ActionResult } from '@/lib/actions';
+
+export async function updateLocaleAction(formData: FormData): Promise<ActionResult> {
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  const locale = formData.get('locale');
+  const parsed = updateLocaleSchema.safeParse({ locale });
+
+  if (!parsed.success) {
+    return { success: false, error: 'invalidLocale' };
+  }
+
+  try {
+    const repo = new ProfileRepository(supabase);
+    await repo.updateLocale(user.id, parsed.data.locale);
+    
+    const cookieStore = await cookies();
+    cookieStore.set('NEXT_LOCALE', parsed.data.locale, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    });
+
+    revalidatePath('/', 'layout');
+    return { success: true, data: undefined };
+  } catch (err) {
+    return toActionError(err);
+  }
+}

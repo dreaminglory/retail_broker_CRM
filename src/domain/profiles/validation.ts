@@ -14,3 +14,11 @@ export const updateProfileSchema = z.object({
 });
 
 export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
+
+export const updateLocaleSchema = z.object({
+  locale: z.enum(['bg', 'en'], {
+    errorMap: () => ({ message: 'invalidLocale' }),
+  }),
+});
+
+export type UpdateLocaleSchema = z.infer<typeof updateLocaleSchema>;

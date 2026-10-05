@@ -83,6 +83,13 @@ export default function LoginPage() {
       return;
     }
 
+    try {
+      const { syncLocaleCookieAction } = await import('./sync-locale');
+      await syncLocaleCookieAction();
+    } catch (err) {
+      console.error('Failed to sync locale cookie', err);
+    }
+
     router.push("/dashboard");
     router.refresh();
   }

@@ -40,8 +40,8 @@ export default async function TeamSettingsPage() {
             View and manage your agency&apos;s team members and their roles.
           </p>
         </div>
-        {membership.role === "owner" && (
-          <InviteDialog agencyId={membership.agency_id} />
+        {(membership.role === "owner" || membership.role === "manager") && (
+          <InviteDialog agencyId={membership.agency_id} currentUserRole={membership.role} />
         )}
       </div>
 

@@ -35,22 +35,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes: redirect to login if not authenticated
-  const isAuthRoute =
+  // Public routes allowlist
+  const isPublicRoute =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/signup") ||
+    request.nextUrl.pathname.startsWith("/forgot-password") ||
+    request.nextUrl.pathname.startsWith("/update-password") ||
     request.nextUrl.pathname.startsWith("/auth")
 
-  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard")
-
-  if (!user && isDashboardRoute) {
+  // Protect all non-public routes
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
-  if (user && isAuthRoute) {
+  // Redirect authenticated users away from auth pages to dashboard,
+  // EXCEPT /auth/callback and /update-password, which need to process authentication states.
+  if (user && isPublicRoute && !request.nextUrl.pathname.startsWith('/auth/callback') && !request.nextUrl.pathname.startsWith('/update-password')) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
