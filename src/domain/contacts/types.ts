@@ -38,6 +38,8 @@ export interface Contact {
   display_name: string;
   notes: string | null;
   status: ContactStatus;
+  external_ref: string | null;
+  import_job_id: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;

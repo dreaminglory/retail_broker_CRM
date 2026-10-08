@@ -255,7 +255,7 @@ export function OpportunityForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="expected_value">Expected Value (BGN)</Label>
+          <Label htmlFor="expected_value">Expected Value (EUR)</Label>
           <Input
             id="expected_value"
             name="expected_value"

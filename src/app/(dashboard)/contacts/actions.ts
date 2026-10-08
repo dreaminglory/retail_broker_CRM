@@ -1,11 +1,11 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { ContactService } from '@/domain/contacts/service';
 import { createContactSchema, updateContactSchema, addContactMethodSchema } from '@/domain/contacts/validation';
 import { findPotentialDuplicates, type PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { ContactRepository } from '@/domain/contacts/repository';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
 export type { ActionResult };
 
@@ -39,17 +39,11 @@ export async function createContactAction(
     };
 
     const parsed = createContactSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const skipDuplicateCheck = formData.get('skipDuplicateCheck') === 'true';
     if (!skipDuplicateCheck) {
-      const duplicates = await findPotentialDuplicates(supabase, agencyId, parsed.data as Record<string, unknown>);
+      const duplicates = await findPotentialDuplicates(supabase, agencyId, parsed.data as any);
       if (duplicates.length > 0) {
         return { success: true, data: { duplicates } };
       }
@@ -60,9 +54,7 @@ export async function createContactAction(
 
     revalidatePath('/contacts');
     return { success: true, data: { id: contact.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function updateContactAction(
@@ -82,13 +74,7 @@ export async function updateContactAction(
     };
 
     const parsed = updateContactSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new ContactService(supabase);
     await service.update(id, agencyId, parsed.data);
@@ -96,9 +82,7 @@ export async function updateContactAction(
     revalidatePath(`/contacts/${id}`);
     revalidatePath('/contacts');
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function archiveContactAction(id: string): Promise<ActionResult> {
@@ -109,9 +93,7 @@ export async function archiveContactAction(id: string): Promise<ActionResult> {
     revalidatePath('/contacts');
     revalidatePath(`/contacts/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 // ── Contact method actions ────────────────────────────────────────────────────
@@ -132,22 +114,14 @@ export async function addContactMethodAction(
     };
 
     const parsed = addContactMethodSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new ContactService(supabase);
     const method = await service.addContactMethod(contactId, agencyId, parsed.data);
 
     revalidatePath(`/contacts/${contactId}`);
     return { success: true, data: { id: method.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function removeContactMethodAction(
@@ -160,9 +134,7 @@ export async function removeContactMethodAction(
     await service.removeContactMethod(id, agencyId);
     revalidatePath(`/contacts/${contactId}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function setPrimaryContactMethodAction(
@@ -175,9 +147,7 @@ export async function setPrimaryContactMethodAction(
     await service.setPrimaryContactMethod(id, contactId, agencyId);
     revalidatePath(`/contacts/${contactId}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function searchContactsQuickAction(search: string) {

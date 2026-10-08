@@ -49,13 +49,13 @@ export class TaskService {
   }
 
   /** Tasks due today. */
-  async listDueToday(agencyId: string, assignedTo?: string): Promise<Task[]> {
-    return this.repo.findDueToday(agencyId, assignedTo);
+  async listDueToday(agencyId: string, assignedTo?: string, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
+    return this.repo.findDueToday(agencyId, assignedTo, timezone);
   }
 
   /** Tasks due in the next 3 days (excluding today). */
-  async listUpcoming(agencyId: string, assignedTo?: string): Promise<Task[]> {
-    return this.repo.findUpcoming(agencyId, assignedTo);
+  async listUpcoming(agencyId: string, assignedTo?: string, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
+    return this.repo.findUpcoming(agencyId, assignedTo, 3, timezone);
   }
 
   /** Active opportunities with no pending task. */

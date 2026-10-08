@@ -28,7 +28,7 @@ export default async function ContactsPage({
 
   const { data: membership } = await supabase
     .from("agency_memberships")
-    .select("agency_id")
+    .select("agency_id, role")
     .eq("user_id", user!.id)
     .eq("status", "active")
     .single();
@@ -52,6 +52,7 @@ export default async function ContactsPage({
         initialSearch={search}
         initialStatus={status}
         agencyId={agencyId}
+        userRole={membership?.role ?? "broker"}
       />
     </div>
   );

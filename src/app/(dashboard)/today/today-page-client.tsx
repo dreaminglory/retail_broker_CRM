@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -53,6 +55,7 @@ export function TodayPageClient({
   completeAction,
 }: TodayPageClientProps) {
   const router = useRouter();
+  const t = useTranslations('Today');
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
 
   const totalItems = overdue.length + dueToday.length + newInquiries.length;
@@ -63,7 +66,7 @@ export function TodayPageClient({
       <div className="mx-auto max-w-3xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">Today</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {hasWork
               ? `You have ${totalItems} item${totalItems !== 1 ? "s" : ""} that need attention`
@@ -77,25 +80,25 @@ export function TodayPageClient({
             {overdue.length > 0 && (
               <Badge variant="destructive" className="gap-1.5 text-xs px-3 py-1">
                 <AlertTriangle className="h-3 w-3" />
-                {overdue.length} overdue
+                {t('overdueCount', { count: overdue.length })}
               </Badge>
             )}
             {newInquiries.length > 0 && (
               <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                 <Inbox className="h-3 w-3" />
-                {newInquiries.length} new inquir{newInquiries.length !== 1 ? "ies" : "y"}
+                {t('newInquiriesCount', { count: newInquiries.length })}
               </Badge>
             )}
             {dueToday.length > 0 && (
               <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                 <CalendarCheck className="h-3 w-3" />
-                {dueToday.length} due today
+                {t('dueTodayCount', { count: dueToday.length })}
               </Badge>
             )}
             {atRisk.length > 0 && (
               <Badge variant="outline" className="gap-1.5 text-xs px-3 py-1 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-700">
                 <Briefcase className="h-3 w-3" />
-                {atRisk.length} at risk
+                {t('atRiskCount', { count: atRisk.length })}
               </Badge>
             )}
           </div>
@@ -106,7 +109,7 @@ export function TodayPageClient({
           {overdue.length > 0 && (
             <Section
               icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
-              title="Overdue"
+              title={t("sections.overdue")}
               count={overdue.length}
               variant="destructive"
             >
@@ -126,7 +129,7 @@ export function TodayPageClient({
           {newInquiries.length > 0 && (
             <Section
               icon={<Inbox className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-              title="New Inquiries"
+              title={t("sections.newInquiries")}
               count={newInquiries.length}
               variant="info"
             >
@@ -142,7 +145,7 @@ export function TodayPageClient({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm truncate">
-                        {inq.caller_name || inq.caller_phone || inq.caller_email || "Unknown caller"}
+                        {inq.caller_name || inq.caller_phone || inq.caller_email || t("unknownCaller")}
                       </p>
                       {inq.subject && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">
@@ -164,7 +167,7 @@ export function TodayPageClient({
           {dueToday.length > 0 && (
             <Section
               icon={<CalendarCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />}
-              title="Due Today"
+              title={t("sections.dueToday")}
               count={dueToday.length}
               variant="warning"
             >
@@ -184,7 +187,7 @@ export function TodayPageClient({
           {upcoming.length > 0 && (
             <Section
               icon={<CalendarClock className="h-4 w-4 text-muted-foreground" />}
-              title="Coming Up"
+              title={t("sections.comingUp")}
               count={upcoming.length}
               variant="default"
             >
@@ -227,7 +230,7 @@ export function TodayPageClient({
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-muted-foreground">
-                        Updated {formatDistanceToNow(new Date(opp.updated_at), { addSuffix: true })}
+                        {t('updated')} {formatDistanceToNow(new Date(opp.updated_at), { addSuffix: true })}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -243,18 +246,13 @@ export function TodayPageClient({
               <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 mb-4">
                 <CheckCircle className="h-7 w-7" />
               </div>
-              <h3 className="font-semibold text-lg mb-1">All caught up!</h3>
+              <h3 className="font-semibold text-lg mb-1">{t("emptyState.title")}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                You have no overdue tasks, pending work, or at-risk opportunities. 
-                Great job staying on top of things.
+                {t('emptyState.description')}
               </p>
               <div className="mt-6 flex items-center justify-center gap-3">
-                <Button variant="outline" size="sm" onClick={() => router.push("/contacts")}>
-                  View Contacts
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push("/opportunities")}>
-                  View Opportunities
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => router.push("/contacts")}>{t("emptyState.viewContacts")}</Button>
+                <Button variant="outline" size="sm" onClick={() => router.push("/opportunities")}>{t("emptyState.viewOpportunities")}</Button>
               </div>
             </div>
           )}

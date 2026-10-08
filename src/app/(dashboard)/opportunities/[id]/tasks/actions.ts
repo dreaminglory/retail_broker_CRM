@@ -1,9 +1,9 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { TaskService } from '@/domain/tasks/service';
 import { createTaskSchema, updateTaskSchema, completeTaskSchema } from '@/domain/tasks/validation';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
 export type { ActionResult };
 
@@ -27,22 +27,14 @@ export async function createTaskAction(
     };
 
     const parsed = createTaskSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new TaskService(supabase);
     const task = await service.create(agencyId, userId, parsed.data);
 
     revalidatePath(`/opportunities/${opportunityId}`);
     return { success: true, data: { id: task.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function updateTaskAction(
@@ -62,22 +54,14 @@ export async function updateTaskAction(
     };
 
     const parsed = updateTaskSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new TaskService(supabase);
     await service.update(id, agencyId, parsed.data);
 
     revalidatePath(`/opportunities/${opportunityId}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 /**
@@ -99,22 +83,14 @@ export async function completeTaskAction(
     };
 
     const parsed = completeTaskSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new TaskService(supabase);
     await service.complete(id, agencyId, parsed.data);
 
     revalidatePath(`/opportunities/${opportunityId}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function cancelTaskAction(
@@ -127,7 +103,5 @@ export async function cancelTaskAction(
     await service.cancel(id, agencyId);
     revalidatePath(`/opportunities/${opportunityId}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }

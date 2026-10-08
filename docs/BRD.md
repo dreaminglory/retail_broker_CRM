@@ -177,6 +177,15 @@ See `docs/business-description.md` for the full founding brief.
 | FR-OPP-14 | Link to source inquiry (immutable reference) | ✅ Done |
 | FR-OPP-15 | Expected value and currency fields | ✅ Done |
 
+### FR-SET: Agency Settings & Localization
+| Req ID | Description | Status |
+|---|---|---|
+| FR-SET-01 | Agency specific settings jsonb column | ?? Done |
+| FR-SET-02 | Default Timezone for all date bounds (`Europe/Sofia` by default) | ?? Done |
+| FR-SET-03 | Default Currency (`EUR`) | ?? Done |
+| FR-SET-04 | Default user profile locale (`bg` for Bulgarian, `en` fallback) | ?? Done |
+| FR-SET-05 | Full system localization (Bulgarian) using `next-intl` | ?? Done |
+
 ### FR-TSK: Tasks & Next Actions ✅ Sprint 1 & 2
 
 | ID | Requirement | Status |

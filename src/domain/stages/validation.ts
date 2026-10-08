@@ -15,8 +15,8 @@ export const createStageSchema = z
   .object({
     name: z
       .string()
-      .min(1, 'Stage name is required')
-      .max(100, 'Stage name must be 100 characters or fewer'),
+      .min(1, 'validation.name_required')
+      .max(100, 'validation.name_too_long'),
     sort_order: z.number().int().nonnegative().optional(),
     is_terminal: z.boolean().optional().default(false),
     terminal_type: terminalTypeSchema,
@@ -31,7 +31,7 @@ export const createStageSchema = z
     },
     {
       message:
-        'Terminal stages must have a terminal type (won/lost/nurture); non-terminal stages must not.',
+        'validation.invalid_terminal_type',
       path: ['terminal_type'],
     }
   );
@@ -42,8 +42,8 @@ export const updateStageSchema = z
   .object({
     name: z
       .string()
-      .min(1, 'Stage name is required')
-      .max(100, 'Stage name must be 100 characters or fewer')
+      .min(1, 'validation.name_required')
+      .max(100, 'validation.name_too_long')
       .optional(),
     is_terminal: z.boolean().optional(),
     terminal_type: terminalTypeSchema,
@@ -57,7 +57,7 @@ export const updateStageSchema = z
     },
     {
       message:
-        'Terminal stages must have a terminal type; non-terminal stages must not.',
+        'validation.invalid_terminal_type',
       path: ['terminal_type'],
     }
   );
@@ -72,7 +72,7 @@ export const reorderStagesSchema = z.object({
         sort_order: z.number().int().nonnegative(),
       })
     )
-    .min(1, 'At least one stage is required'),
+    .min(1, 'validation.stages_required'),
 });
 
 // ── Inferred types ────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { AgencyService } from "@/domain/agencies/service";
 
@@ -29,7 +30,9 @@ export async function signupAction(formData: FormData) {
   // 2. If a session is established immediately (email confirmation disabled), create agency.
   if (data.session) {
     try {
-      await AgencyService.createWithOwner(agencyName);
+      const cookieStore = await cookies();
+      const locale = (cookieStore.get('NEXT_LOCALE')?.value === 'en' ? 'en' : 'bg');
+      await AgencyService.createWithOwner(agencyName, locale);
       return { success: true };
     } catch (err: any) {
       return { error: err.message };

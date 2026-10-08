@@ -46,7 +46,7 @@ export const contactMethodTypeSchema = z.enum([
 export const contactMethodSchema = z
   .object({
     type: contactMethodTypeSchema,
-    value: z.string().min(1, 'Value is required').max(200),
+    value: z.string().min(1, 'validation.required').max(200),
     label: z.string().max(50).nullable().default(null),
     is_primary: z.boolean().optional().default(false),
   })
@@ -62,11 +62,11 @@ export const contactMethodSchema = z
       }
     }
     if (data.type === 'email') {
-      const emailResult = z.string().email('Invalid email address').safeParse(data.value);
+      const emailResult = z.string().email('validation.invalid_email').safeParse(data.value);
       if (!emailResult.success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Invalid email address',
+          message: 'validation.invalid_email',
           path: ['value'],
         });
       }
@@ -108,7 +108,7 @@ export const createContactSchema = z
       if (!data.first_name && !data.last_name) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Person must have at least a first or last name',
+          message: 'validation.person_name_required',
           path: ['first_name'],
         });
       }
@@ -117,7 +117,7 @@ export const createContactSchema = z
       if (!data.company_name) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Organization name is required',
+          message: 'validation.org_name_required',
           path: ['company_name'],
         });
       }
@@ -139,7 +139,7 @@ export const updateContactSchema = z
       if (data.first_name === null && data.last_name === null) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Person must have at least a first or last name',
+          message: 'validation.person_name_required',
           path: ['first_name'],
         });
       }
@@ -148,7 +148,7 @@ export const updateContactSchema = z
       if (!data.company_name) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Organization name is required',
+          message: 'validation.org_name_required',
           path: ['company_name'],
         });
       }
@@ -162,7 +162,7 @@ export const updateContactSchema = z
 export const addContactMethodSchema = z
   .object({
     type: contactMethodTypeSchema,
-    value: z.string().min(1, 'Value is required').max(200),
+    value: z.string().min(1, 'validation.required').max(200),
     label: z.string().max(50).nullable().default(null),
     is_primary: z.boolean().optional().default(false),
   })
@@ -180,7 +180,7 @@ export const addContactMethodSchema = z
       if (!z.string().email().safeParse(data.value).success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Invalid email address',
+          message: 'validation.invalid_email',
           path: ['value'],
         });
       }

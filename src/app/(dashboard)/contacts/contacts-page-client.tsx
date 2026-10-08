@@ -23,19 +23,23 @@ import { ContactForm } from "@/components/domain/contacts/contact-form";
 import { createContactAction, searchContactsQuickAction } from "./actions";
 import type { Contact } from "@/domain/contacts/types";
 import { Search, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ContactsPageClientProps {
   contacts: Contact[];
   initialSearch: string;
   initialStatus: string;
   agencyId: string;
+  userRole?: string;
 }
 
 export function ContactsPageClient({
   contacts,
   initialSearch,
   initialStatus,
+  userRole,
 }: ContactsPageClientProps) {
+  const t = useTranslations("ContactsPage");
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -88,16 +92,22 @@ export function ContactsPageClient({
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {contacts.length} contact{contacts.length !== 1 ? "s" : ""}
-            {initialStatus === "archived" ? " (archived)" : ""}
+            {t("count", { count: contacts.length })}
+            {initialStatus === "archived" ? t("archivedBadge") : ""}
             {initialSearch ? ` matching "${initialSearch}"` : ""}
           </p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger
-            render={
+        <div className="flex items-center gap-2">
+          {(userRole === "owner" || userRole === "manager") && (
+            <Button variant="outline" size="sm" onClick={() => router.push("/settings/import/new?type=contact")}>
+              Import
+            </Button>
+          )}
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger
+              render={
               <Button size="sm">
                 <Plus className="mr-1.5 h-4 w-4" />
                 New contact
@@ -106,7 +116,7 @@ export function ContactsPageClient({
           />
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>New contact</DialogTitle>
+              <DialogTitle>{t("newContactTitle")}</DialogTitle>
             </DialogHeader>
             <ContactForm
               createAction={createContactAction}
@@ -118,6 +128,7 @@ export function ContactsPageClient({
             />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
@@ -162,7 +173,7 @@ export function ContactsPageClient({
               </div>
             )}
           </div>
-          <Button type="submit" variant="secondary">Search</Button>
+          <Button type="submit" variant="secondary">{t("searchBtn")}</Button>
         </form>
         <Select
           value={initialStatus}
@@ -172,9 +183,9 @@ export function ContactsPageClient({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="active">{t("filters.active")}</SelectItem>
+            <SelectItem value="archived">{t("filters.archived")}</SelectItem>
+            <SelectItem value="all">{t("filters.all")}</SelectItem>
           </SelectContent>
         </Select>
       </div>

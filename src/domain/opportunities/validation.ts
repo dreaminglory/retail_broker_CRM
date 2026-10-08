@@ -35,25 +35,25 @@ export const participantRoleSchema = z.enum([
 export const createOpportunitySchema = z.object({
   title: z
     .string()
-    .min(1, 'Title is required')
-    .max(300, 'Title must be 300 characters or fewer'),
+    .min(1, 'validation.title_required')
+    .max(300, 'validation.title_too_long'),
   type: opportunityTypeSchema,
-  stage_id: z.string().uuid('Stage is required'),
+  stage_id: z.string().uuid('validation.stage_required'),
   source_id: z.string().uuid().nullable().optional(),
   inquiry_id: z.string().uuid().nullable().optional(),
   primary_contact_id: z.string().uuid().nullable().optional(),
   assigned_to: z.string().uuid().nullable().optional(),
   temperature: temperatureSchema.optional().default('warm'),
   expected_value: z.number().positive().nullable().optional(),
-  currency: z.string().length(3, 'Currency must be a 3-letter code').optional().default('BGN'),
+  currency: z.string().length(3, 'validation.invalid_currency').optional().default('EUR'),
   notes: z.string().max(10000).nullable().optional(),
 });
 
 export const updateOpportunitySchema = z.object({
   title: z
     .string()
-    .min(1, 'Title is required')
-    .max(300, 'Title must be 300 characters or fewer')
+    .min(1, 'validation.title_required')
+    .max(300, 'validation.title_too_long')
     .optional(),
   type: opportunityTypeSchema.optional(),
   stage_id: z.string().uuid().optional(),
@@ -62,7 +62,7 @@ export const updateOpportunitySchema = z.object({
   assigned_to: z.string().uuid().nullable().optional(),
   temperature: temperatureSchema.nullable().optional(),
   expected_value: z.number().positive().nullable().optional(),
-  currency: z.string().length(3, 'Currency must be a 3-letter code').optional(),
+  currency: z.string().length(3, 'validation.invalid_currency').optional(),
   notes: z.string().max(10000).nullable().optional(),
 });
 
@@ -76,7 +76,7 @@ export const closeOpportunitySchema = z
     if (data.outcome === 'lost' && !data.lost_reason) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Reason is required when closing as Lost',
+        message: 'validation.lost_reason_required',
         path: ['lost_reason'],
       });
     }
@@ -95,7 +95,7 @@ export const addParticipantSchema = z
     if (!data.contact_id && !data.user_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Either a contact or a user must be specified',
+        message: 'validation.participant_required',
         path: ['contact_id'],
       });
     }

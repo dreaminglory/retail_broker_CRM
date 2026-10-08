@@ -1,4 +1,6 @@
 "use client";
+import { useTranslations } from "next-intl";
+
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -50,6 +52,7 @@ export function TaskCompleteDialog({
   onOpenChange,
   completeAction,
 }: TaskCompleteDialogProps) {
+  const t = useTranslations('TaskCompleteDialog');
   const router = useRouter();
   const [outcome, setOutcome] = useState("");
   const [showNextTask, setShowNextTask] = useState(false);
@@ -68,7 +71,7 @@ export function TaskCompleteDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!outcome.trim()) {
-      setError("Please describe what happened");
+      setError(t("error.missingOutcome"));
       return;
     }
 
@@ -124,9 +127,9 @@ export function TaskCompleteDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Complete Task</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription className="text-sm">
-            Record what happened with &ldquo;{task?.title}&rdquo;
+            {t("description", { title: task?.title ?? "" })}
           </DialogDescription>
         </DialogHeader>
 
@@ -134,11 +137,11 @@ export function TaskCompleteDialog({
           {/* Required: Outcome */}
           <div className="space-y-2">
             <Label htmlFor="outcome" className="text-sm font-medium">
-              What happened? <span className="text-destructive">*</span>
+              {t("fields.outcome.label")} <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="outcome"
-              placeholder="Spoke with client, they're interested in viewing the property next week..."
+              placeholder={t("fields.outcome.placeholder")}
               value={outcome}
               onChange={(e) => setOutcome(e.target.value)}
               rows={3}
@@ -156,7 +159,7 @@ export function TaskCompleteDialog({
             >
               <span className="flex items-center gap-2">
                 <CalendarPlus className="h-4 w-4 text-primary" />
-                Schedule next action
+                {t("fields.nextTask.schedule")}
               </span>
               {showNextTask ? (
                 <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -168,10 +171,10 @@ export function TaskCompleteDialog({
             {showNextTask && (
               <div className="mt-3 space-y-3 border-t pt-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="next-title" className="text-xs">Task title</Label>
+                  <Label htmlFor="next-title" className="text-xs">{t("fields.nextTask.title")}</Label>
                   <Input
                     id="next-title"
-                    placeholder="Follow up call after viewing"
+                    placeholder={t("fields.nextTask.placeholder")}
                     value={nextTitle}
                     onChange={(e) => setNextTitle(e.target.value)}
                   />
@@ -179,20 +182,20 @@ export function TaskCompleteDialog({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="next-type" className="text-xs">Type</Label>
+                    <Label htmlFor="next-type" className="text-xs">{t("fields.nextTask.type")}</Label>
                     <Select value={nextType} onValueChange={(v) => setNextType(v as TaskType)}>
                       <SelectTrigger id="next-type">
-                        <SelectValue placeholder="Select type" />
+                        <SelectValue placeholder={t("fields.nextTask.typePlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {TASK_TYPES.map((t) => {
-                          const config = TASK_TYPE_CONFIG[t];
+                        {TASK_TYPES.map((taskType) => {
+                          const config = TASK_TYPE_CONFIG[taskType];
                           const Icon = config.icon;
                           return (
-                            <SelectItem key={t} value={t}>
+                            <SelectItem key={taskType} value={taskType}>
                               <span className="flex items-center gap-2">
                                 <Icon className="h-3.5 w-3.5" />
-                                {config.label}
+                                {t(`types.${taskType}` as any)}
                               </span>
                             </SelectItem>
                           );
@@ -201,7 +204,7 @@ export function TaskCompleteDialog({
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="next-due" className="text-xs">Due date</Label>
+                    <Label htmlFor="next-due" className="text-xs">{t("fields.nextTask.dueDate")}</Label>
                     <Input
                       id="next-due"
                       type="datetime-local"
@@ -213,7 +216,7 @@ export function TaskCompleteDialog({
 
                 {brokers.length > 0 && (
                   <div className="space-y-1.5">
-                    <Label htmlFor="next-assigned-to" className="text-xs">Assign to</Label>
+                    <Label htmlFor="next-assigned-to" className="text-xs">{t("fields.nextTask.assignTo")}</Label>
                     <BrokerSelect
                       name="next_assigned_to"
                       brokers={brokers}
@@ -236,7 +239,7 @@ export function TaskCompleteDialog({
               >
                 <span className="flex items-center gap-2">
                   <ArrowRightCircle className="h-4 w-4 text-primary" />
-                  Advance stage
+                  {t("fields.stage.advance")}
                 </span>
                 {showStageChange ? (
                   <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -249,8 +252,8 @@ export function TaskCompleteDialog({
                 <div className="mt-3 border-t pt-3">
                   <Select value={newStageId} onValueChange={(val) => setNewStageId(val ?? "")}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select new stage">
-                        {(val) => activeStages.find((s) => s.id === val)?.name ?? "Select new stage"}
+                      <SelectValue placeholder={t("fields.stage.placeholder")}>
+                        {(val) => activeStages.find((s) => s.id === val)?.name ?? t("fields.stage.placeholder")}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -271,11 +274,9 @@ export function TaskCompleteDialog({
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-              Cancel
-            </Button>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>{t("actions.cancel")}</Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Complete Task"}
+              {loading ? t("actions.saving") : t("actions.submit")}
             </Button>
           </DialogFooter>
         </form>

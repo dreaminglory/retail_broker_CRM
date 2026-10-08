@@ -203,3 +203,9 @@ async getProfilesByIds(userIds: string[]): Promise<Map<string, Profile>> {
 **Fix:** The invitation flow was adjusted: (1) call `inviteUserByEmail()` first to get the user ID, (2) create the `agency_memberships` row with that user ID and `status: 'invited'`. The auth callback activates the membership when the user clicks the link.
 **Prevention:** When using Supabase admin APIs, test the exact sequence of side effects (trigger firing, row creation) before designing the application flow around assumptions.
 
+
+### L-006: Handling Timezones with TZDate vs Supabase Naive Dates
+**Date:** 2026-10-07
+**Context:** Supabase 	imestamp with time zone fields return as ISO strings in UTC. The Today Screen queries required agency-specific "day boundaries" (e.g., what is "today" in Europe/Sofia?).
+**Pattern:** We use @date-fns/tz (TZDate) to compute the start/end of day boundaries relative to the agency's timezone, and convert those boundaries back to UTC ISO strings for querying Supabase.
+**Usage:** The getDayBounds(timezone, date) helper converts a UTC server time into a localized TZDate, computes startOfDay and endOfDay, and returns them as UTC strings for database queries.

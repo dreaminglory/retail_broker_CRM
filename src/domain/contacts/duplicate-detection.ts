@@ -37,6 +37,8 @@ export async function findPotentialDuplicates(
           notes: contact.notes,
           status: contact.status,
           created_by: contact.created_by,
+          external_ref: contact.external_ref ?? null,
+          import_job_id: contact.import_job_id ?? null,
           created_at: contact.created_at,
           updated_at: contact.updated_at,
         },

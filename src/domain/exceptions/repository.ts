@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import type { Profile } from '@/domain/profiles/types';
+import { getStaleThreshold } from '@/lib/time/agency-day';
 
 export interface UnassignedInquiry {
   id: string;
@@ -61,7 +62,7 @@ export class ExceptionsRepository {
     this.profileRepo = new ProfileRepository(db);
   }
 
-  async getDashboardData(agencyId: string): Promise<ExceptionData> {
+  async getDashboardData(agencyId: string, timezone: string = 'Europe/Sofia'): Promise<ExceptionData> {
     // 1. Unassigned Inquiries (status = 'new', assigned_to IS NULL)
     const { data: unassignedInquiriesData, error: err1 } = await this.db
       .from('inquiries')
@@ -118,15 +119,14 @@ export class ExceptionsRepository {
     const atRiskOpportunities: AtRiskOpportunity[] = [];
     const staleOpportunities: StaleOpportunity[] = [];
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const staleThreshold = getStaleThreshold(timezone, 7);
 
     for (const opp of (oppsData || [])) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const stageName = (opp.stages as any)?.name ?? 'Unknown';
-      const oppDate = new Date(opp.updated_at);
+      const oppDate = opp.updated_at; // Comparing ISO strings directly
 
-      if (oppDate < sevenDaysAgo) {
+      if (oppDate < staleThreshold) {
         staleOpportunities.push({
           id: opp.id,
           title: opp.title,

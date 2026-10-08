@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Contact } from "@/domain/contacts/types";
@@ -20,15 +21,17 @@ function getInitials(name: string): string {
 }
 
 export function ContactListTable({ contacts }: ContactListTableProps) {
+  const t = useTranslations("ContactListTable");
+
   if (contacts.length === 0) {
     return (
       <div className="rounded-lg border border-dashed py-16 text-center">
         <User className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
         <p className="text-sm font-medium text-muted-foreground">
-          No contacts yet
+          {t("emptyTitle")}
         </p>
         <p className="mt-1 text-xs text-muted-foreground/70">
-          Create your first contact to get started.
+          {t("emptyDescription")}
         </p>
       </div>
     );
@@ -44,6 +47,7 @@ export function ContactListTable({ contacts }: ContactListTableProps) {
 }
 
 function ContactRow({ contact }: { contact: Contact }) {
+  const t = useTranslations("ContactListTable");
   const initials = getInitials(contact.display_name);
   const isPerson = contact.type === "person";
 
@@ -70,12 +74,12 @@ function ContactRow({ contact }: { contact: Contact }) {
             ) : (
               <Building2 className="h-2.5 w-2.5" />
             )}
-            {isPerson ? "Person" : "Org"}
+            {isPerson ? t("typePerson") : t("typeOrg")}
           </Badge>
           {contact.status === "archived" && (
             <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 py-0 opacity-60">
               <Archive className="h-2.5 w-2.5 mr-0.5" />
-              Archived
+              {t("archived")}
             </Badge>
           )}
         </div>

@@ -1,9 +1,9 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { LeadSourceService } from '@/domain/lead-sources/service';
 import { createLeadSourceSchema, updateLeadSourceSchema } from '@/domain/lead-sources/validation';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
 export type { ActionResult };
 
@@ -23,22 +23,14 @@ export async function createLeadSourceAction(
     };
 
     const parsed = createLeadSourceSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new LeadSourceService(supabase);
     await service.create(agencyId, parsed.data);
 
     revalidatePath('/settings/lead-sources');
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function updateLeadSourceAction(
@@ -57,22 +49,14 @@ export async function updateLeadSourceAction(
     };
 
     const parsed = updateLeadSourceSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new LeadSourceService(supabase);
     await service.update(id, agencyId, parsed.data);
 
     revalidatePath('/settings/lead-sources');
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function deactivateLeadSourceAction(id: string): Promise<ActionResult> {
@@ -82,7 +66,5 @@ export async function deactivateLeadSourceAction(id: string): Promise<ActionResu
     await service.deactivate(id, agencyId);
     revalidatePath('/settings/lead-sources');
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }

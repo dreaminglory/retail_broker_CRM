@@ -8,6 +8,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Task, CreateTaskInput, CompleteTaskInput } from './types';
+import { getDayBounds, getUpcomingRange } from '@/lib/time/agency-day';
 
 export interface TaskListOptions {
   opportunityId?: string;
@@ -125,10 +126,8 @@ export class TaskRepository {
   /**
    * Tasks due today: due_at is between start and end of today.
    */
-  async findDueToday(agencyId: string, assignedTo?: string): Promise<Task[]> {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+  async findDueToday(agencyId: string, assignedTo?: string, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
+    const { start: startOfDay, end: endOfDay } = getDayBounds(timezone);
 
     let query = this.db
       .from('tasks')
@@ -158,10 +157,8 @@ export class TaskRepository {
   /**
    * Upcoming tasks: due in the next N days (default 3), excluding today.
    */
-  async findUpcoming(agencyId: string, assignedTo?: string, days: number = 3): Promise<Task[]> {
-    const today = new Date();
-    const startOfTomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
-    const endOfWindow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1 + days).toISOString();
+  async findUpcoming(agencyId: string, assignedTo?: string, days: number = 3, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
+    const { start: startOfTomorrow, end: endOfWindow } = getUpcomingRange(timezone, days);
 
     let query = this.db
       .from('tasks')

@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { OpportunityService } from '@/domain/opportunities/service';
@@ -9,7 +9,8 @@ import {
   closeOpportunitySchema,
   addParticipantSchema,
 } from '@/domain/opportunities/validation';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { getAgencySettings } from '@/domain/agencies/settings';
 
 export type { ActionResult };
 
@@ -22,6 +23,8 @@ export async function createOpportunityAction(
   try {
     const { supabase, userId, agencyId } = await getAuthContext();
 
+    const settings = await getAgencySettings(agencyId);
+
     const raw = {
       title: formData.get('title'),
       type: formData.get('type'),
@@ -32,27 +35,19 @@ export async function createOpportunityAction(
       assigned_to: formData.get('assigned_to') === 'none' ? null : (formData.get('assigned_to') || null),
       temperature: formData.get('temperature') || undefined,
       expected_value: formData.get('expected_value') ? Number(formData.get('expected_value')) : null,
-      currency: formData.get('currency') || undefined,
+      currency: formData.get('currency') || settings.default_currency,
       notes: formData.get('notes') || null,
     };
 
     const parsed = createOpportunitySchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new OpportunityService(supabase);
     const opportunity = await service.create(agencyId, userId, parsed.data);
 
     revalidatePath('/opportunities');
     return { success: true, data: { id: opportunity.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function updateOpportunityAction(
@@ -63,27 +58,24 @@ export async function updateOpportunityAction(
   try {
     const { supabase, agencyId } = await getAuthContext();
 
+    const settings = await getAgencySettings(agencyId);
+
     const raw = {
-      title: formData.get('title') ?? undefined,
-      type: formData.get('type') ?? undefined,
-      stage_id: formData.get('stage_id') ?? undefined,
-      source_id: formData.has('source_id') ? (formData.get('source_id') === 'none' ? null : formData.get('source_id')) : undefined,
-      primary_contact_id: formData.has('primary_contact_id') ? (formData.get('primary_contact_id') === 'none' ? null : formData.get('primary_contact_id')) : undefined,
-      assigned_to: formData.has('assigned_to') ? (formData.get('assigned_to') === 'none' ? null : formData.get('assigned_to')) : undefined,
+      title: formData.get('title'),
+      type: formData.get('type'),
+      stage_id: formData.get('stage_id'),
+      source_id: formData.get('source_id') === 'none' ? null : (formData.get('source_id') || null),
+      inquiry_id: formData.get('inquiry_id') === 'none' ? null : (formData.get('inquiry_id') || null),
+      primary_contact_id: formData.get('primary_contact_id') === 'none' ? null : (formData.get('primary_contact_id') || null),
+      assigned_to: formData.get('assigned_to') === 'none' ? null : (formData.get('assigned_to') || null),
       temperature: formData.get('temperature') || undefined,
-      expected_value: formData.get('expected_value') ? Number(formData.get('expected_value')) : undefined,
-      currency: formData.get('currency') || undefined,
-      notes: formData.get('notes') !== null ? (formData.get('notes') || null) : undefined,
+      expected_value: formData.get('expected_value') ? Number(formData.get('expected_value')) : null,
+      currency: formData.get('currency') || settings.default_currency,
+      notes: formData.get('notes') || null,
     };
 
     const parsed = updateOpportunitySchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new OpportunityService(supabase);
     await service.update(id, agencyId, parsed.data);
@@ -91,9 +83,7 @@ export async function updateOpportunityAction(
     revalidatePath('/opportunities');
     revalidatePath(`/opportunities/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 /** Changes only the stage — thin wrapper used by stage-select dropdowns. */
@@ -108,9 +98,7 @@ export async function changeOpportunityStageAction(
     revalidatePath('/opportunities');
     revalidatePath(`/opportunities/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function closeOpportunityAction(
@@ -127,13 +115,7 @@ export async function closeOpportunityAction(
     };
 
     const parsed = closeOpportunitySchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new OpportunityService(supabase);
     await service.close(id, agencyId, parsed.data);
@@ -141,9 +123,7 @@ export async function closeOpportunityAction(
     revalidatePath('/opportunities');
     revalidatePath(`/opportunities/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function reactivateOpportunityAction(id: string): Promise<ActionResult> {
@@ -154,9 +134,7 @@ export async function reactivateOpportunityAction(id: string): Promise<ActionRes
     revalidatePath('/opportunities');
     revalidatePath(`/opportunities/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 // ── Participant actions ───────────────────────────────────────────────────────
@@ -177,22 +155,14 @@ export async function addParticipantAction(
     };
 
     const parsed = addParticipantSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new OpportunityService(supabase);
     const participant = await service.addParticipant(opportunityId, agencyId, parsed.data);
 
     revalidatePath(`/opportunities/${opportunityId}`);
     return { success: true, data: { id: participant.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function removeParticipantAction(
@@ -205,9 +175,7 @@ export async function removeParticipantAction(
     await service.removeParticipant(id, agencyId);
     revalidatePath(`/opportunities/${opportunityId}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function searchOpportunitiesQuickAction(search: string) {

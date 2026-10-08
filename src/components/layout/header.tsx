@@ -8,6 +8,7 @@ import Link from "next/link";
 import { CommandPalette } from "@/components/domain/search/command-palette";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTranslations } from "next-intl";
+import { MobileSidebar } from "./sidebar";
 
 interface UserInfo {
   email: string;
@@ -15,7 +16,11 @@ interface UserInfo {
   agencyName: string;
 }
 
-export function Header() {
+interface HeaderProps {
+  userRole?: string;
+}
+
+export function Header({ userRole = "broker" }: HeaderProps) {
   const router = useRouter();
   const t = useTranslations("header");
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -58,9 +63,11 @@ export function Header() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+      <MobileSidebar userRole={userRole} />
+      
       {/* Agency name */}
-      <div className="flex-1">
+      <div className="flex-1 hidden md:flex">
         <h2 className="text-sm font-semibold text-foreground">
           {userInfo?.agencyName ?? t("loading")}
         </h2>

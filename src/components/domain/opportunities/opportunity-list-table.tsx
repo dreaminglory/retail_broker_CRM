@@ -43,7 +43,7 @@ export function OpportunityListTable({ opportunities, stages }: OpportunityListT
 function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stage?: Stage }) {
   const formatter = new Intl.NumberFormat("bg-BG", {
     style: "currency",
-    currency: opportunity.currency || "BGN",
+    currency: opportunity.currency || "EUR",
     maximumFractionDigits: 0,
   });
 

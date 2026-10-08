@@ -79,7 +79,7 @@ export function OpportunityDetailClient({
   
   const formatter = new Intl.NumberFormat("bg-BG", {
     style: "currency",
-    currency: opportunity.currency || "BGN",
+    currency: opportunity.currency || "EUR",
     maximumFractionDigits: 0,
   });
 

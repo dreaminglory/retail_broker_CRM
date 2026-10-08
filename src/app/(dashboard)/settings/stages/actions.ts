@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { StageService } from '@/domain/stages/service';
@@ -7,7 +7,7 @@ import {
   updateStageSchema,
   reorderStagesSchema,
 } from '@/domain/stages/validation';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 import type { ReorderStagesInput } from '@/domain/stages/validation';
 
 export type { ActionResult };
@@ -30,22 +30,14 @@ export async function createStageAction(
     };
 
     const parsed = createStageSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new StageService(supabase);
     await service.create(agencyId, parsed.data);
 
     revalidatePath(REVALIDATE_PATH);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
@@ -70,22 +62,14 @@ export async function updateStageAction(
     };
 
     const parsed = updateStageSchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new StageService(supabase);
     await service.update(id, agencyId, parsed.data);
 
     revalidatePath(REVALIDATE_PATH);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 // ── Reorder ───────────────────────────────────────────────────────────────────
@@ -100,18 +84,14 @@ export async function reorderStagesAction(
     const { supabase, agencyId } = await getAuthContext();
 
     const parsed = reorderStagesSchema.safeParse({ stages });
-    if (!parsed.success) {
-      return { success: false, error: 'Invalid reorder payload' };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new StageService(supabase);
     await service.reorder(agencyId, parsed.data);
 
     revalidatePath(REVALIDATE_PATH);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
@@ -124,9 +104,7 @@ export async function deleteStageAction(id: string): Promise<ActionResult> {
 
     revalidatePath(REVALIDATE_PATH);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 // ── Get opportunity count (for pre-delete UI feedback) ───────────────────────
@@ -139,7 +117,5 @@ export async function getStageOpportunityCountAction(
     const service = new StageService(supabase);
     const count = await service.getOpportunityCount(stageId, agencyId);
     return { success: true, data: count };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }

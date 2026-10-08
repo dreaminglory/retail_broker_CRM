@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Inquiry, CreateInquiryInput, UpdateInquiryInput } from './types';
+import { DomainError } from '@/lib/errors';
 
 export interface InquiryListOptions {
   status?: 'new' | 'contacted' | 'converted' | 'dismissed' | 'all';
@@ -81,7 +82,12 @@ export class InquiryRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create inquiry: ${error.message}`);
+    if (error) {
+      if (error.code === '23505') {
+        throw new DomainError('inquiries.externalRefExists', 'External reference already exists');
+      }
+      throw new Error(`Failed to create inquiry: ${error.message}`);
+    }
     return data as Inquiry;
   }
 

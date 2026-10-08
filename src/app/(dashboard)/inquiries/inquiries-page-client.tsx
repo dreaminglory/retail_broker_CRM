@@ -37,10 +37,12 @@ import type { Contact } from "@/domain/contacts/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus, Inbox } from "lucide-react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 
 // ── Dismiss submit button ─────────────────────────────────────────────────────
 
 function DismissSubmitButton() {
+  const t = useTranslations("InquiriesPage");
   const { pending } = useFormStatus();
   return (
     <Button
@@ -57,11 +59,11 @@ function DismissSubmitButton() {
 // ── Status filter options ─────────────────────────────────────────────────────
 
 const STATUS_FILTER_OPTIONS = [
-  { value: "all", label: "All inquiries" },
-  { value: "new", label: "New" },
-  { value: "contacted", label: "Contacted" },
-  { value: "converted", label: "Converted" },
-  { value: "dismissed", label: "Dismissed" },
+  { value: "all", label: "all" },
+  { value: "new", label: "new" },
+  { value: "contacted", label: "contacted" },
+  { value: "converted", label: "converted" },
+  { value: "dismissed", label: "dismissed" },
 ];
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -75,6 +77,7 @@ interface InquiriesPageClientProps {
   initialSearch: string;
   initialStatus: string;
   initialId?: string;
+  userRole?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -88,7 +91,9 @@ export function InquiriesPageClient({
   initialSearch,
   initialStatus,
   initialId,
+  userRole,
 }: InquiriesPageClientProps) {
+  const t = useTranslations("InquiriesPage");
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -160,8 +165,7 @@ export function InquiriesPageClient({
   }
 
   const statusLabel =
-    STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.label ??
-    "All inquiries";
+    t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.label ?? "all"}` as any);
 
   const displayedInquiries = initialId 
     ? inquiries.filter(i => i.id === initialId) 
@@ -172,12 +176,18 @@ export function InquiriesPageClient({
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inquiries</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {inquiries.length} {statusLabel.toLowerCase()}
+            {t("count", { count: inquiries.length, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
             {initialSearch ? ` matching "${initialSearch}"` : ""}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          {(userRole === "owner" || userRole === "manager") && (
+            <Button variant="outline" size="sm" onClick={() => router.push("/settings/import/new?type=inquiry")}>
+              Import
+            </Button>
+          )}
 
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger
@@ -190,7 +200,7 @@ export function InquiriesPageClient({
           />
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Log new inquiry</DialogTitle>
+              <DialogTitle>{t("logInquiryTitle")}</DialogTitle>
             </DialogHeader>
             <InquiryForm
               createAction={createInquiryAction}
@@ -203,6 +213,7 @@ export function InquiriesPageClient({
             />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
@@ -238,7 +249,7 @@ export function InquiriesPageClient({
                       }}
                     >
                       <span className="font-medium">
-                        {inquiry.caller_name || "Unknown Caller"} {inquiry.caller_phone ? `(${inquiry.caller_phone})` : ""}
+                        {inquiry.caller_name || t("unknownCaller")} {inquiry.caller_phone ? `(${inquiry.caller_phone})` : ""}
                       </span>
                       {inquiry.subject && (
                         <span className="text-muted-foreground text-xs mt-0.5 line-clamp-1">
@@ -251,7 +262,7 @@ export function InquiriesPageClient({
               </div>
             )}
           </div>
-          <Button type="submit" variant="secondary">Search</Button>
+          <Button type="submit" variant="secondary">{t("searchBtn")}</Button>
         </form>
 
         <Select value={initialStatus} onValueChange={handleStatusChange}>
@@ -261,7 +272,7 @@ export function InquiriesPageClient({
           <SelectContent>
             {STATUS_FILTER_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={o.value}>
-                {o.label}
+                {t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.label ?? "all"}` as any)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -271,7 +282,7 @@ export function InquiriesPageClient({
       {/* ── List ────────────────────────────────────────────────────────────── */}
       {initialId && (
         <div className="mb-4 flex items-center justify-between rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground border">
-          <p>Showing a single inquiry from your dashboard.</p>
+          <p>{t("singleInquiryLabel")}</p>
           <Button variant="link" className="h-auto p-0" onClick={() => router.push("/inquiries")}>
             View all inquiries
           </Button>
@@ -284,10 +295,10 @@ export function InquiriesPageClient({
           <div className="rounded-lg border border-dashed py-16 text-center">
             <Inbox className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
             <p className="text-sm font-medium text-muted-foreground">
-              {initialId ? "Inquiry not found" : "No inquiries yet"}
+              {initialId ? t("emptyState.notFoundTitle") : t("emptyState.emptyTitle")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground/70">
-              {initialId ? "It may have been deleted or you don't have access." : "Log your first inquiry using the button above."}
+              {initialId ? t("emptyState.notFoundDesc") : t("emptyState.emptyDesc")}
             </p>
           </div>
         ) : (
@@ -313,7 +324,7 @@ export function InquiriesPageClient({
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Dismiss inquiry</DialogTitle>
+            <DialogTitle>{t("dismissModal.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             This is terminal — the inquiry cannot be re-opened after dismissal.
@@ -329,7 +340,7 @@ export function InquiriesPageClient({
               className="space-y-3"
             >
               <div className="space-y-1.5">
-                <Label htmlFor="dismiss-reason">Reason (optional)</Label>
+                <Label htmlFor="dismiss-reason">{t("dismissModal.reasonLabel")}</Label>
                 <Textarea
                   id="dismiss-reason"
                   name="dismissed_reason"

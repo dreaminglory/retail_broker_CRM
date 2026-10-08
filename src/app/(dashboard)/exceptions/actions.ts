@@ -5,6 +5,8 @@ import { ExceptionsRepository } from "@/domain/exceptions/repository";
 import type { ExceptionData } from "@/domain/exceptions/repository";
 import { revalidatePath } from "next/cache";
 
+import { getAgencySettings } from "@/domain/agencies/settings";
+
 /** Gets all exception data for the dashboard. Requires manager/owner role. */
 export async function getExceptionDataAction(): Promise<ExceptionData | null> {
   const supabase = await createSupabaseServer();
@@ -22,8 +24,9 @@ export async function getExceptionDataAction(): Promise<ExceptionData | null> {
     return null; // Unauthorized
   }
 
+  const settings = await getAgencySettings(membership.agency_id);
   const repo = new ExceptionsRepository(supabase);
-  return repo.getDashboardData(membership.agency_id);
+  return repo.getDashboardData(membership.agency_id, settings.timezone);
 }
 
 export async function reassignInquiryAction(inquiryId: string, assignedTo: string) {

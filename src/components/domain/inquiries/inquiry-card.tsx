@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Inquiry, InquiryStatus } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
+import Link from "next/link";
 import {
   Phone,
   Mail,
@@ -118,6 +119,13 @@ export function InquiryCard({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {inquiry.import_job_id && (
+            <Link href="/settings/import">
+              <Badge variant="outline" className="text-[10px] uppercase font-semibold text-muted-foreground border-muted-foreground/30 hover:bg-muted" title="Imported from CSV">
+                Imported
+              </Badge>
+            </Link>
+          )}
           <Badge
             variant="secondary"
             className={`text-[11px] font-medium px-2 py-0.5 ${statusCfg.className}`}

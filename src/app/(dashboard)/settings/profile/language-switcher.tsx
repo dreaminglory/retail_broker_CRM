@@ -39,7 +39,7 @@ export function LanguageSwitcher({ currentLocale, bgEnabled }: LanguageSwitcherP
     <div className="space-y-2 mt-6">
       <Label htmlFor="locale">Language</Label>
       <Select
-        defaultValue={currentLocale}
+        value={currentLocale}
         onValueChange={onChange}
         disabled={isPending}
       >

@@ -267,6 +267,24 @@
 **Rationale:** No external service needed at pilot scale. PostgreSQL's built-in capabilities are sufficient for hundreds to low thousands of records per agency.
 **Consequences:** Added `search_vector tsvector` columns to `contacts`, `opportunities`, and `inquiries`. Contact search vectors include contact method values (phone/email) by joining `contact_methods` in the trigger. A cascading trigger on `contact_methods` updates the parent contact's search vector when methods change. Backfill done via `UPDATE ... SET id = id` to fire the triggers on existing rows.
 
+### AD-037: Currency Standardization to EUR
+**Date:** 2026-10-07 | **Status:** Accepted
+
+**Context:** Bulgaria adopted the Euro on 2026-01-01. Historical deals used BGN.
+**Decision:** EUR is the default currency across the CRM. BGN is deprecated but historical records remain intact. `PriceDisplay` component is introduced to format currency correctly according to `bg-BG` locale and EUR.
+**Rationale:** Standardizing on EUR simplifies reporting and aligns with the national currency shift.
+**Consequences:** The default currency in `agencies.settings` and `opportunities.currency` is set to EUR.
+
+---
+
+### AD-038: Opportunity Localization Terminology
+**Date:** 2026-10-07 | **Status:** Accepted
+
+**Context:** "Opportunity" translates to various terms in Bulgarian.
+**Decision:** We use "Сделка" (Deal) as the localized term for Opportunity, rather than "Възможност".
+**Rationale:** "Сделка" is the colloquial industry standard term in the Bulgarian real estate market.
+**Consequences:** UI labels and seeded pipeline stages have been updated to reflect the Bulgarian terminology.
+
 ---
 
 _New decisions will be added as they are made during development._

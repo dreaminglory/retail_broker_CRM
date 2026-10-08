@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail } from "lucide-react";
+import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
           ? <CheckCircle2 className="h-4 w-4 text-green-500" />
           : <ClipboardList className="h-4 w-4 text-orange-500" />;
       case 'audit':
+        if (entry.data.action === 'created') return <Plus className="h-4 w-4 text-emerald-500" />;
         if (entry.data.action === 'stage_change') return <ArrowRightLeft className="h-4 w-4 text-purple-500" />;
         if (entry.data.action === 'assignment_change') return <UserCircle2 className="h-4 w-4 text-indigo-500" />;
         return <Flag className="h-4 w-4 text-gray-500" />;
@@ -58,6 +59,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                   entry.isCompletionEvent ? "Task Completed" : "Task Created"
                 )}
                 {entry.type === 'audit' && (
+                  entry.data.action === 'created' ? "Created" :
                   entry.data.action === 'stage_change' ? "Stage Changed" :
                   entry.data.action === 'assignment_change' ? "Assignment Changed" :
                   entry.data.action === 'status_change' ? "Status Changed" : "System Update"
@@ -92,16 +94,16 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
               <div className="text-muted-foreground space-y-1">
                 {entry.data.action === 'stage_change' && (
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{entry.data.metadata?.old_stage_name || entry.data.old_value}</Badge>
+                    <Badge variant="outline">{String(entry.data.metadata?.old_stage_name || entry.data.old_value || '')}</Badge>
                     <ArrowRightLeft className="h-3 w-3" />
-                    <Badge variant="default">{entry.data.metadata?.new_stage_name || entry.data.new_value}</Badge>
+                    <Badge variant="default">{String(entry.data.metadata?.new_stage_name || entry.data.new_value || '')}</Badge>
                   </div>
                 )}
                 {entry.data.action === 'assignment_change' && (
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{entry.data.metadata?.old_user_email || 'Unassigned'}</Badge>
+                    <Badge variant="outline">{String(entry.data.metadata?.old_user_email || 'Unassigned')}</Badge>
                     <ArrowRightLeft className="h-3 w-3" />
-                    <Badge variant="default">{entry.data.metadata?.new_user_email || 'Unassigned'}</Badge>
+                    <Badge variant="default">{String(entry.data.metadata?.new_user_email || 'Unassigned')}</Badge>
                   </div>
                 )}
                 {entry.data.action === 'status_change' && (
@@ -109,6 +111,15 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                     <Badge variant="outline">{entry.data.old_value}</Badge>
                     <ArrowRightLeft className="h-3 w-3" />
                     <Badge variant="default">{entry.data.new_value}</Badge>
+                  </div>
+                )}
+                {entry.data.action === 'created' && (
+                  <div className="text-sm">
+                    {entry.data.metadata?.import_job_id ? (
+                      <span>Imported from file: <strong>{String(entry.data.metadata.file_name || 'CSV File')}</strong></span>
+                    ) : (
+                      <span>Manually created</span>
+                    )}
                   </div>
                 )}
               </div>

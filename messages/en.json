@@ -93,5 +93,282 @@
       "submit": "Complete setup",
       "loading": "Creating agency..."
     }
+  },
+  "Today": {
+    "title": "Today",
+    "hasWorkSubtitle": "You have {count} item(s) that need attention",
+    "allCaughtUpSubtitle": "All caught up � no pending work right now!",
+    "overdueCount": "{count} overdue",
+    "newInquiriesCount": "{count} new inquiry",
+    "dueTodayCount": "{count} due today",
+    "atRiskCount": "{count} at risk",
+    "sections": {
+      "overdue": "Overdue",
+      "newInquiries": "New Inquiries",
+      "dueToday": "Due Today",
+      "comingUp": "Coming Up",
+      "atRisk": "At Risk � No Next Action"
+    },
+    "unknownCaller": "Unknown caller",
+    "updated": "Updated",
+    "emptyState": {
+      "title": "All caught up!",
+      "description": "You have no overdue tasks, pending work, or at-risk opportunities. Great job staying on top of things.",
+      "viewContacts": "View Contacts",
+      "viewOpportunities": "View Opportunities"
+    }
+  },
+  "TaskCard": {
+    "types": {
+      "call": "Call",
+      "email": "Email",
+      "viewing": "Viewing",
+      "meeting": "Meeting",
+      "follow_up": "Follow-up",
+      "other": "Other"
+    },
+    "overdueDuration": "{duration} overdue",
+    "dueTodayTime": "Today at {time}",
+    "dueDateTime": "{date}",
+    "noDueDate": "No due date",
+    "complete": "Complete"
+  },
+  "TaskCompleteDialog": {
+    "title": "Complete Task",
+    "description": "Record what happened with �{title}�",
+    "error": {
+      "missingOutcome": "Please describe what happened"
+    },
+    "fields": {
+      "outcome": {
+        "label": "What happened?",
+        "placeholder": "Spoke with client, they're interested in viewing the property next week..."
+      },
+      "nextTask": {
+        "schedule": "Schedule next action",
+        "title": "Task title",
+        "placeholder": "Follow up call after viewing",
+        "type": "Type",
+        "typePlaceholder": "Select type",
+        "dueDate": "Due date",
+        "assignTo": "Assign to"
+      },
+      "stage": {
+        "advance": "Advance stage",
+        "placeholder": "Select new stage"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "submit": "Complete Task"
+    },
+    "types": {
+      "call": "Call",
+      "email": "Email",
+      "viewing": "Viewing",
+      "meeting": "Meeting",
+      "follow_up": "Follow-up",
+      "other": "Other"
+    }
+  },
+  "ContactListTable": {
+    "emptyTitle": "No contacts yet",
+    "emptyDescription": "Create your first contact to get started.",
+    "typePerson": "Person",
+    "typeOrg": "Org",
+    "archived": "Archived"
+  },
+  "DuplicateSuggestionModal": {
+    "title": "Potential Duplicates Found",
+    "description": "We found {count} existing contact(s) that might be the same person or organization.",
+    "organization": "Organization",
+    "matches": {
+      "phone": "Phone matches",
+      "email": "Email matches",
+      "name": "Name is similar"
+    },
+    "viewProfile": "View Profile",
+    "actions": {
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "createAnyway": "None of these � Create anyway"
+    }
+  },
+  "LinkedOpportunities": {
+    "emptyState": "Opportunity linking will appear here once opportunities are created."
+  },
+  "Enums": {
+    "opportunityStatus": {
+      "won": "Won",
+      "lost": "Lost",
+      "nurture": "Nurture",
+      "archived": "Archived",
+      "active": "Active"
+    },
+    "opportunityTemperature": {
+      "hot": "Hot",
+      "warm": "Warm",
+      "cold": "Cold"
+    },
+    "contactMethod": {
+      "phone": "Phone",
+      "email": "Email",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "other": "Other"
+    }
+  },
+  "ContactMethodList": {
+    "emptyState": "No contact methods added yet.",
+    "addMethod": "Add contact method",
+    "primary": "Primary",
+    "setPrimary": "Set as primary",
+    "removeMethod": "Remove contact method",
+    "adding": "Adding�",
+    "fields": {
+      "type": {
+        "label": "Type"
+      },
+      "value": {
+        "label": "Value",
+        "emailPlaceholder": "email@example.com",
+        "phonePlaceholder": "+359 888 123 456",
+        "placeholder": "Value"
+      },
+      "label": {
+        "label": "Label (optional)",
+        "placeholder": "e.g. mobile, work"
+      }
+    }
+  },
+  "MergeDialog": {
+    "trigger": "Merge",
+    "title": "Merge Contact",
+    "description": "Merge <name>{name}</name> into another contact. This contact will be archived.",
+    "searchLabel": "Search contacts",
+    "searchPlaceholder": "Type a name to search (e.g. Dimitar Dimitrov)...",
+    "select": "Select",
+    "noResults": "No other contacts found.",
+    "loadingPreview": "Loading preview...",
+    "previewTitle": "Merge Preview",
+    "preview": {
+      "opportunities": "{count} opportunities will be transferred",
+      "inquiries": "{count} inquiries will be transferred",
+      "tasks": "{count} tasks will be transferred",
+      "methods": "{count} unique contact methods will be transferred"
+    },
+    "back": "Back",
+    "merging": "Merging...",
+    "mergeInto": "Merge into {name}"
+  },
+  "ContactForm": {
+    "fields": {
+      "type": {
+        "label": "Type",
+        "person": "Person",
+        "organization": "Organization"
+      },
+      "firstName": {
+        "label": "First name",
+        "placeholder": "First name"
+      },
+      "lastName": {
+        "label": "Last name",
+        "placeholder": "Last name"
+      },
+      "companyName": {
+        "label": "Company name",
+        "placeholder": "e.g. ACME Real Estate Ltd."
+      },
+      "companyOptional": {
+        "label": "Company (optional)",
+        "placeholder": "Company affiliation"
+      },
+      "notes": {
+        "label": "Notes (optional)",
+        "placeholder": "Any relevant notes about this contact..."
+      }
+    },
+    "methodsTitle": "Contact methods",
+    "addMethod": "Add",
+    "primary": "Primary",
+    "setPrimary": "Set primary",
+    "removeMethod": "Remove contact method",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "createContact": "Create contact"
+  },
+  "ContactsPage": {
+    "title": "Contacts",
+    "count": "{count} contact(s)",
+    "archivedBadge": " (archived)",
+    "matchingSearch": " matching \"{search}\"",
+    "importBtn": "Import",
+    "newContactBtn": "New contact",
+    "newContactTitle": "New contact",
+    "searchPlaceholder": "Search by name...",
+    "searchBtn": "Search",
+    "filters": {
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All"
+    }
+  },
+  "ContactDetailClient": {
+    "editBtn": "Edit",
+    "editTitle": "Edit contact",
+    "archiveBtn": "Archive",
+    "archiveTitle": "Archive contact?",
+    "archiveDescription": "<name>{name}</name> will be archived and hidden from the active contacts list. Linked opportunities are preserved. You can restore the contact later.",
+    "cancelBtn": "Cancel",
+    "archivingBtn": "Archiving..."
+  },
+  "ContactActivity": {
+    "errors": {
+      "create": "Failed to create note",
+      "update": "Failed to update note",
+      "delete": "Failed to delete note"
+    },
+    "placeholder": "Write your note here...",
+    "cancelBtn": "Cancel",
+    "savingBtn": "Saving...",
+    "saveBtn": "Save note",
+    "addNoteBtn": "Add a note..."
+  },
+  "InquiriesPage": {
+    "title": "Inquiries",
+    "count": "{count} {statusLabel}",
+    "matchingSearch": " matching \"{search}\"",
+    "importBtn": "Import",
+    "logInquiryBtn": "Log inquiry",
+    "logInquiryTitle": "Log new inquiry",
+    "searchPlaceholder": "Search by caller name, phone, subject...",
+    "unknownCaller": "Unknown Caller",
+    "searchBtn": "Search",
+    "singleInquiryLabel": "Showing a single inquiry from your dashboard.",
+    "viewAllBtn": "View all inquiries",
+    "emptyState": {
+      "notFoundTitle": "Inquiry not found",
+      "emptyTitle": "No inquiries yet",
+      "notFoundDesc": "It may have been deleted or you don't have access.",
+      "emptyDesc": "Log your first inquiry using the button above."
+    },
+    "dismissModal": {
+      "title": "Dismiss inquiry",
+      "warning": "This is terminal � the inquiry cannot be re-opened after dismissal.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "e.g. Wrong number, spam, client found elsewhere...",
+      "cancelBtn": "Cancel",
+      "dismissingBtn": "Dismissing...",
+      "submitBtn": "Dismiss inquiry"
+    },
+    "filters": {
+      "all": "All inquiries",
+      "new": "New",
+      "contacted": "Contacted",
+      "converted": "Converted",
+      "dismissed": "Dismissed"
+    }
   }
 }

@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, ArrowRight, Mail, Phone } from 'lucide-react';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
+import { useTranslations } from "next-intl";
 import Link from 'next/link';
 
 interface DuplicateSuggestionModalProps {
@@ -30,16 +31,18 @@ export function DuplicateSuggestionModal({
   onProceedAnyway,
   isSubmitting = false,
 }: DuplicateSuggestionModalProps) {
+  const t = useTranslations("DuplicateSuggestionModal");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertCircle className="w-5 h-5" />
-            Potential Duplicates Found
+            {t("title")}
           </DialogTitle>
           <DialogDescription>
-            We found {duplicates.length} existing {duplicates.length === 1 ? 'contact' : 'contacts'} that might be the same person or organization.
+            {t("description", { count: duplicates.length })}
           </DialogDescription>
         </DialogHeader>
 
@@ -51,7 +54,7 @@ export function DuplicateSuggestionModal({
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium text-lg">{dup.contact.display_name}</h4>
                     {dup.contact.type === 'organization' && (
-                      <Badge variant="secondary">Organization</Badge>
+                      <Badge variant="secondary">{t("organization")}</Badge>
                     )}
                   </div>
 
@@ -59,17 +62,17 @@ export function DuplicateSuggestionModal({
                   <div className="flex flex-wrap gap-2">
                     {dup.match_reasons.includes('phone') && (
                       <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-200">
-                        Phone matches
+                        {t("matches.phone")}
                       </Badge>
                     )}
                     {dup.match_reasons.includes('email') && (
                       <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200">
-                        Email matches
+                        {t("matches.email")}
                       </Badge>
                     )}
                     {dup.match_reasons.includes('name') && (
                       <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">
-                        Name is similar
+                        {t("matches.name")}
                       </Badge>
                     )}
                   </div>
@@ -93,7 +96,7 @@ export function DuplicateSuggestionModal({
 
                 <div className="flex-shrink-0">
                   <Button variant="secondary" render={<Link href={`/contacts/${dup.contact.id}`} />} nativeButton={false}>
-                    View Profile <ArrowRight className="w-4 h-4 ml-2" />
+                    {t("viewProfile")} <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </CardContent>
@@ -103,10 +106,10 @@ export function DuplicateSuggestionModal({
 
         <DialogFooter className="sm:justify-center !m-0 !p-0 !border-0 !bg-transparent mt-4 gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("actions.cancel")}
           </Button>
           <Button variant="destructive" onClick={onProceedAnyway} disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'None of these — Create anyway'}
+            {isSubmitting ? t("actions.creating") : t("actions.createAnyway")}
           </Button>
         </DialogFooter>
       </DialogContent>

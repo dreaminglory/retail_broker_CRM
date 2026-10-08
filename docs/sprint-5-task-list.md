@@ -165,60 +165,60 @@
 - **US-O052:** As an owner, only managers and owners can bulk-import data into the agency.
 
 ### Database
-- [ ] Migration `…_create_import_tables.sql`:
-  - [ ] `import_jobs` (agency_id, status lifecycle, file meta, sha256, mapping, options, counters)
-  - [ ] `import_rows` (agency_id, raw, normalized, status, errors, match_reason, matched/entity ids)
-  - [ ] `contacts.import_job_id`, `contacts.external_ref` + partial unique index
-  - [ ] RLS (ENABLE + FORCE) with owner/manager-only policies on both tables
-  - [ ] `updated_at` trigger on `import_jobs`
-- [ ] Migration `…_import_commit_contacts_fn.sql`: `import_commit_contacts(job, limit)` SECURITY INVOKER, per-row savepoint, re-check, audit row, counters, explicit GRANT
+- [x] Migration `…_create_import_tables.sql`:
+  - [x] `import_jobs` (agency_id, status lifecycle, file meta, sha256, mapping, options, counters)
+  - [x] `import_rows` (agency_id, raw, normalized, status, errors, match_reason, matched/entity ids)
+  - [x] `contacts.import_job_id`, `contacts.external_ref` + partial unique index
+  - [x] RLS (ENABLE + FORCE) with owner/manager-only policies on both tables
+  - [x] `updated_at` trigger on `import_jobs`
+- [x] Migration `…_import_commit_contacts_fn.sql`: `import_commit_contacts(job, limit)` SECURITY INVOKER, per-row savepoint, re-check, audit row, counters, explicit GRANT
 
 ### Domain (`src/domain/imports/`)
-- [ ] `types.ts`
-- [ ] `validation.ts` (job, mapping, options, stage-rows schemas; messages = i18n keys)
-- [ ] `csv/header-detection.ts` (BG + EN synonyms)
-- [ ] `csv/row-mapper.ts` (full-name split, organization detection)
-- [ ] `duplicate-classifier.ts` (DB match, in-file match, name-similar warning)
-- [ ] `repository.ts` (all queries agency-scoped, chunked `.in()` lookups)
-- [ ] `service.ts` (createJob, saveMapping, stageRows, validate, commitBatch, getSummary, buildErrorReportCsv)
+- [x] `types.ts`
+- [x] `validation.ts` (job, mapping, options, stage-rows schemas; messages = i18n keys)
+- [x] `csv/header-detection.ts` (BG + EN synonyms)
+- [x] `csv/row-mapper.ts` (full-name split, organization detection)
+- [x] `duplicate-classifier.ts` (DB match, in-file match, name-similar warning)
+- [x] `repository.ts` (all queries agency-scoped, chunked `.in()` lookups)
+- [x] `service.ts` (createJob, saveMapping, stageRows, validate, commitBatch, getSummary, buildErrorReportCsv)
 
 ### Server Actions & routes
-- [ ] `createImportJobAction` (returns previous jobs with the same hash)
-- [ ] `saveImportMappingAction`
-- [ ] `stageImportRowsAction` (≤ 500 rows per call)
-- [ ] `validateImportJobAction`
-- [ ] `commitImportBatchAction`
-- [ ] Route Handler `GET /settings/import/[id]/errors.csv` (UTF-8 BOM)
+- [x] `createImportJobAction` (returns previous jobs with the same hash)
+- [x] `saveImportMappingAction`
+- [x] `stageImportRowsAction` (≤ 500 rows per call)
+- [x] `validateImportJobAction`
+- [x] `commitImportBatchAction`
+- [x] Route Handler `GET /settings/import/[id]/errors.csv` (UTF-8 BOM)
 
 ### UI
-- [ ] Install `papaparse` + `@types/papaparse`
-- [ ] `/settings/import` (history), `/settings/import/new?type=contact`, `/settings/import/[id]`
-- [ ] Settings sidebar "Import" (owner/manager) + "Import" button on Contacts list
-- [ ] `file-drop-zone.tsx` (size check, SHA-256, UTF-8 → windows-1251 fallback, override, preview)
-- [ ] `column-mapping-table.tsx`
-- [ ] `import-options-form.tsx` (skip / update / create)
-- [ ] `validation-summary.tsx` (+ same-file warning)
-- [ ] `import-row-table.tsx` (paged, status filter, errors, matched-contact link)
-- [ ] `import-progress.tsx` (batch loop, resume on reload)
-- [ ] `import-wizard.tsx`, `import-job-list.tsx`, `import-status-badge.tsx`
-- [ ] Contact detail "Imported from…" line; timeline renders `created` audit with import metadata
-- [ ] All new strings via message keys (EN + BG placeholders)
+- [x] Install `papaparse` + `@types/papaparse`
+- [x] `/settings/import` (history), `/settings/import/new?type=contact`, `/settings/import/[id]`
+- [x] Settings sidebar "Import" (owner/manager) + "Import" button on Contacts list
+- [x] `file-drop-zone.tsx` (size check, SHA-256, UTF-8 → windows-1251 fallback, override, preview)
+- [x] `column-mapping-table.tsx`
+- [x] `import-options-form.tsx` (skip / update / create)
+- [x] `validation-summary.tsx` (+ same-file warning)
+- [x] `import-row-table.tsx` (paged, status filter, errors, matched-contact link)
+- [x] `import-progress.tsx` (batch loop, resume on reload)
+- [x] `import-wizard.tsx`, `import-job-list.tsx`, `import-status-badge.tsx`
+- [x] Contact detail "Imported from…" line; timeline renders `created` audit with import metadata
+- [x] All new strings via message keys (EN + BG placeholders)
 
 ### Tests
-- [ ] pgTAP `060-import-rls.sql`
-- [ ] pgTAP `061-import-commit-contacts.sql` (create, re-import skip, bad row isolated)
-- [ ] Vitest `header-detection.test.ts`, `row-mapper.test.ts`, `duplicate-classifier.test.ts`
-- [ ] Fixture CSVs: UTF-8 comma, windows-1251 semicolon, messy phones, in-file duplicates, 5,000 rows
+- [x] pgTAP `060-import-rls.sql`
+- [x] pgTAP `061-import-commit-contacts.sql` (create, re-import skip, bad row isolated)
+- [x] Vitest `header-detection.test.ts`, `row-mapper.test.ts`, `duplicate-classifier.test.ts`
+- [x] Fixture CSVs: UTF-8 comma, windows-1251 semicolon, messy phones, in-file duplicates, 5,000 rows
 
 ### Acceptance criteria
-- [ ] **AC-5.3-1 (PIL-CSV)** UTF-8 and windows-1251, `,` and `;` files import; BG/EN headers auto-map; mapping overridable
-- [ ] **AC-5.3-2** Review shows valid / invalid / duplicate counts, row errors, matched contacts, before any write
-- [ ] **AC-5.3-3 (PAC-11)** Re-importing the same file creates 0 contacts; the UI warns it was imported before
-- [ ] **AC-5.3-4 (PAC-11)** Phones stored E.164; `0888 123 456` matches existing `+359888123456`
-- [ ] **AC-5.3-5** Invalid rows don't block valid ones; the error CSV opens in Excel with correct Cyrillic
-- [ ] **AC-5.3-6** Imported contacts have an audit "created" entry, are searchable, and show their import origin
-- [ ] **AC-5.3-7** Brokers can't see or use import (UI, actions, RLS)
-- [ ] **AC-5.3-8** 5,000 rows import in < 2 min with progress; closing the tab and resuming creates no duplicates
+- [x] **AC-5.3-1 (PIL-CSV)** UTF-8 and windows-1251, `,` and `;` files import; BG/EN headers auto-map; mapping overridable
+- [x] **AC-5.3-2** Review shows valid / invalid / duplicate counts, row errors, matched contacts, before any write
+- [x] **AC-5.3-3 (PAC-11)** Re-importing the same file creates 0 contacts; the UI warns it was imported before
+- [x] **AC-5.3-4 (PAC-11)** Phones stored E.164; `0888 123 456` matches existing `+359888123456`
+- [] **AC-5.3-5** Invalid rows don't block valid ones; the error CSV opens in Excel with correct Cyrillic
+- [x] **AC-5.3-6** Imported contacts have an audit "created" entry, are searchable, and show their import origin
+- [x] **AC-5.3-7** Brokers can't see or use import (UI, actions, RLS)
+- [x] **AC-5.3-8** 5,000 rows import in < 2 min with progress; closing the tab and resuming creates no duplicates
 
 ---
 
@@ -233,43 +233,43 @@
 - **US-B051:** As a broker, imported inquiries assigned to me as "New" appear on my Today screen and link to the matching contact.
 
 ### Database
-- [ ] Pre-check: no duplicate `(agency_id, source_id, external_ref)` in prod
-- [ ] Migration `…_inquiry_import_idempotency.sql` (`inquiries.import_job_id`, unique index `NULLS NOT DISTINCT`)
-- [ ] Migration `…_import_commit_inquiries_fn.sql` (contact link/create, `ON CONFLICT DO NOTHING`, `raw_payload` with import provenance)
-- [ ] **(Should)** Migration `…_import_revert_fn.sql` (7-day window, untouched/unreferenced only)
+- [x] Pre-check: no duplicate `(agency_id, source_id, external_ref)` in prod
+- [x] Migration `…_inquiry_import_idempotency.sql` (`inquiries.import_job_id`, unique index `NULLS NOT DISTINCT`)
+- [x] Migration `…_import_commit_inquiries_fn.sql` (contact link/create, `ON CONFLICT DO NOTHING`, `raw_payload` with import provenance)
+- [x] **(Should)** Migration `…_import_revert_fn.sql` (7-day window, untouched/unreferenced only)
 
 ### Domain
-- [ ] `InquiryImportField` type; `inquiryMappingSchema`; `inquiryImportOptionsSchema`
-- [ ] `csv/date-parse.ts` (BG formats, agency timezone)
-- [ ] `csv/value-resolvers.ts` (source by name, assignee by email/name, status synonyms)
-- [ ] `ImportService.validate` for inquiries (phone normalization, in-file + DB external_ref dedupe)
-- [ ] **(Should)** `ImportService.revert`
-- [ ] `Inquiry` type: `import_job_id`
-- [ ] Map unique violation → `DomainError('inquiries.externalRefExists')` in manual create
+- [x] `InquiryImportField` type; `inquiryMappingSchema`; `inquiryImportOptionsSchema`
+- [x] `csv/date-parse.ts` (BG formats, agency timezone)
+- [x] `csv/value-resolvers.ts` (source by name, assignee by email/name, status synonyms)
+- [x] `ImportService.validate` for inquiries (phone normalization, in-file + DB external_ref dedupe)
+- [x] **(Should)** `ImportService.revert`
+- [x] `Inquiry` type: `import_job_id`
+- [x] Map unique violation → `DomainError('inquiries.externalRefExists')` in manual create
 
 ### Server Actions & UI
-- [ ] Import actions dispatch on `entity_type`
-- [ ] **(Should)** `revertImportJobAction` + revalidate contacts, inquiries, today, exceptions
-- [ ] Wizard `type=inquiry` + options step (default source, unknown-source policy, default assignee, default status, link/create contacts)
-- [ ] Per-broker "will appear as New" impact preview
-- [ ] "Import" button on Inquiries list (owner/manager)
-- [ ] "Imported" badge on inquiry card/detail, linking to the job
-- [ ] **(Should)** "Revert import" button + confirmation dialog + result summary
-- [ ] Job history shows entity type, file, user, date, counts, status
+- [x] Import actions dispatch on `entity_type`
+- [x] **(Should)** `revertImportJobAction` + revalidate contacts, inquiries, today, exceptions
+- [x] Wizard `type=inquiry` + options step (default source, unknown-source policy, default assignee, default status, link/create contacts)
+- [x] Per-broker "will appear as New" impact preview
+- [x] "Import" button on Inquiries list (owner/manager)
+- [x] "Imported" badge on inquiry card/detail, linking to the job
+- [x] **(Should)** "Revert import" button + confirmation dialog + result summary
+- [x] Job history shows entity type, file, user, date, counts, status
 
 ### Tests
-- [ ] pgTAP `062-import-commit-inquiries.sql`
-- [ ] **(Should)** pgTAP `063-import-revert.sql`
-- [ ] Vitest `date-parse.test.ts` (incl. DST), `value-resolvers.test.ts`
+- [x] pgTAP `062-import-commit-inquiries.sql`
+- [x] **(Should)** pgTAP `063-import-revert.sql`
+- [x] Vitest `date-parse.test.ts` (incl. DST), `value-resolvers.test.ts`
 
 ### Acceptance criteria
-- [ ] **AC-5.4-1 (PAC-01)** Imported inquiries keep source, external ref, original `received_at` and the full original row in `raw_payload`; detail shows import provenance
-- [ ] **AC-5.4-2 (PAC-11)** Re-import with mapped `external_ref` creates 0 new inquiries
-- [ ] **AC-5.4-3** Unknown sources → default or row error per option; unknown assignees → row error
-- [ ] **AC-5.4-4** Link-contacts links by phone/email (visible on the contact timeline); create-missing creates deduplicated contacts
-- [ ] **AC-5.4-5** Per-broker "New" impact is shown before commit
-- [ ] **AC-5.4-6 (Should)** Revert within 7 days deletes only untouched/unreferenced records and lists what was kept
-- [ ] **AC-5.4-7** Manual inquiry with a duplicate external ref for the same source → friendly localized error
+- [x] **AC-5.4-1 (PAC-01)** Imported inquiries keep source, external ref, original `received_at` and the full original row in `raw_payload`; detail shows import provenance
+- [x] **AC-5.4-2 (PAC-11)** Re-import with mapped `external_ref` creates 0 new inquiries
+- [x] **AC-5.4-3** Unknown sources → default or row error per option; unknown assignees → row error
+- [x] **AC-5.4-4** Link-contacts links by phone/email (visible on the contact timeline); create-missing creates deduplicated contacts
+- [x] **AC-5.4-5** Per-broker "New" impact is shown before commit
+- [x] **AC-5.4-6 (Should)** Revert within 7 days deletes only untouched/unreferenced records and lists what was kept
+- [x] **AC-5.4-7** Manual inquiry with a duplicate external ref for the same source → friendly localized error
 
 ---
 
@@ -305,8 +305,8 @@
 - [ ] **(Should)** `translateDefaultNamesAction` (stages + lead sources, exact English defaults only)
 
 ### UI extraction (one commit per area)
-- [ ] Today (+ task-card, task-complete-dialog)
-- [ ] Contacts (list, detail, form, methods, duplicate modal, merge dialog, linked opps, activity, notes)
+- [x] Today (+ task-card, task-complete-dialog)
+- [x] Contacts (list, detail, form, methods, duplicate modal, merge dialog, linked opps, activity, notes)
 - [ ] Inquiries (list, card, form, convert dialog)
 - [ ] Opportunities (list, detail, form, table, participants, stage badge, task list, close dialog)
 - [ ] Activity (timeline, timeline-entry phrases, note card/list)

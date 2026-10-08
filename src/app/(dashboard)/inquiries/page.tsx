@@ -30,7 +30,7 @@ export default async function InquiriesPage({
 
   const { data: membership } = await supabase
     .from("agency_memberships")
-    .select("agency_id")
+    .select("agency_id, role")
     .eq("user_id", user!.id)
     .eq("status", "active")
     .single();
@@ -70,6 +70,7 @@ export default async function InquiriesPage({
         initialSearch={search}
         initialStatus={status}
         initialId={id}
+        userRole={membership?.role}
       />
     </div>
   );

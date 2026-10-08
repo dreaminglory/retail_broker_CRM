@@ -1,3 +1,4 @@
+import { getAgencySettings } from "@/domain/agencies/settings";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import Link from "next/link";
 import {
@@ -37,10 +38,11 @@ export default async function DashboardPage() {
   // Fetch Today counts
   const taskService = new TaskService(supabase);
   const inquiryService = new InquiryService(supabase);
+  const settings = await getAgencySettings(agencyId);
 
   const [overdue, dueToday, atRisk, newInquiries] = await Promise.all([
     taskService.listOverdue(agencyId, user!.id),
-    taskService.listDueToday(agencyId, user!.id),
+    taskService.listDueToday(agencyId, user!.id, settings.timezone),
     taskService.listAtRisk(agencyId, user!.id),
     inquiryService.list(agencyId, { status: "new", assignedTo: user!.id }),
   ]);

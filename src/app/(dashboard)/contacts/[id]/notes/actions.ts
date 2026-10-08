@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { NotesService } from '@/domain/notes/service';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
 export async function createContactNoteAction(
   contactId: string,
@@ -23,9 +23,7 @@ export async function createContactNoteAction(
 
     revalidatePath(`/contacts/${contactId}`);
     return { success: true, data: { id: note.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function updateNoteAction(
@@ -49,9 +47,7 @@ export async function updateNoteAction(
       revalidatePath(pathname);
     }
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function deleteNoteAction(
@@ -67,9 +63,7 @@ export async function deleteNoteAction(
       revalidatePath(pathname);
     }
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function pinNoteAction(
@@ -86,7 +80,5 @@ export async function pinNoteAction(
       revalidatePath(pathname);
     }
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }

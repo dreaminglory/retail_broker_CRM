@@ -35,7 +35,7 @@ export function OpportunityActivity({
     try {
       const formData = new FormData();
       formData.append("content", newNoteContent);
-      const result = await createOpportunityNoteAction(opportunityId, { success: true, data: undefined as unknown }, formData);
+      const result = await createOpportunityNoteAction(opportunityId, { success: true, data: undefined }, formData);
       if (!result.success) {
         toast.error(result.error || "Failed to create note");
         return;
@@ -53,7 +53,7 @@ export function OpportunityActivity({
     formData.append("is_pinned", isPinned ? "true" : "false");
     formData.append("pathname", pathname);
 
-    const result = await updateNoteAction(noteId, { success: true, data: undefined as unknown }, formData);
+    const result = await updateNoteAction(noteId, { success: true, data: undefined }, formData);
     if (!result.success) {
       toast.error(result.error || "Failed to update note");
       throw new Error(result.error || "Failed to update note");

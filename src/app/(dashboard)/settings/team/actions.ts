@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { MemberService } from "@/domain/members/service";
-import { getAuthContext, type ActionResult } from "@/lib/actions";
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 import {
   updateMemberRoleSchema,
   deactivateMemberSchema,
@@ -21,20 +21,13 @@ export async function updateMemberRole(formData: FormData): Promise<ActionResult
     };
 
     const parsed = updateMemberRoleSchema.safeParse(rawData);
-    if (!parsed.success) {
-      return { success: false, error: "Invalid role data" };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const memberService = new MemberService(ctx.supabase);
     await memberService.updateMemberRole(parsed.data.membershipId, parsed.data.role, ctx.userId);
     revalidatePath("/settings/team");
     return { success: true, data: undefined };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Failed to update member role" };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function deactivateMember(formData: FormData): Promise<ActionResult> {
@@ -46,20 +39,13 @@ export async function deactivateMember(formData: FormData): Promise<ActionResult
     };
 
     const parsed = deactivateMemberSchema.safeParse(rawData);
-    if (!parsed.success) {
-      return { success: false, error: "Invalid data" };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const memberService = new MemberService(ctx.supabase);
     await memberService.deactivateMember(parsed.data.membershipId, ctx.userId);
     revalidatePath("/settings/team");
     return { success: true, data: undefined };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Failed to deactivate member" };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function reactivateMember(formData: FormData): Promise<ActionResult> {
@@ -71,20 +57,13 @@ export async function reactivateMember(formData: FormData): Promise<ActionResult
     };
 
     const parsed = reactivateMemberSchema.safeParse(rawData);
-    if (!parsed.success) {
-      return { success: false, error: "Invalid data" };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const memberService = new MemberService(ctx.supabase);
     await memberService.reactivateMember(parsed.data.membershipId);
     revalidatePath("/settings/team");
     return { success: true, data: undefined };
-  } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Failed to reactivate member" };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function inviteMember(formData: FormData): Promise<ActionResult> {
@@ -99,23 +78,13 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
     }
 
     const parsed = inviteMemberSchema.safeParse({ email, role });
-    if (!parsed.success) {
-      return { success: false, error: "Invalid data format" };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const memberService = new MemberService(ctx.supabase);
     await memberService.inviteMember(ctx, parsed.data.email, parsed.data.role);
     revalidatePath("/settings/team");
     return { success: true, data: undefined };
-  } catch (error) {
-    if (error instanceof DomainError) {
-      return { success: false, error: error.message };
-    }
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Failed to invite member" };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function cancelInvitation(formData: FormData): Promise<ActionResult> {
@@ -132,13 +101,5 @@ export async function cancelInvitation(formData: FormData): Promise<ActionResult
     
     revalidatePath("/settings/team");
     return { success: true, data: undefined };
-  } catch (error) {
-    if (error instanceof DomainError) {
-      return { success: false, error: error.message };
-    }
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "Failed to cancel invitation" };
-  }
+  } catch (error) { return toActionError(error); }
 }
