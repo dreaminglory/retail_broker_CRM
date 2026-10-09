@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServer } from '@/lib/supabase/server';
@@ -57,9 +57,7 @@ export async function updateLocaleAction(formData: FormData): Promise<ActionResu
   const locale = formData.get('locale');
   const parsed = updateLocaleSchema.safeParse({ locale });
 
-  if (!parsed.success) {
-    return { success: false, error: 'invalidLocale' };
-  }
+  if (!parsed.success) return toActionError(parsed.error);
 
   try {
     const repo = new ProfileRepository(supabase);

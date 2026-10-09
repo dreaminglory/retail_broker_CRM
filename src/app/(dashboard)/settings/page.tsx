@@ -1,6 +1,13 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Settings, Radio, ChevronRight, User, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("settings") };
+}
+
 
 interface SettingSection {
   href: string;
@@ -11,49 +18,46 @@ interface SettingSection {
   badge?: string;
 }
 
-const settingSections: SettingSection[] = [
-  {
-    href: "/settings/profile",
-    icon: User,
-    title: "Profile",
-    description:
-      "Manage your display name and personal information.",
-    available: true,
-  },
-  {
-    href: "/settings/team",
-    icon: Users,
-    title: "Team",
-    description:
-      "View team members, manage roles, and invite new brokers to your agency.",
-    available: true,
-  },
-  {
-    href: "/settings/lead-sources",
-    icon: Radio,
-    title: "Lead Sources",
-    description:
-      "Manage the channels through which inquiries arrive (portals, referrals, website, etc.)",
-    available: true,
-  },
-  {
-    href: "/settings/stages",
-    icon: Settings,
-    title: "Pipeline Stages",
-    description:
-      "Configure your opportunity pipeline stages and their ordering.",
-    available: true,
-  },
-];
 
-export default function SettingsPage() {
+
+export default async function SettingsPage() {
+  const t = await getTranslations("settings");
+
+  const settingSections: SettingSection[] = [
+    {
+      href: "/settings/profile",
+      icon: User,
+      title: t("profile"),
+      description: t("profileDesc"),
+      available: true,
+    },
+    {
+      href: "/settings/team",
+      icon: Users,
+      title: t("team"),
+      description: t("teamDesc"),
+      available: true,
+    },
+    {
+      href: "/settings/lead-sources",
+      icon: Radio,
+      title: t("leadSources"),
+      description: t("leadSourcesDesc"),
+      available: true,
+    },
+    {
+      href: "/settings/stages",
+      icon: Settings,
+      title: t("pipelineStages"),
+      description: t("pipelineStagesDesc"),
+      available: true,
+    },
+  ];
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold">Overview</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Quickly access your account and agency configuration.
-        </p>
+        <h2 className="text-xl font-semibold">{t("overview")}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t("overviewDesc")}</p>
       </div>
 
       <div className="space-y-3">

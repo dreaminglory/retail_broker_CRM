@@ -1,4 +1,6 @@
 "use client";
+import { useTranslations } from "next-intl";
+
 
 import Link from "next/link";
 import { formatDistanceToNow, format, isToday, isPast } from "date-fns";
@@ -36,6 +38,7 @@ const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ className
 };
 
 export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity = true }: TaskCardProps) {
+  const t = useTranslations('TaskCard');
   const isOverdue = task.due_at && isPast(new Date(task.due_at)) && task.status === "pending";
   const isDueToday = task.due_at && isToday(new Date(task.due_at));
   const typeConfig = task.task_type ? TASK_TYPE_CONFIG[task.task_type] : null;
@@ -95,7 +98,7 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
           {/* Task type badge */}
           {typeConfig && (
             <Badge variant="secondary" className={cn("text-[10px] shrink-0", typeConfig.color)}>
-              {typeConfig.label}
+              {typeConfig ? t('types.' + task.task_type) : ''}
             </Badge>
           )}
         </div>
@@ -107,7 +110,7 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
               <>
                 <AlertTriangle className="h-3 w-3 text-destructive" />
                 <span className="font-medium text-destructive">
-                  {formatDistanceToNow(new Date(task.due_at!), { addSuffix: false })} overdue
+                  {t('overdueDuration', { duration: formatDistanceToNow(new Date(task.due_at!), { addSuffix: false }) })}
                 </span>
               </>
             ) : task.due_at ? (
@@ -115,12 +118,12 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
                 <Clock className="h-3 w-3 text-muted-foreground" />
                 <span className="text-muted-foreground">
                   {isDueToday
-                    ? `Today at ${format(new Date(task.due_at), "HH:mm")}`
-                    : format(new Date(task.due_at), "MMM d, HH:mm")}
+                    ? `t('dueTodayTime', { time: format(new Date(task.due_at), 'HH:mm') })`
+                    : t('dueDateTime', { date: format(new Date(task.due_at), 'MMM d, HH:mm') })}
                 </span>
               </>
             ) : (
-              <span className="text-muted-foreground italic">No due date</span>
+              <span className="text-muted-foreground italic">{t("noDueDate")}</span>
             )}
           </div>
 
@@ -135,8 +138,7 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
               }}
             >
               <CheckCircle className="mr-1 h-3.5 w-3.5" />
-              Complete
-            </Button>
+              {t("complete")}</Button>
           )}
         </div>
       </div>

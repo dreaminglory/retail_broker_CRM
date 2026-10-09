@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ interface LeadSourceListClientProps {
 }
 
 export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps) {
+  const t = useTranslations("SettingsLeadSources");
   const [addOpen, setAddOpen] = useState(false);
   const [editSource, setEditSource] = useState<LeadSource | null>(null);
 
@@ -51,13 +53,13 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
             render={
               <Button size="sm">
                 <Plus className="mr-1.5 h-4 w-4" />
-                Add lead source
+                {t("addLeadSource")}
               </Button>
             }
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add lead source</DialogTitle>
+              <DialogTitle>{t("addLeadSource")}</DialogTitle>
             </DialogHeader>
             <LeadSourceForm
               createAction={createLeadSourceAction}
@@ -70,11 +72,11 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
       {/* Active sources */}
       <div>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Active ({active.length})
+          {t("activeCount", { count: active.length })}
         </h2>
         {active.length === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No active lead sources yet. Add one above.
+            {t("noActive")}
           </p>
         ) : (
           <div className="divide-y rounded-lg border bg-card">
@@ -93,7 +95,7 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
       {inactive.length > 0 && (
         <div>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Inactive ({inactive.length})
+            {t("inactiveCount", { count: inactive.length })}
           </h2>
           <div className="divide-y rounded-lg border bg-card opacity-60">
             {inactive.map((source) => (
@@ -111,7 +113,7 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
       <Dialog open={!!editSource} onOpenChange={(o) => !o && setEditSource(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit lead source</DialogTitle>
+            <DialogTitle>{t("editLeadSource")}</DialogTitle>
           </DialogHeader>
           {editSource && (
             <LeadSourceForm
@@ -134,6 +136,8 @@ function SourceRow({
   source: LeadSource;
   onEdit: () => void;
 }) {
+  const t = useTranslations("SettingsLeadSources");
+
   const [toggling, setToggling] = useState(false);
 
   async function handleToggle() {
@@ -151,12 +155,12 @@ function SourceRow({
         <div>
           <p className="text-sm font-medium">{source.name}</p>
           <p className="text-xs text-muted-foreground">
-            {CHANNEL_LABELS[source.channel] ?? source.channel}
+            {t(`channels.${source.channel}` as any)}
           </p>
         </div>
         {!source.is_active && (
           <Badge variant="secondary" className="text-xs">
-            Inactive
+            {t("inactiveBadge")}
           </Badge>
         )}
       </div>
@@ -165,7 +169,7 @@ function SourceRow({
           variant="ghost"
           size="sm"
           onClick={onEdit}
-          aria-label={`Edit ${source.name}`}
+          aria-label={t("editName", { name: source.name })}
         >
           <Pencil className="h-3.5 w-3.5" />
         </Button>
@@ -175,8 +179,8 @@ function SourceRow({
             size="sm"
             onClick={handleToggle}
             disabled={toggling}
-            aria-label={`Deactivate ${source.name}`}
-            title="Deactivate"
+            aria-label={t("deactivateTitle")}
+            title={t("deactivateTitle")}
           >
             <ToggleRight className="h-4 w-4 text-primary" />
           </Button>
@@ -188,6 +192,8 @@ function SourceRow({
 }
 
 function ReactivateButton({ source }: { source: LeadSource }) {
+  const t = useTranslations("SettingsLeadSources");
+
   const [pending, setPending] = useState(false);
 
   async function handleReactivate() {
@@ -208,8 +214,8 @@ function ReactivateButton({ source }: { source: LeadSource }) {
       size="sm"
       onClick={handleReactivate}
       disabled={pending}
-      aria-label={`Reactivate ${source.name}`}
-      title="Reactivate"
+      aria-label={t("reactivateTitle")}
+      title={t("reactivateTitle")}
     >
       <ToggleLeft className="h-4 w-4 text-muted-foreground" />
     </Button>

@@ -26,8 +26,8 @@ export const channelSchema = z.enum([
 export const createLeadSourceSchema = z.object({
   name: z
     .string()
-    .min(1, 'Name is required')
-    .max(100, 'Name must be 100 characters or fewer'),
+    .min(1, 'validation.name_required')
+    .max(100, 'validation.name_too_long'),
   channel: channelSchema,
   sort_order: z.number().int().min(0).optional(),
 });
@@ -35,8 +35,8 @@ export const createLeadSourceSchema = z.object({
 export const updateLeadSourceSchema = z.object({
   name: z
     .string()
-    .min(1, 'Name is required')
-    .max(100, 'Name must be 100 characters or fewer')
+    .min(1, 'validation.name_required')
+    .max(100, 'validation.name_too_long')
     .optional(),
   channel: channelSchema.optional(),
   sort_order: z.number().int().min(0).optional(),

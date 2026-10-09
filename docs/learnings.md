@@ -203,3 +203,45 @@ async getProfilesByIds(userIds: string[]): Promise<Map<string, Profile>> {
 **Fix:** The invitation flow was adjusted: (1) call `inviteUserByEmail()` first to get the user ID, (2) create the `agency_memberships` row with that user ID and `status: 'invited'`. The auth callback activates the membership when the user clicks the link.
 **Prevention:** When using Supabase admin APIs, test the exact sequence of side effects (trigger firing, row creation) before designing the application flow around assumptions.
 
+
+### L-006: Handling Timezones with TZDate vs Supabase Naive Dates
+**Date:** 2026-10-07
+**Context:** Supabase 	imestamp with time zone fields return as ISO strings in UTC. The Today Screen queries required agency-specific "day boundaries" (e.g., what is "today" in Europe/Sofia?).
+**Pattern:** We use @date-fns/tz (TZDate) to compute the start/end of day boundaries relative to the agency's timezone, and convert those boundaries back to UTC ISO strings for querying Supabase.
+**Usage:** The getDayBounds(timezone, date) helper converts a UTC server time into a localized TZDate, computes startOfDay and endOfDay, and returns them as UTC strings for database queries.
+
+### P-009: Import Pipeline Chunking Pattern
+**Date:** 2026-10-07
+**Pattern:** When dealing with large CSV files, parsing and validating all rows at once hits Vercel's 1MB payload limits and execution timeouts.
+**Usage:** Parse on the client in a worker, chunk into 500-row batches, and send to a Server Action to stage in `import_rows`. Commit operations should similarly be driven by the client looping over `commitImportBatchAction` until `remaining === 0`.
+
+### P-010: next-intl without i18n routing
+**Date:** 2026-10-06
+**Pattern:** For apps that don't need SEO-indexed localized URLs (like a SaaS dashboard), skip i18n URL routing (no `/bg/...` or `/en/...`).
+**Usage:** Configure `next-intl` to read a `NEXT_LOCALE` cookie. Set this cookie when the user logs in based on their `profiles.locale` or when they use the language switcher.
+
+## Gotchas & Pitfalls (Sprint 5)
+
+### G-007: Vercel Function Payload Limits
+**Date:** 2026-10-07
+**Problem:** Sending a fully parsed 5000-row CSV to a Server Action throws a 413 Payload Too Large error.
+**Root cause:** Next.js / Vercel restricts Server Action request bodies to 1MB.
+**Fix:** Chunk the rows on the client (e.g., 500 rows per request) and stage them incrementally in the database.
+
+### G-008: Supabase RPC Context with next-intl
+**Date:** 2026-10-06
+**Problem:** Default seeds created via RPC were always in English, even when the user signed up in Bulgarian.
+**Root cause:** The RPC has no access to the Next.js request headers or `next-intl` locale context.
+**Fix:** Explicitly pass the `locale` parameter to the `create_agency_with_owner(name, locale)` RPC so it can seed the defaults in the correct language.
+
+### G-009: CTE filtering on DELETE USING
+**Date:** 2026-10-08
+**Problem:** Reverting an import deleted contacts that had been manually linked to new inquiries, resulting in broken foreign keys or lost data.
+**Root cause:** A simple `DELETE FROM contacts WHERE import_job_id = X` does not respect business logic constraints about untouched data.
+**Fix:** Use a CTE (`contact_check`) to explicitly compute a boolean `can_delete` based on absence of tasks, notes, or inquiries, and then use `DELETE FROM contacts USING contact_check WHERE contacts.id = contact_check.id AND contact_check.can_delete = true`.
+
+### G-010: Next 16 Middleware Deprecation (Proxy)
+**Date:** 2026-10-06
+**Problem:** Supabase session refresh in `middleware.ts` silently stopped working.
+**Root cause:** Next.js 16 changed the middleware signature and prefers a proxy pattern for session updates.
+**Fix:** Moved the session refresh logic to `src/proxy.ts` following the Next.js 16 conventions, leaving full authorization to layout Server Components.

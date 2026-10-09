@@ -87,8 +87,8 @@ BEGIN
   -- (Profiles are auto-created by the handle_new_user trigger on auth.users insert)
 
   -- 4. Seed Defaults for both agencies
-  PERFORM public.seed_agency_defaults(v_agency_1);
-  PERFORM public.seed_agency_defaults(v_agency_2);
+  PERFORM public.seed_agency_defaults(v_agency_1, 'en');
+  PERFORM public.seed_agency_defaults(v_agency_2, 'en');
 
   -- Fetch stage and source IDs for Alpha
   SELECT id INTO v_stage_1_new FROM public.stages WHERE agency_id = v_agency_1 AND name = 'New' LIMIT 1;

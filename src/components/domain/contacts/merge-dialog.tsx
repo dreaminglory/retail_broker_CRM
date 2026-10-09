@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Merge } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Contact } from "@/domain/contacts/types";
 import type { MergePreview } from "@/domain/contacts/merge-types";
 import {
@@ -27,6 +28,7 @@ interface MergeDialogProps {
 }
 
 export function MergeDialog({ currentContact }: MergeDialogProps) {
+  const t = useTranslations("MergeDialog");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -104,13 +106,16 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
         render={<Button variant="outline" size="sm" className="gap-1.5" />}
       >
         <Merge className="h-3.5 w-3.5" />
-        Merge
+        {t("trigger")}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Merge Contact</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Merge <strong>{currentContact.display_name}</strong> into another contact. This contact will be archived.
+            {t.rich("description", {
+              name: currentContact.display_name,
+              nameTag: (chunks) => <strong>{chunks}</strong>
+            })}
           </DialogDescription>
         </DialogHeader>
 
@@ -118,10 +123,10 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
           <div className="space-y-4">
             <div className="flex gap-2">
               <div className="flex-1">
-                <Label htmlFor="search" className="sr-only">Search contacts</Label>
+                <Label htmlFor="search" className="sr-only">{t("searchLabel")}</Label>
                 <Input
                   id="search"
-                  placeholder="Type a name to search (e.g. Dimitar Dimitrov)..."
+                  placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -139,7 +144,7 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
                       )}
                     </div>
                     <Button variant="secondary" size="sm" onClick={() => handleSelectWinner(contact)}>
-                      Select
+                      {t("select")}
                     </Button>
                   </div>
                 ))}
@@ -147,22 +152,22 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
             )}
 
             {search && searchResults.length === 0 && !searching && (
-              <p className="text-sm text-muted-foreground text-center py-4">No other contacts found.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("noResults")}</p>
             )}
           </div>
         ) : (
           <div className="space-y-4">
             {loadingPreview ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Loading preview...</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t("loadingPreview")}</p>
             ) : preview ? (
               <div className="space-y-4">
                 <div className="rounded-md border p-4 bg-muted/30">
-                  <h4 className="font-medium mb-2 text-sm">Merge Preview</h4>
+                  <h4 className="font-medium mb-2 text-sm">{t("previewTitle")}</h4>
                   <ul className="text-sm space-y-1 text-muted-foreground list-disc list-inside">
-                    <li>{preview.opportunitiesToTransfer} opportunities will be transferred</li>
-                    <li>{preview.inquiriesToTransfer} inquiries will be transferred</li>
-                    <li>{preview.tasksToTransfer} tasks will be transferred</li>
-                    <li>{preview.contactMethodsToTransfer} unique contact methods will be transferred</li>
+                    <li>{t("preview.opportunities", { count: preview.opportunitiesToTransfer })}</li>
+                    <li>{t("preview.inquiries", { count: preview.inquiriesToTransfer })}</li>
+                    <li>{t("preview.tasks", { count: preview.tasksToTransfer })}</li>
+                    <li>{t("preview.methods", { count: preview.contactMethodsToTransfer })}</li>
                   </ul>
                 </div>
                 <div className="flex gap-3">
@@ -175,7 +180,7 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
                     }}
                     disabled={merging}
                   >
-                    Back
+                    {t("back")}
                   </Button>
                   <Button
                     variant="destructive"
@@ -183,7 +188,7 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
                     onClick={handleMerge}
                     disabled={merging}
                   >
-                    {merging ? "Merging..." : `Merge into ${selectedWinner.display_name}`}
+                    {merging ? t("merging") : t("mergeInto", { name: selectedWinner.display_name })}
                   </Button>
                 </div>
               </div>

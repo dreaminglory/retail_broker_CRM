@@ -12,7 +12,10 @@ interface ProfileFormProps {
   currentDisplayName: string;
 }
 
+import { useTranslations } from "next-intl";
+
 export function ProfileForm({ currentDisplayName }: ProfileFormProps) {
+  const t = useTranslations("SettingsProfile");
   const router = useRouter();
   const [displayName, setDisplayName] = useState(currentDisplayName);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,11 +34,11 @@ export function ProfileForm({ currentDisplayName }: ProfileFormProps) {
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success('Profile updated successfully');
+        toast.success(t("success"));
         router.refresh();
       }
     } catch {
-      toast.error('Failed to update profile');
+      toast.error(t("error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -44,25 +47,25 @@ export function ProfileForm({ currentDisplayName }: ProfileFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="display_name">Display Name</Label>
+        <Label htmlFor="display_name">{t("displayName")}</Label>
         <Input
           id="display_name"
           name="display_name"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Enter your display name"
+          placeholder={t("displayNamePlaceholder")}
           minLength={2}
           maxLength={100}
           required
         />
         <p className="text-xs text-muted-foreground">
-          This is the name that appears on notes, tasks, and timeline entries.
+          {t("displayNameHelp")}
         </p>
       </div>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={!isDirty || isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
+          {isSubmitting ? t("saving") : t("saveChanges")}
         </Button>
       </div>
     </form>

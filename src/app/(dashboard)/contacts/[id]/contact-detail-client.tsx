@@ -17,6 +17,7 @@ import {
   archiveContactAction,
 } from "@/app/(dashboard)/contacts/actions";
 import { Pencil, Archive } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { MergeDialog } from "@/components/domain/contacts/merge-dialog";
 
 interface ContactDetailClientProps {
@@ -25,6 +26,7 @@ interface ContactDetailClientProps {
 }
 
 export function ContactDetailClient({ contact }: ContactDetailClientProps) {
+  const t = useTranslations("ContactDetailClient");
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -52,13 +54,13 @@ export function ContactDetailClient({ contact }: ContactDetailClientProps) {
           render={
             <Button variant="outline" size="sm" className="gap-1.5">
               <Pencil className="h-3.5 w-3.5" />
-              Edit
+              {t("editBtn")}
             </Button>
           }
         />
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Edit contact</DialogTitle>
+            <DialogTitle>{t("editTitle")}</DialogTitle>
           </DialogHeader>
           <ContactForm
             key={contact.updated_at}
@@ -86,18 +88,16 @@ export function ContactDetailClient({ contact }: ContactDetailClientProps) {
                 className="gap-1.5 text-muted-foreground"
               >
                 <Archive className="h-3.5 w-3.5" />
-                Archive
+                {t("archiveBtn")}
               </Button>
             }
           />
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>Archive contact?</DialogTitle>
+              <DialogTitle>{t("archiveTitle")}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              <strong>{contact.display_name}</strong> will be archived and
-              hidden from the active contacts list. Linked opportunities are
-              preserved. You can restore the contact later.
+              {t.rich("archiveDescription", { name: contact.display_name, nameTag: (chunks) => <strong>{chunks}</strong> })}
             </p>
             <div className="flex gap-3 pt-2">
               <Button
@@ -105,7 +105,7 @@ export function ContactDetailClient({ contact }: ContactDetailClientProps) {
                 className="flex-1"
                 onClick={() => setArchiveOpen(false)}
               >
-                Cancel
+                {t("cancelBtn")}
               </Button>
               <Button
                 variant="destructive"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Opportunity } from "@/domain/opportunities/types";
@@ -14,11 +15,13 @@ interface LinkedOpportunitiesProps {
 }
 
 export function LinkedOpportunities({ opportunities, stages }: LinkedOpportunitiesProps) {
+  const t = useTranslations("LinkedOpportunities");
+
   if (opportunities.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Opportunity linking will appear here once opportunities are created.
+          {t("emptyState")}
         </p>
       </div>
     );
@@ -37,9 +40,10 @@ export function LinkedOpportunities({ opportunities, stages }: LinkedOpportuniti
 }
 
 function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stage?: Stage }) {
+  const tEnum = useTranslations("Enums");
   const formatter = new Intl.NumberFormat("bg-BG", {
     style: "currency",
-    currency: opportunity.currency || "BGN",
+    currency: opportunity.currency || "EUR",
     maximumFractionDigits: 0,
   });
 
@@ -54,15 +58,15 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
           {stage && <StageBadge stage={stage} />}
           {opportunity.status !== "active" && (
             <Badge variant={opportunity.status === "won" ? "default" : "secondary"}>
-              {opportunity.status === "won" && "🏆 Won"}
-              {opportunity.status === "lost" && "❌ Lost"}
-              {opportunity.status === "nurture" && "🌱 Nurture"}
-              {opportunity.status === "archived" && "📦 Archived"}
+              {opportunity.status === "won" && `?? ${tEnum("opportunityStatus.won")}`}
+              {opportunity.status === "lost" && `? ${tEnum("opportunityStatus.lost")}`}
+              {opportunity.status === "nurture" && `?? ${tEnum("opportunityStatus.nurture")}`}
+              {opportunity.status === "archived" && `?? ${tEnum("opportunityStatus.archived")}`}
             </Badge>
           )}
-          {opportunity.status === "active" && opportunity.temperature === "hot" && <span title="Hot">🔥</span>}
-          {opportunity.status === "active" && opportunity.temperature === "warm" && <span title="Warm">⚡</span>}
-          {opportunity.status === "active" && opportunity.temperature === "cold" && <span title="Cold">❄️</span>}
+          {opportunity.status === "active" && opportunity.temperature === "hot" && <span title={tEnum("opportunityTemperature.hot")}>??</span>}
+          {opportunity.status === "active" && opportunity.temperature === "warm" && <span title={tEnum("opportunityTemperature.warm")}>??</span>}
+          {opportunity.status === "active" && opportunity.temperature === "cold" && <span title={tEnum("opportunityTemperature.cold")}>??</span>}
         </div>
         
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

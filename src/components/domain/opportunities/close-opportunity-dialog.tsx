@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import type { ActionResult } from "@/lib/actions";
+import { useTranslations } from "next-intl";
 
 interface CloseOpportunityDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function CloseOpportunityDialog({
   closeAction,
   onSuccess,
 }: CloseOpportunityDialogProps) {
+  const t = useTranslations("CloseOpportunityDialog");
   const [state, formAction, isPending] = useActionState(closeAction, initialState);
   const [outcome, setOutcome] = useState<string>("won");
 
@@ -49,19 +51,19 @@ export function CloseOpportunityDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Close Opportunity</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
         <form action={formAction} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="outcome">Outcome</Label>
-            <Select name="outcome" value={outcome} onValueChange={(v) => { if (v) setOutcome(v); }} required>
+            <Label htmlFor="outcome">{t("outcomeLabel")}</Label>
+            <Select name="outcome" value={outcome} onValueChange={(v) => { if (v) setOutcome(v as string); }} required>
               <SelectTrigger>
-                <SelectValue placeholder="Select outcome" />
+                <SelectValue placeholder={t("outcomePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="won">Won (Closed)</SelectItem>
-                <SelectItem value="lost">Lost (Closed)</SelectItem>
-                <SelectItem value="nurture">Nurture (On Hold)</SelectItem>
+                <SelectItem value="won">{t("won")}</SelectItem>
+                <SelectItem value="lost">{t("lost")}</SelectItem>
+                <SelectItem value="nurture">{t("nurture")}</SelectItem>
               </SelectContent>
             </Select>
             {!state.success && state.fieldErrors?.outcome && (
@@ -71,11 +73,11 @@ export function CloseOpportunityDialog({
 
           {outcome === "lost" && (
             <div className="space-y-2">
-              <Label htmlFor="lost_reason">Lost Reason</Label>
+              <Label htmlFor="lost_reason">{t("lostReasonLabel")}</Label>
               <Input
                 id="lost_reason"
                 name="lost_reason"
-                placeholder="Why was this opportunity lost?"
+                placeholder={t("lostReasonPlaceholder")}
                 required
               />
               {!state.success && state.fieldErrors?.lost_reason && (
@@ -88,10 +90,10 @@ export function CloseOpportunityDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Closing..." : "Close Opportunity"}
+              {isPending ? t("closingBtn") : t("submitBtn")}
             </Button>
           </DialogFooter>
         </form>

@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ActiveBroker } from "@/domain/members/types";
+import { useTranslations } from "next-intl";
 
 export interface BrokerSelectProps {
   name?: string;
@@ -32,6 +33,7 @@ export function BrokerSelect({
   disabled,
   allowUnassigned = true,
 }: BrokerSelectProps) {
+  const enums = useTranslations("Enums");
   // Translate null/undefined defaultValue to "none" if we allow unassigned
   const mappedDefault = defaultValue === null ? "none" : defaultValue;
 
@@ -47,7 +49,7 @@ export function BrokerSelect({
       <SelectTrigger>
         <SelectValue placeholder={placeholder}>
           {(val: string | null) => {
-            if (val === "none") return "Unassigned";
+            if (val === "none") return enums("unassigned");
             if (!val) return placeholder;
             return brokers.find((b) => b.id === val)?.display_name ?? placeholder;
           }}
@@ -56,7 +58,7 @@ export function BrokerSelect({
       <SelectContent>
         {allowUnassigned && (
           <SelectItem value="none" className="italic text-muted-foreground">
-            Unassigned
+            {enums("unassigned")}
           </SelectItem>
         )}
         {brokers.map((broker) => (

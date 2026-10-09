@@ -12,7 +12,7 @@ Always check these before making architectural decisions:
 - `docs/learnings.md` — Best practices and patterns discovered during development
 
 ## Approved Tech Stack
-- **Framework:** Next.js 15 (App Router, React Server Components, Server Actions)
+- **Framework:** Next.js 16 (App Router, React Server Components, Server Actions)
 - **Language:** TypeScript 5.x (strict mode)
 - **Database:** Supabase (managed PostgreSQL with Row-Level Security)
 - **Auth:** Supabase Auth (email/password, magic link)

@@ -24,7 +24,7 @@ export function OpportunityNotes({
   const handleCreate = async (content: string) => {
     const formData = new FormData();
     formData.append("content", content);
-    const result = await createOpportunityNoteAction(opportunityId, { success: true, data: undefined as unknown }, formData);
+    const result = await createOpportunityNoteAction(opportunityId, { success: true, data: undefined }, formData);
     if (!result.success) {
       toast.error(result.error || "Failed to create note");
       throw new Error(result.error || "Failed to create note");
@@ -37,7 +37,7 @@ export function OpportunityNotes({
     formData.append("is_pinned", isPinned ? "true" : "false");
     formData.append("pathname", pathname);
 
-    const result = await updateNoteAction(noteId, { success: true, data: undefined as unknown }, formData);
+    const result = await updateNoteAction(noteId, { success: true, data: undefined }, formData);
     if (!result.success) {
       toast.error(result.error || "Failed to update note");
       throw new Error(result.error || "Failed to update note");

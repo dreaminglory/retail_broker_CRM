@@ -9,6 +9,7 @@ import {
   deleteNoteAction,
 } from "./notes/actions";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export function ContactNotes({
   notes,
@@ -19,15 +20,16 @@ export function ContactNotes({
   contactId: string;
   currentUserId?: string;
 }) {
+  const t = useTranslations("ContactActivity");
   const pathname = usePathname();
 
   const handleCreate = async (content: string) => {
     const formData = new FormData();
     formData.append("content", content);
-    const result = await createContactNoteAction(contactId, { success: true, data: undefined as unknown }, formData);
+    const result = await createContactNoteAction(contactId, { success: true, data: undefined }, formData);
     if (!result.success) {
-      toast.error(result.error || "Failed to create note");
-      throw new Error(result.error || "Failed to create note");
+      toast.error(result.error || t("errors.create"));
+      throw new Error(result.error || t("errors.create"));
     }
   };
 
@@ -37,18 +39,18 @@ export function ContactNotes({
     formData.append("is_pinned", isPinned ? "true" : "false");
     formData.append("pathname", pathname);
 
-    const result = await updateNoteAction(noteId, { success: true, data: undefined as unknown }, formData);
+    const result = await updateNoteAction(noteId, { success: true, data: undefined }, formData);
     if (!result.success) {
-      toast.error(result.error || "Failed to update note");
-      throw new Error(result.error || "Failed to update note");
+      toast.error(result.error || t("errors.update"));
+      throw new Error(result.error || t("errors.update"));
     }
   };
 
   const handleDelete = async (noteId: string) => {
     const result = await deleteNoteAction(noteId, pathname);
     if (!result.success) {
-      toast.error(result.error || "Failed to delete note");
-      throw new Error(result.error || "Failed to delete note");
+      toast.error(result.error || t("errors.delete"));
+      throw new Error(result.error || t("errors.delete"));
     }
   };
 

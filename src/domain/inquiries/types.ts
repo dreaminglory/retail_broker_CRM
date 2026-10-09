@@ -40,6 +40,7 @@ export interface Inquiry {
   received_at: string;
 
   created_by: string | null;
+  import_job_id: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createAgencySchema = z.object({
-  agency_name: z.string().min(2, 'Agency name must be at least 2 characters').max(120, 'Agency name must be less than 120 characters'),
+  agency_name: z.string().min(2, 'validation.name_too_short').max(120, 'validation.name_too_long'),
   locale: z.enum(['bg', 'en']).default('bg'),
 });
 

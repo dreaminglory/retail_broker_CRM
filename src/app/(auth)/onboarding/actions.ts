@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { AgencyService } from "@/domain/agencies/service";
 import { redirect } from "next/navigation";
@@ -30,7 +31,9 @@ export async function onboardingAction(formData: FormData) {
   }
 
   try {
-    await AgencyService.createWithOwner(agencyName);
+    const cookieStore = await cookies();
+    const locale = (cookieStore.get('NEXT_LOCALE')?.value === 'en' ? 'en' : 'bg');
+    await AgencyService.createWithOwner(agencyName, locale);
     return { success: true };
   } catch (err: any) {
     return { error: err.message };

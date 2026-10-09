@@ -25,6 +25,7 @@ import {
 import { inviteMember } from "@/app/(dashboard)/settings/team/actions";
 import { toast } from "sonner";
 import type { MemberRole } from "@/domain/members/types";
+import { useTranslations } from "next-intl";
 
 interface InviteDialogProps {
   agencyId: string;
@@ -32,6 +33,8 @@ interface InviteDialogProps {
 }
 
 export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
+  const t = useTranslations("SettingsTeam.invite");
+  const tRoles = useTranslations("SettingsTeam.roles");
   const [open, setOpen] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
   const [email, setEmail] = useState("");
@@ -52,7 +55,7 @@ export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
       if (!result.success) {
         toast.error(result.error);
       } else {
-        toast.success(`Invitation sent to ${email}`);
+        toast.success(t("success", { email }));
         setOpen(false);
         setEmail("");
         setRole("broker");
@@ -68,40 +71,40 @@ export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
         className={cn(buttonVariants({ variant: "default" }))}
       >
         <UserPlus className="mr-2 h-4 w-4" />
-        Invite Member
+        {t("button")}
       </DialogTrigger>
       <DialogContent>
         <form onSubmit={handleInvite}>
           <DialogHeader>
-            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogTitle>{t("title")}</DialogTitle>
             <DialogDescription>
-              Send an email invitation to join your agency.
+              {t("description")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">{t("emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="colleague@example.com"
+                placeholder={t("emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role">{t("roleLabel")}</Label>
               <Select value={role} onValueChange={(v) => setRole(v as MemberRole)}>
                 <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
+                  <SelectValue placeholder={t("selectRole")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="broker">Broker</SelectItem>
+                  <SelectItem value="broker">{tRoles("broker")}</SelectItem>
                   {currentUserRole === "owner" && (
                     <>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="owner">Owner</SelectItem>
+                      <SelectItem value="manager">{tRoles("manager")}</SelectItem>
+                      <SelectItem value="owner">{tRoles("owner")}</SelectItem>
                     </>
                   )}
                 </SelectContent>
@@ -115,10 +118,10 @@ export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
               onClick={() => setOpen(false)}
               disabled={isInviting}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isInviting || !email}>
-              {isInviting ? "Sending..." : "Send Invitation"}
+              {isInviting ? t("sending") : t("send")}
             </Button>
           </DialogFooter>
         </form>

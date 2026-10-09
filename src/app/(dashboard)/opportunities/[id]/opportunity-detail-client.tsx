@@ -39,8 +39,9 @@ import type { Contact } from "@/domain/contacts/types";
 import type { Task } from "@/domain/tasks/types";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import type { ActiveBroker } from "@/domain/members/types";
-import { format } from "date-fns";
 import { ArrowLeft, Pencil, Link as LinkIcon, Building2, Calendar, FileText, Users } from "lucide-react";
+import { useTranslations, useFormatter } from "next-intl";
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 
 interface OpportunityDetailClientProps {
   opportunity: OpportunityWithDetails;
@@ -64,6 +65,10 @@ export function OpportunityDetailClient({
   timeline,
   currentUserId,
 }: OpportunityDetailClientProps) {
+  const t = useTranslations("OpportunityDetail");
+  const getStageName = useStageTranslation();
+  const enums = useTranslations("Enums");
+  const format = useFormatter();
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
@@ -79,7 +84,7 @@ export function OpportunityDetailClient({
   
   const formatter = new Intl.NumberFormat("bg-BG", {
     style: "currency",
-    currency: opportunity.currency || "BGN",
+    currency: opportunity.currency || "EUR",
     maximumFractionDigits: 0,
   });
 
@@ -93,7 +98,7 @@ export function OpportunityDetailClient({
           onClick={() => router.push("/opportunities")}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Back to opportunities
+          {t("backBtn")}
         </Button>
       </div>
 
@@ -104,17 +109,15 @@ export function OpportunityDetailClient({
           </h1>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             {currentStage && <StageBadge stage={currentStage} />}
-            <span className="capitalize">{opportunity.type}</span>
+            <span>{enums(`opportunityType.${opportunity.type}`)}</span>
             {opportunity.temperature && (
               <span className="flex items-center gap-1">
-                {opportunity.temperature === "hot" && "🔥 Hot"}
-                {opportunity.temperature === "warm" && "⚡ Warm"}
-                {opportunity.temperature === "cold" && "❄️ Cold"}
+                {enums(`opportunityTemperature.${opportunity.temperature}`)}
               </span>
             )}
             {opportunity.status !== "active" && opportunity.closed_at && (
               <span className="text-destructive font-medium">
-                Closed {format(new Date(opportunity.closed_at), "MMM d, yyyy")}
+                {t("closedLabel", { date: format.dateTime(new Date(opportunity.closed_at), { month: "short", day: "numeric", year: "numeric" }) })}
               </span>
             )}
           </div>
@@ -123,17 +126,17 @@ export function OpportunityDetailClient({
         <div className="flex items-center gap-2">
           {opportunity.status === "active" && (
             <div className="flex items-center gap-2 mr-2">
-              <span className="text-sm font-medium text-muted-foreground">Stage:</span>
-              <Select value={opportunity.stage_id} onValueChange={(v) => { if (v) handleStageChange(v); }}>
+              <span className="text-sm font-medium text-muted-foreground">{t("stageLabel")}</span>
+              <Select value={opportunity.stage_id} onValueChange={(v) => { if (v) handleStageChange(v as string); }}>
                 <SelectTrigger className="w-44 h-9">
                   <SelectValue>
-                    {(val) => stages.find((s) => s.id === val)?.name ?? "Select stage"}
+                    {(val) => getStageName(stages.find((s) => s.id === val)?.name ?? "") || t("stagePlaceholder")}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {stages.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
-                      {s.name}
+                      {getStageName(s.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -147,14 +150,14 @@ export function OpportunityDetailClient({
               size="sm"
               onClick={() => setCloseOpen(true)}
             >
-              Close
+              {t("closeBtn")}
             </Button>
           )}
 
           {opportunity.status !== "active" && (
             <form action={async () => { await reactivateOpportunityAction(opportunity.id); }}>
               <Button type="submit" variant="outline" size="sm">
-                Reactivate
+                {t("reactivateBtn")}
               </Button>
             </form>
           )}
@@ -165,7 +168,7 @@ export function OpportunityDetailClient({
             onClick={() => setEditOpen(true)}
           >
             <Pencil className="mr-1.5 h-4 w-4" />
-            Edit
+            {t("editBtn")}
           </Button>
         </div>
       </div>
@@ -176,16 +179,16 @@ export function OpportunityDetailClient({
           <div className="rounded-lg border bg-card p-5">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              Details
+              {t("detailsTitle")}
             </h3>
             
             <dl className="grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
               <div className="col-span-2">
-                <dt className="text-muted-foreground mb-1">Primary Contact</dt>
+                <dt className="text-muted-foreground mb-1">{t("primaryContact")}</dt>
                 <dd className="font-medium text-base">
                   {(() => {
                     const primaryContact = contacts.find(c => c.id === opportunity.primary_contact_id);
-                    if (!primaryContact) return "—";
+                    if (!primaryContact) return t("none");
                     return (
                       <Link
                         href={`/contacts/${primaryContact.id}`}
@@ -199,33 +202,33 @@ export function OpportunityDetailClient({
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground mb-1">Expected Value</dt>
+                <dt className="text-muted-foreground mb-1">{t("expectedValue")}</dt>
                 <dd className="font-medium">
                   {opportunity.expected_value
                     ? formatter.format(opportunity.expected_value)
-                    : "—"}
+                    : t("none")}
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground mb-1">Lead Source</dt>
-                <dd className="font-medium">{source?.name || "—"}</dd>
+                <dt className="text-muted-foreground mb-1">{t("leadSource")}</dt>
+                <dd className="font-medium">{source?.name || t("none")}</dd>
               </div>
               <div>
-                <dt className="text-muted-foreground mb-1">Created</dt>
+                <dt className="text-muted-foreground mb-1">{t("created")}</dt>
                 <dd className="font-medium">
-                  {format(new Date(opportunity.created_at), "MMM d, yyyy")}
+                  {format.dateTime(new Date(opportunity.created_at), { month: "short", day: "numeric", year: "numeric" })}
                 </dd>
               </div>
               {opportunity.inquiry_id && (
                 <div>
-                  <dt className="text-muted-foreground mb-1">Origin</dt>
+                  <dt className="text-muted-foreground mb-1">{t("origin")}</dt>
                   <dd className="font-medium flex items-center gap-1.5">
                     <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
                     <Link
                       href={`/inquiries?id=${opportunity.inquiry_id}`}
                       className="hover:underline text-primary"
                     >
-                      View Inquiry
+                      {t("viewInquiry")}
                     </Link>
                   </dd>
                 </div>
@@ -234,13 +237,13 @@ export function OpportunityDetailClient({
 
             {opportunity.notes && (
               <div className="mt-6 pt-6 border-t">
-                <dt className="text-muted-foreground text-sm mb-2 font-medium">Notes</dt>
+                <dt className="text-muted-foreground text-sm mb-2 font-medium">{t("notesTitle")}</dt>
                 <dd className="whitespace-pre-wrap text-sm">{opportunity.notes}</dd>
               </div>
             )}
 
             <div className="mt-6 pt-6 border-t">
-              <dt className="text-muted-foreground text-sm mb-4 font-medium">Activity History</dt>
+              <dt className="text-muted-foreground text-sm mb-4 font-medium">{t("activityHistoryTitle")}</dt>
               <OpportunityActivity
                 initialTimeline={timeline}
                 opportunityId={opportunity.id}
@@ -273,7 +276,7 @@ export function OpportunityDetailClient({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit opportunity</DialogTitle>
+            <DialogTitle>{t("editTitle")}</DialogTitle>
           </DialogHeader>
           <OpportunityForm
             opportunity={opportunity}

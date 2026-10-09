@@ -6,13 +6,9 @@
 import { createSupabaseServer } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-// ── Shared result type ────────────────────────────────────────────────────────
-
 export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
-
-// ── Auth context ──────────────────────────────────────────────────────────────
 
 export interface AuthContext {
   supabase: SupabaseClient;
@@ -21,11 +17,6 @@ export interface AuthContext {
   role: string;
 }
 
-/**
- * Resolves and validates the current user's auth context.
- * Throws if the user is unauthenticated or has no active agency membership.
- * Call this at the top of every Server Action.
- */
 export async function getAuthContext(): Promise<AuthContext> {
   const supabase = await createSupabaseServer();
   const {
@@ -51,22 +42,32 @@ export async function getAuthContext(): Promise<AuthContext> {
   };
 }
 
-// ── Error handling ────────────────────────────────────────────────────────────
-
 import { DomainError } from '@/lib/errors';
+import { ZodError } from 'zod';
 import { getTranslations } from 'next-intl/server';
 
-/**
- * Normalizes an unknown error into a localized action error result.
- * Supports DomainError which maps directly to i18n keys.
- */
-export async function toActionError(error: unknown): Promise<{ success: false, error: string }> {
-  const t = await getTranslations('Errors');
+export async function toActionError(error: unknown, _t?: any): Promise<{ success: false, error: string, fieldErrors?: Record<string, string[]> }> {
+  const t = await getTranslations();
+  
+  if (error instanceof ZodError) {
+    const fieldErrors: Record<string, string[]> = {};
+    for (const [path, messages] of Object.entries(error.flatten().fieldErrors)) {
+      if (messages) {
+        fieldErrors[path] = messages.map((m) => t(m as any));
+      }
+    }
+    const formErrors = error.flatten().formErrors;
+    const translatedFormErrors = formErrors.map((m) => t(m as any));
+
+    return {
+      success: false,
+      error: translatedFormErrors.length > 0 ? translatedFormErrors[0] : t('validation.failed' as any),
+      fieldErrors,
+    };
+  }
 
   if (error instanceof DomainError) {
     try {
-      // Try to resolve the specific domain error code
-      // We pass the params for interpolation
       const message = t(error.code as any, error.params);
       return { success: false, error: message || error.message };
     } catch {
@@ -75,12 +76,11 @@ export async function toActionError(error: unknown): Promise<{ success: false, e
   }
 
   if (error instanceof Error) {
-    // Basic mapping for common errors
     if (error.message === 'Unauthorized' || error.message === 'No active agency membership') {
-      return { success: false, error: t('unauthorized') };
+      return { success: false, error: t('errors.unauthorized' as any) };
     }
     return { success: false, error: error.message };
   }
 
-  return { success: false, error: t('default') };
+  return { success: false, error: t('errors.unexpected' as any) };
 }

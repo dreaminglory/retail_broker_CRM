@@ -5,7 +5,7 @@ SELECT plan(5); -- Update this number as we add tests
 -- Exclude PostGIS or internal tables if any, but in our schema we check all public tables.
 SELECT tables_are(
     'public',
-    ARRAY['agencies', 'profiles', 'agency_memberships', 'contacts', 'inquiries', 'opportunities', 'notes', 'tasks', 'audit_log', 'lead_sources', 'stages', 'opportunity_participants', 'contact_methods', 'merge_history'],
+    ARRAY['agencies', 'profiles', 'agency_memberships', 'contacts', 'inquiries', 'opportunities', 'notes', 'tasks', 'audit_log', 'lead_sources', 'stages', 'opportunity_participants', 'contact_methods', 'merge_history', 'import_jobs', 'import_rows'],
     'All expected tables should exist'
 );
 

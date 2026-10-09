@@ -60,6 +60,16 @@ export default async function ContactDetailPage({
     .toUpperCase()
     .slice(0, 2);
 
+  let importedFileName = null;
+  if (contact.import_job_id) {
+    const { data: job } = await supabase
+      .from("import_jobs")
+      .select("file_name")
+      .eq("id", contact.import_job_id)
+      .single();
+    if (job) importedFileName = job.file_name;
+  }
+
   return (
     <div className="mx-auto max-w-3xl">
       {/* Breadcrumb */}
@@ -101,6 +111,11 @@ export default async function ContactDetailPage({
           {contact.company_name && isPerson && (
             <p className="mt-1 text-sm text-muted-foreground">
               {contact.company_name}
+            </p>
+          )}
+          {importedFileName && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Imported from {importedFileName}
             </p>
           )}
         </div>

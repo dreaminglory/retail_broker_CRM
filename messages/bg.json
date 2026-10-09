@@ -14,6 +14,304 @@
     "settings": "Настройки",
     "signOut": "Изход"
   },
+              "Metadata": {
+    "root": {
+      "title": "BrokerCRM — CRM за недвижими имоти",
+      "description": "CRM система за агенции за недвижими имоти. Уверете се, че всяка сделка има собственик, следваща стъпка и пълна история."
+    },
+    "today": "Днес | BrokerCRM",
+    "contacts": "Контакти | BrokerCRM",
+    "inquiries": "Запитвания | BrokerCRM",
+    "opportunities": "Сделки | BrokerCRM",
+    "exceptions": "Изключения | BrokerCRM",
+    "dashboard": "Табло | BrokerCRM",
+    "settings": "Настройки | BrokerCRM",
+    "profile": "Профил | BrokerCRM",
+    "team": "Екип | BrokerCRM",
+    "stages": "Етапи | BrokerCRM",
+    "leadSources": "Източници | BrokerCRM",
+    "import": "Импортиране | BrokerCRM"
+  },
+  "SettingsImport": {
+    "title": "История на импортиранията",
+    "description": "Преглед на минали импортирания или стартиране на ново.",
+    "newImport": "Нов импорт",
+    "importContacts": "Импортиране на контакти",
+    "importInquiries": "Импортиране на запитвания",
+    "columns": {
+      "fileName": "Име на файл",
+      "type": "Тип",
+      "date": "Дата",
+      "status": "Статус",
+      "rows": "Редове",
+      "imported": "Внесени"
+    },
+    "noImports": "Не са намерени импортирания.",
+    "revert": "Възстанови",
+    "reverting": "Възстановяване...",
+    "revertImport": "Отмяна на импорта",
+    "revertConfirm": "Сигурни ли сте, че искате да отмените импорта на {fileName}?",
+    "revertDesc": "Това ще изтрие завинаги всички новосъздадени записи от тази задача, които не са били модифицирани или свързани с други записи от импортирането насам.",
+    "cancel": "Отказ",
+    "wizard": {
+      "title": "Импортиране на {type}",
+      "stepCount": "Стъпка {step} от 5",
+      "step1": {
+        "title": "Прикачване на файл",
+        "desc": "Изберете CSV файл за импортиране на {type}."
+      },
+      "step2": {
+        "title": "Мапване на колони",
+        "desc": "Свържете колоните от вашия CSV файл с полетата в CRM.",
+        "previousUploadAlert": "Този файл вече е бил качен. Повторното импортиране с опция \"Пропускане на дубликати\" няма да създаде дубликати."
+      },
+      "step3": {
+        "title": "Преглед на валидацията",
+        "desc": "Прегледайте резултатите преди импортиране на данните.",
+        "totalRows": "Общо редове",
+        "valid": "Валидни",
+        "duplicates": "Дубликати",
+        "invalid": "Невалидни",
+        "invalidDesc": "Невалидните редове ще бъдат пропуснати. По-късно можете да изтеглите отчет за грешките, за да ги поправите.",
+        "impactPreview": "Преглед на влиянието (Нови в Днес)",
+        "inquiriesCount": "+{count} запитвания"
+      },
+      "step4": {
+        "title": "Импортиране...",
+        "desc": "Моля, изчакайте, докато импортираме вашите {type}.",
+        "progress": "{processed} от {total} реда са импортирани"
+      },
+      "step5": {
+        "title": "Импортирането е завършено",
+        "desc": "Вашите {type} са импортирани успешно.",
+        "success": "Процесът на импортиране завърши успешно.",
+        "downloadError": "Изтегляне на отчет за грешките",
+        "goTo": "Отиди към {type}"
+      },
+      "back": "Назад",
+      "validating": "Валидиране...",
+      "nextReview": "Напред: Преглед",
+      "starting": "Стартиране...",
+      "startImport": "Старт на импортирането",
+      "inquiriesType": "запитвания",
+      "contactsType": "контакти"
+    },
+    "dropzone": {
+      "title": "Плъзнете и пуснете вашия CSV файл тук",
+      "subtitle": "или щракнете, за да изберете от вашия компютър",
+      "selectFile": "Изберете файл",
+      "supported": "Поддържани кодировки: UTF-8, Windows-1251. Макс. размер: {size}MB."
+    },
+    "mapping": {
+      "crmField": "CRM Поле",
+      "csvColumn": "CSV Колона",
+      "doNotImport": "-- Не импортирай --",
+      "fields": {
+        "full_name": "Пълно име",
+        "first_name": "Собствено име",
+        "last_name": "Фамилно име",
+        "company_name": "Име на компания",
+        "contact_type": "Тип контакт",
+        "phone": "Телефон",
+        "phone_2": "Телефон 2",
+        "email": "Имейл",
+        "email_2": "Имейл 2",
+        "viber": "Viber",
+        "whatsapp": "WhatsApp",
+        "note": "Бележка",
+        "external_ref": "Външен ID",
+        "caller_name": "Име на обаждащия се",
+        "caller_phone": "Телефон на обаждащия се",
+        "caller_email": "Имейл на обаждащия се",
+        "subject": "Тема",
+        "description": "Описание",
+        "source": "Източник",
+        "received_at": "Дата на получаване",
+        "assigned_to": "Разпределено на",
+        "status": "Статус"
+      }
+    },
+    "options": {
+      "duplicateStrategy": {
+        "title": "Стратегия при дублиране",
+        "desc": "Какво да се случи, ако контакт от файла вече съществува в CRM (съвпада по телефон, имейл или външен ID)?",
+        "skip": "Пропусни дубликатите (Препоръчително)",
+        "update": "Добави липсващи детайли към съществуващи контакти",
+        "create": "Създай въпреки това (Позволи дубликати)"
+      },
+      "defaultContactType": {
+        "title": "Тип контакт по подразбиране",
+        "desc": "Ако ред не посочва тип, как да бъде импортиран?",
+        "person": "Лице",
+        "organization": "Организация"
+      },
+      "contactLinking": {
+        "title": "Свързване на контакти",
+        "desc": "Как да обработваме обаждащите се?",
+        "link": "Свържи със съществуващи контакти (по телефон/имейл)",
+        "create": "Създай нови контакти, ако няма съвпадение"
+      },
+      "unknownSource": {
+        "title": "Стратегия при неизвестен източник",
+        "desc": "Какво се случва, ако името на Източника от CSV не е намерено в CRM?",
+        "error": "Маркирай реда като невалиден (Грешка)",
+        "useDefault": "Използвай източника по подразбиране"
+      },
+      "defaultStatus": {
+        "title": "Статус по подразбиране",
+        "desc": "Какъв статус трябва да имат импортираните запитвания?",
+        "new": "Ново",
+        "contacted": "Свързали сме се",
+        "converted": "Конвертирано",
+        "dismissed": "Отхвърлено"
+      }
+    }
+  },
+  "SettingsStages": {
+    "settings": "Настройки",
+    "title": "Етапи на фунията",
+    "description": "Конфигурирайте фунията за сделки — добавяйте, преименувайте, пренареждайте или изтривайте етапи. Крайните етапи (Спечелена, Загубена, Отглеждане) затварят сделки.",
+    "terminal": {
+      "won": "Спечелена",
+      "lost": "Загубена",
+      "nurture": "Отглеждане"
+    },
+    "stageName": "Име на етапа",
+    "stageNamePlaceholder": "напр. Квалифицирана, Преговори…",
+    "isTerminal": "Това е краен етап (затваря сделката)",
+    "terminalType": "Тип на крайния етап",
+    "selectType": "Изберете тип…",
+    "cancel": "Отказ",
+    "saving": "Запазване…",
+    "saveChanges": "Запази промените",
+    "addStage": "Добави етап",
+    "cannotDelete": "Не може да се изтрие този етап",
+    "opportunitiesInStage": "Има {count} активни сделки в този етап. Преместете ги или ги затворете преди изтриване.",
+    "opportunitiesInStage_1": "Има {count} активна сделка в този етап. Преместете я или я затворете преди изтриване.",
+    "deleteConfirm": "Сигурни ли сте, че искате да изтриете етап \"{name}\"? Това не може да бъде отменено.",
+    "deleting": "Изтриване…",
+    "deleteStage": "Изтрий етап",
+    "activeBadge": "Активен",
+    "editStage": "Редактирай етап",
+    "stagesTotal": "Общо {count} етапа",
+    "stagesTotal_1": "Общо {count} етап",
+    "savingOrder": "Запазване на подредбата…",
+    "addPipelineStage": "Добави етап",
+    "pipelineStages": "Етапи ({count})",
+    "noPipelineStages": "Няма активни етапи. Добавете отгоре.",
+    "terminalStagesTitle": "Крайни етапи ({count})",
+    "terminalStagesDesc": "Крайните етапи затварят сделка. Изисква се поне един за Спечелена и Загубена сделка.",
+    "noTerminalStages": "Няма дефинирани крайни етапи.",
+    "moveUp": "Премести нагоре",
+    "dragToReorder": "Влачи за пренареждане",
+    "moveDown": "Премести надолу",
+    "editName": "Редактирай {name}",
+    "deleteName": "Изтрий {name}"
+  },
+  "SettingsLeadSources": {
+    "settings": "Настройки",
+    "title": "Източници на запитвания",
+    "description": "Конфигурирайте каналите, чрез които постъпват запитвания във вашата агенция.",
+    "addLeadSource": "Добави източник",
+    "editLeadSource": "Редактирай източник",
+    "activeCount": "Активни ({count})",
+    "noActive": "Няма активни източници. Добавете отгоре.",
+    "inactiveCount": "Неактивни ({count})",
+    "inactiveBadge": "Неактивен",
+    "editName": "Редактирай {name}",
+    "deactivateTitle": "Деактивирай",
+    "reactivateTitle": "Активирай отново",
+    "channels": {
+      "portal": "Имотен портал",
+      "referral": "Препоръка",
+      "website": "Уебсайт на агенцията",
+      "phone": "Телефонно обаждане",
+      "social": "Социални мрежи",
+      "email": "Имейл",
+      "walk_in": "На място",
+      "other": "Друго"
+    },
+    "form": {
+      "sourceName": "Име на източника",
+      "sourceNamePlaceholder": "напр. Imot.bg",
+      "channel": "Канал",
+      "selectChannel": "Изберете канал",
+      "saving": "Запазване…",
+      "saveChanges": "Запази промените",
+      "addLeadSource": "Добави източник"
+    }
+  },
+  "SettingsTeam": {
+    "title": "Управление на екипа",
+    "description": "Преглед и управление на членовете на екипа и техните роли.",
+    "noMembership": "Не е намерено активно членство.",
+    "columns": {
+      "member": "Член",
+      "role": "Роля",
+      "status": "Статус",
+      "joined": "Присъединил се"
+    },
+    "unknown": "Неизвестен",
+    "noEmail": "Няма имейл",
+    "you": "(Вие)",
+    "status": {
+      "active": "Активен",
+      "invited": "Поканен",
+      "deactivated": "Деактивиран"
+    },
+    "invited": "Поканен {date}",
+    "roles": {
+      "owner": "Собственик",
+      "manager": "Мениджър",
+      "broker": "Брокер"
+    },
+    "actions": {
+      "openMenu": "Отвори менюто",
+      "actions": "Действия",
+      "changeRole": "Промяна на роля",
+      "makeOwner": "Направи собственик",
+      "makeManager": "Направи мениджър",
+      "makeBroker": "Направи брокер",
+      "cancelInvitation": "Откажи поканата",
+      "deactivateMember": "Деактивирай член",
+      "reactivateMember": "Активирай отново",
+      "roleUpdated": "Ролята е обновена",
+      "memberReactivated": "Членът е активиран",
+      "memberDeactivated": "Членът е деактивиран",
+      "invitationCancelled": "Поканата е отменена",
+      "unknownError": "Неизвестна грешка"
+    },
+    "invite": {
+      "button": "Покани член",
+      "title": "Покани член в екипа",
+      "description": "Изпратете имейл покана за присъединяване към агенцията.",
+      "emailLabel": "Имейл адрес",
+      "emailPlaceholder": "colleague@example.com",
+      "roleLabel": "Роля",
+      "selectRole": "Изберете роля",
+      "cancel": "Отказ",
+      "sending": "Изпращане...",
+      "send": "Изпрати покана",
+      "success": "Поканата е изпратена до {email}"
+    }
+  },
+  "SettingsProfile": {
+    "title": "Профил",
+    "description": "Управление на вашата лична информация. Екранното ви име е видимо за всички членове на екипа.",
+    "emailLabel": "Имейл",
+    "success": "Профилът е обновен успешно",
+    "error": "Неуспешно обновяване на профила",
+    "displayName": "Екранно име",
+    "displayNamePlaceholder": "Въведете екранно име",
+    "displayNameHelp": "Това е името, което се показва в бележки, задачи и история.",
+    "saving": "Запазване...",
+    "saveChanges": "Запази промените",
+    "langSuccess": "Езикът е обновен",
+    "langError": "Неуспешно обновяване на езика",
+    "language": "Език",
+    "selectLanguage": "Изберете език",
+    "languageHelp": "Изберете езика на приложението."
+  },
   "settings": {
     "title": "Настройки",
     "description": "Управление на предпочитанията за акаунта и агенцията.",
@@ -21,7 +319,8 @@
     "profile": "Профил",
     "team": "Екип",
     "leadSources": "Източници",
-    "pipelineStages": "Етапи на фунията"
+    "pipelineStages": "Етапи на фунията",
+    "import": "Импортиране"
   },
   "search": {
     "placeholder": "Търсене...",
@@ -92,6 +391,611 @@
       "agencyNamePlaceholder": "София Имоти",
       "submit": "Завършване на настройката",
       "loading": "Създаване на агенция..."
+    }
+  },
+  "Today": {
+    "title": "Днес",
+    "hasWorkSubtitle": "Имате {count} задача(и) за внимание",
+    "allCaughtUpSubtitle": "Всичко е приключено – няма чакащи задачи!",
+    "overdueCount": "{count} просрочени",
+    "newInquiriesCount": "{count} нови запитвания",
+    "dueTodayCount": "{count} за днес",
+    "atRiskCount": "{count} в риск",
+    "sections": {
+      "overdue": "Просрочени",
+      "newInquiries": "Нови запитвания",
+      "dueToday": "За днес",
+      "comingUp": "Предстоящи",
+      "atRisk": "В риск – Без следващо действие"
+    },
+    "unknownCaller": "Неизвестен обаждащ се",
+    "updated": "Обновено",
+    "emptyState": {
+      "title": "Всичко е приключено!",
+      "description": "Нямате просрочени задачи, чакаща работа или сделки в риск. Страхотна работа!",
+      "viewContacts": "Преглед на контакти",
+      "viewOpportunities": "Преглед на сделки"
+    }
+  },
+  "TaskCard": {
+    "types": {
+      "call": "Обаждане",
+      "email": "Имейл",
+      "viewing": "Оглед",
+      "meeting": "Среща",
+      "follow_up": "Последващо действие",
+      "other": "Друго"
+    },
+    "overdueDuration": "{duration} просрочване",
+    "dueTodayTime": "Днес в {time}",
+    "dueDateTime": "{date}",
+    "noDueDate": "Няма краен срок",
+    "complete": "Приключване"
+  },
+  "TaskCompleteDialog": {
+    "title": "Приключване на задача",
+    "description": "Запишете какво се случи с „{title}“",
+    "error": {
+      "missingOutcome": "Моля, опишете какво се е случило"
+    },
+    "fields": {
+      "outcome": {
+        "label": "Какво се случи?",
+        "placeholder": "Говорих с клиента, интересуват се от оглед другата седмица..."
+      },
+      "nextTask": {
+        "schedule": "Планирай следващо действие",
+        "title": "Заглавие на задача",
+        "placeholder": "Последващо обаждане след оглед",
+        "type": "Тип",
+        "typePlaceholder": "Изберете тип",
+        "dueDate": "Краен срок",
+        "assignTo": "Възложи на"
+      },
+      "stage": {
+        "advance": "Смени етап",
+        "placeholder": "Изберете нов етап"
+      }
+    },
+    "actions": {
+      "cancel": "Отказ",
+      "saving": "Запазване...",
+      "submit": "Приключи задачата"
+    },
+    "types": {
+      "call": "Обаждане",
+      "email": "Имейл",
+      "viewing": "Оглед",
+      "meeting": "Среща",
+      "follow_up": "Последващо действие",
+      "other": "Друго"
+    }
+  },
+  "ContactListTable": {
+    "emptyTitle": "Няма контакти",
+    "emptyDescription": "Създайте първия си контакт, за да започнете.",
+    "typePerson": "Лице",
+    "typeOrg": "Орг",
+    "archived": "Архивиран"
+  },
+  "DuplicateSuggestionModal": {
+    "title": "Възможни дубликати",
+    "description": "Намерихме {count} съществуващ(и) контакт(а), които може да са същото лице или организация.",
+    "organization": "Организация",
+    "matches": {
+      "phone": "Съвпадащ телефон",
+      "email": "Съвпадащ имейл",
+      "name": "Сходно име"
+    },
+    "viewProfile": "Преглед на профил",
+    "actions": {
+      "cancel": "Отказ",
+      "creating": "Създаване...",
+      "createAnyway": "Нито едно – Създай въпреки това"
+    }
+  },
+  "LinkedOpportunities": {
+    "emptyState": "Свързаните сделки ще се появят тук."
+  },
+  "Enums": {
+    "opportunityStatus": {
+      "won": "Спечелена",
+      "lost": "Изгубена",
+      "nurture": "За подхранване",
+      "archived": "Архивирана",
+      "active": "Активна"
+    },
+        "opportunityType": {
+      "buyer": "Купувач",
+      "seller": "Продавач",
+      "tenant": "Наемател",
+      "landlord": "Наемодател"
+    },
+    "participantRole": {
+      "buyer": "Купувач",
+      "seller": "Продавач",
+      "tenant": "Наемател",
+      "landlord": "Наемодател",
+      "broker": "Брокер",
+      "co_owner": "Съсобственик",
+      "representative": "Представител",
+      "other": "Друг"
+    },
+    "Stages": {
+      "New": "Нов",
+      "Attempting Contact": "Опит за контакт",
+      "Qualified": "Квалифициран",
+      "Active": "Активен",
+      "Viewing": "Оглед",
+      "Offer": "Оферта",
+      "Negotiation": "Преговори",
+      "Won": "Спечелена",
+      "Lost": "Загубена",
+      "Nurture": "Отглеждане"
+    },
+    "unassigned": "Невъзложен(а)",
+    "opportunityTemperature": {
+      "hot": "Гореща",
+      "warm": "Топла",
+      "cold": "Студена"
+    },
+    "contactMethod": {
+      "phone": "Телефон",
+      "email": "Имейл",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "other": "Друго"
+    }
+  },
+  "ContactMethodList": {
+    "emptyState": "Няма добавени методи за връзка.",
+    "addMethod": "Добави метод за връзка",
+    "primary": "Основен",
+    "setPrimary": "Направи основен",
+    "removeMethod": "Премахни метод",
+    "adding": "Добавяне...",
+    "fields": {
+      "type": {
+        "label": "Тип"
+      },
+      "value": {
+        "label": "Стойност",
+        "emailPlaceholder": "email@example.com",
+        "phonePlaceholder": "+359 888 123 456",
+        "placeholder": "Стойност"
+      },
+      "label": {
+        "label": "Етикет (по избор)",
+        "placeholder": "напр. мобилен, служебен"
+      }
+    }
+  },
+  "MergeDialog": {
+    "trigger": "Сливане",
+    "title": "Сливане на контакт",
+    "description": "Слейте <name>{name}</name> в друг контакт. Този контакт ще бъде архивиран.",
+    "searchLabel": "Търсене на контакти",
+    "searchPlaceholder": "Въведете име за търсене (напр. Димитър)...",
+    "select": "Избери",
+    "noResults": "Няма намерени контакти.",
+    "loadingPreview": "Зареждане на преглед...",
+    "previewTitle": "Преглед на сливането",
+    "preview": {
+      "opportunities": "Ще бъдат прехвърлени {count} сделки",
+      "inquiries": "Ще бъдат прехвърлени {count} запитвания",
+      "tasks": "Ще бъдат прехвърлени {count} задачи",
+      "methods": "Ще бъдат прехвърлени {count} метода за връзка"
+    },
+    "back": "Назад",
+    "merging": "Сливане...",
+    "mergeInto": "Слей в {name}"
+  },
+  "ContactForm": {
+    "fields": {
+      "type": {
+        "label": "Тип",
+        "person": "Лице",
+        "organization": "Организация"
+      },
+      "firstName": {
+        "label": "Име",
+        "placeholder": "Име"
+      },
+      "lastName": {
+        "label": "Фамилия",
+        "placeholder": "Фамилия"
+      },
+      "companyName": {
+        "label": "Име на компания",
+        "placeholder": "напр. Алфа ООД"
+      },
+      "companyOptional": {
+        "label": "Компания (по избор)",
+        "placeholder": "Търсене на компания"
+      },
+      "notes": {
+        "label": "Бележки (по избор)",
+        "placeholder": "Добавете начални бележки..."
+      }
+    },
+    "methodsTitle": "Методи за връзка",
+    "addMethod": "Добави",
+    "primary": "Основен",
+    "setPrimary": "Направи основен",
+    "removeMethod": "Премахни",
+    "saving": "Запазване...",
+    "saveChanges": "Запази промените",
+    "createContact": "Създай контакт"
+  },
+  "ContactsPage": {
+    "title": "Контакти",
+    "count": "{count} контакт(а)",
+    "archivedBadge": " (Архивиран)",
+    "matchingSearch": " съвпадащи с \"{search}\"",
+    "importBtn": "Внасяне",
+    "newContactBtn": "Нов контакт",
+    "newContactTitle": "Нов контакт",
+    "searchPlaceholder": "Търсене по име...",
+    "searchBtn": "Търси",
+    "filters": {
+      "active": "Активни",
+      "archived": "Архивирани",
+      "all": "Всички"
+    }
+  },
+  "ContactDetailClient": {
+    "editBtn": "Редактиране",
+    "editTitle": "Редактиране на контакт",
+    "archiveBtn": "Архивиране",
+    "archiveTitle": "Архивиране на контакт",
+    "archiveDescription": "<name>{name}</name> ще бъде архивиран и скрит от списъците. Свързаните сделки не се променят.",
+    "cancelBtn": "Отказ",
+    "archivingBtn": "Архивиране..."
+  },
+  "ContactActivity": {
+    "errors": {
+      "create": "Грешка при създаване",
+      "update": "Грешка при обновяване",
+      "delete": "Грешка при изтриване"
+    },
+    "placeholder": "Добавете бележка...",
+    "cancelBtn": "Отказ",
+    "savingBtn": "Запазване...",
+    "saveBtn": "Запази",
+    "addNoteBtn": "Добави бележка..."
+  },
+  "InquiriesPage": {
+    "title": "Запитвания",
+    "count": "{count} {statusLabel}",
+    "matchingSearch": " съвпадащи с \"{search}\"",
+    "importBtn": "Внасяне",
+    "logInquiryBtn": "Ново запитване",
+    "logInquiryTitle": "Ново запитване",
+    "searchPlaceholder": "Търсене по име, телефон, тема...",
+    "unknownCaller": "Неизвестен обаждащ се",
+    "searchBtn": "Търси",
+    "singleInquiryLabel": "Преглед на запитване от директен линк.",
+    "viewAllBtn": "Виж всички",
+    "emptyState": {
+      "notFoundTitle": "Няма намерени запитвания",
+      "emptyTitle": "Няма запитвания все още",
+      "notFoundDesc": "Опитайте да промените филтрите.",
+      "emptyDesc": "Въведете запитване ръчно или внесете списък."
+    },
+    "dismissModal": {
+      "title": "Отхвърляне на запитване",
+      "warning": "Това действие е необратимо.",
+      "reasonLabel": "Причина (по избор)",
+      "reasonPlaceholder": "напр. грешен номер, спам...",
+      "cancelBtn": "Отказ",
+      "dismissingBtn": "Отхвърляне...",
+      "submitBtn": "Отхвърли запитването"
+    },
+    "filters": {
+      "all": "Всички",
+      "new": "Нови",
+      "contacted": "Свързани",
+      "converted": "Преобразувани",
+      "dismissed": "Отхвърлени"
+    }
+  },
+  "ConvertInquiryDialog": {
+    "title": "Преобразуване в сделка",
+    "contactTabNew": "Нов контакт",
+    "contactTabExisting": "Свързване",
+    "contactSection": "Контакт",
+    "newContactType": "Тип контакт",
+    "typePerson": "Лице",
+    "typeOrganization": "Организация",
+    "firstName": "Име",
+    "firstNamePlaceholder": "Име",
+    "lastName": "Фамилия",
+    "lastNamePlaceholder": "Фамилия",
+    "companyName": "Име на компания",
+    "companyNamePlaceholder": "напр. Алфа ООД",
+    "searchContactsPlaceholder": "Търсене на контакти…",
+    "noContactsFound": "Няма намерени контакти",
+    "opportunitySection": "Сделка",
+    "oppTitle": "Заглавие",
+    "oppTitlePlaceholder": "напр. Иван – Купувач – 3-стаен Лозенец",
+    "oppType": "Тип",
+    "oppTypePlaceholder": "Изберете тип",
+    "oppStage": "Етап",
+    "oppStagePlaceholder": "Изберете етап…",
+    "assignedTo": "Възложено на",
+    "cancel": "Отказ",
+    "converting": "Преобразуване…",
+    "convert": "Преобразувай"
+  },
+  "InquiryCard": {
+    "importedBadge": "Внесено",
+    "unknownCaller": "Неизвестен обаждащ се",
+    "markContacted": "Отбележи като свързан",
+    "convertToOpportunity": "Преобразуване в сделка",
+    "dismiss": "Отхвърли",
+    "assigned": "Възложено"
+  },
+  "InquiryForm": {
+    "source": "Източник",
+    "sourcePlaceholder": "Изберете източник…",
+    "assignedTo": "Възложено на",
+    "callerName": "Име на обаждащия се",
+    "callerNamePlaceholder": "напр. Иван Петров",
+    "phone": "Телефон",
+    "phonePlaceholder": "+359 888 …",
+    "email": "Имейл",
+    "emailPlaceholder": "name@example.com",
+    "subject": "Тема",
+    "subjectPlaceholder": "напр. Търси 3-стаен в Лозенец",
+    "description": "Описание (по избор)",
+    "descriptionPlaceholder": "Допълнителни детайли за запитването…",
+    "externalRef": "Външен реф. (по избор)",
+    "externalRefPlaceholder": "ID в портал или номер",
+    "saving": "Запазване…",
+    "submit": "Въведи запитване"
+  },
+  "CloseOpportunityDialog": {
+    "title": "Затваряне на сделка",
+    "outcomeLabel": "Резултат",
+    "outcomePlaceholder": "Изберете резултат",
+    "won": "Спечелена (Затворена)",
+    "lost": "Загубена (Затворена)",
+    "nurture": "Задържана (В изчакване)",
+    "lostReasonLabel": "Причина за загуба",
+    "lostReasonPlaceholder": "Защо беше загубена сделката?",
+    "cancel": "Отказ",
+    "closingBtn": "Затваряне...",
+    "submitBtn": "Затвори сделката"
+  },
+  "OpportunityForm": {
+    "titleLabel": "Заглавие",
+    "titlePlaceholder": "напр. Купувач търси 3-стаен в Лозенец",
+    "typeLabel": "Тип",
+    "typePlaceholder": "Изберете тип",
+    "stageLabel": "Етап",
+    "stagePlaceholder": "Изберете етап",
+    "primaryContactLabel": "Основен контакт",
+    "primaryContactPlaceholder": "Изберете контакт",
+    "sourceLabel": "Източник",
+    "sourcePlaceholder": "Изберете източник",
+    "assignedToLabel": "Възложено на",
+    "temperatureLabel": "Интерес (температура)",
+    "temperaturePlaceholder": "Изберете интерес",
+    "hot": "🔥 Горещо",
+    "warm": "⚡ Топло",
+    "cold": "❄️ Студено",
+    "expectedValueLabel": "Очаквана стойност",
+    "expectedValuePlaceholder": "0.00",
+    "notesLabel": "Бележки",
+    "notesPlaceholder": "Първоначални бележки относно изискванията...",
+    "savingBtn": "Запазване…",
+    "submitCreate": "Създай сделка",
+    "submitEdit": "Запази промените",
+    "none": "Няма"
+  },
+  "OpportunityListTable": {
+    "noOpportunities": "Няма намерени сделки",
+    "noOpportunitiesDesc": "Променете филтрите или създайте нова сделка."
+  },
+  "ParticipantList": {
+    "title": "Участници",
+    "addBtn": "Добави",
+    "addTitle": "Добави участник",
+    "contactLabel": "Контакт",
+    "contactPlaceholder": "Изберете контакт",
+    "roleLabel": "Роля",
+    "rolePlaceholder": "Изберете роля",
+    "notesLabel": "Бележки (по избор)",
+    "notesPlaceholder": "напр. Нуждае се от финансиране...",
+    "addingBtn": "Добавяне…",
+    "submitAdd": "Добави участник",
+    "noParticipants": "Няма добавени участници.",
+    "internalUser": "Вътрешен потребител",
+    "removeTitle": "Премахване на участник",
+    "removeConfirm": "Сигурни ли сте, че искате да премахнете този участник от сделката?",
+    "cancelBtn": "Отказ",
+    "removingBtn": "Премахване…",
+    "submitRemove": "Премахни"
+  },
+  "OpportunityTaskList": {
+    "title": "Задачи",
+    "pending": "чакащи",
+    "addBtn": "Добави задача",
+    "addTitle": "Добавяне на задача",
+    "taskTitleLabel": "Заглавие",
+    "taskTitlePlaceholder": "напр. Обаждане за обсъждане на оферта...",
+    "dueAtLabel": "Краен срок",
+    "descriptionLabel": "Описание (по избор)",
+    "assignedToLabel": "Възложено на",
+    "addingBtn": "Добавяне…",
+    "submitAdd": "Добави задача",
+    "noPendingTasks": "Няма чакащи задачи.",
+    "overdue": "Просрочена",
+    "completedSection": "Завършени",
+    "outcomeLabel": "Резултат"
+  },
+  "OpportunitiesPage": {
+    "title": "Сделки",
+    "count": "Намерени {count} сделки",
+    "newBtn": "Нова сделка",
+    "newTitle": "Създаване на сделка",
+    "searchPlaceholder": "Търсене по заглавие…",
+    "searchBtn": "Търси",
+    "filters": {
+      "allStatuses": "Всички статуси",
+      "active": "Активни",
+      "won": "Спечелени",
+      "lost": "Загубени",
+      "nurture": "Задържани",
+      "archived": "Архивирани",
+      "allTypes": "Всички типове",
+      "buyer": "Купувач",
+      "seller": "Продавач",
+      "tenant": "Наемател",
+      "landlord": "Наемодател",
+      "allStages": "Всички етапи",
+      "unknownStage": "Неизвестен етап"
+    }
+  },
+  "OpportunityDetail": {
+    "backBtn": "Назад към сделките",
+    "closedLabel": "Затворена {date}",
+    "stageLabel": "Етап:",
+    "stagePlaceholder": "Изберете етап",
+    "closeBtn": "Затвори",
+    "reactivateBtn": "Активирай",
+    "editBtn": "Редакция",
+    "editTitle": "Редакция на сделка",
+    "detailsTitle": "Детайли",
+    "primaryContact": "Основен контакт",
+    "expectedValue": "Очаквана стойност",
+    "leadSource": "Източник",
+    "created": "Създадена",
+    "origin": "Произход",
+    "viewInquiry": "Виж запитване",
+    "notesTitle": "Бележки",
+    "activityHistoryTitle": "История на активността",
+    "none": "—"
+  },
+  "Timeline": {
+    "noActivity": "Няма история на активността.",
+    "loading": "Зареждане...",
+    "loadMore": "Зареди по-стара активност",
+    "events": {
+      "taskCompleted": "Задачата е завършена",
+      "taskCreated": "Задачата е създадена",
+      "created": "Създаден(а)",
+      "stageChanged": "Етапът е променен",
+      "assignmentChanged": "Отговорникът е променен",
+      "statusChanged": "Статусът е променен",
+      "systemUpdate": "Системно обновяване",
+      "newInquiry": "Получено е ново запитване"
+    },
+    "outcomeLabel": "Резултат",
+    "unassigned": "Невъзложен(а)",
+    "importedFrom": "Внесен(а) от файл:",
+    "csvFile": "CSV файл",
+    "manuallyCreated": "Ръчно създаден(а)"
+  },
+  "NoteCard": {
+    "teamMember": "Член на екипа",
+    "unpinNote": "Отбоди бележката",
+    "pinNote": "Забоди бележката",
+    "editNote": "Редактирай бележката",
+    "deleteNote": "Изтрий бележката",
+    "cancel": "Отказ",
+    "saving": "Запазване...",
+    "saveChanges": "Запази промените",
+    "deleteNoteTitle": "Изтриване на бележка",
+    "deleteNoteDesc": "Сигурни ли сте, че искате да изтриете тази бележка? Това действие е необратимо.",
+    "deleting": "Изтриване...",
+    "deleteBtn": "Изтрий",
+    "openMenu": "Отвори менюто"
+  },
+    "settings": {
+    "title": "Настройки",
+    "description": "Управление на вашата агенция и предпочитания.",
+    "overview": "Общ преглед",
+    "overviewDesc": "Бърз достъп до конфигурацията на вашия акаунт и агенция.",
+    "profile": "Профил",
+    "profileDesc": "Управление на вашето екранно име и лична информация.",
+    "team": "Екип",
+    "teamDesc": "Преглед на членовете на екипа, управление на роли и покани към нови брокери във вашата агенция.",
+    "leadSources": "Източници на лийдове",
+    "leadSourcesDesc": "Управление на каналите, през които пристигат запитвания (портали, препоръки, уебсайт и др.)",
+    "pipelineStages": "Етапи на фунията",
+    "pipelineStagesDesc": "Конфигурирайте етапите на вашата фуния от сделки и тяхната подредба.",
+    "import": "Импортиране",
+    "importDesc": "Внасяне на данни във вашето работно пространство."
+  },
+  "Dashboard": {
+    "welcome": "Добре дошли, {name}!",
+    "workspaceReady": "Работното пространство на {agency} е готово.",
+    "ownerNotice": " Вие сте собственик на агенцията.",
+    "todayWorkTitle": "Днешните задачи",
+    "todayItems": "{count} елемента изискват вашето внимание",
+    "todayItem": "{count} елемент изисква вашето внимание",
+    "caughtUp": "Всичко е приключено — страхотна работа!",
+    "overdue": "Просрочени",
+    "newInquiries": "Нови запитвания",
+    "dueToday": "За днес",
+    "atRisk": "В риск",
+    "quickActions": "Бързи действия",
+    "actions": {
+      "inquiriesTitle": "Запитвания",
+      "inquiriesDesc": "Преглед и управление на входящи лийдове",
+      "opportunitiesTitle": "Сделки",
+      "opportunitiesDesc": "Проследяване на пайплайн и сделки",
+      "contactsTitle": "Контакти",
+      "contactsDesc": "Хора и организации"
+    }
+  },
+  "ExceptionsPage": {
+    "title": "Табло с изключения",
+    "description": "Идентифицирайте оперативни пречки и задачи за действие в агенцията.",
+    "unassigned": {
+      "title": "Невъзложени запитвания",
+      "description": "Нови запитвания без назначен брокер",
+      "empty": "Няма невъзложени запитвания.",
+      "unknownCaller": "Неизвестен обаждащ се",
+      "noSubject": "Няма тема"
+    },
+    "overdue": {
+      "title": "Просрочени задачи",
+      "description": "Брокери със задачи с изтекъл срок",
+      "empty": "Няма просрочени задачи.",
+      "mostOverdue": "Най-забавена: {title} ({time})",
+      "overdueBadge": "{count} просрочени"
+    },
+    "atRisk": {
+      "title": "Сделки в риск",
+      "description": "Активни сделки БЕЗ предстоящи планирани задачи",
+      "empty": "Няма сделки в риск.",
+      "columns": {
+        "opportunity": "Сделка",
+        "stage": "Етап",
+        "broker": "Брокер",
+        "created": "Създадена"
+      },
+      "unassigned": "Невъзложена"
+    },
+    "stale": {
+      "title": "Изоставени сделки",
+      "description": "> 7 дни от последната активност",
+      "empty": "Няма изоставени сделки.",
+      "updated": "Обновена на {date}",
+      "broker": "Брокер: {name}",
+      "none": "Няма"
+    },
+    "workload": {
+      "title": "Разпределение на натоварването",
+      "description": "Активни сделки и чакащи задачи по брокер",
+      "empty": "Няма активни натоварвания.",
+      "columns": {
+        "broker": "Брокер",
+        "activeOpps": "Активни сделки",
+        "pendingTasks": "Чакащи задачи"
+      }
     }
   }
 }

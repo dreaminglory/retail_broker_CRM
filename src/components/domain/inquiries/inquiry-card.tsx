@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Inquiry, InquiryStatus } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
+import Link from "next/link";
 import {
   Phone,
   Mail,
@@ -21,6 +22,7 @@ import {
   MessageSquareOff,
   CheckCheck,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
@@ -83,6 +85,8 @@ export function InquiryCard({
   onConvert,
   onDismiss,
 }: InquiryCardProps) {
+  const t = useTranslations("InquiryCard");
+
   const statusCfg = STATUS_CONFIG[inquiry.status];
   const isTerminal =
     inquiry.status === "converted" || inquiry.status === "dismissed";
@@ -97,7 +101,7 @@ export function InquiryCard({
     inquiry.caller_name ||
     inquiry.caller_phone ||
     inquiry.caller_email ||
-    "Unknown caller";
+    t("unknownCaller");
 
   return (
     <div className="group relative rounded-lg border bg-card px-4 py-3.5 transition-shadow hover:shadow-sm">
@@ -118,6 +122,13 @@ export function InquiryCard({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {inquiry.import_job_id && (
+            <Link href="/settings/import">
+              <Badge variant="outline" className="text-[10px] uppercase font-semibold text-muted-foreground border-muted-foreground/30 hover:bg-muted" title={t("importedBadge")}>
+                {t("importedBadge")}
+              </Badge>
+            </Link>
+          )}
           <Badge
             variant="secondary"
             className={`text-[11px] font-medium px-2 py-0.5 ${statusCfg.className}`}
@@ -148,7 +159,7 @@ export function InquiryCard({
                     id={`inquiry-mark-contacted-${inquiry.id}`}
                   >
                     <CheckCheck className="mr-2 h-4 w-4 text-amber-600" />
-                    Mark contacted
+                    {t("markContacted")}
                   </DropdownMenuItem>
                 )}
                 {onConvert && (
@@ -157,7 +168,7 @@ export function InquiryCard({
                     id={`inquiry-convert-${inquiry.id}`}
                   >
                     <ArrowUpRight className="mr-2 h-4 w-4 text-emerald-600" />
-                    Convert to opportunity
+                    {t("convertToOpportunity")}
                   </DropdownMenuItem>
                 )}
                 {onDismiss && (
@@ -169,7 +180,7 @@ export function InquiryCard({
                       id={`inquiry-dismiss-${inquiry.id}`}
                     >
                       <MessageSquareOff className="mr-2 h-4 w-4" />
-                      Dismiss
+                      {t("dismiss")}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -204,7 +215,7 @@ export function InquiryCard({
           {inquiry.assigned_to && (
             <span className="flex items-center gap-1">
               <User className="h-3 w-3" />
-              Assigned
+              {t("assigned")}
             </span>
           )}
           {inquiry.dismissed_reason && (

@@ -13,6 +13,7 @@ import {
 } from "@/app/(dashboard)/contacts/[id]/notes/actions";
 import { createOpportunityNoteAction } from "./notes/actions";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export function OpportunityActivity({
   initialTimeline,
@@ -23,6 +24,7 @@ export function OpportunityActivity({
   opportunityId: string;
   currentUserId?: string;
 }) {
+  const t = useTranslations("ContactActivity");
   const pathname = usePathname();
   const [isAdding, setIsAdding] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState("");
@@ -35,9 +37,9 @@ export function OpportunityActivity({
     try {
       const formData = new FormData();
       formData.append("content", newNoteContent);
-      const result = await createOpportunityNoteAction(opportunityId, { success: true, data: undefined as unknown }, formData);
+      const result = await createOpportunityNoteAction(opportunityId, { success: true, data: undefined }, formData);
       if (!result.success) {
-        toast.error(result.error || "Failed to create note");
+        toast.error(result.error || t("errors.create"));
         return;
       }
       setNewNoteContent("");
@@ -53,18 +55,18 @@ export function OpportunityActivity({
     formData.append("is_pinned", isPinned ? "true" : "false");
     formData.append("pathname", pathname);
 
-    const result = await updateNoteAction(noteId, { success: true, data: undefined as unknown }, formData);
+    const result = await updateNoteAction(noteId, { success: true, data: undefined }, formData);
     if (!result.success) {
-      toast.error(result.error || "Failed to update note");
-      throw new Error(result.error || "Failed to update note");
+      toast.error(result.error || t("errors.update"));
+      throw new Error(result.error || t("errors.update"));
     }
   };
 
   const handleDeleteNote = async (noteId: string) => {
     const result = await deleteNoteAction(noteId, pathname);
     if (!result.success) {
-      toast.error(result.error || "Failed to delete note");
-      throw new Error(result.error || "Failed to delete note");
+      toast.error(result.error || t("errors.delete"));
+      throw new Error(result.error || t("errors.delete"));
     }
   };
 
@@ -74,7 +76,7 @@ export function OpportunityActivity({
         {isAdding ? (
           <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
             <Textarea
-              placeholder="Write your note here..."
+              placeholder={t("placeholder")}
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
               className="min-h-[100px] bg-background text-sm"
@@ -90,14 +92,14 @@ export function OpportunityActivity({
                 }}
                 disabled={isSubmitting}
               >
-                Cancel
+                {t("cancelBtn")}
               </Button>
               <Button 
                 size="sm" 
                 onClick={handleCreateNote} 
                 disabled={isSubmitting || !newNoteContent.trim()}
               >
-                {isSubmitting ? "Saving..." : "Save note"}
+                {isSubmitting ? t("savingBtn") : t("saveBtn")}
               </Button>
             </div>
           </div>
@@ -108,7 +110,7 @@ export function OpportunityActivity({
             onClick={() => setIsAdding(true)}
           >
             <MessageSquarePlus className="mr-2 h-4 w-4" />
-            Add a note...
+            {t("addNoteBtn")}
           </Button>
         )}
       </div>

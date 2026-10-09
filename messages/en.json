@@ -14,6 +14,304 @@
     "settings": "Settings",
     "signOut": "Sign out"
   },
+              "Metadata": {
+    "root": {
+      "title": "BrokerCRM — Real Estate Agency CRM",
+      "description": "A Bulgarian-first CRM for residential real estate agencies. Ensure every opportunity has an owner, a next action, and a complete history."
+    },
+    "today": "Today | BrokerCRM",
+    "contacts": "Contacts | BrokerCRM",
+    "inquiries": "Inquiries | BrokerCRM",
+    "opportunities": "Opportunities | BrokerCRM",
+    "exceptions": "Exceptions | BrokerCRM",
+    "dashboard": "Dashboard | BrokerCRM",
+    "settings": "Settings | BrokerCRM",
+    "profile": "Profile | BrokerCRM",
+    "team": "Team | BrokerCRM",
+    "stages": "Stages | BrokerCRM",
+    "leadSources": "Lead Sources | BrokerCRM",
+    "import": "Import | BrokerCRM"
+  },
+  "SettingsImport": {
+    "title": "Import History",
+    "description": "View past imports or start a new one.",
+    "newImport": "New Import",
+    "importContacts": "Import Contacts",
+    "importInquiries": "Import Inquiries",
+    "columns": {
+      "fileName": "File Name",
+      "type": "Type",
+      "date": "Date",
+      "status": "Status",
+      "rows": "Rows",
+      "imported": "Imported"
+    },
+    "noImports": "No imports found.",
+    "revert": "Revert",
+    "reverting": "Reverting...",
+    "revertImport": "Revert Import",
+    "revertConfirm": "Are you sure you want to revert the import of {fileName}?",
+    "revertDesc": "This will permanently delete all newly created records from this job that haven't been modified or referenced by other records since import.",
+    "cancel": "Cancel",
+    "wizard": {
+      "title": "Import {type}",
+      "stepCount": "Step {step} of 5",
+      "step1": {
+        "title": "Upload File",
+        "desc": "Select a CSV file to import {type} from."
+      },
+      "step2": {
+        "title": "Map Columns",
+        "desc": "Map the columns from your CSV to CRM fields.",
+        "previousUploadAlert": "This file was previously uploaded. Re-importing it with \"Skip duplicates\" will not create duplicates."
+      },
+      "step3": {
+        "title": "Review Validation",
+        "desc": "Review the results before importing data.",
+        "totalRows": "Total Rows",
+        "valid": "Valid",
+        "duplicates": "Duplicates",
+        "invalid": "Invalid",
+        "invalidDesc": "Invalid rows will be skipped. You can download an error report later to fix them.",
+        "impactPreview": "Impact Preview (New on Today Screen)",
+        "inquiriesCount": "+{count} inquiries"
+      },
+      "step4": {
+        "title": "Importing...",
+        "desc": "Please wait while we import your {type}.",
+        "progress": "{processed} of {total} rows imported"
+      },
+      "step5": {
+        "title": "Import Complete",
+        "desc": "Your {type} have been successfully imported.",
+        "success": "The import process finished successfully.",
+        "downloadError": "Download Error Report",
+        "goTo": "Go to {type}"
+      },
+      "back": "Back",
+      "validating": "Validating...",
+      "nextReview": "Next: Review",
+      "starting": "Starting...",
+      "startImport": "Start Import",
+      "inquiriesType": "Inquiries",
+      "contactsType": "Contacts"
+    },
+    "dropzone": {
+      "title": "Drag & drop your CSV file here",
+      "subtitle": "or click to browse from your computer",
+      "selectFile": "Select File",
+      "supported": "Supported encodings: UTF-8, Windows-1251. Max size: {size}MB."
+    },
+    "mapping": {
+      "crmField": "CRM Field",
+      "csvColumn": "CSV Column",
+      "doNotImport": "-- Do not import --",
+      "fields": {
+        "full_name": "Full Name",
+        "first_name": "First Name",
+        "last_name": "Last Name",
+        "company_name": "Company Name",
+        "contact_type": "Contact Type",
+        "phone": "Phone",
+        "phone_2": "Phone 2",
+        "email": "Email",
+        "email_2": "Email 2",
+        "viber": "Viber",
+        "whatsapp": "WhatsApp",
+        "note": "Note",
+        "external_ref": "External Reference ID",
+        "caller_name": "Caller Name",
+        "caller_phone": "Caller Phone",
+        "caller_email": "Caller Email",
+        "subject": "Subject",
+        "description": "Description",
+        "source": "Source",
+        "received_at": "Date Received",
+        "assigned_to": "Assigned To",
+        "status": "Status"
+      }
+    },
+    "options": {
+      "duplicateStrategy": {
+        "title": "Duplicate Strategy",
+        "desc": "What should happen if a contact in the file already exists in the CRM (matched by phone, email, or external ID)?",
+        "skip": "Skip duplicates (Recommended)",
+        "update": "Add missing details to existing contacts",
+        "create": "Create anyway (Allow duplicates)"
+      },
+      "defaultContactType": {
+        "title": "Default Contact Type",
+        "desc": "If a row doesn't specify a type, what should it be imported as?",
+        "person": "Person",
+        "organization": "Organization"
+      },
+      "contactLinking": {
+        "title": "Contact Linking",
+        "desc": "How should we handle callers?",
+        "link": "Link to existing contacts (by phone/email)",
+        "create": "Create new contacts if no match found"
+      },
+      "unknownSource": {
+        "title": "Unknown Source Strategy",
+        "desc": "What happens if a Lead Source name from the CSV is not found in CRM?",
+        "error": "Mark row as invalid (Error)",
+        "useDefault": "Use default source"
+      },
+      "defaultStatus": {
+        "title": "Default Status",
+        "desc": "What status should imported inquiries have?",
+        "new": "New",
+        "contacted": "Contacted",
+        "converted": "Converted",
+        "dismissed": "Dismissed"
+      }
+    }
+  },
+  "SettingsStages": {
+    "settings": "Settings",
+    "title": "Pipeline Stages",
+    "description": "Configure your opportunity pipeline — add, rename, reorder, or delete stages. Terminal stages (Won, Lost, Nurture) close opportunities.",
+    "terminal": {
+      "won": "Won",
+      "lost": "Lost",
+      "nurture": "Nurture"
+    },
+    "stageName": "Stage name",
+    "stageNamePlaceholder": "e.g. Qualified, Negotiation…",
+    "isTerminal": "This is a terminal stage (closes the opportunity)",
+    "terminalType": "Terminal type",
+    "selectType": "Select type…",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "saveChanges": "Save changes",
+    "addStage": "Add stage",
+    "cannotDelete": "Cannot delete this stage",
+    "opportunitiesInStage": "There are {count} active opportunities in this stage. Move or close them before deleting.",
+    "opportunitiesInStage_1": "There is {count} active opportunity in this stage. Move or close them before deleting.",
+    "deleteConfirm": "Are you sure you want to delete the stage \"{name}\"? This cannot be undone.",
+    "deleting": "Deleting…",
+    "deleteStage": "Delete stage",
+    "activeBadge": "Active",
+    "editStage": "Edit stage",
+    "stagesTotal": "{count} stages total",
+    "stagesTotal_1": "{count} stage total",
+    "savingOrder": "Saving order…",
+    "addPipelineStage": "Add pipeline stage",
+    "pipelineStages": "Pipeline stages ({count})",
+    "noPipelineStages": "No active pipeline stages. Add one above.",
+    "terminalStagesTitle": "Terminal stages ({count})",
+    "terminalStagesDesc": "Terminal stages close an opportunity. At least one Won and one Lost stage are required.",
+    "noTerminalStages": "No terminal stages defined.",
+    "moveUp": "Move stage up",
+    "dragToReorder": "Drag to reorder",
+    "moveDown": "Move stage down",
+    "editName": "Edit {name}",
+    "deleteName": "Delete {name}"
+  },
+  "SettingsLeadSources": {
+    "settings": "Settings",
+    "title": "Lead Sources",
+    "description": "Configure the channels through which inquiries arrive at your agency. Lead sources appear on inquiry and opportunity forms.",
+    "addLeadSource": "Add lead source",
+    "editLeadSource": "Edit lead source",
+    "activeCount": "Active ({count})",
+    "noActive": "No active lead sources yet. Add one above.",
+    "inactiveCount": "Inactive ({count})",
+    "inactiveBadge": "Inactive",
+    "editName": "Edit {name}",
+    "deactivateTitle": "Deactivate",
+    "reactivateTitle": "Reactivate",
+    "channels": {
+      "portal": "Property Portal",
+      "referral": "Referral",
+      "website": "Agency Website",
+      "phone": "Phone Call",
+      "social": "Social Media",
+      "email": "Email",
+      "walk_in": "Walk-in",
+      "other": "Other"
+    },
+    "form": {
+      "sourceName": "Source name",
+      "sourceNamePlaceholder": "e.g. Imot.bg",
+      "channel": "Channel",
+      "selectChannel": "Select a channel",
+      "saving": "Saving…",
+      "saveChanges": "Save changes",
+      "addLeadSource": "Add lead source"
+    }
+  },
+  "SettingsTeam": {
+    "title": "Team Management",
+    "description": "View and manage your agency's team members and their roles.",
+    "noMembership": "No active membership found.",
+    "columns": {
+      "member": "Member",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined"
+    },
+    "unknown": "Unknown",
+    "noEmail": "No email",
+    "you": "(You)",
+    "status": {
+      "active": "Active",
+      "invited": "Invited",
+      "deactivated": "Deactivated"
+    },
+    "invited": "Invited {date}",
+    "roles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "broker": "Broker"
+    },
+    "actions": {
+      "openMenu": "Open menu",
+      "actions": "Actions",
+      "changeRole": "Change Role",
+      "makeOwner": "Make Owner",
+      "makeManager": "Make Manager",
+      "makeBroker": "Make Broker",
+      "cancelInvitation": "Cancel Invitation",
+      "deactivateMember": "Deactivate Member",
+      "reactivateMember": "Reactivate Member",
+      "roleUpdated": "Role updated successfully",
+      "memberReactivated": "Member reactivated",
+      "memberDeactivated": "Member deactivated",
+      "invitationCancelled": "Invitation cancelled",
+      "unknownError": "Unknown error"
+    },
+    "invite": {
+      "button": "Invite Member",
+      "title": "Invite Team Member",
+      "description": "Send an email invitation to join your agency.",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "colleague@example.com",
+      "roleLabel": "Role",
+      "selectRole": "Select a role",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "send": "Send Invitation",
+      "success": "Invitation sent to {email}"
+    }
+  },
+  "SettingsProfile": {
+    "title": "Profile",
+    "description": "Manage your personal information. Your display name is visible to all team members.",
+    "emailLabel": "Email",
+    "success": "Profile updated successfully",
+    "error": "Failed to update profile",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "displayNameHelp": "This is the name that appears on notes, tasks, and timeline entries.",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "langSuccess": "Language updated",
+    "langError": "Failed to update language",
+    "language": "Language",
+    "selectLanguage": "Select language",
+    "languageHelp": "Choose the application language."
+  },
   "settings": {
     "title": "Settings",
     "description": "Manage your account and agency preferences.",
@@ -21,7 +319,8 @@
     "profile": "Profile",
     "team": "Team",
     "leadSources": "Lead Sources",
-    "pipelineStages": "Pipeline Stages"
+    "pipelineStages": "Pipeline Stages",
+    "import": "Data Import"
   },
   "search": {
     "placeholder": "Search...",
@@ -92,6 +391,627 @@
       "agencyNamePlaceholder": "Sofia Properties",
       "submit": "Complete setup",
       "loading": "Creating agency..."
+    }
+  },
+  "Today": {
+    "title": "Today",
+    "hasWorkSubtitle": "You have {count} item(s) that need attention",
+    "allCaughtUpSubtitle": "All caught up � no pending work right now!",
+    "overdueCount": "{count} overdue",
+    "newInquiriesCount": "{count} new inquiry",
+    "dueTodayCount": "{count} due today",
+    "atRiskCount": "{count} at risk",
+    "sections": {
+      "overdue": "Overdue",
+      "newInquiries": "New Inquiries",
+      "dueToday": "Due Today",
+      "comingUp": "Coming Up",
+      "atRisk": "At Risk � No Next Action"
+    },
+    "unknownCaller": "Unknown caller",
+    "updated": "Updated",
+    "emptyState": {
+      "title": "All caught up!",
+      "description": "You have no overdue tasks, pending work, or at-risk opportunities. Great job staying on top of things.",
+      "viewContacts": "View Contacts",
+      "viewOpportunities": "View Opportunities"
+    }
+  },
+  "TaskCard": {
+    "types": {
+      "call": "Call",
+      "email": "Email",
+      "viewing": "Viewing",
+      "meeting": "Meeting",
+      "follow_up": "Follow-up",
+      "other": "Other"
+    },
+    "overdueDuration": "{duration} overdue",
+    "dueTodayTime": "Today at {time}",
+    "dueDateTime": "{date}",
+    "noDueDate": "No due date",
+    "complete": "Complete"
+  },
+  "TaskCompleteDialog": {
+    "title": "Complete Task",
+    "description": "Record what happened with �{title}�",
+    "error": {
+      "missingOutcome": "Please describe what happened"
+    },
+    "fields": {
+      "outcome": {
+        "label": "What happened?",
+        "placeholder": "Spoke with client, they're interested in viewing the property next week..."
+      },
+      "nextTask": {
+        "schedule": "Schedule next action",
+        "title": "Task title",
+        "placeholder": "Follow up call after viewing",
+        "type": "Type",
+        "typePlaceholder": "Select type",
+        "dueDate": "Due date",
+        "assignTo": "Assign to"
+      },
+      "stage": {
+        "advance": "Advance stage",
+        "placeholder": "Select new stage"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "submit": "Complete Task"
+    },
+    "types": {
+      "call": "Call",
+      "email": "Email",
+      "viewing": "Viewing",
+      "meeting": "Meeting",
+      "follow_up": "Follow-up",
+      "other": "Other"
+    }
+  },
+  "ContactListTable": {
+    "emptyTitle": "No contacts yet",
+    "emptyDescription": "Create your first contact to get started.",
+    "typePerson": "Person",
+    "typeOrg": "Org",
+    "archived": "Archived"
+  },
+  "DuplicateSuggestionModal": {
+    "title": "Potential Duplicates Found",
+    "description": "We found {count} existing contact(s) that might be the same person or organization.",
+    "organization": "Organization",
+    "matches": {
+      "phone": "Phone matches",
+      "email": "Email matches",
+      "name": "Name is similar"
+    },
+    "viewProfile": "View Profile",
+    "actions": {
+      "cancel": "Cancel",
+      "creating": "Creating...",
+      "createAnyway": "None of these � Create anyway"
+    }
+  },
+  "LinkedOpportunities": {
+    "emptyState": "Opportunity linking will appear here once opportunities are created."
+  },
+  "Enums": {
+    "opportunityStatus": {
+      "won": "Won",
+      "lost": "Lost",
+      "nurture": "Nurture",
+      "archived": "Archived",
+      "active": "Active"
+    },
+        "opportunityType": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "tenant": "Tenant",
+      "landlord": "Landlord"
+    },
+    "participantRole": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "tenant": "Tenant",
+      "landlord": "Landlord",
+      "broker": "Broker",
+      "co_owner": "Co-owner",
+      "representative": "Representative",
+      "other": "Other"
+    },
+    "Stages": {
+      "New": "New",
+      "Attempting Contact": "Attempting Contact",
+      "Qualified": "Qualified",
+      "Active": "Active",
+      "Viewing": "Viewing",
+      "Offer": "Offer",
+      "Negotiation": "Negotiation",
+      "Won": "Won",
+      "Lost": "Lost",
+      "Nurture": "Nurture"
+    },
+    "unassigned": "Unassigned",
+    "opportunityTemperature": {
+      "hot": "Hot",
+      "warm": "Warm",
+      "cold": "Cold"
+    },
+    "opportunityType": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "tenant": "Tenant",
+      "landlord": "Landlord"
+    },
+    "participantRole": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "landlord": "Landlord",
+      "tenant": "Tenant",
+      "co_owner": "Co-owner",
+      "representative": "Representative",
+      "broker": "Broker",
+      "other": "Other"
+    },
+    "contactMethod": {
+      "phone": "Phone",
+      "email": "Email",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "other": "Other"
+    }
+  },
+  "ContactMethodList": {
+    "emptyState": "No contact methods added yet.",
+    "addMethod": "Add contact method",
+    "primary": "Primary",
+    "setPrimary": "Set as primary",
+    "removeMethod": "Remove contact method",
+    "adding": "Adding�",
+    "fields": {
+      "type": {
+        "label": "Type"
+      },
+      "value": {
+        "label": "Value",
+        "emailPlaceholder": "email@example.com",
+        "phonePlaceholder": "+359 888 123 456",
+        "placeholder": "Value"
+      },
+      "label": {
+        "label": "Label (optional)",
+        "placeholder": "e.g. mobile, work"
+      }
+    }
+  },
+  "MergeDialog": {
+    "trigger": "Merge",
+    "title": "Merge Contact",
+    "description": "Merge <name>{name}</name> into another contact. This contact will be archived.",
+    "searchLabel": "Search contacts",
+    "searchPlaceholder": "Type a name to search (e.g. Dimitar Dimitrov)...",
+    "select": "Select",
+    "noResults": "No other contacts found.",
+    "loadingPreview": "Loading preview...",
+    "previewTitle": "Merge Preview",
+    "preview": {
+      "opportunities": "{count} opportunities will be transferred",
+      "inquiries": "{count} inquiries will be transferred",
+      "tasks": "{count} tasks will be transferred",
+      "methods": "{count} unique contact methods will be transferred"
+    },
+    "back": "Back",
+    "merging": "Merging...",
+    "mergeInto": "Merge into {name}"
+  },
+  "ContactForm": {
+    "fields": {
+      "type": {
+        "label": "Type",
+        "person": "Person",
+        "organization": "Organization"
+      },
+      "firstName": {
+        "label": "First name",
+        "placeholder": "First name"
+      },
+      "lastName": {
+        "label": "Last name",
+        "placeholder": "Last name"
+      },
+      "companyName": {
+        "label": "Company name",
+        "placeholder": "e.g. ACME Real Estate Ltd."
+      },
+      "companyOptional": {
+        "label": "Company (optional)",
+        "placeholder": "Company affiliation"
+      },
+      "notes": {
+        "label": "Notes (optional)",
+        "placeholder": "Any relevant notes about this contact..."
+      }
+    },
+    "methodsTitle": "Contact methods",
+    "addMethod": "Add",
+    "primary": "Primary",
+    "setPrimary": "Set primary",
+    "removeMethod": "Remove contact method",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "createContact": "Create contact"
+  },
+  "ContactsPage": {
+    "title": "Contacts",
+    "count": "{count} contact(s)",
+    "archivedBadge": " (archived)",
+    "matchingSearch": " matching \"{search}\"",
+    "importBtn": "Import",
+    "newContactBtn": "New contact",
+    "newContactTitle": "New contact",
+    "searchPlaceholder": "Search by name...",
+    "searchBtn": "Search",
+    "filters": {
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All"
+    }
+  },
+  "ContactDetailClient": {
+    "editBtn": "Edit",
+    "editTitle": "Edit contact",
+    "archiveBtn": "Archive",
+    "archiveTitle": "Archive contact?",
+    "archiveDescription": "<name>{name}</name> will be archived and hidden from the active contacts list. Linked opportunities are preserved. You can restore the contact later.",
+    "cancelBtn": "Cancel",
+    "archivingBtn": "Archiving..."
+  },
+  "ContactActivity": {
+    "errors": {
+      "create": "Failed to create note",
+      "update": "Failed to update note",
+      "delete": "Failed to delete note"
+    },
+    "placeholder": "Write your note here...",
+    "cancelBtn": "Cancel",
+    "savingBtn": "Saving...",
+    "saveBtn": "Save note",
+    "addNoteBtn": "Add a note..."
+  },
+  "InquiriesPage": {
+    "title": "Inquiries",
+    "count": "{count} {statusLabel}",
+    "matchingSearch": " matching \"{search}\"",
+    "importBtn": "Import",
+    "logInquiryBtn": "Log inquiry",
+    "logInquiryTitle": "Log new inquiry",
+    "searchPlaceholder": "Search by caller name, phone, subject...",
+    "unknownCaller": "Unknown Caller",
+    "searchBtn": "Search",
+    "singleInquiryLabel": "Showing a single inquiry from your dashboard.",
+    "viewAllBtn": "View all inquiries",
+    "emptyState": {
+      "notFoundTitle": "Inquiry not found",
+      "emptyTitle": "No inquiries yet",
+      "notFoundDesc": "It may have been deleted or you don't have access.",
+      "emptyDesc": "Log your first inquiry using the button above."
+    },
+    "dismissModal": {
+      "title": "Dismiss inquiry",
+      "warning": "This is terminal � the inquiry cannot be re-opened after dismissal.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "e.g. Wrong number, spam, client found elsewhere...",
+      "cancelBtn": "Cancel",
+      "dismissingBtn": "Dismissing...",
+      "submitBtn": "Dismiss inquiry"
+    },
+    "filters": {
+      "all": "All inquiries",
+      "new": "New",
+      "contacted": "Contacted",
+      "converted": "Converted",
+      "dismissed": "Dismissed"
+    }
+  },
+  "ConvertInquiryDialog": {
+    "title": "Convert to opportunity",
+    "contactTabNew": "Create new",
+    "contactTabExisting": "Link existing",
+    "contactSection": "Contact",
+    "newContactType": "Contact type",
+    "typePerson": "Person",
+    "typeOrganization": "Organization",
+    "firstName": "First name",
+    "firstNamePlaceholder": "First name",
+    "lastName": "Last name",
+    "lastNamePlaceholder": "Last name",
+    "companyName": "Company name",
+    "companyNamePlaceholder": "e.g. ACME Real Estate Ltd.",
+    "searchContactsPlaceholder": "Search contacts…",
+    "noContactsFound": "No contacts found",
+    "opportunitySection": "Opportunity",
+    "oppTitle": "Title",
+    "oppTitlePlaceholder": "e.g. Ivan – Buyer – 2-bed Lozenets",
+    "oppType": "Type",
+    "oppTypePlaceholder": "Select type",
+    "oppStage": "Stage",
+    "oppStagePlaceholder": "Pick stage…",
+    "assignedTo": "Assigned to",
+    "cancel": "Cancel",
+    "converting": "Converting…",
+    "convert": "Convert"
+  },
+  "InquiryCard": {
+    "importedBadge": "Imported",
+    "unknownCaller": "Unknown caller",
+    "markContacted": "Mark contacted",
+    "convertToOpportunity": "Convert to opportunity",
+    "dismiss": "Dismiss",
+    "assigned": "Assigned"
+  },
+  "InquiryForm": {
+    "source": "Lead source",
+    "sourcePlaceholder": "Select a source…",
+    "assignedTo": "Assigned to",
+    "callerName": "Caller name",
+    "callerNamePlaceholder": "e.g. Ivan Petrov",
+    "phone": "Phone",
+    "phonePlaceholder": "+359 888 …",
+    "email": "Email",
+    "emailPlaceholder": "name@example.com",
+    "subject": "Subject",
+    "subjectPlaceholder": "e.g. Looking for 2-bed apartment in Lozenets",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Any additional details about the inquiry…",
+    "externalRef": "External ref (optional)",
+    "externalRefPlaceholder": "Portal ID or tracking number",
+    "saving": "Saving…",
+    "submit": "Log inquiry"
+  },
+  "CloseOpportunityDialog": {
+    "title": "Close Opportunity",
+    "outcomeLabel": "Outcome",
+    "outcomePlaceholder": "Select outcome",
+    "won": "Won (Closed)",
+    "lost": "Lost (Closed)",
+    "nurture": "Nurture (On Hold)",
+    "lostReasonLabel": "Lost Reason",
+    "lostReasonPlaceholder": "Why was this opportunity lost?",
+    "cancel": "Cancel",
+    "closingBtn": "Closing...",
+    "submitBtn": "Close Opportunity"
+  },
+  "OpportunityForm": {
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Buyer looking for 2-bed in Lozenets",
+    "typeLabel": "Type",
+    "typePlaceholder": "Select type",
+    "stageLabel": "Stage",
+    "stagePlaceholder": "Select stage",
+    "primaryContactLabel": "Primary Contact",
+    "primaryContactPlaceholder": "Select contact",
+    "sourceLabel": "Lead Source",
+    "sourcePlaceholder": "Select source",
+    "assignedToLabel": "Assigned to",
+    "temperatureLabel": "Temperature",
+    "temperaturePlaceholder": "Select temperature",
+    "hot": "🔥 Hot",
+    "warm": "⚡ Warm",
+    "cold": "❄️ Cold",
+    "expectedValueLabel": "Expected Value (EUR)",
+    "expectedValuePlaceholder": "0.00",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Any initial notes about the requirements...",
+    "savingBtn": "Saving…",
+    "submitCreate": "Create opportunity",
+    "submitEdit": "Save changes",
+    "none": "None"
+  },
+  "OpportunityListTable": {
+    "noOpportunities": "No opportunities found",
+    "noOpportunitiesDesc": "Adjust your filters or create a new opportunity."
+  },
+  "ParticipantList": {
+    "title": "Participants",
+    "addBtn": "Add",
+    "addTitle": "Add Participant",
+    "contactLabel": "Contact",
+    "contactPlaceholder": "Select contact",
+    "roleLabel": "Role",
+    "rolePlaceholder": "Select role",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "e.g. Needs financing, representing the buyer...",
+    "addingBtn": "Adding…",
+    "submitAdd": "Add participant",
+    "noParticipants": "No participants added.",
+    "internalUser": "Internal User",
+    "removeTitle": "Remove participant",
+    "removeConfirm": "Are you sure you want to remove this participant from the opportunity?",
+    "cancelBtn": "Cancel",
+    "removingBtn": "Removing…",
+    "submitRemove": "Remove"
+  },
+  "OpportunityTaskList": {
+    "title": "Tasks",
+    "pending": "pending",
+    "addBtn": "Add Task",
+    "addTitle": "Add Task",
+    "taskTitleLabel": "Title",
+    "taskTitlePlaceholder": "e.g. Call to discuss offer...",
+    "dueAtLabel": "Due Date & Time",
+    "descriptionLabel": "Description (optional)",
+    "assignedToLabel": "Assigned to",
+    "addingBtn": "Adding…",
+    "submitAdd": "Add task",
+    "noPendingTasks": "No pending tasks.",
+    "overdue": "Overdue",
+    "completedSection": "Completed",
+    "outcomeLabel": "Outcome"
+  },
+  "OpportunitiesPage": {
+    "title": "Opportunities",
+    "count": "{count} opportunities found",
+    "newBtn": "New opportunity",
+    "newTitle": "Create opportunity",
+    "searchPlaceholder": "Search by title…",
+    "searchBtn": "Search",
+    "filters": {
+      "allStatuses": "All statuses",
+      "active": "Active",
+      "won": "Won",
+      "lost": "Lost",
+      "nurture": "Nurture",
+      "archived": "Archived",
+      "allTypes": "All types",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "tenant": "Tenant",
+      "landlord": "Landlord",
+      "allStages": "All stages",
+      "unknownStage": "Unknown stage"
+    }
+  },
+  "OpportunityDetail": {
+    "backBtn": "Back to opportunities",
+    "closedLabel": "Closed {date}",
+    "stageLabel": "Stage:",
+    "stagePlaceholder": "Select stage",
+    "closeBtn": "Close",
+    "reactivateBtn": "Reactivate",
+    "editBtn": "Edit",
+    "editTitle": "Edit opportunity",
+    "detailsTitle": "Details",
+    "primaryContact": "Primary Contact",
+    "expectedValue": "Expected Value",
+    "leadSource": "Lead Source",
+    "created": "Created",
+    "origin": "Origin",
+    "viewInquiry": "View Inquiry",
+    "notesTitle": "Notes",
+    "activityHistoryTitle": "Activity History",
+    "none": "—"
+  },
+  "Timeline": {
+    "noActivity": "No activity history yet.",
+    "loading": "Loading...",
+    "loadMore": "Load older activity",
+    "events": {
+      "taskCompleted": "Task Completed",
+      "taskCreated": "Task Created",
+      "created": "Created",
+      "stageChanged": "Stage Changed",
+      "assignmentChanged": "Assignment Changed",
+      "statusChanged": "Status Changed",
+      "systemUpdate": "System Update",
+      "newInquiry": "New Inquiry Received"
+    },
+    "outcomeLabel": "Outcome",
+    "unassigned": "Unassigned",
+    "importedFrom": "Imported from file:",
+    "csvFile": "CSV File",
+    "manuallyCreated": "Manually created"
+  },
+  "NoteCard": {
+    "teamMember": "Team Member",
+    "unpinNote": "Unpin note",
+    "pinNote": "Pin note",
+    "editNote": "Edit note",
+    "deleteNote": "Delete note",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "deleteNoteTitle": "Delete note",
+    "deleteNoteDesc": "Are you sure you want to delete this note? This action cannot be undone.",
+    "deleting": "Deleting...",
+    "deleteBtn": "Delete",
+    "openMenu": "Open menu"
+  },
+    "settings": {
+    "title": "Settings",
+    "description": "Manage your agency and preferences.",
+    "overview": "Overview",
+    "overviewDesc": "Quickly access your account and agency configuration.",
+    "profile": "Profile",
+    "profileDesc": "Manage your display name and personal information.",
+    "team": "Team",
+    "teamDesc": "View team members, manage roles, and invite new brokers to your agency.",
+    "leadSources": "Lead Sources",
+    "leadSourcesDesc": "Manage the channels through which inquiries arrive (portals, referrals, website, etc.)",
+    "pipelineStages": "Pipeline Stages",
+    "pipelineStagesDesc": "Configure your opportunity pipeline stages and their ordering.",
+    "import": "Import",
+    "importDesc": "Import data into your agency workspace."
+  },
+  "Dashboard": {
+    "welcome": "Welcome, {name}!",
+    "workspaceReady": "{agency} workspace is ready.",
+    "ownerNotice": " You are the agency owner.",
+    "todayWorkTitle": "Today's Work",
+    "todayItems": "{count} items need your attention",
+    "todayItem": "{count} item needs your attention",
+    "caughtUp": "All caught up — great work!",
+    "overdue": "Overdue",
+    "newInquiries": "New Inquiries",
+    "dueToday": "Due Today",
+    "atRisk": "At Risk",
+    "quickActions": "Quick Actions",
+    "actions": {
+      "inquiriesTitle": "Inquiries",
+      "inquiriesDesc": "View and manage inbound leads",
+      "opportunitiesTitle": "Opportunities",
+      "opportunitiesDesc": "Pipeline and deal tracking",
+      "contactsTitle": "Contacts",
+      "contactsDesc": "People and organizations"
+    }
+  },
+  "ExceptionsPage": {
+    "title": "Exceptions Dashboard",
+    "description": "Identify operational bottlenecks and actionable items across the agency.",
+    "unassigned": {
+      "title": "Unassigned Inquiries",
+      "description": "New inquiries without a broker assigned",
+      "empty": "No unassigned inquiries.",
+      "unknownCaller": "Unknown Caller",
+      "noSubject": "No subject"
+    },
+    "overdue": {
+      "title": "Overdue Tasks",
+      "description": "Brokers with tasks past their due date",
+      "empty": "No overdue tasks.",
+      "mostOverdue": "Most overdue: {title} ({time})",
+      "overdueBadge": "{count} overdue"
+    },
+    "atRisk": {
+      "title": "At Risk Opportunities",
+      "description": "Active opportunities with NO pending tasks scheduled",
+      "empty": "No at-risk opportunities.",
+      "columns": {
+        "opportunity": "Opportunity",
+        "stage": "Stage",
+        "broker": "Broker",
+        "created": "Created"
+      },
+      "unassigned": "Unassigned"
+    },
+    "stale": {
+      "title": "Stale Opportunities",
+      "description": "> 7 days since last activity",
+      "empty": "No stale opportunities.",
+      "updated": "Updated {date}",
+      "broker": "Broker: {name}",
+      "none": "None"
+    },
+    "workload": {
+      "title": "Workload Distribution",
+      "description": "Active deals and pending tasks per broker",
+      "empty": "No active workloads.",
+      "columns": {
+        "broker": "Broker",
+        "activeOpps": "Active Opps",
+        "pendingTasks": "Pending Tasks"
+      }
     }
   }
 }

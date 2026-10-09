@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { OpportunityService } from "@/domain/opportunities/service";
 import { StageRepository } from "@/domain/stages/repository";
@@ -6,6 +7,12 @@ import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { OpportunitiesPageClient } from "./opportunities-page-client";
 import type { OpportunityType } from "@/domain/opportunities/types";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("opportunities") };
+}
+
 
 interface SearchParams {
   search?: string;

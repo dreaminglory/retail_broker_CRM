@@ -55,7 +55,6 @@ export function normalizePhone(raw: string): string | null {
  */
 export function phoneValidationMessage(): string {
   return (
-    'Enter a valid Bulgarian phone number ' +
-    '(e.g. 0888 123 456 or +359 888 123 456)'
+    'validation.invalid_phone'
   );
 }

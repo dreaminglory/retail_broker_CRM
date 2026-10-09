@@ -146,7 +146,7 @@ export class OpportunityRepository {
         assigned_to: input.assigned_to ?? null,
         temperature: input.temperature ?? 'warm',
         expected_value: input.expected_value ?? null,
-        currency: input.currency ?? 'BGN',
+        currency: input.currency ?? 'EUR',
         notes: input.notes ?? null,
         created_by: userId,
       })

@@ -1,3 +1,4 @@
+import { DomainError } from "@/lib/errors";
 /**
  * Inquiry service.
  * Enforces status transition rules and the convert-to-opportunity flow.
@@ -62,7 +63,7 @@ export class InquiryService {
     // Enforce status transition rules if status is being changed
     if (parsed.status) {
       const current = await this.repo.findById(id, agencyId);
-      if (!current) throw new Error('Inquiry not found');
+      if (!current) throw new DomainError('errors.not_found');
       this.assertValidTransition(current.status, parsed.status);
     }
 
@@ -72,7 +73,7 @@ export class InquiryService {
   /** Marks the inquiry as 'contacted'. */
   async markContacted(id: string, agencyId: string): Promise<Inquiry> {
     const current = await this.repo.findById(id, agencyId);
-    if (!current) throw new Error('Inquiry not found');
+    if (!current) throw new DomainError('errors.not_found');
     this.assertValidTransition(current.status, 'contacted');
     return this.repo.update(id, agencyId, { status: 'contacted' });
   }
@@ -85,7 +86,7 @@ export class InquiryService {
   ): Promise<Inquiry> {
     const parsed = dismissInquirySchema.parse(input);
     const current = await this.repo.findById(id, agencyId);
-    if (!current) throw new Error('Inquiry not found');
+    if (!current) throw new DomainError('errors.not_found');
     this.assertValidTransition(current.status, 'dismissed');
     return this.repo.update(id, agencyId, {
       status: 'dismissed',
@@ -107,7 +108,7 @@ export class InquiryService {
     const parsed = convertInquirySchema.parse(input);
 
     const current = await this.repo.findById(id, agencyId);
-    if (!current) throw new Error('Inquiry not found');
+    if (!current) throw new DomainError('errors.not_found');
     this.assertValidTransition(current.status, 'converted');
 
     let contactId: string | null = parsed.contact_id ?? null;
@@ -134,7 +135,7 @@ export class InquiryService {
         .select()
         .single();
 
-      if (contactError) throw new Error(`Failed to create contact: ${contactError.message}`);
+      if (contactError) throw new DomainError('errors.inquiries.contact_creation_failed', `Failed to create contact: ${contactError.message}`);
       contactId = (newContact as { id: string }).id;
 
       // Seed contact methods from caller info if available

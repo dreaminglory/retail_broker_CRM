@@ -25,7 +25,10 @@ interface MemberActionsProps {
   isSelf: boolean;
 }
 
+import { useTranslations } from "next-intl";
+
 export function MemberActions({ membershipId, currentRole, status, canManage, isSelf }: MemberActionsProps) {
+  const t = useTranslations("SettingsTeam.actions");
   const [isUpdating, setIsUpdating] = useState(false);
 
   if (!canManage) return null;
@@ -42,7 +45,7 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
       if (!result.success) {
         toast.error(result.error);
       } else {
-        toast.success("Role updated successfully");
+        toast.success(t("roleUpdated"));
       }
     } finally {
       setIsUpdating(false);
@@ -65,12 +68,12 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
       }
       
       if (!result?.success) {
-        toast.error(result?.error || "Unknown error");
+        toast.error(result?.error || t("unknownError"));
       } else {
         toast.success(
-          newStatus === "active" ? "Member reactivated" : 
-          newStatus === "deactivated" ? "Member deactivated" : 
-          "Invitation cancelled"
+          newStatus === "active" ? t("memberReactivated") : 
+          newStatus === "deactivated" ? t("memberDeactivated") : 
+          t("invitationCancelled")
         );
       }
     } finally {
@@ -84,28 +87,31 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
         className={cn(buttonVariants({ variant: "ghost" }), "h-8 w-8 p-0")} 
         disabled={isUpdating}
       >
-        <span className="sr-only">Open menu</span>
+        <span className="sr-only">{t("openMenu")}</span>
         <MoreHorizontal className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Change Role</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t("changeRole")}</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => handleRoleChange("owner")} disabled={currentRole === "owner"}>
             <Crown className="mr-2 h-4 w-4" />
-            Make Owner
+            <Crown className="mr-2 h-4 w-4" />
+            {t("makeOwner")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleRoleChange("manager")} disabled={currentRole === "manager"}>
             <ShieldCheck className="mr-2 h-4 w-4" />
-            Make Manager
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            {t("makeManager")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleRoleChange("broker")} disabled={currentRole === "broker"}>
             <User className="mr-2 h-4 w-4" />
-            Make Broker
+            <User className="mr-2 h-4 w-4" />
+            {t("makeBroker")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         
@@ -119,7 +125,8 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
                   className="text-destructive focus:text-destructive"
                 >
                   <UserX className="mr-2 h-4 w-4" />
-                  Cancel Invitation
+                  <UserX className="mr-2 h-4 w-4" />
+                  {t("cancelInvitation")}
                 </DropdownMenuItem>
               ) : status === "active" ? (
                 <DropdownMenuItem 
@@ -127,12 +134,14 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
                   className="text-destructive focus:text-destructive"
                 >
                   <UserX className="mr-2 h-4 w-4" />
-                  Deactivate Member
+                  <UserX className="mr-2 h-4 w-4" />
+                  {t("deactivateMember")}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => handleStatusChange("active")}>
                   <UserCheck className="mr-2 h-4 w-4" />
-                  Reactivate Member
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  {t("reactivateMember")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuGroup>

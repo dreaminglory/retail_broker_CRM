@@ -1,9 +1,10 @@
+import { DomainError } from "@/lib/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MemberRepository } from "./repository";
 import type { AgencyMember, MemberRole } from "./types";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type { AuthContext } from "@/lib/actions";
-import { DomainError } from "@/lib/errors";
+
 
 export class MemberService {
   private readonly repo: MemberRepository;
@@ -18,7 +19,7 @@ export class MemberService {
 
   async updateMemberRole(membershipId: string, newRole: MemberRole, currentUserId: string): Promise<void> {
     const membership = await this.repo.getMembership(membershipId);
-    if (!membership) throw new Error("Membership not found.");
+    if (!membership) throw new DomainError('errors.not_found');
 
     // Rule: if demoting an owner, ensure they are not the last owner
     if (membership.role === "owner" && newRole !== "owner") {
@@ -30,11 +31,11 @@ export class MemberService {
 
   async deactivateMember(membershipId: string, currentUserId: string): Promise<void> {
     const membership = await this.repo.getMembership(membershipId);
-    if (!membership) throw new Error("Membership not found.");
+    if (!membership) throw new DomainError('errors.not_found');
 
     // Rule: no self-deactivation
     if (membership.user_id === currentUserId) {
-      throw new Error("You cannot deactivate your own account.");
+      throw new DomainError('errors.members.deactivate_self');
     }
 
     // Rule: if deactivating an owner, ensure they are not the last owner
@@ -47,7 +48,7 @@ export class MemberService {
 
   async reactivateMember(membershipId: string): Promise<void> {
     const membership = await this.repo.getMembership(membershipId);
-    if (!membership) throw new Error("Membership not found.");
+    if (!membership) throw new DomainError('errors.not_found');
 
     await this.repo.updateMemberStatus(membershipId, "active");
   }
@@ -65,7 +66,7 @@ export class MemberService {
     );
     
     if (existing) {
-      throw new Error("User is already a member or has been invited.");
+      throw new DomainError('errors.members.already_member');
     }
 
     const adminDb = createSupabaseAdmin();
@@ -78,11 +79,11 @@ export class MemberService {
     });
 
     if (error) {
-      throw new Error(`Failed to invite user: ${error.message}`);
+      throw new DomainError('errors.members.invite_failed', `Failed to invite user: ${error.message}`);
     }
 
     if (!data.user) {
-      throw new Error("Failed to invite user: No user returned from Supabase.");
+      throw new DomainError('errors.members.invite_failed_no_user');
     }
 
     await this.repo.createInvitation(ctx.agencyId, email, role, data.user.id, ctx.userId);
@@ -90,8 +91,8 @@ export class MemberService {
 
   async cancelInvitation(ctx: AuthContext, membershipId: string): Promise<void> {
     const membership = await this.repo.getMembership(membershipId);
-    if (!membership) throw new Error("Membership not found.");
-    if (membership.status !== "invited") throw new Error("Only pending invitations can be cancelled.");
+    if (!membership) throw new DomainError('errors.not_found');
+    if (membership.status !== "invited") throw new DomainError('errors.members.only_pending_cancel');
 
     await this.repo.deleteInvitation(membershipId);
   }
@@ -102,7 +103,7 @@ export class MemberService {
       (m) => m.role === "owner" && m.status === "active" && m.id !== excludingMembershipId
     );
     if (otherActiveOwners.length === 0) {
-      throw new Error("Cannot perform this action. The agency must have at least one active owner.");
+      throw new DomainError('errors.members.last_owner');
     }
   }
 }

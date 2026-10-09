@@ -8,8 +8,8 @@ import { z } from 'zod';
 export const updateProfileSchema = z.object({
   display_name: z
     .string()
-    .min(2, 'Display name must be at least 2 characters')
-    .max(100, 'Display name cannot exceed 100 characters')
+    .min(2, 'validation.name_too_short')
+    .max(100, 'validation.name_too_long')
     .transform((val) => val.trim()),
 });
 
@@ -17,7 +17,7 @@ export type UpdateProfileSchema = z.infer<typeof updateProfileSchema>;
 
 export const updateLocaleSchema = z.object({
   locale: z.enum(['bg', 'en'], {
-    errorMap: () => ({ message: 'invalidLocale' }),
+    errorMap: () => ({ message: 'validation.invalid_locale' }),
   }),
 });
 

@@ -21,7 +21,16 @@ async function getAgencyId(): Promise<string | null> {
   return membership?.agency_id ?? null;
 }
 
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("stages") };
+}
+
+
 export default async function StagesSettingsPage() {
+  const t = await getTranslations("SettingsStages");
   const supabase = await createSupabaseServer();
   const agencyId = await getAgencyId();
 
@@ -38,15 +47,14 @@ export default async function StagesSettingsPage() {
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Settings
+          {t("settings")}
         </Link>
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Pipeline Stages</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure your opportunity pipeline — add, rename, reorder, or delete stages.
-          Terminal stages (Won, Lost, Nurture) close opportunities.
+          {t("description")}
         </p>
       </div>
 

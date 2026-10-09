@@ -1,11 +1,11 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { InquiryService } from '@/domain/inquiries/service';
 import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
 import { findPotentialDuplicates, type PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
-import { getAuthContext, type ActionResult } from '@/lib/actions';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
 export type { ActionResult };
 
@@ -31,22 +31,14 @@ export async function createInquiryAction(
     };
 
     const parsed = createInquirySchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
     const inquiry = await service.create(agencyId, userId, parsed.data);
 
     revalidatePath('/inquiries');
     return { success: true, data: { id: inquiry.id } };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function updateInquiryAction(
@@ -69,13 +61,7 @@ export async function updateInquiryAction(
     };
 
     const parsed = updateInquirySchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
     await service.update(id, agencyId, parsed.data);
@@ -83,9 +69,7 @@ export async function updateInquiryAction(
     revalidatePath('/inquiries');
     revalidatePath(`/inquiries/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function markInquiryContactedAction(id: string): Promise<ActionResult> {
@@ -96,9 +80,7 @@ export async function markInquiryContactedAction(id: string): Promise<ActionResu
     revalidatePath('/inquiries');
     revalidatePath(`/inquiries/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function dismissInquiryAction(
@@ -117,9 +99,7 @@ export async function dismissInquiryAction(
     revalidatePath('/inquiries');
     revalidatePath(`/inquiries/${id}`);
     return { success: true, data: undefined };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 /**
@@ -155,17 +135,11 @@ export async function convertInquiryAction(
     };
 
     const parsed = convertInquirySchema.safeParse(raw);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
+    if (!parsed.success) return toActionError(parsed.error);
 
     const skipDuplicateCheck = formData.get('skipDuplicateCheck') === 'true';
     if (parsed.data.create_contact && !skipDuplicateCheck) {
-      const duplicates = await findPotentialDuplicates(supabase, agencyId, parsed.data.create_contact as Record<string, unknown>);
+      const duplicates = await findPotentialDuplicates(supabase, agencyId, parsed.data.create_contact as any);
       if (duplicates.length > 0) {
         return { success: true, data: { duplicates } };
       }
@@ -181,9 +155,7 @@ export async function convertInquiryAction(
       success: true,
       data: { opportunityId: result.opportunityId, contactId: result.contactId },
     };
-  } catch (err) {
-    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
-  }
+  } catch (error) { return toActionError(error); }
 }
 
 export async function searchInquiriesQuickAction(search: string) {

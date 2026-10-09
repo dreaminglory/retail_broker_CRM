@@ -17,6 +17,7 @@ import type { Inquiry } from "@/domain/inquiries/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { ActionResult } from "@/lib/actions";
+import { useTranslations } from "next-intl";
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export function InquiryForm({
   brokers,
   onSuccess,
 }: InquiryFormProps) {
+  const t = useTranslations("InquiryForm");
   const [state, formAction, pending] = useActionState(
     createAction as (
       prevState: ActionResult<{ id: string }>,
@@ -76,11 +78,11 @@ export function InquiryForm({
     <form ref={formRef} action={formAction} className="space-y-4">
       {/* Source */}
       <div key={`src-${resetKey}`} className="space-y-1.5">
-        <Label htmlFor="inquiry-source">Lead source</Label>
+        <Label htmlFor="inquiry-source">{t("source")}</Label>
         <Select name="source_id" defaultValue={inquiry?.source_id ?? ""}>
           <SelectTrigger id="inquiry-source">
-            <SelectValue placeholder="Select a source…">
-              {(val) => leadSources.find((s) => s.id === val)?.name ?? "Select a source…"}
+            <SelectValue placeholder={t("sourcePlaceholder")}>
+              {(val) => leadSources.find((s) => s.id === val)?.name ?? t("sourcePlaceholder")}
             </SelectValue>          </SelectTrigger>
           <SelectContent>
             {leadSources.map((s) => (
@@ -99,7 +101,7 @@ export function InquiryForm({
 
       {/* Assigned To */}
       <div key={`assign-${resetKey}`} className="space-y-1.5">
-        <Label htmlFor="assigned-to">Assigned to</Label>
+        <Label htmlFor="assigned-to">{t("assignedTo")}</Label>
         <BrokerSelect
           name="assigned_to"
           brokers={brokers}
@@ -114,13 +116,13 @@ export function InquiryForm({
 
       {/* Caller name */}
       <div className="space-y-1.5">
-        <Label htmlFor="caller-name">Caller name</Label>
+        <Label htmlFor="caller-name">{t("callerName")}</Label>
         <Input
           id="caller-name"
           name="caller_name"
           defaultValue={inquiry?.caller_name ?? ""}
           maxLength={200}
-          placeholder="e.g. Ivan Petrov"
+          placeholder={t("callerNamePlaceholder")}
           aria-invalid={
             !state.success && !!state.fieldErrors?.caller_name
           }
@@ -135,14 +137,14 @@ export function InquiryForm({
       {/* Caller phone + email side by side */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="caller-phone">Phone</Label>
+          <Label htmlFor="caller-phone">{t("phone")}</Label>
           <Input
             id="caller-phone"
             name="caller_phone"
             type="tel"
             defaultValue={inquiry?.caller_phone ?? ""}
             maxLength={50}
-            placeholder="+359 888 …"
+            placeholder={t("phonePlaceholder")}
           />
           {!state.success && state.fieldErrors?.caller_phone && (
             <p className="text-xs text-destructive">
@@ -151,14 +153,14 @@ export function InquiryForm({
           )}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="caller-email">Email</Label>
+          <Label htmlFor="caller-email">{t("email")}</Label>
           <Input
             id="caller-email"
             name="caller_email"
             type="email"
             defaultValue={inquiry?.caller_email ?? ""}
             maxLength={254}
-            placeholder="name@example.com"
+            placeholder={t("emailPlaceholder")}
           />
           {!state.success && state.fieldErrors?.caller_email && (
             <p className="text-xs text-destructive">
@@ -170,13 +172,13 @@ export function InquiryForm({
 
       {/* Subject */}
       <div className="space-y-1.5">
-        <Label htmlFor="inquiry-subject">Subject</Label>
+        <Label htmlFor="inquiry-subject">{t("subject")}</Label>
         <Input
           id="inquiry-subject"
           name="subject"
           defaultValue={inquiry?.subject ?? ""}
           maxLength={500}
-          placeholder="e.g. Looking for 2-bed apartment in Lozenets"
+          placeholder={t("subjectPlaceholder")}
           aria-invalid={!state.success && !!state.fieldErrors?.subject}
         />
         {!state.success && state.fieldErrors?.subject && (
@@ -188,26 +190,26 @@ export function InquiryForm({
 
       {/* Description */}
       <div className="space-y-1.5">
-        <Label htmlFor="inquiry-description">Description (optional)</Label>
+        <Label htmlFor="inquiry-description">{t("description")}</Label>
         <Textarea
           id="inquiry-description"
           name="description"
           defaultValue={inquiry?.description ?? ""}
           maxLength={5000}
-          placeholder="Any additional details about the inquiry…"
+          placeholder={t("descriptionPlaceholder")}
           rows={3}
         />
       </div>
 
       {/* External ref */}
       <div className="space-y-1.5">
-        <Label htmlFor="inquiry-external-ref">External ref (optional)</Label>
+        <Label htmlFor="inquiry-external-ref">{t("externalRef")}</Label>
         <Input
           id="inquiry-external-ref"
           name="external_ref"
           defaultValue={inquiry?.external_ref ?? ""}
           maxLength={200}
-          placeholder="Portal ID or tracking number"
+          placeholder={t("externalRefPlaceholder")}
         />
       </div>
 
@@ -219,7 +221,7 @@ export function InquiryForm({
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Saving…" : "Log inquiry"}
+        {pending ? t("saving") : t("submit")}
       </Button>
     </form>
   );

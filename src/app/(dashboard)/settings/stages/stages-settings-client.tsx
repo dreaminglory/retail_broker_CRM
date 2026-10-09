@@ -19,9 +19,11 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslations } from "next-intl";
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +58,7 @@ import {
   XCircle,
   Leaf,
   Layers,
-  AlertTriangle,
+  AlertTriangle, Archive,
 } from 'lucide-react';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -90,6 +92,7 @@ interface StageFormProps {
 }
 
 function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
+  const t = useTranslations("SettingsStages");
   const isEdit = !!stage;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -132,13 +135,13 @@ function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name */}
       <div className="space-y-1.5">
-        <Label htmlFor="stage-name">Stage name</Label>
+        <Label htmlFor="stage-name">{t("stageName")}</Label>
         <Input
           id="stage-name"
           name="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Qualified, Negotiation…"
+          placeholder={t("stageNamePlaceholder")}
           maxLength={100}
           required
           disabled={isPending}
@@ -163,35 +166,42 @@ function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
             className="h-4 w-4 rounded border accent-primary"
           />
           <Label htmlFor="stage-terminal" className="cursor-pointer">
-            This is a terminal stage (closes the opportunity)
+            {t("isTerminal")}
           </Label>
         </div>
 
         {isTerminal && (
           <div className="space-y-1.5 pl-6">
-            <Label htmlFor="stage-terminal-type">Terminal type</Label>
+            <Label htmlFor="stage-terminal-type">{t("terminalType")}</Label>
             <Select
               value={terminalType}
-              onValueChange={(v) => setTerminalType(v ?? '')}
+              onValueChange={(v) => setTerminalType(v as string ?? '')}
               disabled={isPending}
             >
               <SelectTrigger id="stage-terminal-type" className="w-48">
-                <SelectValue placeholder="Select type…" />
+                <SelectValue placeholder={t("selectType")}>
+                  {(val: string) => {
+                    if (val === "won") return <span className="flex items-center gap-2"><Trophy className="h-3.5 w-3.5 text-amber-500" /> {t("terminal.won")}</span>;
+                    if (val === "lost") return <span className="flex items-center gap-2"><XCircle className="h-3.5 w-3.5 text-destructive" /> {t("terminal.lost")}</span>;
+                    if (val === "nurture") return <span className="flex items-center gap-2"><Archive className="h-3.5 w-3.5 text-muted-foreground" /> {t("terminal.nurture")}</span>;
+                    return t("selectType");
+                  }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="won">
                   <span className="flex items-center gap-2">
-                    <Trophy className="h-3.5 w-3.5 text-amber-500" /> Won
+                    <Trophy className="h-3.5 w-3.5 text-amber-500" /> {t("terminal.won")}
                   </span>
                 </SelectItem>
                 <SelectItem value="lost">
                   <span className="flex items-center gap-2">
-                    <XCircle className="h-3.5 w-3.5 text-destructive" /> Lost
+                    <XCircle className="h-3.5 w-3.5 text-destructive" /> {t("terminal.lost")}
                   </span>
                 </SelectItem>
                 <SelectItem value="nurture">
                   <span className="flex items-center gap-2">
-                    <Leaf className="h-3.5 w-3.5 text-emerald-500" /> Nurture
+                    <Leaf className="h-3.5 w-3.5 text-emerald-500" /> {t("terminal.nurture")}
                   </span>
                 </SelectItem>
               </SelectContent>
@@ -211,10 +221,10 @@ function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" size="sm" onClick={onCancel} disabled={isPending}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button type="submit" size="sm" disabled={isPending}>
-          {isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Add stage'}
+          {isPending ? t("saving") : isEdit ? t("saveChanges") : t("addStage")}
         </Button>
       </div>
     </form>
@@ -231,6 +241,8 @@ interface DeleteConfirmProps {
 }
 
 function DeleteConfirm({ stage, oppCount, onSuccess, onCancel }: DeleteConfirmProps) {
+  const t = useTranslations("SettingsStages");
+  const getStageName = useStageTranslation();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -253,18 +265,15 @@ function DeleteConfirm({ stage, oppCount, onSuccess, onCancel }: DeleteConfirmPr
         <div className="flex items-start gap-3 rounded-md bg-amber-50 px-3 py-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
-            <p className="font-medium">Cannot delete this stage</p>
+            <p className="font-medium">{t("cannotDelete")}</p>
             <p className="mt-0.5">
-              There {oppCount === 1 ? 'is' : 'are'} <strong>{oppCount} active{' '}
-              {oppCount === 1 ? 'opportunity' : 'opportunities'}</strong> in this stage.
-              Move or close them before deleting.
+              {oppCount === 1 ? t("opportunitiesInStage_1", { count: oppCount }) : t("opportunitiesInStage", { count: oppCount })}
             </p>
           </div>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Are you sure you want to delete the stage <strong>&ldquo;{stage.name}&rdquo;</strong>?
-          This cannot be undone.
+          {t.rich("deleteConfirm", { name: getStageName(stage.name), strong: (c) => <strong>{c}</strong> })}
         </p>
       )}
 
@@ -276,7 +285,7 @@ function DeleteConfirm({ stage, oppCount, onSuccess, onCancel }: DeleteConfirmPr
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={onCancel} disabled={isPending}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button
           variant="destructive"
@@ -284,7 +293,7 @@ function DeleteConfirm({ stage, oppCount, onSuccess, onCancel }: DeleteConfirmPr
           onClick={handleDelete}
           disabled={blocked || isPending}
         >
-          {isPending ? 'Deleting…' : 'Delete stage'}
+          {isPending ? t("deleting") : t("deleteStage")}
         </Button>
       </div>
     </div>
@@ -303,6 +312,8 @@ interface StageRowProps {
 }
 
 function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess }: StageRowProps) {
+  const t = useTranslations("SettingsStages");
+  const getStageName = useStageTranslation();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [oppCount] = useState(0); // let the action validate; shown as 0 for simplicity
@@ -336,7 +347,7 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
           onClick={onMoveUp}
           disabled={index === 0}
           className="rounded p-0.5 hover:bg-muted disabled:opacity-20"
-          aria-label="Move stage up"
+          aria-label={t("moveUp")}
         >
           <ChevronUp className="h-3.5 w-3.5" />
         </button>
@@ -344,7 +355,7 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
           {...attributes}
           {...listeners}
           className="cursor-grab hover:bg-muted p-1 rounded active:cursor-grabbing"
-          aria-label="Drag to reorder"
+          aria-label={t("dragToReorder")}
         >
           <GripVertical className="h-4 w-4 opacity-30 group-hover:opacity-60" />
         </div>
@@ -353,7 +364,7 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
           onClick={onMoveDown}
           disabled={index === total - 1}
           className="rounded p-0.5 hover:bg-muted disabled:opacity-20"
-          aria-label="Move stage down"
+          aria-label={t("moveDown")}
         >
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
@@ -362,10 +373,10 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
       {/* Stage info */}
       <div className="flex flex-1 items-center gap-2 min-w-0">
         <TerminalIcon terminalType={stage.terminal_type} />
-        <span className="truncate text-sm font-medium">{stage.name}</span>
+        <span className="truncate text-sm font-medium">{getStageName(stage.name)}</span>
         <TerminalBadge terminalType={stage.terminal_type} />
         {!stage.is_terminal && (
-          <Badge variant="outline" className="text-xs">Active</Badge>
+          <Badge variant="outline" className="text-xs">{t("activeBadge")}</Badge>
         )}
       </div>
 
@@ -375,14 +386,14 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogTrigger
             render={
-              <Button variant="ghost" size="sm" aria-label={`Edit ${stage.name}`}>
+              <Button variant="ghost" size="sm" aria-label={t("editName", { name: getStageName(stage.name) })}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
             }
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit stage</DialogTitle>
+              <DialogTitle>{t("editStage")}</DialogTitle>
             </DialogHeader>
             <StageForm
               stage={stage}
@@ -402,7 +413,7 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label={`Delete ${stage.name}`}
+                aria-label={t("deleteName", { name: getStageName(stage.name) })}
                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
               >
                 <Trash2 className="h-3.5 w-3.5" />
@@ -411,7 +422,7 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete stage</DialogTitle>
+              <DialogTitle>{t("deleteStage")}</DialogTitle>
             </DialogHeader>
             <DeleteConfirm
               stage={stage}
@@ -436,6 +447,7 @@ interface StagesSettingsClientProps {
 }
 
 export function StagesSettingsClient({ initialStages }: StagesSettingsClientProps) {
+  const t = useTranslations("SettingsStages");
   const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
   const [stages, setStages] = useState<Stage[]>(initialStages);
@@ -518,9 +530,9 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {stages.length} {stages.length === 1 ? 'stage' : 'stages'} total
+          {stages.length === 1 ? t("stagesTotal_1", { count: stages.length }) : t("stagesTotal", { count: stages.length })}
           {isSavingOrder && (
-            <span className="ml-2 text-xs text-muted-foreground/70">Saving order…</span>
+            <span className="ml-2 text-xs text-muted-foreground/70">{t("savingOrder")}</span>
           )}
         </p>
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
@@ -528,13 +540,13 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
             render={
               <Button size="sm">
                 <Plus className="mr-1.5 h-4 w-4" />
-                Add stage
+                {t("addStage")}
               </Button>
             }
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add pipeline stage</DialogTitle>
+              <DialogTitle>{t("addPipelineStage")}</DialogTitle>
             </DialogHeader>
             <StageForm
               onSuccess={() => {
@@ -550,11 +562,11 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
       {/* Pipeline stages */}
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Pipeline stages ({pipeline.length})
+          {t("pipelineStages", { count: pipeline.length })}
         </h2>
         {pipeline.length === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No active pipeline stages. Add one above.
+            {t("noPipelineStages")}
           </p>
         ) : (
           <DndContext 
@@ -588,14 +600,14 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
       {/* Terminal stages */}
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Terminal stages ({terminal.length})
+          {t("terminalStagesTitle", { count: terminal.length })}
         </h2>
         <p className="mb-3 text-xs text-muted-foreground">
-          Terminal stages close an opportunity. At least one Won and one Lost stage are required.
+          {t("terminalStagesDesc")}
         </p>
         {terminal.length === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No terminal stages defined.
+            {t("noTerminalStages")}
           </p>
         ) : (
           <DndContext 

@@ -34,6 +34,7 @@ import {
   Plus,
 } from "lucide-react";
 import type { ActionResult } from "@/lib/actions";
+import { useTranslations } from "next-intl";
 
 interface ContactMethodListProps {
   contactId: string;
@@ -63,13 +64,15 @@ export function ContactMethodList({
   contactId,
   methods,
 }: ContactMethodListProps) {
+  const t = useTranslations("ContactMethodList");
   const [addOpen, setAddOpen] = useState(false);
+
 
   return (
     <div className="space-y-3">
       {methods.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">
-          No contact methods added yet.
+          {t("emptyState")}
         </p>
       ) : (
         <div className="space-y-2">
@@ -89,13 +92,13 @@ export function ContactMethodList({
           render={
             <Button variant="outline" size="sm" className="w-full gap-1.5">
               <Plus className="h-3.5 w-3.5" />
-              Add contact method
+              {t("addMethod")}
             </Button>
           }
         />
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Add contact method</DialogTitle>
+            <DialogTitle>{t("addMethod")}</DialogTitle>
           </DialogHeader>
           <AddMethodForm
             contactId={contactId}
@@ -114,6 +117,8 @@ function MethodRow({
   method: ContactMethod;
   contactId: string;
 }) {
+  const t = useTranslations("ContactMethodList");
+  const tEnum = useTranslations("Enums");
   const [removing, setRemoving] = useState(false);
   const [settingPrimary, setSettingPrimary] = useState(false);
   const Icon = METHOD_ICONS[method.type] ?? Phone;
@@ -142,14 +147,14 @@ function MethodRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{method.value}</p>
         <p className="text-xs text-muted-foreground">
-          {METHOD_TYPE_LABELS[method.type] ?? method.type}
+          {tEnum(`contactMethod.${method.type}` as any) ?? method.type}
           {method.label ? ` · ${method.label}` : ""}
         </p>
       </div>
       {method.is_primary && (
         <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 gap-0.5">
           <Star className="h-2.5 w-2.5" />
-          Primary
+          {t("primary")}
         </Badge>
       )}
       <div className="flex items-center gap-1">
@@ -160,7 +165,7 @@ function MethodRow({
             className="h-7 px-2 text-xs text-muted-foreground"
             onClick={handleSetPrimary}
             disabled={settingPrimary}
-            title="Set as primary"
+            title={t("setPrimary")}
           >
             <Star className="h-3.5 w-3.5" />
           </Button>
@@ -171,7 +176,7 @@ function MethodRow({
           className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
           onClick={handleRemove}
           disabled={removing}
-          aria-label="Remove contact method"
+          aria-label={t("removeMethod")}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -187,7 +192,10 @@ function AddMethodForm({
   contactId: string;
   onSuccess: () => void;
 }) {
+  const t = useTranslations("ContactMethodList");
+  const tEnum = useTranslations("Enums");
   const [selectedType, setSelectedType] = useState<string>("phone");
+
   const boundAction = addContactMethodAction.bind(null, contactId) as (
     prevState: AddMethodResult,
     formData: FormData
@@ -204,15 +212,15 @@ function AddMethodForm({
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="method-type">Type</Label>
-        <Select name="type" value={selectedType} onValueChange={(val) => val && setSelectedType(val)}>
+        <Label htmlFor="method-type">{t("fields.type.label")}</Label>
+        <Select name="type" value={selectedType} onValueChange={(val) => val && setSelectedType(val as string)}>
           <SelectTrigger id="method-type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(METHOD_TYPE_LABELS).map(([val, label]) => (
+            {["phone", "email", "viber", "whatsapp", "other"].map((val) => (
               <SelectItem key={val} value={val}>
-                {label}
+                {tEnum(`contactMethod.${val}` as any)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -221,7 +229,7 @@ function AddMethodForm({
 
       <div className="space-y-1.5">
         <Label htmlFor="method-value">
-          Value <span className="text-destructive">*</span>
+          {t("fields.value.label")} <span className="text-destructive">*</span>
         </Label>
         <div className="relative">
           <Icon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -248,11 +256,11 @@ function AddMethodForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="method-label">Label (optional)</Label>
+        <Label htmlFor="method-label">{t("fields.label.label")}</Label>
         <Input
           id="method-label"
           name="label"
-          placeholder="e.g. mobile, work"
+          placeholder={t("fields.label.placeholder")}
           maxLength={50}
         />
       </div>
@@ -264,7 +272,7 @@ function AddMethodForm({
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Adding…" : "Add contact method"}
+        {pending ? t("adding") : t("addMethod")}
       </Button>
     </form>
   );

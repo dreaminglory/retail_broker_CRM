@@ -20,7 +20,8 @@ import type { ActiveBroker } from "@/domain/members/types";
 import type { ActionResult } from "@/lib/actions";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import { Plus, Calendar, CheckCircle2, Circle } from "lucide-react";
-import { format, isPast } from "date-fns";
+import { isPast } from "date-fns";
+import { useTranslations, useFormatter } from "next-intl";
 
 interface TaskListProps {
   opportunityId: string;
@@ -49,6 +50,8 @@ export function TaskList({
   createAction,
   completeAction,
 }: TaskListProps) {
+  const t = useTranslations("OpportunityTaskList");
+  const format = useFormatter();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [completeTarget, setCompleteTarget] = useState<Task | null>(null);
@@ -84,31 +87,31 @@ export function TaskList({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          Tasks ({pendingTasks.length} pending)
+          {t("title")} ({pendingTasks.length} {t("pending")})
         </h3>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger
             render={
               <Button variant="outline" size="sm" className="h-8">
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                Add Task
+                {t("addBtn")}
               </Button>
             }
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Task</DialogTitle>
+              <DialogTitle>{t("addTitle")}</DialogTitle>
             </DialogHeader>
             <form ref={formRef} action={formAction} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="title">
-                  Title <span className="text-destructive">*</span>
+                  {t("taskTitleLabel")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="title"
                   name="title"
                   maxLength={150}
-                  placeholder="e.g. Call to discuss offer..."
+                  placeholder={t("taskTitlePlaceholder")}
                   required
                   aria-invalid={!!fieldErrors?.title}
                 />
@@ -118,7 +121,7 @@ export function TaskList({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="due_at">Due Date & Time</Label>
+                <Label htmlFor="due_at">{t("dueAtLabel")}</Label>
                 <Input
                   id="due_at"
                   name="due_at"
@@ -131,7 +134,7 @@ export function TaskList({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="description">Description (optional)</Label>
+                <Label htmlFor="description">{t("descriptionLabel")}</Label>
                 <Textarea
                   id="description"
                   name="description"
@@ -141,7 +144,7 @@ export function TaskList({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="assigned_to">Assigned to</Label>
+                <Label htmlFor="assigned_to">{t("assignedToLabel")}</Label>
                 <BrokerSelect
                   name="assigned_to"
                   brokers={brokers}
@@ -158,7 +161,7 @@ export function TaskList({
               )}
 
               <Button type="submit" disabled={pending} className="w-full">
-                {pending ? "Adding…" : "Add task"}
+                {pending ? t("addingBtn") : t("submitAdd")}
               </Button>
             </form>
           </DialogContent>
@@ -168,32 +171,32 @@ export function TaskList({
       <div className="space-y-3">
         {pendingTasks.length === 0 ? (
           <div className="rounded-md border border-dashed py-6 text-center text-sm text-muted-foreground">
-            No pending tasks.
+            {t("noPendingTasks")}
           </div>
         ) : (
           <div className="rounded-md border divide-y bg-card">
-            {pendingTasks.map((t) => {
-              const overdue = t.due_at && isPast(new Date(t.due_at));
+            {pendingTasks.map((task) => {
+              const overdue = task.due_at && isPast(new Date(task.due_at));
               return (
-                <div key={t.id} className="flex items-start gap-3 p-3">
+                <div key={task.id} className="flex items-start gap-3 p-3">
                   <button
-                    onClick={() => setCompleteTarget(t)}
+                    onClick={() => setCompleteTarget(task)}
                     className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
                   >
                     <Circle className="h-4 w-4" />
                   </button>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{t.title}</p>
-                    {t.description && (
+                    <p className="text-sm font-medium">{task.title}</p>
+                    {task.description && (
                       <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                        {t.description}
+                        {task.description}
                       </p>
                     )}
-                    {t.due_at && (
+                    {task.due_at && (
                       <div className={`mt-1.5 flex items-center gap-1.5 text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                         <Calendar className="h-3.5 w-3.5" />
-                        {format(new Date(t.due_at), "MMM d, h:mm a")}
-                        {overdue && <Badge variant="destructive" className="ml-1 text-[10px] h-4 px-1 py-0">Overdue</Badge>}
+                        {format.dateTime(new Date(task.due_at), { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                        {overdue && <Badge variant="destructive" className="ml-1 text-[10px] h-4 px-1 py-0">{t("overdue")}</Badge>}
                       </div>
                     )}
                   </div>
@@ -206,17 +209,17 @@ export function TaskList({
         {completedTasks.length > 0 && (
           <div className="mt-6">
             <h4 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Completed
+              {t("completedSection")}
             </h4>
             <div className="space-y-2 opacity-70">
-              {completedTasks.map((t) => (
-                <div key={t.id} className="flex items-start gap-3">
+              {completedTasks.map((task) => (
+                <div key={task.id} className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm line-through">{t.title}</p>
-                    {t.outcome && (
+                    <p className="text-sm line-through">{task.title}</p>
+                    {task.outcome && (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Outcome: {t.outcome}
+                        {t("outcomeLabel")}: {task.outcome}
                       </p>
                     )}
                   </div>

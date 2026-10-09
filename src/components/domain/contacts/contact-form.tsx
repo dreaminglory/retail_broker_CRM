@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useActionState, useEffect, useRef, useState, startTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,8 +30,8 @@ interface ContactMethod {
 
 interface ContactFormProps {
   contact?: Contact;
-  createAction: (prevState: ActionResult<unknown>, formData: FormData) => Promise<ActionResult<unknown>>;
-  updateAction?: (prevState: ActionResult, formData: FormData) => Promise<ActionResult>;
+  createAction: (prevState: any, formData: FormData) => Promise<ActionResult<any>>;
+  updateAction?: (prevState: any, formData: FormData) => Promise<ActionResult>;
   onSuccess?: (id?: string) => void;
 }
 
@@ -57,6 +59,8 @@ export function ContactForm({
   updateAction,
   onSuccess,
 }: ContactFormProps) {
+  const t = useTranslations("ContactForm");
+  const tEnum = useTranslations("Enums");
   const isEdit = !!contact;
   const action = isEdit && updateAction ? updateAction : createAction;
 
@@ -84,11 +88,12 @@ export function ContactForm({
 
   useEffect(() => {
     if (state.success) {
-      if (state.data && 'duplicates' in state.data && Array.isArray(state.data.duplicates)) {
-        const duplicates = state.data.duplicates;
+      const data = state.data as Record<string, any> | undefined;
+      if (data && typeof data === 'object' && 'duplicates' in data && Array.isArray(data.duplicates)) {
+        const duplicates = data.duplicates;
         setTimeout(() => setSuggestedDuplicates(duplicates), 0);
       } else {
-        const successId = state.data && 'id' in state.data ? state.data.id : undefined;
+        const successId = data && typeof data === 'object' && 'id' in data ? (data.id as string) : undefined;
         if (!isEdit) {
           formRef.current?.reset();
           setTimeout(() => {
@@ -147,7 +152,7 @@ export function ContactForm({
       {/* Contact type — key resets controlled state after successful create */}
       <div key={resetKey} className="space-y-1.5">
         <Label htmlFor="contact-type">
-          Type <span className="text-destructive">*</span>
+          {t("fields.type.label")} <span className="text-destructive">*</span>
         </Label>
         <Select
           name="type"
@@ -156,11 +161,13 @@ export function ContactForm({
           required
         >
           <SelectTrigger id="contact-type">
-            <SelectValue />
+            <SelectValue>
+              {(val: string) => val === "person" ? t("fields.type.person") : t("fields.type.organization")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="person">Person</SelectItem>
-            <SelectItem value="organization">Organization</SelectItem>
+            <SelectItem value="person">{t("fields.type.person")}</SelectItem>
+            <SelectItem value="organization">{t("fields.type.organization")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -169,13 +176,13 @@ export function ContactForm({
       {contactType === "person" && (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="first-name">First name</Label>
+            <Label htmlFor="first-name">{t("fields.firstName.label")}</Label>
             <Input
               id="first-name"
               name="first_name"
               defaultValue={contact?.first_name ?? ""}
               maxLength={100}
-              placeholder="First name"
+              placeholder={t("fields.firstName.placeholder")}
               aria-invalid={!!fieldErrors?.first_name}
             />
             {fieldErrors?.first_name && (
@@ -183,13 +190,13 @@ export function ContactForm({
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="last-name">Last name</Label>
+            <Label htmlFor="last-name">{t("fields.lastName.label")}</Label>
             <Input
               id="last-name"
               name="last_name"
               defaultValue={contact?.last_name ?? ""}
               maxLength={100}
-              placeholder="Last name"
+              placeholder={t("fields.lastName.placeholder")}
             />
           </div>
         </div>
@@ -199,14 +206,14 @@ export function ContactForm({
       {contactType === "organization" && (
         <div className="space-y-1.5">
           <Label htmlFor="company-name">
-            Company name <span className="text-destructive">*</span>
+            {t("fields.companyName.label")} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="company-name"
             name="company_name"
             defaultValue={contact?.company_name ?? ""}
             maxLength={200}
-            placeholder="e.g. ACME Real Estate Ltd."
+            placeholder={t("fields.companyName.placeholder")}
             required
             aria-invalid={!!fieldErrors?.company_name}
           />
@@ -219,13 +226,13 @@ export function ContactForm({
       {/* Optional company affiliation for persons */}
       {contactType === "person" && (
         <div className="space-y-1.5">
-          <Label htmlFor="company-affiliation">Company (optional)</Label>
+          <Label htmlFor="company-affiliation">{t("fields.companyOptional.label")}</Label>
           <Input
             id="company-affiliation"
             name="company_name"
             defaultValue={contact?.company_name ?? ""}
             maxLength={200}
-            placeholder="Company affiliation"
+            placeholder={t("fields.companyOptional.placeholder")}
           />
         </div>
       )}
@@ -234,7 +241,7 @@ export function ContactForm({
       {!isEdit && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label>Contact methods</Label>
+            <Label>{t("methodsTitle")}</Label>
             <Button
               type="button"
               variant="ghost"
@@ -243,7 +250,7 @@ export function ContactForm({
               className="h-7 px-2 text-xs"
             >
               <Plus className="mr-1 h-3 w-3" />
-              Add
+              {t("addMethod")}
             </Button>
           </div>
 
@@ -259,12 +266,14 @@ export function ContactForm({
                   }
                 >
                   <SelectTrigger className="w-32 shrink-0">
-                    <SelectValue />
+                    <SelectValue>
+                      {(val: string) => tEnum(`contactMethod.${val}` as any)}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(METHOD_TYPE_LABELS).map(([val, label]) => (
+                    {["phone", "email", "viber", "whatsapp", "other"].map((val) => (
                       <SelectItem key={val} value={val}>
-                        {label}
+                        {tEnum(`contactMethod.${val}` as any)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -289,14 +298,14 @@ export function ContactForm({
                   />
                 </div>
 
-                {/* Primary badge + remove */}
+                {/* {t("primary")} badge + remove */}
                 <div className="flex items-center gap-1 pt-1">
                   {method.is_primary ? (
                     <Badge
                       variant="secondary"
                       className="cursor-pointer text-[10px] px-1.5"
                     >
-                      Primary
+                      {t("primary")}
                     </Badge>
                   ) : (
                     <Button
@@ -306,7 +315,7 @@ export function ContactForm({
                       className="h-6 px-1.5 text-[10px] text-muted-foreground"
                       onClick={() => updateMethod(idx, { is_primary: true })}
                     >
-                      Set primary
+                      {t("setPrimary")}
                     </Button>
                   )}
                   {methods.length > 1 && (
@@ -316,7 +325,7 @@ export function ContactForm({
                       size="sm"
                       className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                       onClick={() => removeMethod(idx)}
-                      aria-label="Remove contact method"
+                      aria-label={t("removeMethod")}
                     >
                       <X className="h-3.5 w-3.5" />
                     </Button>
@@ -333,13 +342,13 @@ export function ContactForm({
 
       {/* Notes */}
       <div className="space-y-1.5">
-        <Label htmlFor="notes">Notes (optional)</Label>
+        <Label htmlFor="notes">{t("fields.notes.label")}</Label>
         <Textarea
           id="notes"
           name="notes"
           defaultValue={contact?.notes ?? ""}
           maxLength={5000}
-          placeholder="Any relevant notes about this contact…"
+          placeholder={t("fields.notes.placeholder")}
           rows={3}
         />
       </div>
@@ -354,7 +363,7 @@ export function ContactForm({
       <input type="hidden" name="skipDuplicateCheck" value={skipDuplicateCheck ? "true" : "false"} />
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Saving…" : isEdit ? "Save changes" : "Create contact"}
+        {pending ? t("saving") : isEdit ? t("saveChanges") : t("createContact")}
       </Button>
 
       {suggestedDuplicates.length > 0 && (

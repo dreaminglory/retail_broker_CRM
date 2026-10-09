@@ -1,0 +1,5 @@
+Име,Фамилия,Имейл,Телефон,Фирма,Бележка
+Иван,Иванов,ivan@example.com,0888 123 456,Иван ЕООД,"Contacted yesterday"
+Мария,Петрова,maria@example.com, +359 89 9 123 456  ,, "Needs call"
+Иван,Иванов,ivan@example.com,0888123456,Иван ЕООД,"Duplicate in-file"
+Георги,,georgi@example.com,0877112233,,

@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(3);
+SELECT plan(5);
 
 SELECT set_config('test.u1', gen_random_uuid()::text, true);
 INSERT INTO auth.users (id, email) VALUES (current_setting('test.u1')::uuid, 'user1@example.com');
@@ -11,6 +11,19 @@ SET ROLE authenticated;
 SELECT lives_ok(
     $$ SELECT create_agency_with_owner('Test Agency', 'bg') $$,
     'Can create agency'
+);
+
+-- Test it seeds BG locale
+SELECT is(
+    (SELECT count(*)::int FROM lead_sources WHERE name = 'Сайт на агенцията'),
+    1,
+    'Seeds BG lead sources'
+);
+
+SELECT is(
+    (SELECT count(*)::int FROM stages WHERE name = 'Нов'),
+    1,
+    'Seeds BG stages'
 );
 
 -- Test cannot create second agency

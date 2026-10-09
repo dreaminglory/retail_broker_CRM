@@ -22,6 +22,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Note, NoteWithAuthor } from "@/domain/notes/types";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface NoteCardProps {
   note: Note | NoteWithAuthor;
@@ -31,6 +32,7 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardProps) {
+  const t = useTranslations("NoteCard");
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(note.content);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -93,7 +95,7 @@ export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardPr
               <span className="font-semibold text-foreground">
                 {(note as NoteWithAuthor).author?.display_name ||
                   (note as NoteWithAuthor).author?.email ||
-                  'Team Member'}
+                  t("teamMember")}
               </span>
               <span className="text-muted-foreground text-xs">
                 {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
@@ -107,23 +109,23 @@ export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardPr
               <DropdownMenu>
                 <DropdownMenuTrigger className="inline-flex h-6 w-6 -mr-2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent focus:bg-accent outline-none">
                   <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">Open menu</span>
+                  <span className="sr-only">{t("openMenu")}</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={handleTogglePin}>
                     <Pin className="mr-2 h-4 w-4" />
-                    {note.is_pinned ? "Unpin note" : "Pin note"}
+                    {note.is_pinned ? t("unpinNote") : t("pinNote")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setIsEditing(true)}>
                     <Edit2 className="mr-2 h-4 w-4" />
-                    Edit note
+                    {t("editNote")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={() => setIsDeleting(true)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete note
+                    {t("deleteNote")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -148,10 +150,10 @@ export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardPr
                   }}
                   disabled={isLoading}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button size="sm" onClick={handleSaveEdit} disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save changes"}
+                  {isLoading ? t("saving") : t("saveChanges")}
                 </Button>
               </div>
             </div>
@@ -166,9 +168,9 @@ export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardPr
       <Dialog open={isDeleting} onOpenChange={setIsDeleting}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete note</DialogTitle>
+            <DialogTitle>{t("deleteNoteTitle")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this note? This action cannot be undone.
+              {t("deleteNoteDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -177,14 +179,14 @@ export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardPr
               onClick={() => setIsDeleting(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete"}
+              {isLoading ? t("deleting") : t("deleteBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

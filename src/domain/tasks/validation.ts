@@ -13,13 +13,13 @@ export const createTaskSchema = z.object({
   contact_id: z.string().uuid().nullable().optional(),
   title: z
     .string()
-    .min(1, 'Title is required')
-    .max(300, 'Title must be 300 characters or fewer'),
+    .min(1, 'validation.title_required')
+    .max(300, 'validation.title_too_long'),
   description: z.string().max(5000).nullable().optional(),
   task_type: taskTypeSchema,
   due_at: z
     .string()
-    .refine((val) => val === '' || !isNaN(Date.parse(val)), { message: 'Invalid date/time' })
+    .refine((val) => val === '' || !isNaN(Date.parse(val)), { message: 'validation.invalid_date' })
     .transform((val) => (val === '' ? null : new Date(val).toISOString()))
     .nullable()
     .optional(),
@@ -31,8 +31,8 @@ export const createTaskSchema = z.object({
 export const completeTaskSchema = z.object({
   outcome: z
     .string()
-    .min(1, 'Outcome is required — describe what happened')
-    .max(5000, 'Outcome must be 5000 characters or fewer'),
+    .min(1, 'validation.outcome_required')
+    .max(5000, 'validation.outcome_too_long'),
 });
 
 // ── Complete task with next action (full workflow) ──────────────────────────
@@ -42,8 +42,8 @@ export const completeTaskSchema = z.object({
 export const completeTaskWithNextSchema = z.object({
   outcome: z
     .string()
-    .min(1, 'Outcome is required — describe what happened')
-    .max(5000, 'Outcome must be 5000 characters or fewer'),
+    .min(1, 'validation.outcome_required')
+    .max(5000, 'validation.outcome_too_long'),
   next_task: createTaskSchema.nullable().optional(),
   new_stage_id: z.string().uuid().nullable().optional(),
 });
@@ -53,14 +53,14 @@ export const completeTaskWithNextSchema = z.object({
 export const updateTaskSchema = z.object({
   title: z
     .string()
-    .min(1, 'Title is required')
-    .max(300, 'Title must be 300 characters or fewer')
+    .min(1, 'validation.title_required')
+    .max(300, 'validation.title_too_long')
     .optional(),
   description: z.string().max(5000).nullable().optional(),
   task_type: taskTypeSchema,
   due_at: z
     .string()
-    .refine((val) => val === '' || !isNaN(Date.parse(val)), { message: 'Invalid date/time' })
+    .refine((val) => val === '' || !isNaN(Date.parse(val)), { message: 'validation.invalid_date' })
     .transform((val) => (val === '' ? null : new Date(val).toISOString()))
     .nullable()
     .optional(),

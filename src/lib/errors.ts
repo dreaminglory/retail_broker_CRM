@@ -1,11 +1,14 @@
-export class DomainError extends Error {
-  code: string;
-  params?: Record<string, string | number>;
+/**
+ * Shared error classes for domain logic.
+ */
 
-  constructor(code: string, message: string, params?: Record<string, string | number>) {
-    super(message);
+export class DomainError extends Error {
+  constructor(
+    public readonly code: string,
+    message?: string,
+    public readonly params?: Record<string, string | number>
+  ) {
+    super(message ?? code);
     this.name = 'DomainError';
-    this.code = code;
-    this.params = params;
   }
 }

@@ -1,3 +1,4 @@
+import { DomainError } from "@/lib/errors";
 /**
  * Stage service.
  * Sprint 2 (AD-006): Full CRUD with business-rule validation.
@@ -63,22 +64,18 @@ export class StageService {
     // there must remain at least one won and one lost terminal stage.
     if (parsed.is_terminal === false) {
       const existing = await this.repo.findById(id, agencyId);
-      if (!existing) throw new Error('Stage not found');
+      if (!existing) throw new DomainError('errors.not_found');
 
       if (existing.terminal_type === 'won') {
         const wonStages = await this.repo.findByTerminalType(agencyId, 'won');
         if (wonStages.length <= 1) {
-          throw new Error(
-            'Cannot remove the last "Won" terminal stage. Add another Won stage first.'
-          );
+          throw new DomainError('errors.stages.last_won_stage');
         }
       }
       if (existing.terminal_type === 'lost') {
         const lostStages = await this.repo.findByTerminalType(agencyId, 'lost');
         if (lostStages.length <= 1) {
-          throw new Error(
-            'Cannot remove the last "Lost" terminal stage. Add another Lost stage first.'
-          );
+          throw new DomainError('errors.stages.last_lost_stage');
         }
       }
     }
@@ -98,33 +95,25 @@ export class StageService {
    */
   async delete(id: string, agencyId: string): Promise<void> {
     const stage = await this.repo.findById(id, agencyId);
-    if (!stage) throw new Error('Stage not found');
+    if (!stage) throw new DomainError('errors.not_found');
 
     // Guard: active opportunities block deletion
     const oppCount = await this.repo.countOpportunitiesByStage(id, agencyId);
     if (oppCount > 0) {
-      throw new Error(
-        `Cannot delete this stage — it still has ${oppCount} active ${
-          oppCount === 1 ? 'opportunity' : 'opportunities'
-        }. Move or close them first.`
-      );
+      throw new DomainError('errors.stages.delete_has_opportunities', undefined, { count: oppCount });
     }
 
     // Guard: terminal stage invariant
     if (stage.terminal_type === 'won') {
       const wonStages = await this.repo.findByTerminalType(agencyId, 'won');
       if (wonStages.length <= 1) {
-        throw new Error(
-          'Cannot delete the last "Won" terminal stage. Add another Won stage first.'
-        );
+        throw new DomainError('errors.stages.last_won_stage');
       }
     }
     if (stage.terminal_type === 'lost') {
       const lostStages = await this.repo.findByTerminalType(agencyId, 'lost');
       if (lostStages.length <= 1) {
-        throw new Error(
-          'Cannot delete the last "Lost" terminal stage. Add another Lost stage first.'
-        );
+        throw new DomainError('errors.stages.last_lost_stage');
       }
     }
 

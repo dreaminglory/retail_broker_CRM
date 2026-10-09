@@ -24,6 +24,7 @@ import type { OpportunityParticipant } from "@/domain/opportunities/types";
 import type { Contact } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
 import { Plus, User, Building2, X, Users2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ParticipantListProps {
   opportunityId: string;
@@ -57,6 +58,8 @@ export function ParticipantList({
   addAction,
   removeAction,
 }: ParticipantListProps) {
+  const t = useTranslations("ParticipantList");
+  const enums = useTranslations("Enums");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [participantToRemove, setParticipantToRemove] = useState<string | null>(null);
@@ -104,30 +107,30 @@ export function ParticipantList({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Users2 className="h-4 w-4 text-muted-foreground" />
-          Participants ({participants.length})
+          {t("title")} ({participants.length})
         </h3>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger
             render={
               <Button variant="outline" size="sm" className="h-8">
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                Add
+                {t("addBtn")}
               </Button>
             }
           />
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Add Participant</DialogTitle>
+              <DialogTitle>{t("addTitle")}</DialogTitle>
             </DialogHeader>
             <form ref={formRef} action={formAction} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="contact_id">
-                  Contact <span className="text-destructive">*</span>
+                  {t("contactLabel")} <span className="text-destructive">*</span>
                 </Label>
                 <Select name="contact_id" required>
                   <SelectTrigger id="contact_id">
-                    <SelectValue placeholder="Select contact">
-                      {(val) => contacts.find((c) => c.id === val)?.display_name ?? "Select contact"}
+                    <SelectValue placeholder={t("contactPlaceholder")}>
+                      {(val) => contacts.find((c) => c.id === val)?.display_name ?? t("contactPlaceholder")}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -147,18 +150,18 @@ export function ParticipantList({
 
               <div className="space-y-1.5">
                 <Label htmlFor="role">
-                  Role <span className="text-destructive">*</span>
+                  {t("roleLabel")} <span className="text-destructive">*</span>
                 </Label>
                 <Select name="role" defaultValue="buyer" required>
                   <SelectTrigger id="role">
-                    <SelectValue>
-                      {(val) => ROLE_OPTIONS.find((o) => o.value === val)?.label ?? "Select role"}
+                    <SelectValue placeholder={t("rolePlaceholder")}>
+                      {(val) => enums(`participantRole.${val}`)}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {ROLE_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>
-                        {o.label}
+                        {enums(`participantRole.${o.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -169,12 +172,12 @@ export function ParticipantList({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="notes">Notes (optional)</Label>
+                <Label htmlFor="notes">{t("notesLabel")}</Label>
                 <Textarea
                   id="notes"
                   name="notes"
                   maxLength={1000}
-                  placeholder="e.g. Needs financing, representing the buyer..."
+                  placeholder={t("notesPlaceholder")}
                   rows={2}
                 />
               </div>
@@ -186,7 +189,7 @@ export function ParticipantList({
               )}
 
               <Button type="submit" disabled={pending} className="w-full">
-                {pending ? "Adding…" : "Add participant"}
+                {pending ? t("addingBtn") : t("submitAdd")}
               </Button>
             </form>
           </DialogContent>
@@ -196,7 +199,7 @@ export function ParticipantList({
       <div className="rounded-md border divide-y bg-card">
         {participants.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            No participants added.
+            {t("noParticipants")}
           </div>
         ) : (
           participants.map((p) => {
@@ -218,11 +221,10 @@ export function ParticipantList({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
-                      {contact?.display_name || "Internal User"}
+                      {contact?.display_name || t("internalUser")}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {ROLE_OPTIONS.find((o) => o.value === p.role)?.label ||
-                        p.role}
+                      {enums(`participantRole.${p.role}`)}
                       {p.notes ? ` • ${p.notes}` : ""}
                     </p>
                   </div>
@@ -250,11 +252,11 @@ export function ParticipantList({
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Remove participant</DialogTitle>
+            <DialogTitle>{t("removeTitle")}</DialogTitle>
           </DialogHeader>
           <div className="py-2">
             <p className="text-sm text-muted-foreground">
-              Are you sure you want to remove this participant from the opportunity?
+              {t("removeConfirm")}
             </p>
           </div>
           <div className="flex justify-end gap-2">
@@ -264,7 +266,7 @@ export function ParticipantList({
               onClick={() => setParticipantToRemove(null)}
               disabled={isRemoving}
             >
-              Cancel
+              {t("cancelBtn")}
             </Button>
             <Button
               type="button"
@@ -272,7 +274,7 @@ export function ParticipantList({
               onClick={confirmRemove}
               disabled={isRemoving}
             >
-              {isRemoving ? "Removing…" : "Remove"}
+              {isRemoving ? t("removingBtn") : t("submitRemove")}
             </Button>
           </div>
         </DialogContent>

@@ -17,7 +17,7 @@ export const createInquirySchema = z
     source_description: z.string().max(500).nullable().optional(),
     caller_name: z.string().max(200).nullable().optional(),
     caller_phone: z.string().max(50).nullable().optional(),
-    caller_email: z.string().email('Invalid email').nullable().optional(),
+    caller_email: z.string().email('validation.invalid_email').nullable().optional(),
     subject: z.string().max(500).nullable().optional(),
     description: z.string().max(5000).nullable().optional(),
     external_ref: z.string().max(200).nullable().optional(),
@@ -33,7 +33,7 @@ export const createInquirySchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message:
-          'Provide at least caller information (name, phone, or email) or a subject/description',
+          'validation.inquiry_needs_info',
         path: ['caller_name'],
       });
     }
@@ -49,7 +49,7 @@ export const updateInquirySchema = z.object({
   dismissed_reason: z.string().max(1000).nullable().optional(),
   caller_name: z.string().max(200).nullable().optional(),
   caller_phone: z.string().max(50).nullable().optional(),
-  caller_email: z.string().email('Invalid email').nullable().optional(),
+  caller_email: z.string().email('validation.invalid_email').nullable().optional(),
   subject: z.string().max(500).nullable().optional(),
   description: z.string().max(5000).nullable().optional(),
 });
@@ -71,9 +71,9 @@ export const convertInquirySchema = z.object({
       company_name: z.string().max(200).nullable().optional(),
     })
     .optional(),
-  opportunity_title: z.string().min(1, 'Opportunity title is required').max(300),
+  opportunity_title: z.string().min(1, 'validation.opp_title_required').max(300),
   opportunity_type: z.enum(['buyer', 'seller', 'landlord', 'tenant']),
-  stage_id: z.string().uuid('Stage is required'),
+  stage_id: z.string().uuid('validation.stage_required'),
   assigned_to: z.string().uuid().nullable().optional(),
 });
 

@@ -2,10 +2,18 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { MemberService } from "@/domain/members/service";
 import { MemberList } from "@/components/domain/members/member-list";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { InviteDialog } from "@/components/domain/members/invite-dialog";
 
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("team") };
+}
+
+
 export default async function TeamSettingsPage() {
+  const t = await getTranslations("SettingsTeam");
   const supabase = await createSupabaseServer();
 
   const {
@@ -25,7 +33,7 @@ export default async function TeamSettingsPage() {
     .single();
 
   if (!membership) {
-    return <div>No active membership found.</div>;
+    return <div>{t("noMembership")}</div>;
   }
 
   const memberService = new MemberService(supabase);
@@ -35,9 +43,9 @@ export default async function TeamSettingsPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Team Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            View and manage your agency&apos;s team members and their roles.
+            {t("description")}
           </p>
         </div>
         {(membership.role === "owner" || membership.role === "manager") && (
