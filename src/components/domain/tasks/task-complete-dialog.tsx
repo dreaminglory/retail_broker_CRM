@@ -32,6 +32,7 @@ import type { CompleteTaskWithNextInput } from "@/domain/tasks/types";
 import { TASK_TYPES } from "@/domain/tasks/validation";
 import type { ActiveBroker } from "@/domain/members/types";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { ChevronDown, ChevronUp, CalendarPlus, ArrowRightCircle } from "lucide-react";
 
 interface TaskCompleteDialogProps {
@@ -53,6 +54,7 @@ export function TaskCompleteDialog({
   completeAction,
 }: TaskCompleteDialogProps) {
   const t = useTranslations('TaskCompleteDialog');
+  const getStageName = useStageTranslation();
   const router = useRouter();
   const [outcome, setOutcome] = useState("");
   const [showNextTask, setShowNextTask] = useState(false);
@@ -250,16 +252,16 @@ export function TaskCompleteDialog({
 
               {showStageChange && (
                 <div className="mt-3 border-t pt-3">
-                  <Select value={newStageId} onValueChange={(val) => setNewStageId(val ?? "")}>
+                  <Select value={newStageId} onValueChange={(val) => setNewStageId(val as string ?? "")}>
                     <SelectTrigger>
                       <SelectValue placeholder={t("fields.stage.placeholder")}>
-                        {(val) => activeStages.find((s) => s.id === val)?.name ?? t("fields.stage.placeholder")}
+                      {(val) => getStageName(activeStages.find((s) => s.id === val)?.name ?? "") || t("fields.stage.placeholder")}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {activeStages.map((s) => (
                         <SelectItem key={s.id} value={s.id}>
-                          {s.name}
+                          {getStageName(s.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>

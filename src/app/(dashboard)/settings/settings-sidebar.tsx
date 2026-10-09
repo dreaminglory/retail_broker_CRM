@@ -65,8 +65,7 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
           {t("overview")}
         </Link>
         {sidebarNavItems.map((item) => {
-          // Provide fallback for "import" if it's not translated yet
-          const label = item.i18nKey === "import" ? "Import" : t(item.i18nKey as any);
+          const label = t(item.i18nKey as any);
           return (
             <Link
               key={item.href}

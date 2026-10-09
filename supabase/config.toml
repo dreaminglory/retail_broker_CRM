@@ -1,0 +1,15 @@
+[auth.email.template.invite]
+subject = "Покана за присъединяване към BrokerCRM"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.recovery]
+subject = "Възстановяване на парола - BrokerCRM"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Вход в BrokerCRM"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.confirmation]
+subject = "Потвърждение на имейл - BrokerCRM"
+content_path = "./supabase/templates/confirmation.html"

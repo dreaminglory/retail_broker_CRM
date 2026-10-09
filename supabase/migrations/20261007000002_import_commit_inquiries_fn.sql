@@ -51,6 +51,7 @@ BEGIN
   LOOP
     BEGIN
       v_contact_id := NULL;
+      v_inquiry_id := NULL;
       v_external_ref := v_row.normalized->>'external_ref';
       v_source_id := (v_row.normalized->>'source_id')::UUID;
       v_assigned_to := (v_row.normalized->>'assigned_to')::UUID;
@@ -70,11 +71,12 @@ BEGIN
         END IF;
         
         IF v_contact_id IS NULL THEN
-          INSERT INTO contacts (agency_id, first_name, display_name, created_by, import_job_id) 
+          INSERT INTO contacts (agency_id, first_name, display_name, type, created_by, import_job_id) 
           VALUES (
             v_job.agency_id, 
             COALESCE(v_row.normalized->>'caller_name', 'Unknown'), 
             COALESCE(v_row.normalized->>'caller_name', 'Unknown'),
+            'person',
             v_user_id, 
             p_job_id
           ) RETURNING id INTO v_contact_id;

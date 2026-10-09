@@ -6,7 +6,7 @@ import type { Opportunity, OpportunityWithDetails } from "@/domain/opportunities
 import type { Stage } from "@/domain/stages/types";
 import { StageBadge } from "./stage-badge";
 import { Building2, User, ChevronRight, Briefcase, Calendar } from "lucide-react";
-import { format } from "date-fns";
+import { useTranslations, useFormatter } from "next-intl";
 
 interface OpportunityListTableProps {
   opportunities: Opportunity[];
@@ -14,15 +14,17 @@ interface OpportunityListTableProps {
 }
 
 export function OpportunityListTable({ opportunities, stages }: OpportunityListTableProps) {
+  const t = useTranslations("OpportunityListTable");
+
   if (opportunities.length === 0) {
     return (
       <div className="rounded-lg border border-dashed py-16 text-center">
         <Briefcase className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
         <p className="text-sm font-medium text-muted-foreground">
-          No opportunities found
+          {t("noOpportunities")}
         </p>
         <p className="mt-1 text-xs text-muted-foreground/70">
-          Adjust your filters or create a new opportunity.
+          {t("noOpportunitiesDesc")}
         </p>
       </div>
     );
@@ -41,11 +43,8 @@ export function OpportunityListTable({ opportunities, stages }: OpportunityListT
 }
 
 function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stage?: Stage }) {
-  const formatter = new Intl.NumberFormat("bg-BG", {
-    style: "currency",
-    currency: opportunity.currency || "EUR",
-    maximumFractionDigits: 0,
-  });
+  const format = useFormatter();
+  const enums = useTranslations("Enums");
 
   return (
     <Link
@@ -62,13 +61,13 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
         </div>
         
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="capitalize">{opportunity.type}</span>
+          <span>{enums(`opportunityType.${opportunity.type}`)}</span>
           
           {opportunity.expected_value && (
             <>
               <span>•</span>
               <span className="font-medium text-foreground">
-                {formatter.format(opportunity.expected_value)}
+                {format.number(opportunity.expected_value, { style: "currency", currency: opportunity.currency || "EUR", maximumFractionDigits: 0 })}
               </span>
             </>
           )}
@@ -78,7 +77,7 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
               <span>•</span>
               <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
                 <Calendar className="h-3 w-3" />
-                {format(new Date(opportunity.next_action_at), "MMM d")}
+                {format.dateTime(new Date(opportunity.next_action_at), { month: "short", day: "numeric" })}
               </span>
             </>
           )}

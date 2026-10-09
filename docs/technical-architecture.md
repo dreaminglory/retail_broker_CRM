@@ -1,13 +1,15 @@
 # BrokerCRM Technical Architecture & Engineering Runbook
 
-> **Status:** Up to date as of Sprint 4  
+> **Status:** Up to date as of Sprint 5  
 > **Purpose:** A comprehensive technical guide for future developers joining the project. This document synthesizes how the data flows, how components are structured, and how the core loops were built across all sprints.
+
 
 ---
 
+
 ## 1. Stack Overview
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript (Strict mode, no `any` types)
 - **Styling:** Tailwind CSS 4 + shadcn/ui + Lucide Icons
 - **Database:** Supabase (PostgreSQL)
@@ -167,6 +169,32 @@ Sprint 4 focused on giving agencies real user management, including team invitat
 - **Trigger-Maintained Vectors**: Search vectors (`search_vector` column of type `tsvector`) on `contacts` and `opportunities` are automatically kept in sync via `BEFORE INSERT OR UPDATE` triggers.
 - **Command Palette UI**: Added a ⌘K / Ctrl+K triggered search overlay allowing users to instantly find contacts, opportunities, and inquiries across their agency.
 - **Settings Consolidation**: Organized the settings area into a clean sidebar-navigation structure grouping Profile, Team, Lead Sources, and Pipeline configurations.
+
+---
+
+## 8. Sprint 5 Architecture (Completed)
+
+Sprint 5 focused on tenant isolation hardening, localization, and robust CSV imports.
+
+### Security Hardening & Isolation Suite
+- **Atomic Provisioning (AD-027)**: Agency creation, owner membership insertion, and default seeding are now handled in a single `SECURITY DEFINER` RPC to prevent partial signups.
+- **Function Privilege Grants (AD-028)**: Removed default `EXECUTE` permissions from public schema functions for `anon` and `authenticated` roles, enforcing explicit `GRANT` only for required endpoints.
+- **pgTAP Test Suite**: Introduced a comprehensive PostgreSQL testing suite using `pgTAP` and `supabase test db` to enforce tenant isolation and catalog rules (e.g. ensuring every table has RLS enabled and an `agency_id` column).
+
+### Localization & i18n
+- **next-intl (AD-031)**: We adopted `next-intl` in "without i18n routing" mode, using the `NEXT_LOCALE` cookie based on the `profiles.locale` column.
+- **Error Mapping (AD-032 & AD-033)**: All Zod validation messages and Server Action exceptions are now returned as translation keys (`DomainError.code`), ensuring the client component renders the error in the correct language via `useTranslations`.
+- **Dynamic Entity Translation**: Hardcoded system stages and UI fallbacks (e.g., "Unassigned") were migrated to a dynamic translation lookup. A custom hook `useStageTranslation` evaluates if a stage name matches a default system stage (e.g., "New") and translates it dynamically, while preserving custom user-defined stage names.
+- **Global Formatting**: Custom formatting wrappers were deprecated in favor of `next-intl`'s `useFormatter` (`format.dateTime`, `format.number`) to ensure strict locale adherence across all dates and currency operations.
+
+### Next.js 16 Proxy Migration
+- **Proxy Pattern (AD-030)**: Next.js 16 deprecated traditional middleware for session updates. We implemented `src/proxy.ts` to handle Supabase token refreshing and basic redirects, keeping full authorization checks in the Server Components (layouts).
+
+### Import Pipeline Architecture
+- **Chunking Pattern (AD-034)**: To bypass Vercel's 1MB payload limits and timeouts for 5,000-row CSV files, parsing is done client-side. The data is chunked and staged into `import_rows` incrementally via Server Actions.
+- **Validation & Commit**: Once staged, server-side validation classifies duplicates and normalizes phones. A Postgres RPC (`import_commit_contacts`) iterates over valid rows, inserting atomic records with savepoints, returning `{processed, remaining}` to a client-driven loop.
+- **Idempotency (AD-035)**: Inquiries utilize `(agency_id, source_id, external_ref)` as a unique index to allow safe re-importing of historical portal exports without duplication.
+- **Revert (AD-036)**: Owners can undo mistakes via a soft-revert bounded to a 7-day window. The RPC uses a CTE (`contact_check`) to explicitly compute whether a contact can be safely deleted (no manual tasks, notes, or linked inquiries).
 
 ---
 

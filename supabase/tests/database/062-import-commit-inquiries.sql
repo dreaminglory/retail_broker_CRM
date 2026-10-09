@@ -2,41 +2,41 @@ BEGIN;
 SELECT plan(5);
 
 -- Setup
-\ir ../000-setup-tests-hooks.sql
 
 -- Get a test agency and user
-SELECT id INTO my_agency_id FROM agencies LIMIT 1;
-SELECT id INTO my_user_id FROM auth.users LIMIT 1;
-SELECT id INTO my_source_id FROM lead_sources WHERE agency_id = my_agency_id LIMIT 1;
+
+SELECT set_config('test.a1', (SELECT id FROM agencies LIMIT 1)::text, true);
+SELECT set_config('test.u1', (SELECT id FROM auth.users LIMIT 1)::text, true);
+SELECT set_config('test.s1', (SELECT id FROM lead_sources WHERE agency_id = current_setting('test.a1')::uuid LIMIT 1)::text, true);
 
 -- Seed import job
-INSERT INTO import_jobs (id, agency_id, entity_type, status, file_name, file_size_bytes, total_rows)
-VALUES ('00000000-0000-0000-0000-000000000001', my_agency_id, 'inquiry', 'validated', 'test.csv', 100, 2);
+INSERT INTO import_jobs (id, agency_id, entity_type, status, file_name, file_sha256, file_size_bytes, total_rows, options)
+VALUES ('00000000-0000-0000-0000-000000000001', current_setting('test.a1')::uuid, 'inquiry', 'validated', 'test.csv', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 100, 2, '{"create_missing_contacts": true}');
 
 -- Seed staged rows
-INSERT INTO import_staged_rows (id, agency_id, import_job_id, row_number, status, normalized)
+INSERT INTO import_rows (id, agency_id, import_job_id, row_number, status, raw, normalized)
 VALUES 
-  ('00000000-0000-0000-0000-100000000001', my_agency_id, '00000000-0000-0000-0000-000000000001', 1, 'valid', jsonb_build_object(
+  ('00000000-0000-0000-0000-100000000001', current_setting('test.a1')::uuid, '00000000-0000-0000-0000-000000000001', 1, 'valid', '{}', jsonb_build_object(
     'caller_name', 'Test Caller 1',
-    'caller_phone', '+359888111222',
-    'source_id', my_source_id,
+    'caller_phone', '+359888111999',
+    'source_id', current_setting('test.s1')::uuid,
     'status', 'new'
   )),
-  ('00000000-0000-0000-0000-100000000002', my_agency_id, '00000000-0000-0000-0000-000000000001', 2, 'valid', jsonb_build_object(
+  ('00000000-0000-0000-0000-100000000002', current_setting('test.a1')::uuid, '00000000-0000-0000-0000-000000000001', 2, 'valid', '{}', jsonb_build_object(
     'caller_name', 'Test Caller 2',
     'caller_phone', '+359888333444',
-    'source_id', my_source_id,
+    'source_id', current_setting('test.s1')::uuid,
     'status', 'new'
   ));
 
 -- Test commit inquiries
 SELECT diag('Testing import_commit_inquiries_fn...');
 
-SELECT * FROM commit_inquiries_batch('00000000-0000-0000-0000-000000000001');
+SELECT * FROM import_commit_inquiries('00000000-0000-0000-0000-000000000001');
 
 SELECT is(
   (SELECT status FROM import_jobs WHERE id = '00000000-0000-0000-0000-000000000001'),
-  'completed'::import_job_status,
+  'completed'::text,
   'Job status should be completed'
 );
 
@@ -59,12 +59,15 @@ SELECT is(
 );
 
 -- Idempotency
-SELECT * FROM commit_inquiries_batch('00000000-0000-0000-0000-000000000001');
-SELECT is(
-  (SELECT count(*)::int FROM inquiries WHERE import_job_id = '00000000-0000-0000-0000-000000000001'),
-  2,
-  'Re-running commit should be idempotent and not create duplicate inquiries'
+SELECT throws_ok(
+  $$ SELECT * FROM import_commit_inquiries('00000000-0000-0000-0000-000000000001') $$,
+  'Job is not in a committable state',
+  'Re-running commit throws because job is completed'
 );
 
+SELECT diag('Contacts count: ' || (SELECT count(*) FROM contacts WHERE import_job_id = '00000000-0000-0000-0000-000000000001'));
+SELECT diag('All Contacts: ' || COALESCE((SELECT json_agg(row_to_json(c)) FROM contacts c)::text, 'none'));
+SELECT diag('All Contact Methods: ' || COALESCE((SELECT json_agg(row_to_json(m)) FROM contact_methods m)::text, 'none'));
+SELECT diag('Import Rows: ' || (SELECT json_agg(row_to_json(r)) FROM import_rows r WHERE import_job_id = '00000000-0000-0000-0000-000000000001'));
 SELECT * FROM finish();
 ROLLBACK;

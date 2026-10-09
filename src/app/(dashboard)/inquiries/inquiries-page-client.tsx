@@ -51,7 +51,7 @@ function DismissSubmitButton() {
       disabled={pending}
       id="dismiss-inquiry-submit"
     >
-      {pending ? "Dismissing…" : "Dismiss inquiry"}
+      {pending ? t("dismissModal.dismissingBtn") : t("dismissModal.submitBtn")}
     </Button>
   );
 }
@@ -165,7 +165,7 @@ export function InquiriesPageClient({
   }
 
   const statusLabel =
-    t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.label ?? "all"}` as any);
+    t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.value ?? "all"}` as any);
 
   const displayedInquiries = initialId 
     ? inquiries.filter(i => i.id === initialId) 
@@ -179,13 +179,13 @@ export function InquiriesPageClient({
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {t("count", { count: inquiries.length, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
-            {initialSearch ? ` matching "${initialSearch}"` : ""}
+            {initialSearch ? t("matchingSearch", { search: initialSearch }) : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {(userRole === "owner" || userRole === "manager") && (
             <Button variant="outline" size="sm" onClick={() => router.push("/settings/import/new?type=inquiry")}>
-              Import
+              {t("importBtn")}
             </Button>
           )}
 
@@ -194,7 +194,7 @@ export function InquiriesPageClient({
             render={
               <Button size="sm" id="new-inquiry-btn">
                 <Plus className="mr-1.5 h-4 w-4" />
-                Log inquiry
+                {t("logInquiryBtn")}
               </Button>
             }
           />
@@ -223,7 +223,7 @@ export function InquiriesPageClient({
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-8"
-              placeholder="Search by caller name, phone, subject…"
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -265,14 +265,16 @@ export function InquiriesPageClient({
           <Button type="submit" variant="secondary">{t("searchBtn")}</Button>
         </form>
 
-        <Select value={initialStatus} onValueChange={handleStatusChange}>
+        <Select value={initialStatus} onValueChange={(v) => handleStatusChange(v as string | null)}>
           <SelectTrigger className="w-44" id="inquiry-status-filter">
-            <SelectValue />
+            <SelectValue>
+              {(val: string) => val ? t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === val)?.label ?? "all"}` as any) : t("filters.all")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {STATUS_FILTER_OPTIONS.map((o) => (
               <SelectItem key={o.value} value={o.value}>
-                {t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.label ?? "all"}` as any)}
+                {t(`filters.${o.label}` as any)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -284,7 +286,7 @@ export function InquiriesPageClient({
         <div className="mb-4 flex items-center justify-between rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground border">
           <p>{t("singleInquiryLabel")}</p>
           <Button variant="link" className="h-auto p-0" onClick={() => router.push("/inquiries")}>
-            View all inquiries
+            {t("viewAllBtn")}
           </Button>
         </div>
       )}
@@ -327,7 +329,7 @@ export function InquiriesPageClient({
             <DialogTitle>{t("dismissModal.title")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This is terminal — the inquiry cannot be re-opened after dismissal.
+            {t("dismissModal.warning")}
           </p>
           {dismissTarget && (
             <form
@@ -344,7 +346,7 @@ export function InquiriesPageClient({
                 <Textarea
                   id="dismiss-reason"
                   name="dismissed_reason"
-                  placeholder="e.g. Wrong number, spam, client found elsewhere…"
+                  placeholder={t("dismissModal.reasonPlaceholder")}
                   rows={2}
                   maxLength={1000}
                 />
@@ -355,7 +357,7 @@ export function InquiriesPageClient({
                   variant="outline"
                   onClick={() => setDismissTarget(null)}
                 >
-                  Cancel
+                  {t("dismissModal.cancelBtn")}
                 </Button>
                 <DismissSubmitButton />
               </div>

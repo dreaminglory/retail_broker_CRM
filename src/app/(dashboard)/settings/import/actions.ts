@@ -63,9 +63,11 @@ export async function saveImportMappingAction(
     }
 
     if (!parsedMapping.success) {
+      console.error("Mapping Zod Error:", parsedMapping.error);
       return { success: false, error: "import.errors.invalidMapping" };
     }
     if (!parsedOptions.success) {
+      console.error("Options Zod Error:", parsedOptions.error);
       return { success: false, error: "import.errors.invalidOptions" };
     }
 

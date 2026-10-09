@@ -1,4 +1,5 @@
 -- 1. Locale-aware seeding (AD-033)
+DROP FUNCTION IF EXISTS seed_agency_defaults(uuid);
 CREATE OR REPLACE FUNCTION seed_agency_defaults(p_agency_id uuid, p_locale text DEFAULT 'bg')
 RETURNS VOID AS $$
 BEGIN

@@ -9,10 +9,12 @@ import { toast } from 'sonner';
 
 interface LanguageSwitcherProps {
   currentLocale: string;
-  bgEnabled: boolean;
-}
+  }
 
-export function LanguageSwitcher({ currentLocale, bgEnabled }: LanguageSwitcherProps) {
+import { useTranslations } from "next-intl";
+
+export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
+  const t = useTranslations("SettingsProfile");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -23,36 +25,33 @@ export function LanguageSwitcher({ currentLocale, bgEnabled }: LanguageSwitcherP
       formData.set('locale', locale);
       const res = await updateLocaleAction(formData);
       if (res.success) {
-        toast.success('Language updated');
+        toast.success(t("langSuccess"));
         router.refresh();
       } else {
-        toast.error('Failed to update language');
+        toast.error(t("langError"));
       }
     });
   }
 
-  if (!bgEnabled && currentLocale === 'en') {
-    return null;
-  }
-
+  
   return (
     <div className="space-y-2 mt-6">
-      <Label htmlFor="locale">Language</Label>
+      <Label htmlFor="locale">{t("language")}</Label>
       <Select
         value={currentLocale}
-        onValueChange={onChange}
+        onValueChange={(locale) => onChange(locale as string | null)}
         disabled={isPending}
       >
         <SelectTrigger id="locale">
-          <SelectValue placeholder="Select language" />
+          <SelectValue placeholder={t("selectLanguage")} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="en">English</SelectItem>
-          {(bgEnabled || currentLocale === 'bg') && <SelectItem value="bg">Български</SelectItem>}
+          <SelectItem value="bg">Български</SelectItem>
         </SelectContent>
       </Select>
       <p className="text-xs text-muted-foreground">
-        Choose the application language.
+        {t("languageHelp")}
       </p>
     </div>
   );

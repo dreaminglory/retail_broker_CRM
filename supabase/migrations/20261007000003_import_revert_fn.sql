@@ -70,11 +70,10 @@ BEGIN
         WHEN EXISTS (SELECT 1 FROM opportunities o WHERE o.primary_contact_id = c.id) THEN false
         WHEN EXISTS (SELECT 1 FROM opportunity_participants op WHERE op.contact_id = c.id) THEN false
         WHEN EXISTS (SELECT 1 FROM tasks t WHERE t.contact_id = c.id) THEN false
-        WHEN EXISTS (SELECT 1 FROM notes n WHERE n.contact_id = c.id AND (n.content IS NULL OR n.content = '')) THEN false -- approximate import note check
-        WHEN EXISTS (SELECT 1 FROM inquiries i WHERE i.contact_id = c.id AND i.import_job_id IS DISTINCT FROM p_job_id) THEN false
+        WHEN EXISTS (SELECT 1 FROM notes n WHERE n.contact_id = c.id AND (n.content IS NULL OR n.content = '')) THEN false
+        WHEN EXISTS (SELECT 1 FROM inquiries i WHERE i.contact_id = c.id) THEN false
         WHEN EXISTS (SELECT 1 FROM merge_history mh WHERE mh.loser_contact_id = c.id OR mh.winner_contact_id = c.id) THEN false
-        ELSE true
-      END as can_delete
+        ELSE true END as can_delete
     FROM contacts c
     WHERE c.import_job_id = p_job_id
   ),

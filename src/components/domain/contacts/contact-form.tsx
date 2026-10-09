@@ -152,7 +152,7 @@ export function ContactForm({
       {/* Contact type — key resets controlled state after successful create */}
       <div key={resetKey} className="space-y-1.5">
         <Label htmlFor="contact-type">
-          Type <span className="text-destructive">*</span>
+          {t("fields.type.label")} <span className="text-destructive">*</span>
         </Label>
         <Select
           name="type"
@@ -161,7 +161,9 @@ export function ContactForm({
           required
         >
           <SelectTrigger id="contact-type">
-            <SelectValue />
+            <SelectValue>
+              {(val: string) => val === "person" ? t("fields.type.person") : t("fields.type.organization")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="person">{t("fields.type.person")}</SelectItem>
@@ -204,7 +206,7 @@ export function ContactForm({
       {contactType === "organization" && (
         <div className="space-y-1.5">
           <Label htmlFor="company-name">
-            Company name <span className="text-destructive">*</span>
+            {t("fields.companyName.label")} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="company-name"
@@ -248,7 +250,7 @@ export function ContactForm({
               className="h-7 px-2 text-xs"
             >
               <Plus className="mr-1 h-3 w-3" />
-              Add
+              {t("addMethod")}
             </Button>
           </div>
 
@@ -264,7 +266,9 @@ export function ContactForm({
                   }
                 >
                   <SelectTrigger className="w-32 shrink-0">
-                    <SelectValue />
+                    <SelectValue>
+                      {(val: string) => tEnum(`contactMethod.${val}` as any)}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {["phone", "email", "viber", "whatsapp", "other"].map((val) => (
@@ -301,7 +305,7 @@ export function ContactForm({
                       variant="secondary"
                       className="cursor-pointer text-[10px] px-1.5"
                     >
-                      Primary
+                      {t("primary")}
                     </Badge>
                   ) : (
                     <Button
@@ -344,7 +348,7 @@ export function ContactForm({
           name="notes"
           defaultValue={contact?.notes ?? ""}
           maxLength={5000}
-          placeholder="Any relevant notes about this contact…"
+          placeholder={t("fields.notes.placeholder")}
           rows={3}
         />
       </div>

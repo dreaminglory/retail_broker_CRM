@@ -9,13 +9,16 @@ interface ImportOptionsFormProps {
   onChange: (options: ContactImportOptionsInput) => void;
 }
 
+import { useTranslations } from "next-intl";
+
 export function ImportOptionsForm({ options, onChange }: ImportOptionsFormProps) {
+  const t = useTranslations("SettingsImport.options");
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-sm font-medium">Duplicate Strategy</h3>
+        <h3 className="text-sm font-medium">{t("duplicateStrategy.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          What should happen if a contact in the file already exists in the CRM (matched by phone, email, or external ID)?
+          {t("duplicateStrategy.desc")}
         </p>
         <RadioGroup
           value={options.duplicate_strategy}
@@ -26,23 +29,23 @@ export function ImportOptionsForm({ options, onChange }: ImportOptionsFormProps)
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="skip" id="skip" />
-            <Label htmlFor="skip">Skip duplicates (Recommended)</Label>
+            <Label htmlFor="skip">{t("duplicateStrategy.skip")}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="update" id="update" />
-            <Label htmlFor="update">Add missing details to existing contacts</Label>
+            <Label htmlFor="update">{t("duplicateStrategy.update")}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="create" id="create" />
-            <Label htmlFor="create">Create anyway (Allow duplicates)</Label>
+            <Label htmlFor="create">{t("duplicateStrategy.create")}</Label>
           </div>
         </RadioGroup>
       </div>
 
       <div className="space-y-4 pt-4 border-t">
-        <h3 className="text-sm font-medium">Default Contact Type</h3>
+        <h3 className="text-sm font-medium">{t("defaultContactType.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          If a row doesn't specify a type, what should it be imported as?
+          {t("defaultContactType.desc")}
         </p>
         <RadioGroup
           value={options.default_contact_type}
@@ -53,11 +56,11 @@ export function ImportOptionsForm({ options, onChange }: ImportOptionsFormProps)
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="person" id="person" />
-            <Label htmlFor="person">Person</Label>
+            <Label htmlFor="person">{t("defaultContactType.person")}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="organization" id="organization" />
-            <Label htmlFor="organization">Organization</Label>
+            <Label htmlFor="organization">{t("defaultContactType.organization")}</Label>
           </div>
         </RadioGroup>
       </div>

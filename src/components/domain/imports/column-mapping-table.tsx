@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ContactImportField } from "@/domain/imports/types";
+import { ContactImportField, InquiryImportField } from "@/domain/imports/types";
 import { detectHeaders } from "@/domain/imports/csv/header-detection";
 
 interface ColumnMappingTableProps {
   headers: string[];
+  entityType: "contact" | "inquiry";
   initialMapping?: Record<string, string | null>;
   onChange: (mapping: Record<string, string | null>) => void;
 }
 
-const FIELD_OPTIONS: { value: ContactImportField; label: string }[] = [
+const CONTACT_FIELD_OPTIONS: { value: ContactImportField; label: string }[] = [
   { value: "full_name", label: "Full Name" },
   { value: "first_name", label: "First Name" },
   { value: "last_name", label: "Last Name" },
@@ -28,8 +29,26 @@ const FIELD_OPTIONS: { value: ContactImportField; label: string }[] = [
   { value: "external_ref", label: "External Reference ID" },
 ];
 
-export function ColumnMappingTable({ headers, initialMapping, onChange }: ColumnMappingTableProps) {
+const INQUIRY_FIELD_OPTIONS: { value: InquiryImportField; label: string }[] = [
+  { value: "caller_name", label: "Caller Name" },
+  { value: "caller_phone", label: "Caller Phone" },
+  { value: "caller_email", label: "Caller Email" },
+  { value: "subject", label: "Subject" },
+  { value: "description", label: "Description" },
+  { value: "source", label: "Source" },
+  { value: "external_ref", label: "External Reference ID" },
+  { value: "received_at", label: "Date Received" },
+  { value: "assigned_to", label: "Assigned To" },
+  { value: "status", label: "Status" },
+];
+
+import { useTranslations } from "next-intl";
+
+export function ColumnMappingTable({ headers, entityType, initialMapping, onChange }: ColumnMappingTableProps) {
+  const t = useTranslations("SettingsImport.mapping");
   const [mapping, setMapping] = useState<Record<string, string | null>>({});
+
+  const fieldOptions = entityType === "inquiry" ? INQUIRY_FIELD_OPTIONS : CONTACT_FIELD_OPTIONS;
 
   useEffect(() => {
     if (initialMapping && Object.keys(initialMapping).length > 0) {
@@ -38,20 +57,17 @@ export function ColumnMappingTable({ headers, initialMapping, onChange }: Column
     }
 
     const autoMapping = detectHeaders(headers);
-    // Convert from Field -> Header to Field -> Header 
-    // Wait, the mapping in DB is Field -> Header.
-    // e.g., mapping["first_name"] = "Име"
     
     // Ensure all fields exist in mapping, even if null
     const fullMapping: Record<string, string | null> = {};
-    FIELD_OPTIONS.forEach(opt => {
+    fieldOptions.forEach(opt => {
       fullMapping[opt.value] = autoMapping[opt.value] || null;
     });
 
     setMapping(fullMapping);
     onChange(fullMapping);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [headers]);
+  }, [headers, entityType]);
 
   const handleMappingChange = (field: string, headerValue: string | null) => {
     const newMapping = { ...mapping, [field]: headerValue === "none" ? null : headerValue };
@@ -64,24 +80,24 @@ export function ColumnMappingTable({ headers, initialMapping, onChange }: Column
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-1/2">CRM Field</TableHead>
-            <TableHead className="w-1/2">CSV Column</TableHead>
+            <TableHead className="w-1/2">{t("crmField")}</TableHead>
+            <TableHead className="w-1/2">{t("csvColumn")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {FIELD_OPTIONS.map((opt) => (
+          {fieldOptions.map((opt) => (
             <TableRow key={opt.value}>
-              <TableCell className="font-medium">{opt.label}</TableCell>
+              <TableCell className="font-medium">{t(`fields.${opt.value}` as any)}</TableCell>
               <TableCell>
                 <Select
                   value={mapping[opt.value] || "none"}
-                  onValueChange={(val) => handleMappingChange(opt.value, val)}
+                  onValueChange={(val) => handleMappingChange(opt.value, val as string | null)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Do not import" />
+                    <SelectValue placeholder={t("doNotImport")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">-- Do not import --</SelectItem>
+                    <SelectItem value="none">{t("doNotImport")}</SelectItem>
                     {headers.map((h) => (
                       <SelectItem key={h} value={h}>
                         {h}

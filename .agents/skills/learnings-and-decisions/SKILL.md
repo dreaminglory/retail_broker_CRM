@@ -80,6 +80,58 @@ can reference this to avoid repeating mistakes.
 **Decision:** Normalize all phone-type contact methods to E.164 (`+359XXXXXXXXX`) before DB insert. Validation in Zod schema; normalization in `normalizePhone()` / `normalizeContactMethodValue()`. DB schema unchanged.
 **Rationale:** The unique constraint on `contact_methods(agency_id, type, value)` only works if values are consistently formatted. Free-text would let `0888123456` and `+359888123456` coexist as separate rows for the same number.
 
+### AD-027: Atomic Tenant Provisioning
+**Date:** 2026-10-05
+**Decision:** Agency creation and owner provisioning is a single atomic SECURITY DEFINER RPC.
+**Rationale:** Prevents partial signups and hardens security.
+
+### AD-028: Explicit Privilege Grants on Functions
+**Date:** 2026-10-05
+**Decision:** Revoke all EXECUTE permissions on public functions by default, explicitly GRANT only as needed.
+**Rationale:** Least privilege; prevents anon from calling internal helpers.
+
+### AD-029: Profiles Table Scope
+**Date:** 2026-10-05
+**Decision:** Restrict profile visibility to self + colleagues.
+
+### AD-030: Next 16 Proxy Strategy
+**Date:** 2026-10-06
+**Decision:** Use `src/proxy.ts` for Supabase session refresh instead of Next 15 middleware.
+
+### AD-031: i18n Strategy
+**Date:** 2026-10-06
+**Decision:** `next-intl` without i18n routing, using NEXT_LOCALE cookie.
+
+### AD-032: Validation Messages as Keys
+**Date:** 2026-10-06
+**Decision:** Zod schemas return i18n keys, client translates them.
+
+### AD-034: Import Pipeline Architecture
+**Date:** 2026-10-07
+**Decision:** Chunked CSV parsing on client, batched staging, server-side atomic commit via RPC.
+
+### AD-037: Currency Standardization
+**Date:** 2026-10-07
+**Decision:** EUR is default, BGN deprecated.
+
+### AD-038: Deal Terminology
+**Date:** 2026-10-07
+**Decision:** "Сделка" (Deal) instead of "Възможност".
+
+---
+
+## Best Practices Discovered
+
+### L-007: Catalog Guard Test
+**Date:** 2026-10-05
+**Pattern:** Ensure every new table gets tested for RLS.
+**Usage:** `010-rls-catalog.sql` automatically checks every table in the `public` schema for `agency_id` and `relforcerowsecurity`. Never merge a table without it.
+
+### L-008: Explicit GRANT Rule
+**Date:** 2026-10-05
+**Pattern:** Supabase grants EXECUTE to anon/authenticated by default on new functions.
+**Usage:** After creating a function, always `REVOKE EXECUTE ON FUNCTION fn FROM PUBLIC, anon, authenticated;` and then explicitly `GRANT EXECUTE ON FUNCTION fn TO authenticated;` if it is an RPC.
+
 ---
 
 ## Best Practices Discovered

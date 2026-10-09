@@ -6,7 +6,20 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+const SelectPrimitiveRoot = SelectPrimitive.Root
+
+const SelectContext = React.createContext<{
+  labelsRef: React.MutableRefObject<Map<any, React.ReactNode>>;
+} | null>(null);
+
+function Select(props: React.ComponentProps<typeof SelectPrimitiveRoot>) {
+  const labelsRef = React.useRef(new Map<any, React.ReactNode>());
+  return (
+    <SelectContext.Provider value={{ labelsRef }}>
+      <SelectPrimitiveRoot {...props} />
+    </SelectContext.Provider>
+  );
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -18,13 +31,16 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   )
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+function SelectValue({ className, children, ...props }: SelectPrimitive.Value.Props) {
+  const ctx = React.useContext(SelectContext);
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
       className={cn("flex flex-1 text-left", className)}
       {...props}
-    />
+    >
+      {children ?? (ctx ? ((val: any) => ctx.labelsRef.current.get(val) || val) : undefined)}
+    </SelectPrimitive.Value>
   )
 }
 
@@ -111,10 +127,16 @@ function SelectLabel({
 function SelectItem({
   className,
   children,
+  value,
   ...props
 }: SelectPrimitive.Item.Props) {
+  const ctx = React.useContext(SelectContext);
+  if (ctx && value !== undefined) {
+    ctx.labelsRef.current.set(value, children);
+  }
   return (
     <SelectPrimitive.Item
+      value={value}
       data-slot="select-item"
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",

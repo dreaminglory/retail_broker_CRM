@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { TaskService } from "@/domain/tasks/service";
@@ -7,6 +8,12 @@ import { StageRepository } from "@/domain/stages/repository";
 import { MemberRepository } from "@/domain/members/repository";
 import { TodayPageClient } from "./today-page-client";
 import { quickCompleteTaskAction } from "./actions";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("today") };
+}
+
 
 export default async function TodayPage() {
   const supabase = await createSupabaseServer();

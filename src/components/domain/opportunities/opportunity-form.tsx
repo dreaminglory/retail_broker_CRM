@@ -17,8 +17,10 @@ import type { Stage } from "@/domain/stages/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
 import type { Contact } from "@/domain/contacts/types";
 import type { ActiveBroker } from "@/domain/members/types";
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { ActionResult } from "@/lib/actions";
+import { useTranslations } from "next-intl";
 
 interface OpportunityFormProps {
   opportunity?: Opportunity;
@@ -47,6 +49,10 @@ export function OpportunityForm({
   defaultInquiryId,
   defaultContactId,
 }: OpportunityFormProps) {
+  const t = useTranslations("OpportunityForm");
+  const enums = useTranslations("Enums");
+  const getStageName = useStageTranslation();
+  
   const isEdit = !!opportunity;
   const action = isEdit && updateAction ? updateAction : createAction;
 
@@ -85,14 +91,14 @@ export function OpportunityForm({
 
       <div className="space-y-1.5">
         <Label htmlFor="title">
-          Title <span className="text-destructive">*</span>
+          {t("titleLabel")} <span className="text-destructive">*</span>
         </Label>
         <Input
           id="title"
           name="title"
           defaultValue={opportunity?.title ?? ""}
           maxLength={300}
-          placeholder="e.g. Buyer looking for 2-bed in Lozenets"
+          placeholder={t("titlePlaceholder")}
           required
           aria-invalid={!!fieldErrors?.title}
         />
@@ -104,7 +110,7 @@ export function OpportunityForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="type">
-            Type <span className="text-destructive">*</span>
+            {t("typeLabel")} <span className="text-destructive">*</span>
           </Label>
           <Select
             key={`type-${opportunity?.type ?? "buyer"}`}
@@ -116,27 +122,27 @@ export function OpportunityForm({
               <SelectValue>
                 {(val) => {
                   switch (val) {
-                    case "buyer": return "Buyer";
-                    case "seller": return "Seller";
-                    case "tenant": return "Tenant";
-                    case "landlord": return "Landlord";
-                    default: return "Select type";
+                    case "buyer": return enums("opportunityType.buyer");
+                    case "seller": return enums("opportunityType.seller");
+                    case "tenant": return enums("opportunityType.tenant");
+                    case "landlord": return enums("opportunityType.landlord");
+                    default: return t("typePlaceholder");
                   }
                 }}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="buyer">Buyer</SelectItem>
-              <SelectItem value="seller">Seller</SelectItem>
-              <SelectItem value="tenant">Tenant</SelectItem>
-              <SelectItem value="landlord">Landlord</SelectItem>
+              <SelectItem value="buyer">{enums("opportunityType.buyer")}</SelectItem>
+              <SelectItem value="seller">{enums("opportunityType.seller")}</SelectItem>
+              <SelectItem value="tenant">{enums("opportunityType.tenant")}</SelectItem>
+              <SelectItem value="landlord">{enums("opportunityType.landlord")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="stage_id">
-            Stage <span className="text-destructive">*</span>
+            {t("stageLabel")} <span className="text-destructive">*</span>
           </Label>
           <Select
             key={`stage-${opportunity?.stage_id ?? (stages.length > 0 ? stages[0].id : "empty")}`}
@@ -146,13 +152,13 @@ export function OpportunityForm({
           >
             <SelectTrigger id="stage_id">
               <SelectValue>
-                {(val) => stages.find((s) => s.id === val)?.name ?? "Select stage"}
+                {(val) => getStageName(stages.find((s) => s.id === val)?.name) || t("stagePlaceholder")}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {stages.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
-                  {s.name}
+                  {getStageName(s.name)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -162,22 +168,22 @@ export function OpportunityForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="primary_contact_id">Primary Contact</Label>
+          <Label htmlFor="primary_contact_id">{t("primaryContactLabel")}</Label>
           <Select
             key={`contact-${opportunity?.primary_contact_id ?? defaultContactId ?? "none"}`}
             name="primary_contact_id"
             defaultValue={opportunity?.primary_contact_id ?? defaultContactId ?? "none"}
           >
             <SelectTrigger id="primary_contact_id">
-              <SelectValue placeholder="Select contact">
+              <SelectValue placeholder={t("primaryContactPlaceholder")}>
                 {(val) => {
-                  if (val === "none") return "None";
-                  return contacts.find((c) => c.id === val)?.display_name ?? "Select contact";
+                  if (val === "none") return t("none");
+                  return contacts.find((c) => c.id === val)?.display_name ?? t("primaryContactPlaceholder");
                 }}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none" className="text-muted-foreground italic">None</SelectItem>
+              <SelectItem value="none" className="text-muted-foreground italic">{t("none")}</SelectItem>
               {contacts.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.display_name}
@@ -188,22 +194,22 @@ export function OpportunityForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="source_id">Lead Source</Label>
+          <Label htmlFor="source_id">{t("sourceLabel")}</Label>
           <Select
             key={`source-${opportunity?.source_id ?? "none"}`}
             name="source_id"
             defaultValue={opportunity?.source_id ?? "none"}
           >
             <SelectTrigger id="source_id">
-              <SelectValue placeholder="Select source">
+              <SelectValue placeholder={t("sourcePlaceholder")}>
                 {(val) => {
-                  if (val === "none") return "None";
-                  return leadSources.find((s) => s.id === val)?.name ?? "Select source";
+                  if (val === "none") return t("none");
+                  return leadSources.find((s) => s.id === val)?.name ?? t("sourcePlaceholder");
                 }}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none" className="text-muted-foreground italic">None</SelectItem>
+              <SelectItem value="none" className="text-muted-foreground italic">{t("none")}</SelectItem>
               {leadSources.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
                   {s.name}
@@ -215,7 +221,7 @@ export function OpportunityForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="assigned-to">Assigned to</Label>
+        <Label htmlFor="assigned-to">{t("assignedToLabel")}</Label>
         <BrokerSelect
           name="assigned_to"
           brokers={brokers}
@@ -228,7 +234,7 @@ export function OpportunityForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="temperature">Temperature</Label>
+          <Label htmlFor="temperature">{t("temperatureLabel")}</Label>
           <Select
             key={`temperature-${opportunity?.temperature ?? "warm"}`}
             name="temperature"
@@ -238,24 +244,24 @@ export function OpportunityForm({
               <SelectValue>
                 {(val) => {
                   switch (val) {
-                    case "hot": return "🔥 Hot";
-                    case "warm": return "⚡ Warm";
-                    case "cold": return "❄️ Cold";
-                    default: return "Select temperature";
+                    case "hot": return t("hot");
+                    case "warm": return t("warm");
+                    case "cold": return t("cold");
+                    default: return t("temperaturePlaceholder");
                   }
                 }}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="hot">🔥 Hot</SelectItem>
-              <SelectItem value="warm">⚡ Warm</SelectItem>
-              <SelectItem value="cold">❄️ Cold</SelectItem>
+              <SelectItem value="hot">{t("hot")}</SelectItem>
+              <SelectItem value="warm">{t("warm")}</SelectItem>
+              <SelectItem value="cold">{t("cold")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="expected_value">Expected Value (EUR)</Label>
+          <Label htmlFor="expected_value">{t("expectedValueLabel")}</Label>
           <Input
             id="expected_value"
             name="expected_value"
@@ -263,7 +269,7 @@ export function OpportunityForm({
             min="0"
             step="0.01"
             defaultValue={opportunity?.expected_value ?? ""}
-            placeholder="0.00"
+            placeholder={t("expectedValuePlaceholder")}
             aria-invalid={!!fieldErrors?.expected_value}
           />
           {fieldErrors?.expected_value && (
@@ -273,13 +279,13 @@ export function OpportunityForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="notes">Notes</Label>
+        <Label htmlFor="notes">{t("notesLabel")}</Label>
         <Textarea
           id="notes"
           name="notes"
           defaultValue={opportunity?.notes ?? ""}
           maxLength={10000}
-          placeholder="Any initial notes about the requirements..."
+          placeholder={t("notesPlaceholder")}
           rows={4}
         />
       </div>
@@ -292,7 +298,7 @@ export function OpportunityForm({
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Saving…" : isEdit ? "Save changes" : "Create opportunity"}
+        {pending ? t("savingBtn") : isEdit ? t("submitEdit") : t("submitCreate")}
       </Button>
     </form>
   );

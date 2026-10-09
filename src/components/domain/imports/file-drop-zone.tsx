@@ -14,7 +14,7 @@ interface FileDropZoneProps {
 }
 
 export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProps) {
-  const t = useTranslations();
+  const t = useTranslations("SettingsImport.dropzone");
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -114,12 +114,12 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
           <div className="rounded-full bg-muted p-4 mb-4">
             <UploadCloud className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold">Drag & drop your CSV file here</h3>
+          <h3 className="text-lg font-semibold">{t("title")}</h3>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
-            or click to browse from your computer
+            {t("subtitle")}
           </p>
           <Button onClick={() => fileInputRef.current?.click()} variant="outline">
-            Select File
+            {t("selectFile")}
           </Button>
           <input
             type="file"
@@ -129,7 +129,7 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
             onChange={handleFileInputChange}
           />
           <p className="text-xs text-muted-foreground mt-4">
-            Supported encodings: UTF-8, Windows-1251. Max size: {maxSizeMB}MB.
+            {t("supported", { size: maxSizeMB })}
           </p>
         </CardContent>
       </Card>

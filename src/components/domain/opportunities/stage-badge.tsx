@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { type Stage } from "@/domain/stages/types";
 import { cn } from "@/lib/utils";
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 
 interface StageBadgeProps {
   stage: Stage;
@@ -8,10 +9,11 @@ interface StageBadgeProps {
 }
 
 export function StageBadge({ stage, className }: StageBadgeProps) {
+  const getStageName = useStageTranslation();
   if (!stage.is_terminal || !stage.terminal_type) {
     return (
       <Badge variant="outline" className={cn("bg-transparent", className)}>
-        {stage.name}
+        {getStageName(stage.name)}
       </Badge>
     );
   }
@@ -26,25 +28,25 @@ export function StageBadge({ stage, className }: StageBadgeProps) {
           )}
           variant="outline"
         >
-          {stage.name}
+          {getStageName(stage.name)}
         </Badge>
       );
     case "lost":
       return (
         <Badge variant="destructive" className={className}>
-          {stage.name}
+          {getStageName(stage.name)}
         </Badge>
       );
     case "nurture":
       return (
         <Badge variant="secondary" className={className}>
-          {stage.name}
+          {getStageName(stage.name)}
         </Badge>
       );
     default:
       return (
         <Badge variant="outline" className={className}>
-          {stage.name}
+          {getStageName(stage.name)}
         </Badge>
       );
   }

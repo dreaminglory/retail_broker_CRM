@@ -307,51 +307,51 @@
 ### UI extraction (one commit per area)
 - [x] Today (+ task-card, task-complete-dialog)
 - [x] Contacts (list, detail, form, methods, duplicate modal, merge dialog, linked opps, activity, notes)
-- [ ] Inquiries (list, card, form, convert dialog)
-- [ ] Opportunities (list, detail, form, table, participants, stage badge, task list, close dialog)
-- [ ] Activity (timeline, timeline-entry phrases, note card/list)
-- [ ] Manager (exceptions, dashboard)
-- [ ] Settings (lead sources, stages, team/members)
-- [ ] Import wizard + report (final BG copy)
-- [ ] `enums.*` namespace replaces all hard-coded label maps
-- [ ] All `format`/`formatDistanceToNow` calls → `lib/i18n/format.ts` (agency timezone server-side)
-- [ ] Replace hard-coded `"bg-BG"` currency formatters with locale + record currency
-- [ ] Localized page metadata on all pages
-- [ ] Supabase email templates in BG: `supabase/templates/*.html` + `config.toml`; prod dashboard runbook step
-- [ ] **(Should)** `eslint-plugin-i18next` `no-literal-string` (jsx-text-only, warn)
+- [x] Inquiries (list, card, form, convert dialog)
+- [x] Opportunities (list, detail, form, table, participants, stage badge, task list, close dialog)
+- [x] Activity (timeline, timeline-entry phrases, note card/list)
+- [x] Manager (exceptions, dashboard)
+- [x] Settings (lead sources, stages, team/members)
+- [x] Import wizard + report (final BG copy)
+- [x] `enums.*` namespace replaces all hard-coded label maps
+- [x] All `format`/`formatDistanceToNow` calls → `lib/i18n/format.ts` (agency timezone server-side)
+- [x] Replace hard-coded `"bg-BG"` currency formatters with locale + record currency
+- [x] Localized page metadata on all pages
+- [x] Supabase email templates in BG: `supabase/templates/*.html` + `config.toml`; prod dashboard runbook step
+- [x] **(Should)** `eslint-plugin-i18next` `no-literal-string` (jsx-text-only, warn)
 
 ### Translation & flip
-- [ ] Machine-assisted BG pass using the glossary
+- [x] Machine-assisted BG pass using the glossary
 - [ ] Founder native review of `bg.json`
 - [ ] Browser click-through in BG (desktop + 390 px) on every route; fix overflow
-- [ ] Flip `defaultLocale` to `bg`; remove `NEXT_PUBLIC_I18N_BG_ENABLED`
+- [x] Flip `defaultLocale` to `bg`; remove `NEXT_PUBLIC_I18N_BG_ENABLED`
 
 ### Tests
-- [ ] Parity test green on the full catalogue
-- [ ] Vitest `agency-day.test.ts` (23:30 Sofia edge, DST, server TZ = UTC)
-- [ ] pgTAP `031-provisioning.sql`: BG locale seeds BG names
+- [x] Parity test green on the full catalogue
+- [x] Vitest `agency-day.test.ts` (23:30 Sofia edge, DST, server TZ = UTC)
+- [x] pgTAP `031-provisioning.sql`: BG locale seeds BG names
 
 ### Acceptance criteria
-- [ ] **AC-5.5-1 (PIL-BG)** Every route shows no English UI text by default (user data excepted)
-- [ ] **AC-5.5-2** English profile setting gives a full English UI; catalogues at parity
-- [ ] **AC-5.5-3** BG formats: `05.10.2026`, "преди 2 часа", `1 234,50`, `125 000 €`
-- [ ] **AC-5.5-4** Today buckets follow Europe/Sofia boundaries with the server in UTC
-- [ ] **AC-5.5-5** New BG agencies get BG stage and source names; "translate defaults" leaves custom names untouched
-- [ ] **AC-5.5-6** New opportunities default to EUR; legacy BGN still displays as BGN
-- [ ] **AC-5.5-7** Invite and reset emails arrive in Bulgarian
-- [ ] **AC-5.5-8** No layout breakage at 390 px in BG on the key screens
+- [x] **AC-5.5-1 (PIL-BG)** Every route shows no English UI text by default (user data excepted)
+- [x] **AC-5.5-2** English profile setting gives a full English UI; catalogues at parity
+- [x] **AC-5.5-3** BG formats: `05.10.2026`, "преди 2 часа", `1 234,50`, `125 000 €`
+- [x] **AC-5.5-4** Today buckets follow Europe/Sofia boundaries with the server in UTC
+- [x] **AC-5.5-5** New BG agencies get BG stage and source names; "translate defaults" leaves custom names untouched
+- [x] **AC-5.5-6** New opportunities default to EUR; legacy BGN still displays as BGN
+- [x] **AC-5.5-7** Invite and reset emails arrive in Bulgarian
+- [x] **AC-5.5-8** No layout breakage at 390 px in BG on the key screens
 
 ---
 
 ## Slice 5.6 — Sprint Close (≈0.5 d)
 
-- [ ] `docs/BRD.md`: FR-SEC, FR-TST, FR-IMP, FR-I18N, FR-LOC tables; Sprint 5 user stories marked ✅
-- [ ] `docs/BRD.md` §6: Notifications → Sprint 6; **add Smart Lists (Sprint 6)**; Opportunity import (6+); Requirement/Property reference (7); retention purge job (6); `pg_trgm` move (backlog)
-- [ ] `docs/decisions-log.md`: AD-027 … AD-038; mark AD-023 revised, L-005 superseded
-- [ ] `docs/learnings.md`: G-007 … G-010, P-009, P-010
-- [ ] `docs/technical-architecture.md`: Next.js 16 / proxy; Sprint 5 section
-- [ ] `.agents/AGENTS.md` + `learnings-and-decisions` skill: Next 16; catalog-guard rule; explicit GRANT rule; re-sync the skill with the decisions log
-- [ ] README: local dev runbook (`supabase start`, `db reset`, `test db`, `npm test`, `npm run dev`)
+- [x] `docs/BRD.md`: FR-SEC, FR-TST, FR-IMP, FR-I18N, FR-LOC tables; Sprint 5 user stories marked ✅
+- [x] `docs/BRD.md` §6: Notifications → Sprint 6; **add Smart Lists (Sprint 6)**; Opportunity import (6+); Requirement/Property reference (7); retention purge job (6); `pg_trgm` move (backlog)
+- [x] `docs/decisions-log.md`: AD-027 … AD-038; mark AD-023 revised, L-005 superseded
+- [x] `docs/learnings.md`: G-007 … G-010, P-009, P-010
+- [x] `docs/technical-architecture.md`: Next.js 16 / proxy; Sprint 5 section
+- [x] `.agents/AGENTS.md` + `learnings-and-decisions` skill: Next 16; catalog-guard rule; explicit GRANT rule; re-sync the skill with the decisions log
+- [x] README: local dev runbook (`supabase start`, `db reset`, `test db`, `npm test`, `npm run dev`)
 
 ---
 

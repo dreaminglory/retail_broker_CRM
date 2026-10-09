@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import type { LeadSource, Channel } from "@/domain/lead-sources/types";
 import { CHANNELS } from "@/domain/lead-sources/validation";
+import { useTranslations } from "next-intl";
 import type { ActionResult } from "@/lib/actions";
 
 const CHANNEL_LABELS: Record<Channel, string> = {
@@ -42,6 +43,8 @@ export function LeadSourceForm({
   updateAction,
   onSuccess,
 }: LeadSourceFormProps) {
+  const t = useTranslations("SettingsLeadSources.form");
+  const tChannels = useTranslations("SettingsLeadSources.channels");
   const isEdit = !!leadSource;
   const action = isEdit && updateAction ? updateAction : createAction;
 
@@ -64,12 +67,12 @@ export function LeadSourceForm({
       {/* Name */}
       <div className="space-y-1.5">
         <Label htmlFor="ls-name">
-          Source name <span className="text-destructive">*</span>
+          {t("sourceName")} <span className="text-destructive">*</span>
         </Label>
         <Input
           id="ls-name"
           name="name"
-          placeholder="e.g. Imot.bg"
+          placeholder={t("sourceNamePlaceholder")}
           defaultValue={leadSource?.name ?? ""}
           required
           maxLength={100}
@@ -86,16 +89,16 @@ export function LeadSourceForm({
       {/* Channel */}
       <div className="space-y-1.5">
         <Label htmlFor="ls-channel">
-          Channel <span className="text-destructive">*</span>
+          {t("channel")} <span className="text-destructive">*</span>
         </Label>
         <Select name="channel" defaultValue={leadSource?.channel ?? "other"} required>
           <SelectTrigger id="ls-channel" aria-invalid={!!fieldErrors?.channel}>
-            <SelectValue placeholder="Select a channel" />
+            <SelectValue placeholder={t("selectChannel")} />
           </SelectTrigger>
           <SelectContent>
             {CHANNELS.map((ch) => (
               <SelectItem key={ch} value={ch}>
-                {CHANNEL_LABELS[ch]}
+                {tChannels(ch as any)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -113,7 +116,7 @@ export function LeadSourceForm({
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Saving…" : isEdit ? "Save changes" : "Add lead source"}
+        {pending ? t("saving") : isEdit ? t("saveChanges") : t("addLeadSource")}
       </Button>
     </form>
   );

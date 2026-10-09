@@ -51,7 +51,7 @@ export class ImportService {
   ): Promise<ImportJob> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
-    if (job.status !== "draft" && job.status !== "staged") {
+    if (job.status !== "draft" && job.status !== "staged" && job.status !== "validated") {
       throw new DomainError("import.errors.invalidStatus", "Invalid status");
     }
 
@@ -102,7 +102,7 @@ export class ImportService {
     let hasMore = true;
 
     while (hasMore) {
-      const rows = await this.repository.listRows(agencyId, jobId, { status: "pending", offset, limit: pageSize });
+      const rows = await this.repository.listRows(agencyId, jobId, { offset, limit: pageSize });
       if (rows.length === 0) {
         hasMore = false;
         break;
@@ -242,7 +242,7 @@ export class ImportService {
     const options = job.options as InquiryImportOptionsInput;
 
     while (hasMore) {
-      const rows = await this.repository.listRows(agencyId, job.id, { status: "pending", offset, limit: pageSize });
+      const rows = await this.repository.listRows(agencyId, job.id, { offset, limit: pageSize });
       if (rows.length === 0) {
         hasMore = false;
         break;

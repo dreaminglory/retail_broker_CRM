@@ -213,7 +213,7 @@ function AddMethodForm({
     <form action={formAction} className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="method-type">{t("fields.type.label")}</Label>
-        <Select name="type" value={selectedType} onValueChange={(val) => val && setSelectedType(val)}>
+        <Select name="type" value={selectedType} onValueChange={(val) => val && setSelectedType(val as string)}>
           <SelectTrigger id="method-type">
             <SelectValue />
           </SelectTrigger>

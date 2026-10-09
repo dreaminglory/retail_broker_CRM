@@ -1,15 +1,30 @@
 import { redirect } from "next/navigation";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("import") };
+}
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ImportService } from "@/domain/imports/service";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format, differenceInDays } from "date-fns";
+import { differenceInDays } from "date-fns";
+import { getTranslations } from "next-intl/server";
+import { getFormatter } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { RevertImportButton } from "./revert-import-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default async function ImportHistoryPage() {
+  const t = await getTranslations("SettingsImport");
+  const formatLoc = await getFormatter();
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -40,29 +55,50 @@ export default async function ImportHistoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Import History</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            View past imports or start a new one.
+            {t("description")}
           </p>
         </div>
-        <Link href="/settings/import/new?type=contact">
-          <Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("newImport")}
+            </Button>
+          }>
             <Plus className="mr-2 h-4 w-4" />
-            New Import
-          </Button>
-        </Link>
+            {t("newImport")}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem render={
+              <Link href="/settings/import/new?type=contact" className="w-full">
+                {t("importContacts")}
+              </Link>
+            }>
+              {t("importContacts")}
+            </DropdownMenuItem>
+            <DropdownMenuItem render={
+              <Link href="/settings/import/new?type=inquiry" className="w-full">
+                {t("importInquiries")}
+              </Link>
+            }>
+              {t("importInquiries")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>File Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Rows</TableHead>
-              <TableHead className="text-right">Imported</TableHead>
+              <TableHead>{t("columns.fileName")}</TableHead>
+              <TableHead>{t("columns.type")}</TableHead>
+              <TableHead>{t("columns.date")}</TableHead>
+              <TableHead>{t("columns.status")}</TableHead>
+              <TableHead className="text-right">{t("columns.rows")}</TableHead>
+              <TableHead className="text-right">{t("columns.imported")}</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -70,7 +106,7 @@ export default async function ImportHistoryPage() {
             {(!jobs || jobs.length === 0) && (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  No imports found.
+                  {t("noImports")}
                 </TableCell>
               </TableRow>
             )}
@@ -83,7 +119,7 @@ export default async function ImportHistoryPage() {
                   {job.entity_type}
                 </TableCell>
                 <TableCell>
-                  {format(new Date(job.created_at), "MMM d, yyyy HH:mm")}
+                  {formatLoc.dateTime(new Date(job.created_at), { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </TableCell>
                 <TableCell>
                   <Badge variant={

@@ -12,9 +12,17 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { TaskService } from "@/domain/tasks/service";
+import { getTranslations } from "next-intl/server";
 import { InquiryService } from "@/domain/inquiries/service";
 
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("dashboard") };
+}
+
+
 export default async function DashboardPage() {
+  const t = await getTranslations('Dashboard');
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -56,11 +64,11 @@ export default async function DashboardPage() {
       {/* Welcome header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome, {fullName.split(" ")[0]}!
+          {t('welcome', { name: fullName.split(' ')[0] })}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {agencyData?.name ?? "Your agency"} workspace is ready.
-          {membership?.role === "owner" && " You are the agency owner."}
+          {t('workspaceReady', { agency: agencyData?.name ?? 'Your agency' })}
+          {membership?.role === 'owner' && t('ownerNotice')}
         </p>
       </div>
 
@@ -75,11 +83,11 @@ export default async function DashboardPage() {
               <CalendarCheck className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-lg">Today&apos;s Work</h2>
+              <h2 className="font-semibold text-lg">{t('todayWorkTitle')}</h2>
               <p className="text-sm text-muted-foreground">
                 {totalUrgent + totalToday > 0
-                  ? `${totalUrgent + totalToday} item${totalUrgent + totalToday !== 1 ? "s" : ""} need your attention`
-                  : "All caught up — great work!"}
+                  ? (totalUrgent + totalToday === 1 ? t('todayItem', { count: 1 }) : t('todayItems', { count: totalUrgent + totalToday }))
+                  : t('caughtUp')}
               </p>
             </div>
           </div>
@@ -89,25 +97,25 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <CountCard
             icon={<AlertTriangle className="h-4 w-4" />}
-            label="Overdue"
+            label={t('overdue')}
             count={overdue.length}
             color={overdue.length > 0 ? "text-destructive" : "text-muted-foreground"}
           />
           <CountCard
             icon={<Inbox className="h-4 w-4" />}
-            label="New Inquiries"
+            label={t('newInquiries')}
             count={newInquiries.length}
             color={newInquiries.length > 0 ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}
           />
           <CountCard
             icon={<Clock className="h-4 w-4" />}
-            label="Due Today"
+            label={t('dueToday')}
             count={totalToday}
             color={totalToday > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}
           />
           <CountCard
             icon={<Briefcase className="h-4 w-4" />}
-            label="At Risk"
+            label={t('atRisk')}
             count={totalAtRisk}
             color={totalAtRisk > 0 ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}
           />
@@ -115,27 +123,25 @@ export default async function DashboardPage() {
       </Link>
 
       {/* Quick links */}
-      <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">
-        Quick Actions
-      </h3>
+      <h3 className="mb-4 text-sm font-medium uppercase tracking-wider text-muted-foreground">{t('quickActions')}</h3>
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           {
             icon: Inbox,
-            title: "Inquiries",
-            description: "View and manage inbound leads",
+            title: t('actions.inquiriesTitle'),
+            description: t('actions.inquiriesDesc'),
             href: "/inquiries",
           },
           {
             icon: Briefcase,
-            title: "Opportunities",
-            description: "Pipeline and deal tracking",
+            title: t('actions.opportunitiesTitle'),
+            description: t('actions.opportunitiesDesc'),
             href: "/opportunities",
           },
           {
             icon: Building2,
-            title: "Contacts",
-            description: "People and organizations",
+            title: t('actions.contactsTitle'),
+            description: t('actions.contactsDesc'),
             href: "/contacts",
           },
         ].map((item) => (

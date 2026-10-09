@@ -1,6 +1,13 @@
+import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ContactService } from "@/domain/contacts/service";
 import { ContactsPageClient } from "./contacts-page-client";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("contacts") };
+}
+
 
 interface SearchParams {
   search?: string;

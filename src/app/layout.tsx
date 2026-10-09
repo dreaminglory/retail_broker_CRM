@@ -13,14 +13,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "BrokerCRM — Real Estate Agency CRM",
-  description:
-    "A Bulgarian-first CRM for residential real estate agencies. Ensure every opportunity has an owner, a next action, and a complete history.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Metadata.root");
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();

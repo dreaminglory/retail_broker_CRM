@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations, useFormatter } from "next-intl";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { 
@@ -35,12 +36,14 @@ interface ExceptionsPageClientProps {
 }
 
 export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
+  const t = useTranslations("ExceptionsPage");
+  const formatLoc = useFormatter();
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight mb-1">Exceptions Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight mb-1">{t('title')}</h1>
         <p className="text-muted-foreground">
-          Identify operational bottlenecks and actionable items across the agency.
+          {t('description')}
         </p>
       </div>
 
@@ -50,10 +53,8 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-destructive" />
-                Unassigned Inquiries
-              </CardTitle>
-              <CardDescription>New inquiries without a broker assigned</CardDescription>
+                <UserPlus className="h-5 w-5 text-destructive" /> {t('unassigned.title')} </CardTitle>
+              <CardDescription>{t('unassigned.description')}</CardDescription>
             </div>
             <Badge variant="destructive" className="text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
               {data.unassignedInquiries.length}
@@ -61,20 +62,20 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           </CardHeader>
           <CardContent>
             {data.unassignedInquiries.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No unassigned inquiries.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('unassigned.empty')}</p>
             ) : (
               <div className="space-y-3">
                 {data.unassignedInquiries.map((inq) => (
                   <div key={inq.id} className="flex flex-col gap-1 text-sm border-b pb-3 last:border-0 last:pb-0">
                     <div className="flex justify-between items-start">
                       <Link href={`/inquiries`} className="font-medium hover:underline">
-                        {inq.caller_name || "Unknown Caller"}
+                        {inq.caller_name || t('unassigned.unknownCaller')}
                       </Link>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {formatDistanceToNow(new Date(inq.received_at), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-muted-foreground truncate">{inq.subject || inq.source_description || "No subject"}</p>
+                    <p className="text-muted-foreground truncate">{inq.subject || inq.source_description || t('unassigned.noSubject')}</p>
                   </div>
                 ))}
               </div>
@@ -87,10 +88,8 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="h-5 w-5 text-orange-500" />
-                Overdue Tasks
-              </CardTitle>
-              <CardDescription>Brokers with tasks past their due date</CardDescription>
+                <Clock className="h-5 w-5 text-orange-500" /> {t('overdue.title')} </CardTitle>
+              <CardDescription>{t('overdue.description')}</CardDescription>
             </div>
             <Badge className="bg-orange-500 hover:bg-orange-600 text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
               {data.overdueTasksByBroker.reduce((acc, b) => acc + b.overdue_count, 0)}
@@ -98,7 +97,7 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           </CardHeader>
           <CardContent>
             {data.overdueTasksByBroker.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No overdue tasks.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('overdue.empty')}</p>
             ) : (
               <div className="space-y-3">
                 {data.overdueTasksByBroker.map((broker) => (
@@ -106,10 +105,10 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
                     <div>
                       <p className="font-medium">{broker.broker_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        Most overdue: {broker.most_overdue_task?.title} ({formatDistanceToNow(new Date(broker.most_overdue_task!.due_at), { addSuffix: true })})
+                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: formatDistanceToNow(new Date(broker.most_overdue_task!.due_at as string), { addSuffix: true }) })}
                       </p>
                     </div>
-                    <Badge variant="outline">{broker.overdue_count} overdue</Badge>
+                    <Badge variant="outline">{t('overdue.overdueBadge', { count: broker.overdue_count })}</Badge>
                   </div>
                 ))}
               </div>
@@ -122,10 +121,8 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                At Risk Opportunities
-              </CardTitle>
-              <CardDescription>Active opportunities with NO pending tasks scheduled</CardDescription>
+                <AlertCircle className="h-5 w-5 text-amber-500" /> {t('atRisk.title')} </CardTitle>
+              <CardDescription>{t('atRisk.description')}</CardDescription>
             </div>
             <Badge className="bg-amber-500 hover:bg-amber-600 text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
               {data.atRiskOpportunities.length}
@@ -133,16 +130,16 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           </CardHeader>
           <CardContent>
             {data.atRiskOpportunities.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No at-risk opportunities.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('atRisk.empty')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Opportunity</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Broker</TableHead>
-                      <TableHead className="text-right">Created</TableHead>
+                      <TableHead>{t('atRisk.columns.opportunity')}</TableHead>
+                      <TableHead>{t('atRisk.columns.stage')}</TableHead>
+                      <TableHead>{t('atRisk.columns.broker')}</TableHead>
+                      <TableHead className="text-right">{t('atRisk.columns.created')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -156,9 +153,9 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
                         <TableCell>
                           <Badge variant="secondary" className="font-normal">{opp.stage_name}</Badge>
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{opp.assigned_to_name || 'Unassigned'}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{opp.assigned_to_name || t('atRisk.unassigned')}</TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(opp.created_at), "MMM d")}
+                          {formatLoc.dateTime(new Date(opp.created_at), { month: "short", day: "numeric" })}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -174,10 +171,8 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Timer className="h-5 w-5 text-slate-500" />
-                Stale Opportunities
-              </CardTitle>
-              <CardDescription>{">"} 7 days since last activity</CardDescription>
+                <Timer className="h-5 w-5 text-slate-500" /> {t('stale.title')} </CardTitle>
+              <CardDescription>{t('stale.description')}</CardDescription>
             </div>
             <Badge variant="secondary" className="text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
               {data.staleOpportunities.length}
@@ -185,7 +180,7 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
           </CardHeader>
           <CardContent>
             {data.staleOpportunities.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No stale opportunities.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('stale.empty')}</p>
             ) : (
               <div className="space-y-3">
                 {data.staleOpportunities.map((opp) => (
@@ -195,12 +190,12 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
                         {opp.title}
                       </Link>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        Updated {format(new Date(opp.updated_at), "MMM d")}
+                        {t('stale.updated', { date: formatLoc.dateTime(new Date(opp.updated_at), { month: "short", day: "numeric" }) })}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="font-normal text-[10px]">{opp.stage_name}</Badge>
-                      <span className="text-xs text-muted-foreground">Broker: {opp.assigned_to_name || 'None'}</span>
+                      <span className="text-xs text-muted-foreground">{t('stale.broker', { name: opp.assigned_to_name || t('stale.none') })}</span>
                     </div>
                   </div>
                 ))}
@@ -213,22 +208,20 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
         <Card className="col-span-2 md:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <BarChart className="h-5 w-5 text-indigo-500" />
-              Workload Distribution
-            </CardTitle>
-            <CardDescription>Active deals and pending tasks per broker</CardDescription>
+              <BarChart className="h-5 w-5 text-indigo-500" /> {t('workload.title')} </CardTitle>
+            <CardDescription>{t('workload.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             {data.workloadDistribution.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No active workloads.</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">{t('workload.empty')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Broker</TableHead>
-                      <TableHead className="text-center">Active Opps</TableHead>
-                      <TableHead className="text-center">Pending Tasks</TableHead>
+                      <TableHead>{t('workload.columns.broker')}</TableHead>
+                      <TableHead className="text-center">{t('workload.columns.activeOpps')}</TableHead>
+                      <TableHead className="text-center">{t('workload.columns.pendingTasks')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

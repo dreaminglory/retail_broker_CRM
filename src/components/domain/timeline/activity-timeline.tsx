@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { TimelineEntryItem } from "./timeline-entry";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 interface ActivityTimelineProps {
   initialEntries: TimelineEntry[];
@@ -20,6 +21,7 @@ export function ActivityTimeline({
   onDeleteNote,
   onLoadMore
 }: ActivityTimelineProps) {
+  const t = useTranslations("Timeline");
   const [entries, setEntries] = useState<TimelineEntry[]>(initialEntries);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialEntries.length === 20); // assumption: if exactly 20, there might be more
@@ -62,14 +64,14 @@ export function ActivityTimeline({
       
       {entries.length === 0 && (
         <div className="text-center p-8 border rounded-lg bg-muted/10">
-          <p className="text-sm text-muted-foreground">No activity history yet.</p>
+          <p className="text-sm text-muted-foreground">{t("noActivity")}</p>
         </div>
       )}
 
       {hasMore && onLoadMore && (
         <div className="pt-4 text-center border-t">
           <Button variant="outline" onClick={handleLoadMore} disabled={isLoading}>
-            {isLoading ? "Loading..." : "Load older activity"}
+            {isLoading ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}

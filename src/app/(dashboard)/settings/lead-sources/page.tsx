@@ -22,7 +22,16 @@ async function getAgencyId(): Promise<string | null> {
   return membership?.agency_id ?? null;
 }
 
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("leadSources") };
+}
+
+
 export default async function LeadSourcesPage() {
+  const t = await getTranslations("SettingsLeadSources");
   const supabase = await createSupabaseServer();
   const agencyId = await getAgencyId();
 
@@ -39,15 +48,14 @@ export default async function LeadSourcesPage() {
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Settings
+          {t("settings")}
         </Link>
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Lead Sources</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Configure the channels through which inquiries arrive at your agency.
-          Lead sources appear on inquiry and opportunity forms.
+          {t("description")}
         </p>
       </div>
 

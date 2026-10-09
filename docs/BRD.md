@@ -22,6 +22,15 @@ See `docs/business-description.md` for the full founding brief.
 
 ### Broker User Stories
 
+#### Sprint 5 — Hardening, Import & i18n
+- **US-B050:** ✅ As an invited broker, clicking my invitation link activates my membership and takes me safely into the app.
+- **US-B051:** ✅ As a broker, imported inquiries assigned to me as "New" appear on my Today screen and link to the matching contact.
+- **US-B052:** ✅ As a user, I can choose Bulgarian or English in my profile, and the choice follows me to every device.
+- **US-B053:** ✅ As a Bulgarian broker, the whole application speaks Bulgarian by default, including errors, empty states and emails.
+- **US-B054:** ✅ As a broker, dates, times, numbers and prices appear in the Bulgarian format I'm used to.
+- **US-B055:** ✅ As a broker, "Today" means today in Sofia, no matter where the server runs.
+
+
 #### Sprint 0 — Authentication
 - **US-B001:** ✅ As a broker, I can sign up and create my agency so I can start using BrokerCRM.
 - **US-B002:** ✅ As a broker, I can log in to my existing account so I can access my workspace.
@@ -64,6 +73,17 @@ See `docs/business-description.md` for the full founding brief.
 
 ### Manager User Stories
 
+#### Sprint 5 — Import & Team
+- **US-M050:** ✅ As a manager, I can invite brokers. Only the owner can grant manager or owner roles.
+- **US-M051:** ✅ As a manager, I can upload the contacts spreadsheet we've kept in Excel/Google Sheets, map its columns, and preview problems before anything is saved.
+- **US-M052:** ✅ As a manager, contacts that already exist (same phone or email, in any format) are not duplicated when I import, even if I import the same file twice.
+- **US-M053:** ✅ As a manager, I can download the rejected rows with reasons, fix them, and import just those.
+- **US-M054:** ✅ As a manager, I can import historical or portal-exported inquiries with their original source, reference number and date preserved.
+- **US-M055:** ✅ As a manager, re-importing an inquiry export doesn't create duplicate inquiries.
+- **US-M056:** ✅ As a manager, I can see who imported what, when, and with what result.
+- **US-M057:** ✅ As a manager, I can see how many imported inquiries will land in each broker's Today screen before I commit.
+
+
 #### Sprint 1 — Core Domain
 - **US-M010:** ✅ As a manager, I can view all contacts in my agency so I have visibility into the customer database.
 - **US-M011:** ✅ As a manager, I can view all inquiries and their status (new/contacted/converted/dismissed) so I can spot unhandled leads.
@@ -83,6 +103,15 @@ See `docs/business-description.md` for the full founding brief.
 
 ### Owner User Stories
 
+#### Sprint 5 — Hardening, Defaults & Revert
+- **US-O050:** ✅ As an agency owner, I can trust that nobody outside my agency can join it, read its data, or write into its history.
+- **US-O051:** ✅ As an owner, I can show prospects and auditors automated proof that agencies are isolated from each other.
+- **US-O052:** ✅ As an owner, only managers and owners can bulk-import data into the agency.
+- **US-O053:** ✅ As an owner, I can undo a mistaken import within 7 days without touching records my team has already worked on.
+- **US-O054:** ✅ As a new agency owner, my default pipeline stages and lead sources are created in Bulgarian.
+- **US-O055:** ✅ As an owner, invitation and password-reset emails reach my team in Bulgarian.
+
+
 #### Sprint 0 — Authentication
 - **US-O001:** ✅ As an owner, I can create an agency during signup so my workspace is established.
 - **US-O002:** ✅ As an owner, I can see my agency name and role on the dashboard so I know I'm in the right workspace.
@@ -97,6 +126,11 @@ See `docs/business-description.md` for the full founding brief.
 - **US-O042:** ✅ As an owner, I can change a member's role (broker ↔ manager ↔ owner).
 - **US-O043:** ✅ As an owner, I can deactivate a member so they lose access without losing their historical data.
 - **US-O044:** ✅ As an owner, I can cancel or resend pending invitations.
+
+### Technical User Stories
+
+#### Sprint 5 — Testing
+- **US-T050:** ✅ As the product team, we can rebuild a production-identical database locally in one command, so every change is tested before it reaches pilot agencies.
 
 ## 4. Functional Requirements
 
@@ -177,14 +211,14 @@ See `docs/business-description.md` for the full founding brief.
 | FR-OPP-14 | Link to source inquiry (immutable reference) | ✅ Done |
 | FR-OPP-15 | Expected value and currency fields | ✅ Done |
 
-### FR-SET: Agency Settings & Localization
+### FR-SET: Agency Settings & Localization ✅ Sprint 5
 | Req ID | Description | Status |
 |---|---|---|
-| FR-SET-01 | Agency specific settings jsonb column | ?? Done |
-| FR-SET-02 | Default Timezone for all date bounds (`Europe/Sofia` by default) | ?? Done |
-| FR-SET-03 | Default Currency (`EUR`) | ?? Done |
-| FR-SET-04 | Default user profile locale (`bg` for Bulgarian, `en` fallback) | ?? Done |
-| FR-SET-05 | Full system localization (Bulgarian) using `next-intl` | ?? Done |
+| FR-SET-01 | Agency specific settings jsonb column | ✅ Done |
+| FR-SET-02 | Default Timezone for all date bounds (`Europe/Sofia` by default) | ✅ Done |
+| FR-SET-03 | Default Currency (`EUR`) | ✅ Done |
+| FR-SET-04 | Default user profile locale (`bg` for Bulgarian, `en` fallback) | ✅ Done |
+| FR-SET-05 | Full system localization (Bulgarian) using `next-intl` | ✅ Done |
 
 ### FR-TSK: Tasks & Next Actions ✅ Sprint 1 & 2
 
@@ -274,6 +308,46 @@ See `docs/business-description.md` for the full founding brief.
 | FR-SRH-05 | Results scoped to user's agency via RLS | ✅ Done |
 | FR-SRH-06 | Clicking a result navigates to the entity's detail page | ✅ Done |
 
+
+### FR-SEC: Security Hardening & Isolation ✅ Sprint 5
+
+| ID | Requirement | Status |
+|----|------------|--------|
+| FR-SEC-01 | Partial unique index limits each user to 1 active membership | ✅ Done |
+| FR-SEC-02 | Atomic RPCs for signups and member activation | ✅ Done |
+| FR-SEC-03 | Non-atomic role validation before sending invitations | ✅ Done |
+| FR-SEC-04 | Only owners can grant owner/manager roles | ✅ Done |
+| FR-SEC-05 | Search path strictly defined on all functions | ✅ Done |
+| FR-SEC-06 | Exploit regression test suite blocking regressions | ✅ Done |
+
+### FR-TST: Migration Baseline & Test Harness ✅ Sprint 5
+
+| ID | Requirement | Status |
+|----|------------|--------|
+| FR-TST-01 | Clean `supabase db reset` builds production-ready schema | ✅ Done |
+| FR-TST-02 | pgTAP test suite testing RLS on all tenant-owned tables | ✅ Done |
+| FR-TST-03 | Vitest suite for business logic (phone parsing, timezone logic) | ✅ Done |
+
+### FR-IMP: Import Foundation & Execution ✅ Sprint 5
+
+| ID | Requirement | Status |
+|----|------------|--------|
+| FR-IMP-01 | Contacts upload, validation, mapping and idempotent commit | ✅ Done |
+| FR-IMP-02 | Inquiries upload, validation, mapping and idempotent commit | ✅ Done |
+| FR-IMP-03 | Duplicate detection against both database and in-file rows | ✅ Done |
+| FR-IMP-04 | Import Jobs history and status tracking | ✅ Done |
+| FR-IMP-05 | Import Revert action (7-day window, untouched records only) | ✅ Done |
+| FR-IMP-06 | Role-gating for imports (owner/manager only) | ✅ Done |
+
+### FR-LOC: Localization & Formatting ✅ Sprint 5
+
+| ID | Requirement | Status |
+|----|------------|--------|
+| FR-LOC-01 | `bg` default language across all components (next-intl) | ✅ Done |
+| FR-LOC-02 | Currency display formatting based on agency defaults | ✅ Done |
+| FR-LOC-03 | Timezone-aware date calculations for "Today" boundaries | ✅ Done |
+| FR-LOC-04 | Auth emails sent in localized language | ✅ Done |
+
 ## 5. Non-Functional Requirements
 
 | ID | Requirement | Priority |
@@ -291,10 +365,12 @@ See `docs/business-description.md` for the full founding brief.
 
 | Item | Target | Notes |
 |------|--------|-------|
-| CSV Import | Sprint 5 | Mapping UI, validation, error reporting, idempotency |
-| Bulgarian Localization | Sprint 5 | Extract all strings and translate before pilot |
-| Notifications & Reminders | Sprint 5+ | Architecture decided (AD-025: email-only via Resend, pg_cron). Implementation pending. |
-| Automated RLS Isolation Tests | Sprint 5+ | Supabase RLS integration test suite |
+| Notifications & Reminders | Sprint 6 | Architecture decided (AD-025: email-only via Resend, pg_cron). |
+| Smart Lists | Sprint 6 | Custom saved filters for inquiries and opportunities |
+| Opportunity Import | Sprint 6+ | Import opportunities via CSV |
+| Retention Purge Job | Sprint 6 | Purge reverted import rows and soft-deleted data |
+| Requirement/Property reference | Sprint 7 | Link contacts to what they want to buy/sell |
+| pg_trgm move | Backlog | Move pg_trgm to extensions schema |
 | Offline Draft & Retry | Post-pilot | Mobile form behavior when offline |
 | Property Inventory & Integrations | Post-pilot | Pending evidence of core loop adoption |
 

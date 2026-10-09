@@ -267,6 +267,107 @@
 **Rationale:** No external service needed at pilot scale. PostgreSQL's built-in capabilities are sufficient for hundreds to low thousands of records per agency.
 **Consequences:** Added `search_vector tsvector` columns to `contacts`, `opportunities`, and `inquiries`. Contact search vectors include contact method values (phone/email) by joining `contact_methods` in the trigger. A cascading trigger on `contact_methods` updates the parent contact's search vector when methods change. Backfill done via `UPDATE ... SET id = id` to fire the triggers on existing rows.
 
+
+## Sprint 5 Decisions
+
+### AD-027: Atomic Tenant Provisioning
+**Date:** 2026-10-05 | **Status:** Accepted
+
+**Context:** The previous signup flow was a 3-step client-side process which was vulnerable to manipulation and could fail midway, leaving partial state.
+**Decision:** Implement `create_agency_with_owner` as a single atomic SECURITY DEFINER RPC.
+**Rationale:** Database-level transactions ensure the agency, owner membership, and default seeds are created all-or-nothing, while RLS policies can be tightened to prevent unauthorized inserts.
+**Consequences:** Signup logic shifted to Server Actions calling the RPC.
+
+---
+
+### AD-028: Explicit Privilege Grants on Functions
+**Date:** 2026-10-05 | **Status:** Accepted
+
+**Context:** Supabase grants EXECUTE on public functions to anon and authenticated roles by default, exposing internal logic.
+**Decision:** Revoke all EXECUTE permissions on public functions by default, and explicitly GRANT EXECUTE only to necessary roles (e.g., authenticated) for specific RPCs.
+**Rationale:** Adheres to the principle of least privilege.
+**Consequences:** Internal helper functions like `seed_agency_defaults` are no longer callable via the REST API.
+
+---
+
+### AD-029: Profiles Table Scope and Selection logic (revises AD-023)
+**Date:** 2026-10-05 | **Status:** Accepted
+
+**Context:** Profiles were globally viewable by any authenticated user, which raised privacy concerns.
+**Decision:** Restrict profile visibility to the user themselves and colleagues within the same agency using a `shares_agency_with` helper.
+**Rationale:** Prevents user enumeration across tenants while allowing team members to see each other's profiles.
+**Consequences:** Replaced the "authenticated_can_view_profiles" policy with a colleague-restricted policy.
+
+---
+
+### AD-030: Next 16 Middleware & Proxy Strategy
+**Date:** 2026-10-06 | **Status:** Accepted
+
+**Context:** Next.js 16 deprecated traditional middleware in favor of a proxy pattern for session updates.
+**Decision:** Implement `src/proxy.ts` to update Supabase sessions and handle basic redirects.
+**Rationale:** Aligns with Next 16 conventions and fixes a bug where sessions were never refreshed in the middleware layer.
+**Consequences:** Middleware was removed, and proxy handles session token refreshing. Full authorization remains in Server Components (layouts).
+
+---
+
+### AD-031: i18n Strategy
+**Date:** 2026-10-06 | **Status:** Accepted
+
+**Context:** We need full Bulgarian localization.
+**Decision:** Use `next-intl` in "without i18n routing" mode, using `NEXT_LOCALE` cookie and reading the user's preference from `profiles.locale`.
+**Rationale:** Avoids the complexity of URL-based routing (e.g. `/bg/dashboard`) while keeping the UI in the user's chosen language.
+**Consequences:** All strings are extracted to `messages/bg.json` and `en.json`.
+
+---
+
+### AD-032: Validation Messages as i18n Keys
+**Date:** 2026-10-06 | **Status:** Accepted
+
+**Context:** Zod schemas return hardcoded English error messages.
+**Decision:** Zod schemas will return i18n translation keys instead of raw strings (e.g., `'validation.required'`). A client-side `FieldError` component translates them at render time.
+**Rationale:** Keeps the domain layer clean of React contexts and translation fetching.
+**Consequences:** Zod errors are now keys.
+
+---
+
+### AD-033: Domain Errors mapping to translation keys
+**Date:** 2026-10-06 | **Status:** Accepted
+
+**Context:** Server Actions need to return localized errors.
+**Decision:** Introduce a `DomainError` class whose `code` property corresponds to an i18n key in the `errors` namespace.
+**Rationale:** Cleanly separates business logic failures from UI presentation.
+**Consequences:** Action wrappers catch `DomainError` and translate it using `getTranslations` before sending to the client.
+
+---
+
+### AD-034: Import Pipeline Architecture
+**Date:** 2026-10-07 | **Status:** Accepted
+
+**Context:** Bulk CSV imports require validation, preview, and atomic commits, but face Vercel execution limits and payload constraints.
+**Decision:** A 3-phase chunked pipeline: (1) Client parses CSV and stages chunks via Server Actions to `import_rows`; (2) Server validates all staged rows in DB; (3) Client orchestrates batch commits via an RPC (`import_commit_contacts`).
+**Rationale:** Bypasses 1MB request limits and timeout issues by chunking and batching, while keeping validation in TS and atomic commits in PG.
+**Consequences:** Requires heavy state tracking in `import_jobs` and `import_rows`.
+
+---
+
+### AD-035: Idempotency keys for Inquiries
+**Date:** 2026-10-07 | **Status:** Accepted
+
+**Context:** We must prevent duplicate inquiries on repeated CSV imports.
+**Decision:** Add a unique index on `(agency_id, source_id, external_ref)` to `inquiries`.
+**Rationale:** Portals provide reliable IDs. Using this as an idempotency key guarantees exact duplicates are rejected or skipped safely.
+**Consequences:** Requires `external_ref` mapping during import.
+
+---
+
+### AD-036: Import Revert Strategy
+**Date:** 2026-10-07 | **Status:** Accepted
+
+**Context:** Owners need to undo mistaken imports.
+**Decision:** Implement a soft-revert bounded to a 7-day window. The revert RPC safely deletes only records that have remained untouched (no manual notes, no tasks, no stage changes) since import.
+**Rationale:** Prevents destroying actual work done by brokers on mistakenly imported data.
+**Consequences:** Revert relies on a CTE to check dependencies and `DELETE ... USING` to remove safely.
+
 ### AD-037: Currency Standardization to EUR
 **Date:** 2026-10-07 | **Status:** Accepted
 

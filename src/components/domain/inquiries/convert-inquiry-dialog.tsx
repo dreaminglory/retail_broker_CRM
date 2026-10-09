@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { Stage } from "@/domain/stages/types";
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import type { Contact } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
 import type { ActiveBroker } from "@/domain/members/types";
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { PotentialDuplicate } from "@/domain/contacts/duplicate-detection";
 import { DuplicateSuggestionModal } from "@/components/domain/contacts/duplicate-suggestion-modal";
+import { useTranslations } from "next-intl";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -73,6 +75,10 @@ export function ConvertInquiryDialog({
   convertAction,
   onSuccess,
 }: ConvertInquiryDialogProps) {
+  const t = useTranslations("ConvertInquiryDialog");
+  const enums = useTranslations("Enums");
+  const getStageName = useStageTranslation();
+  
   // Bind the inquiry id into the action to match (prevState, formData) signature
   const boundAction = convertAction.bind(null, inquiry.id);
   const [state, formAction, pending] = useActionState(
@@ -150,7 +156,7 @@ export function ConvertInquiryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Convert to opportunity</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 pt-1" ref={formRef}>
@@ -172,7 +178,7 @@ export function ConvertInquiryDialog({
                 id="convert-tab-new"
               >
                 <UserPlus className="h-3.5 w-3.5" />
-                Create new
+                {t("contactTabNew")}
               </button>
               <button
                 type="button"
@@ -186,7 +192,7 @@ export function ConvertInquiryDialog({
                 id="convert-tab-existing"
               >
                 <Users className="h-3.5 w-3.5" />
-                Link existing
+                {t("contactTabExisting")}
               </button>
             </div>
 
@@ -194,19 +200,21 @@ export function ConvertInquiryDialog({
             {contactTab === "new" && (
               <div className="space-y-3 pt-1">
                 <div className="space-y-1.5">
-                  <Label htmlFor="new-contact-type">Contact type</Label>
+                  <Label htmlFor="new-contact-type">{t("newContactType")}</Label>
                   <Select
                     value={newContactType}
-                    onValueChange={(v: string | null) =>
-                      setNewContactType((v ?? "person") as "person" | "organization")
+                    onValueChange={(v) =>
+                      setNewContactType((v as string ?? "person") as "person" | "organization")
                     }
                   >
                     <SelectTrigger id="new-contact-type">
-                      <SelectValue />
+                      <SelectValue>
+                        {(val: string) => val === "person" ? t("typePerson") : t("typeOrganization")}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="person">Person</SelectItem>
-                      <SelectItem value="organization">Organization</SelectItem>
+                      <SelectItem value="person">{t("typePerson")}</SelectItem>
+                      <SelectItem value="organization">{t("typeOrganization")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -214,34 +222,34 @@ export function ConvertInquiryDialog({
                 {newContactType === "person" ? (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="new-first-name">First name</Label>
+                      <Label htmlFor="new-first-name">{t("firstName")}</Label>
                       <Input
                         id="new-first-name"
                         value={newFirstName}
                         onChange={(e) => setNewFirstName(e.target.value)}
-                        placeholder="First name"
+                        placeholder={t("firstNamePlaceholder")}
                         maxLength={100}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="new-last-name">Last name</Label>
+                      <Label htmlFor="new-last-name">{t("lastName")}</Label>
                       <Input
                         id="new-last-name"
                         value={newLastName}
                         onChange={(e) => setNewLastName(e.target.value)}
-                        placeholder="Last name"
+                        placeholder={t("lastNamePlaceholder")}
                         maxLength={100}
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <Label htmlFor="new-company-name">Company name</Label>
+                    <Label htmlFor="new-company-name">{t("companyName")}</Label>
                     <Input
                       id="new-company-name"
                       value={newFirstName}
                       onChange={(e) => setNewFirstName(e.target.value)}
-                      placeholder="e.g. ACME Real Estate Ltd."
+                      placeholder={t("companyNamePlaceholder")}
                       maxLength={200}
                     />
                   </div>
@@ -263,7 +271,7 @@ export function ConvertInquiryDialog({
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     className="pl-8"
-                    placeholder="Search contacts…"
+                    placeholder={t("searchContactsPlaceholder")}
                     value={contactSearch}
                     onChange={(e) => setContactSearch(e.target.value)}
                     id="convert-contact-search"
@@ -273,7 +281,7 @@ export function ConvertInquiryDialog({
                 <div className="max-h-40 overflow-y-auto rounded-md border divide-y">
                   {filteredContacts.length === 0 ? (
                     <p className="py-6 text-center text-sm text-muted-foreground">
-                      No contacts found
+                      {t("noContactsFound")}
                     </p>
                   ) : (
                     filteredContacts.slice(0, 20).map((c) => (
@@ -311,18 +319,18 @@ export function ConvertInquiryDialog({
 
           {/* ── Opportunity details ───────────────────────────────────────── */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold">Opportunity</Label>
+            <Label className="text-sm font-semibold">{t("opportunitySection")}</Label>
 
             <div className="space-y-1.5">
               <Label htmlFor="opp-title">
-                Title <span className="text-destructive">*</span>
+                {t("oppTitle")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="opp-title"
                 name="opportunity_title"
                 defaultValue={defaultTitle}
                 maxLength={300}
-                placeholder="e.g. Ivan – Buyer – 2-bed Lozenets"
+                placeholder={t("oppTitlePlaceholder")}
                 required
                 aria-invalid={
                   !state.success && !!state.fieldErrors?.opportunity_title
@@ -338,18 +346,18 @@ export function ConvertInquiryDialog({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="opp-type">
-                  Type <span className="text-destructive">*</span>
+                  {t("oppType")} <span className="text-destructive">*</span>
                 </Label>
                 <Select name="opportunity_type" defaultValue="buyer">
                   <SelectTrigger id="opp-type">
                     <SelectValue>
-                      {(val) => OPPORTUNITY_TYPES.find((t) => t.value === val)?.label ?? "Select type"}
+                      {(val) => OPPORTUNITY_TYPES.find((type) => type.value === val) ? enums(`opportunityType.${val}`) : t("oppTypePlaceholder")}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {OPPORTUNITY_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
+                    {OPPORTUNITY_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {enums(`opportunityType.${type.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -363,18 +371,18 @@ export function ConvertInquiryDialog({
 
               <div className="space-y-1.5">
                 <Label htmlFor="opp-stage">
-                  Stage <span className="text-destructive">*</span>
+                  {t("oppStage")} <span className="text-destructive">*</span>
                 </Label>
                 <Select name="stage_id" defaultValue={defaultStageId}>
                   <SelectTrigger id="opp-stage">
-                    <SelectValue placeholder="Pick stage…">
-                      {(val) => stages.find((s) => s.id === val)?.name ?? "Pick stage…"}
+                    <SelectValue placeholder={t("oppStagePlaceholder")}>
+                      {(val) => getStageName(stages.find((s) => s.id === val)?.name) || t("oppStagePlaceholder")}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {stages.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
-                        {s.name}
+                        {getStageName(s.name)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -388,7 +396,7 @@ export function ConvertInquiryDialog({
             </div>
             
             <div className="space-y-1.5">
-              <Label htmlFor="convert-assigned-to">Assigned to</Label>
+              <Label htmlFor="convert-assigned-to">{t("assignedTo")}</Label>
               <BrokerSelect
                 name="assigned_to"
                 brokers={brokers}
@@ -419,7 +427,7 @@ export function ConvertInquiryDialog({
               onClick={() => onOpenChange(false)}
               disabled={pending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
@@ -427,7 +435,7 @@ export function ConvertInquiryDialog({
               disabled={pending}
               id="convert-inquiry-submit"
             >
-              {pending ? "Converting…" : "Convert"}
+              {pending ? t("converting") : t("convert")}
             </Button>
           </div>
         </form>

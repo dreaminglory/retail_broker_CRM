@@ -22,7 +22,10 @@ interface RevertImportButtonProps {
   fileName: string;
 }
 
+import { useTranslations } from "next-intl";
+
 export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps) {
+  const t = useTranslations("SettingsImport");
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -45,20 +48,20 @@ export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps)
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger render={
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Revert Import" />
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title={t("revertImport")} />
       }>
         <Undo2 className="h-4 w-4" />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Revert Import</AlertDialogTitle>
+          <AlertDialogTitle>{t("revertImport")}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to revert the import of <strong>{fileName}</strong>?
-            This will permanently delete all newly created records from this job that haven't been modified or referenced by other records since import.
+            {t.rich("revertConfirm", { fileName, strong: (c) => <strong>{c}</strong> })}
+            {t("revertDesc")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
@@ -67,7 +70,7 @@ export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps)
             disabled={isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isPending ? "Reverting..." : "Revert"}
+            {isPending ? t("reverting") : t("revert")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

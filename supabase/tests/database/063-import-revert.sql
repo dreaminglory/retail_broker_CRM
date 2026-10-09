@@ -2,34 +2,34 @@ BEGIN;
 SELECT plan(6);
 
 -- Setup
-\ir ../000-setup-tests-hooks.sql
 
 -- Get a test agency and user
-SELECT id INTO my_agency_id FROM agencies LIMIT 1;
-SELECT id INTO my_source_id FROM lead_sources WHERE agency_id = my_agency_id LIMIT 1;
+
+SELECT set_config('test.a1', (SELECT id FROM agencies LIMIT 1)::text, true);
+SELECT set_config('test.s1', (SELECT id FROM lead_sources WHERE agency_id = current_setting('test.a1')::uuid LIMIT 1)::text, true);
 
 -- Seed import job
-INSERT INTO import_jobs (id, agency_id, entity_type, status, file_name, file_size_bytes, total_rows)
-VALUES ('00000000-0000-0000-0000-000000000002', my_agency_id, 'inquiry', 'validated', 'test-revert.csv', 100, 2);
+INSERT INTO import_jobs (id, agency_id, entity_type, status, file_name, file_sha256, file_size_bytes, total_rows, options)
+VALUES ('00000000-0000-0000-0000-000000000002', current_setting('test.a1')::uuid, 'inquiry', 'validated', 'test-revert.csv', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 100, 2, '{"create_missing_contacts": true}');
 
 -- Seed staged rows
-INSERT INTO import_staged_rows (id, agency_id, import_job_id, row_number, status, normalized)
+INSERT INTO import_rows (id, agency_id, import_job_id, row_number, status, raw, normalized)
 VALUES 
-  ('00000000-0000-0000-0000-200000000001', my_agency_id, '00000000-0000-0000-0000-000000000002', 1, 'valid', jsonb_build_object(
+  ('00000000-0000-0000-0000-200000000001', current_setting('test.a1')::uuid, '00000000-0000-0000-0000-000000000002', 1, 'valid', '{}', jsonb_build_object(
     'caller_name', 'Test Revert 1',
     'caller_phone', '+359888999991',
-    'source_id', my_source_id,
+    'source_id', current_setting('test.s1')::uuid,
     'status', 'new'
   )),
-  ('00000000-0000-0000-0000-200000000002', my_agency_id, '00000000-0000-0000-0000-000000000002', 2, 'valid', jsonb_build_object(
+  ('00000000-0000-0000-0000-200000000002', current_setting('test.a1')::uuid, '00000000-0000-0000-0000-000000000002', 2, 'valid', '{}', jsonb_build_object(
     'caller_name', 'Test Revert 2',
     'caller_phone', '+359888999992',
-    'source_id', my_source_id,
+    'source_id', current_setting('test.s1')::uuid,
     'status', 'new'
   ));
 
 -- Commit first
-SELECT * FROM commit_inquiries_batch('00000000-0000-0000-0000-000000000002');
+SELECT * FROM import_commit_inquiries('00000000-0000-0000-0000-000000000002');
 
 SELECT is(
   (SELECT count(*)::int FROM inquiries WHERE import_job_id = '00000000-0000-0000-0000-000000000002'),
@@ -38,16 +38,16 @@ SELECT is(
 );
 
 -- Modify one inquiry to prevent its deletion
-UPDATE inquiries 
-SET status = 'contacted'
-WHERE caller_name = 'Test Revert 1';
+ALTER TABLE inquiries DISABLE TRIGGER set_inquiries_updated_at;
+UPDATE inquiries SET status = 'contacted', updated_at = now() + INTERVAL '2 minutes' WHERE caller_name = 'Test Revert 1';
+ALTER TABLE inquiries ENABLE TRIGGER set_inquiries_updated_at;
 
 -- Revert job
-SELECT * FROM revert_import_job('00000000-0000-0000-0000-000000000002');
+SELECT * FROM import_revert('00000000-0000-0000-0000-000000000002');
 
 SELECT is(
   (SELECT status FROM import_jobs WHERE id = '00000000-0000-0000-0000-000000000002'),
-  'reverted'::import_job_status,
+  'reverted'::text,
   'Job status should be reverted'
 );
 

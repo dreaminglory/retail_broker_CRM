@@ -110,7 +110,7 @@ export function ContactsPageClient({
               render={
               <Button size="sm">
                 <Plus className="mr-1.5 h-4 w-4" />
-                New contact
+                {t("newContactBtn")}
               </Button>
             }
           />
@@ -138,7 +138,7 @@ export function ContactsPageClient({
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-8"
-              placeholder="Search by name…"
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -177,10 +177,12 @@ export function ContactsPageClient({
         </form>
         <Select
           value={initialStatus}
-          onValueChange={handleStatusChange}
+          onValueChange={(v) => handleStatusChange(v as string | null)}
         >
           <SelectTrigger className="w-36">
-            <SelectValue />
+            <SelectValue>
+              {(val: string) => val ? t(`filters.${val}` as any) : t("filters.all")}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="active">{t("filters.active")}</SelectItem>

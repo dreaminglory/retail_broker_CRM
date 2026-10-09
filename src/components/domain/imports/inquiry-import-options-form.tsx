@@ -10,13 +10,16 @@ interface InquiryImportOptionsFormProps {
   onChange: (options: InquiryImportOptionsInput) => void;
 }
 
+import { useTranslations } from "next-intl";
+
 export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOptionsFormProps) {
+  const t = useTranslations("SettingsImport.options");
   return (
     <div className="space-y-6">
       <div className="space-y-4 pt-4 border-t">
-        <h3 className="text-sm font-medium">Contact Linking</h3>
+        <h3 className="text-sm font-medium">{t("contactLinking.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          How should we handle callers?
+          {t("contactLinking.desc")}
         </p>
         <div className="flex items-center space-x-2">
           <input 
@@ -26,7 +29,7 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
             checked={options.link_contacts}
             onChange={(e) => onChange({ ...options, link_contacts: e.target.checked })}
           />
-          <Label htmlFor="link_contacts">Link to existing contacts (by phone/email)</Label>
+          <Label htmlFor="link_contacts">{t("contactLinking.link")}</Label>
         </div>
         <div className="flex items-center space-x-2">
           <input 
@@ -36,14 +39,14 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
             checked={options.create_missing_contacts}
             onChange={(e) => onChange({ ...options, create_missing_contacts: e.target.checked })}
           />
-          <Label htmlFor="create_missing_contacts">Create new contacts if no match found</Label>
+          <Label htmlFor="create_missing_contacts">{t("contactLinking.create")}</Label>
         </div>
       </div>
 
       <div className="space-y-4 pt-4 border-t">
-        <h3 className="text-sm font-medium">Unknown Source Strategy</h3>
+        <h3 className="text-sm font-medium">{t("unknownSource.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          What happens if a Lead Source name from the CSV is not found in CRM?
+          {t("unknownSource.desc")}
         </p>
         <RadioGroup
           value={options.unknown_source}
@@ -54,19 +57,19 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="error" id="error" />
-            <Label htmlFor="error">Mark row as invalid (Error)</Label>
+            <Label htmlFor="error">{t("unknownSource.error")}</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="default" id="default" />
-            <Label htmlFor="default">Use default source</Label>
+            <RadioGroupItem value="use_default" id="use_default" />
+            <Label htmlFor="use_default">{t("unknownSource.useDefault")}</Label>
           </div>
         </RadioGroup>
       </div>
 
       <div className="space-y-4 pt-4 border-t">
-        <h3 className="text-sm font-medium">Default Status</h3>
+        <h3 className="text-sm font-medium">{t("defaultStatus.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          What status should imported inquiries have?
+          {t("defaultStatus.desc")}
         </p>
         <Select 
           value={options.default_status} 
@@ -76,10 +79,10 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="converted">Converted</SelectItem>
-            <SelectItem value="dismissed">Dismissed</SelectItem>
+            <SelectItem value="new">{t("defaultStatus.new")}</SelectItem>
+            <SelectItem value="contacted">{t("defaultStatus.contacted")}</SelectItem>
+            <SelectItem value="converted">{t("defaultStatus.converted")}</SelectItem>
+            <SelectItem value="dismissed">{t("defaultStatus.dismissed")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
