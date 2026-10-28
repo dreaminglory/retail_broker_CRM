@@ -1,320 +1,146 @@
-# [Working Name] - Real Estate CRM for Bulgarian Brokerages
+# BrokerCRM — Product and Business Brief
 
-## Document Purpose And Status
+The founding brief: who we serve, what problem we solve, what the pilot must prove and how
+we will sell it. Use it to decide **what to build next**. For what is built, see `BRD.md`.
+For how it works, see `domain-model.md` and `decisions-log.md`.
 
-This document is the founding product and business brief for the company. It aligns founders, customer-development work, product design, software architecture, and AI-assisted development around the same direction.
-
-It defines:
-
-- The customer and problem we intend to serve
-- The product promise and daily operating workflow
-- The fastest sellable pilot
-- The core CRM foundations and domain model
-- Initial technical, privacy, and operational principles
-- Go-to-market, pricing, and validation hypotheses
-- Success measures, risks, and open decisions
-
-It is not a complete business plan, legal opinion, UI specification, database schema, API contract, or developer implementation specification. Those should be created as separate documents after customer discovery and pilot validation.
-
-Unless explicitly marked as validated, market claims, customer behavior, pricing, and success targets in this document are hypotheses to test with Bulgarian agencies.
+Unless marked as validated, market claims, customer behaviour, pricing and targets here are
+hypotheses to test with Bulgarian agencies. Record evidence in `pilot-feedback.md`.
 
 ## Executive Summary
 
-[Working Name] is a Bulgarian-first CRM for residential real estate agencies. It ensures every active opportunity has an owner, a next action, and a complete history so brokers lose fewer opportunities and managers can run the agency from reliable operational data.
+BrokerCRM is a Bulgarian-first CRM for residential real estate agencies. It ensures every
+active opportunity has an owner, a next action and a complete history, so brokers lose fewer
+opportunities and managers can run the agency from reliable operational data.
 
-The first product will not attempt to be a property portal, MLS, accounting system, transaction platform, or messaging application. It will focus on one repeatable operating loop:
+It is not a property portal, MLS, accounting system, transaction platform or messaging app.
+It focuses on one repeatable operating loop:
 
-> Capture the inquiry, identify the contact, assign the opportunity, schedule the next action, record the outcome, advance the stage, and expose anything at risk of being forgotten.
+> Capture the inquiry, identify the contact, assign the opportunity, schedule the next action,
+> record the outcome, advance the stage, and expose anything at risk of being forgotten.
 
-The initial commercial goal is to prove that a narrowly defined Bulgarian brokerage will pay for this workflow and continue using it after the pilot.
-
-## One-Line Description
-
-A Bulgarian-first CRM for residential brokerages that ensures every opportunity has an owner, a next action, and a complete history.
-
-The product does not try to look like Viber, WhatsApp, or Messenger. Brokers use those tools because they lack a professional operating system. The CRM should provide structure, ownership, reminders, history, and team visibility while allowing communication from external channels to be recorded.
+The first commercial goal is to prove that a narrowly defined Bulgarian brokerage will pay
+for this workflow and keep using it after the pilot.
 
 ## Initial Target Customer
 
-The initial beachhead customer is a hypothesis:
+Beachhead hypothesis:
 
-> A Bulgarian residential sales agency with 5-15 active brokers, one hands-on owner or sales manager, leads arriving from portals, referrals, websites, phone calls, and social channels, and an existing workflow based on Excel, personal phones, notebooks, Viber, or WhatsApp.
+> A Bulgarian residential sales agency with 5–15 active brokers, one hands-on owner or sales
+> manager, leads from portals, referrals, websites, phone calls and social channels, and a
+> current workflow of Excel, personal phones, notebooks, Viber or WhatsApp.
 
-This segment is intentionally narrower than "agencies with 3-30 brokers." A three-person founder-led office and a thirty-person multi-team brokerage have materially different permissions, onboarding, reporting, and purchasing needs.
-
-The target may change after interviews and pilots. Rental-focused agencies, solo brokers, developers, commercial agencies, and multi-office organizations are not the initial design center.
+A three-person founder-led office and a thirty-person multi-team brokerage differ in
+permissions, onboarding, reporting and purchasing, so the segment is deliberately narrow.
+Rental-focused agencies, solo brokers, developers, commercial agencies and multi-office
+organisations are not the initial design centre.
 
 ## Core Personas
 
-### Economic Buyer: Owner Or Managing Director
-
-Pain:
-
-- Cannot reliably see lead ownership, follow-up quality, pipeline health, or broker workload
-- Fears losing customer history when a broker leaves
-- Cannot compare lead sources or identify missed revenue
-
-Desired result:
-
-- Fewer forgotten opportunities
-- Clear accountability without manually checking every broker
-- A business database owned by the agency
-- Evidence that the software improves conversion or operational control
-
-Likely objections:
-
-- Brokers will not use it
-- Setup and migration will take too much time
-- A spreadsheet or generic CRM is cheaper
-- Reporting may create conflict inside the team
-
-### Operational Champion: Team Lead Or Office Manager
-
-Pain:
-
-- Manually distributes leads and asks brokers for updates
-- Reconstructs status from calls, chats, and spreadsheets
-- Spends time chasing incomplete records and overdue work
-
-Desired result:
-
-- A single queue for new and at-risk work
-- Fast assignment and reassignment
-- Exception-based management instead of constant status meetings
-
-### Daily User: Broker
-
-Pain:
-
-- Must remember follow-ups across personal messages, calls, notes, and portal inquiries
-- Re-enters information and searches through conversations
-- May see management software as surveillance or extra administration
-
-Desired result:
-
-- Open one screen and immediately know what to do next
-- Record outcomes in seconds from phone or desktop
-- Keep useful client context without duplicating work
-- Receive value personally, not only provide reports to management
+| Persona | Pain | Wants | Likely objections |
+|---|---|---|---|
+| **Owner / managing director** (economic buyer) | Can't see lead ownership, follow-up quality, pipeline health or workload. Fears losing history when a broker leaves. Can't compare sources. | Fewer forgotten opportunities, accountability without checking every broker, a database the agency owns, proof the software helps. | Brokers won't use it. Setup takes too long. A spreadsheet or generic CRM is cheaper. Reporting may cause team conflict. |
+| **Team lead / office manager** (operational champion) | Distributes leads by hand, chases updates, rebuilds status from calls and chats. | One queue for new and at-risk work, fast (re)assignment, exceptions instead of status meetings. | |
+| **Broker** (daily user) | Remembers follow-ups across messages, calls and notes. Re-enters data. May see the CRM as surveillance. | Open one screen and know what to do. Record outcomes in seconds on phone or desktop. Personal value, not just reports for management. | |
 
 ## Problem Hypothesis
 
-We believe many Bulgarian residential agencies operate through scattered conversations, personal phones, notebooks, spreadsheets, portal messages, and Viber/WhatsApp chats. This may create the following problems:
+Many Bulgarian residential agencies run on scattered conversations, personal phones,
+notebooks, spreadsheets, portal messages and Viber/WhatsApp. As a result:
 
 - New inquiries are lost or left unassigned.
-- Follow-up depends on memory instead of a system.
-- Managers cannot see which opportunities have no next action.
-- Customer history disappears when a broker leaves.
-- Contacts, requirements, properties, viewings, offers, and outcomes are disconnected.
-- Agencies cannot reliably measure response time, source quality, pipeline progress, or lost reasons.
-- Imported records contain duplicates and inconsistent information.
+- Follow-up depends on memory.
+- Managers can't see which opportunities have no next action.
+- Customer history leaves with the broker.
+- Contacts, requirements, properties, viewings, offers and outcomes are disconnected.
+- Response time, source quality, pipeline progress and lost reasons can't be measured.
+- Imported records are duplicated and inconsistent.
 
-These statements must be validated through interviews, observation, and examination of anonymized agency data. The highest-risk assumption is not that a database would be useful; it is that brokers will consistently use the workflow during a normal working day.
+The highest-risk assumption is not that a database would be useful, but that **brokers will
+consistently use the workflow during a normal working day**.
 
-## Current Alternatives And Competition
+## Competition
 
-The primary competitor is the status quo:
+The main competitor is the status quo: personal phones, Viber/WhatsApp/Messenger, Excel or
+Google Sheets, paper, portal inboxes and verbal reporting.
 
-- Personal phones and address books
-- Viber, WhatsApp, Messenger, and email
-- Excel or Google Sheets
-- Paper notes and memory
-- Portal inboxes
-- Verbal reporting and team meetings
+Also investigate: generic CRMs (Bitrix24, HubSpot, Zoho, Pipedrive), Bulgarian agency
+software, international real estate CRMs (Follow Up Boss, kvCORE, onOffice), and home-made
+spreadsheets or low-code tools. Don't claim any product dominates until interviews show it;
+find out what agencies tried, why it failed, and what switching would cost.
 
-Other alternatives to investigate include:
+## Product Thesis And Positioning
 
-- Generic CRMs such as Bitrix24, HubSpot, Zoho, Pipedrive, and customized systems
-- Bulgarian property, listing, or agency-management software
-- International real estate CRMs such as Follow Up Boss, kvCORE, onOffice, and Salesforce configurations
-- Internally built spreadsheets, Airtable bases, and low-code tools
+The value is a disciplined daily workflow, not a large feature list.
 
-We should not claim that any named product dominates Bulgarian agencies until customer research proves it. Interviews must establish what agencies have tried, why those attempts failed, and what switching cost exists.
+> Every broker opens the CRM and immediately knows which new inquiries need attention, who to
+> call, which follow-ups are overdue, and which opportunities have no next action.
 
-## Product Thesis
+> Every manager can see unassigned work, overdue follow-ups, stale opportunities and workload
+> without reconstructing the agency from conversations.
 
-The first sellable product should be a focused real estate CRM. Its value is a disciplined daily workflow, not a large feature list.
+This borrows the Follow Up Boss pattern (people, opportunities, sources, next actions and
+history organised around daily work), adapted to Bulgarian workflows. Never copy another
+product's interface, branding, copy or implementation.
 
-> Every broker opens the CRM and immediately knows which new inquiries need attention, who to call, which follow-ups are overdue, and which opportunities have no next action.
+A Bulgarian UI is an entry requirement, not an advantage. The wedge to test combines: very
+fast broker adoption, Bulgarian real estate terminology and workflows, reliable import with
+deduplication and merge history, local lead-source attribution, mobile-efficient daily work,
+hands-on onboarding, and multi-party deals as practised in Bulgaria.
 
-> Every manager can see unassigned work, overdue follow-ups, stale opportunities, and workload without reconstructing the agency from conversations.
+Positioning to test:
 
-This is the core pattern to borrow from Follow Up Boss: organize people, opportunities, lead sources, follow-up actions, and communication history around clear daily work. We should adapt the pattern to Bulgarian workflows rather than clone another product's interface, branding, copy, or proprietary implementation.
-
-## Positioning And Differentiation Hypotheses
-
-"Bulgarian UI" is an entry requirement, not a durable competitive advantage. The stronger initial wedge should combine:
-
-- Very fast adoption by brokers
-- Bulgarian terminology and real estate workflows
-- Reliable import, deduplication, and merge history
-- Local lead-source capture and attribution
-- Mobile-efficient daily work
-- Hands-on setup and onboarding
-- Multi-party transaction support appropriate to Bulgarian practice
-- Later integrations with local portals and communication channels
-- Accumulated workflow knowledge from Bulgarian agencies
-
-The positioning to test is:
-
-> The easiest way for a Bulgarian residential agency to ensure that no active opportunity is unowned or forgotten.
+> The easiest way for a Bulgarian residential agency to ensure that no active opportunity is
+> unowned or forgotten.
 
 ## Product Principles
 
-- The broker must receive immediate personal value from using the CRM.
-- Daily work should be driven by next actions and exceptions, not by browsing records.
-- Contacts are durable people; opportunities represent commercial intent and own the pipeline stage.
-- Properties are important records, but the product is not property-first at the expense of follow-up.
-- Managers should manage exceptions, not use the system as a surveillance feed.
+- The broker must get immediate personal value from the CRM.
+- Daily work is driven by next actions and exceptions, not by browsing records.
+- Contacts are durable people; opportunities represent commercial intent and own the stage.
+- Properties matter, but the product is not property-first at the expense of follow-up.
+- Managers manage exceptions; the system is not a surveillance feed.
 - Imports and onboarding are part of the product experience.
-- Important business history must belong to the agency, subject to permissions and law.
-- External communication channels should feed the CRM, not dictate its interface.
-- Automation and AI should support a proven workflow, not compensate for an unclear one.
-
-## Design Direction
-
-The application should use the structure and logic of a modern operational CRM:
-
-- Left navigation for primary modules
-- A broker "Today" screen for new, due, overdue, and at-risk work
-- An inquiry inbox for unhandled inbound items
-- Contacts list with search, filters, and saved views
-- Contact profile with opportunities and chronological history
-- Opportunity profile with owner, stage, participants, source, requirement, next action, and related properties
-- Pipeline table or board
-- Tasks and reminders
-- A minimal manager exception view
-- Settings for team membership, permissions, sources, stages, and later automations
-
-The interface should be clean, dense, and operational. Brokers must be able to scan, call, update, and move on quickly. Mobile web forms should preserve drafts or clearly recover from failed submissions so a weak connection does not silently destroy work.
-
-## Follow Up Boss-Inspired CRM Foundations
-
-### 1. Inquiry Inbox
-
-A central work queue for new and unresolved inbound events. Sources may include manual entry, website forms, portal inquiries, referrals, phone calls, email, social campaigns, and later approved messaging integrations.
-
-An inquiry is an incoming event, not the permanent customer record. It should be matched to an existing contact or used to create a new contact and opportunity while preserving original source data.
-
-### 2. People And Opportunities
-
-The contact is the durable person or organization. A contact may be a buyer, seller, landlord, tenant, investor, past client, partner, or several of these over time.
-
-A contact can have multiple concurrent opportunities. For example, the same person may sell an apartment, search for a larger home, and refer another buyer. The primary commercial stage belongs to each opportunity, not to the contact.
-
-The contact may still have non-commercial labels such as active client, past client, partner, or archived.
-
-### 3. Smart Lists
-
-Saved dynamic views tell brokers and managers what requires attention:
-
-- New inquiries not contacted
-- Unassigned opportunities
-- Opportunities without a next action
-- Follow-ups due today
-- Overdue follow-ups
-- Hot opportunities with no recent activity
-- Seller opportunities needing an update
-- Viewings requiring follow-up
-- Offers awaiting a response
-- Past clients to re-engage
-- Opportunities from a specific source or campaign
-
-Smart Lists are a core pilot feature because they turn stored data into daily work.
-
-### 4. Stages And Pipelines
-
-Every opportunity has an owner, type, stage, source, and status. A provisional shared pipeline may begin with:
-
-- New
-- Attempting contact
-- Qualified
-- Active
-- Viewing
-- Offer
-- Negotiation
-- Won
-- Lost
-- Nurture
-
-The exact stages must be validated with pilot agencies. Buyer, seller, landlord, and tenant pipelines may later diverge. Stage history and lost reasons should be preserved.
-
-### 5. Next Action And Tasks
-
-Every active opportunity should normally have a clear next action with an owner and due time. Tasks may exist for a contact or agency operation without an opportunity, but the opportunity-level next action is the central operating mechanism.
-
-Simple reusable task sequences can follow after the manual workflow is proven. Complex automation is not required for the first pilot.
-
-### 6. Activity Timeline
-
-The product should present a chronological history of relevant events:
-
-- Inquiries
-- Calls and manually recorded messages
-- Notes
-- Tasks and outcomes
-- Stage changes
-- Assignments
-- Viewings
-- Offers
-- Imports and merges
-
-The timeline is a unified read experience. It does not require every domain event to be stored in one oversized activity table.
-
-### 7. Team Accountability
-
-Managers initially need exception visibility rather than a large analytics suite:
-
-- New inquiries without an owner
-- Uncontacted new opportunities
-- Active opportunities without a next action
-- Overdue follow-ups
-- Stale opportunities
-- Workload by broker
-- Basic progression and outcome counts
-
-Advanced productivity, conversion, source, and financial reporting should follow validated demand.
-
-### 8. Source Attribution
-
-The original inquiry should retain:
-
-- Source and channel
-- Portal or campaign
-- External reference
-- Original timestamp
-- Raw imported reference where appropriate
-- First-touch attribution
-
-Later attribution can include additional touches. Source names must be configurable because agency channels differ.
+- Business history belongs to the agency, subject to permissions and law.
+- Viber, WhatsApp and other channels feed the CRM; they don't dictate its interface. The
+  pilot records that a conversation happened; integrations come later where APIs, cost and
+  law allow.
+- Automation and AI support a proven workflow; they don't compensate for an unclear one.
+- The interface is clean, dense and operational: scan, call, update, move on. Mobile forms
+  must not silently lose work on a weak connection.
 
 ## Pilot MVP: Fastest Sellable Version
 
-The first paid pilot should implement one complete operational loop rather than a miniature version of every future module.
+One complete operational loop, not a miniature of every future module.
 
 ### Included
 
-- Agency workspace
-- User invitations and agency membership
-- Roles for owner/admin, manager, and broker
+- Agency workspace, invitations and memberships
+- Roles: owner, manager, broker
 - Contacts and contact methods
-- Duplicate suggestions, controlled merge, and merge history
+- Duplicate suggestions, controlled merge and merge history
 - Manual inquiry creation
-- CSV import with mapping, validation, and error reporting
-- Opportunities with type, owner, stage, source, temperature, and next action
+- CSV import with mapping, validation and error reporting
+- Opportunities with type, owner, stage, source, temperature and next action
 - Multiple opportunities per contact
 - Tasks and reminders
 - Notes and manually recorded calls/messages
-- Contact and opportunity activity timelines
+- Contact and opportunity timelines
 - Saved operational filters and Smart Lists
-- Broker "Today" screen
+- Broker Today screen
 - Minimal manager exception report
 - Lightweight buyer/tenant requirement
 - Optional lightweight property or listing reference on an opportunity
-- Bulgarian interface copy
-- Responsive desktop and mobile web experience
+- Bulgarian interface
+- Responsive desktop and mobile web
 
-In the pilot, a scheduled viewing may be represented through an opportunity task/activity and a property reference. A full property inventory, viewing module, offer workflow, and transaction management system are deferred until usage proves they are necessary.
+A viewing can be a task plus a property reference in the pilot. Full property inventory,
+viewings, offers and transaction management wait until usage proves the need.
+
+Smart Lists should cover at least: new inquiries not contacted, unassigned opportunities,
+no next action, due today, overdue, hot with no recent activity, sellers needing an update,
+viewings needing follow-up, offers awaiting response, past clients to re-engage, and
+opportunities by source or campaign.
 
 ### Pilot Acceptance Criteria
 
@@ -324,204 +150,104 @@ The pilot is operationally complete when:
 - The system suggests likely duplicate contacts before creating another record.
 - An inquiry can be matched to a contact and create or join an opportunity.
 - An opportunity can be assigned to a broker with a stage and next action.
-- A broker can see new, due, and overdue work on the Today screen.
-- A broker can record an outcome and schedule the next action quickly from phone or desktop.
+- A broker sees new, due and overdue work on the Today screen.
+- A broker records an outcome and schedules the next action quickly from phone or desktop.
 - A contact can hold more than one concurrent opportunity.
-- A manager can see unassigned inquiries, overdue tasks, and active opportunities without next actions.
-- Important ownership, stage, assignment, and merge changes are traceable.
-- Automated tests prove that one agency cannot access another agency's records.
-- Failed or repeated imports do not silently create uncontrolled duplicates.
+- A manager sees unassigned inquiries, overdue tasks and opportunities without a next action.
+- Ownership, stage, assignment and merge changes are traceable.
+- Automated tests prove one agency can't access another agency's records.
+- Failed or repeated imports don't silently create duplicates.
 
 ## Candidate V1 Features After Pilot Validation
 
-- Structured property inventory
-- Separate listings and listing history
-- Dedicated viewing records and workflows
-- Offer and negotiation records
+Prioritise from observed pilot behaviour, not because established CRMs have them:
+
+- Structured property inventory, listings and listing history
+- Dedicated viewings and offers/negotiation records
 - Simple action-plan templates
 - Email and calendar sync
 - Lead assignment and routing rules
-- Expanded manager reporting
+- Expanded manager reporting (conversion, source, productivity)
 - Property matching between requirements and listings
 - Basic API and webhooks
+- Multi-touch source attribution
 
-These features should be prioritized from observed pilot behavior, not merely because established CRMs contain them.
+### Future data model direction
+
+When these arrive, extend `domain-model.md` following these rules, already agreed:
+
+- A **Requirement** describes a search; it is not a Property.
+- A **Property** is the physical asset; a **Listing** is a time-bound mandate or marketed
+  offering for it.
+- A property can have several parties and ownership history; never a single `owner_contact_id`.
+- An opportunity can relate to several candidate properties (candidate, viewed, offered,
+  rejected, selected); a won deal may identify one.
+- **Viewings** and **offers** involve several participants and keep their own outcomes and history.
+- A Bulgarian agency may act on more than one side of a deal; never force a single buyer or
+  seller column.
+- Timeline stays a unified read view; Task, Viewing and Offer keep their own tables.
+- Imports and integrations are idempotent wherever an external reference exists.
+- A later transaction module may create a Transaction from a won opportunity.
+- Privacy records (purpose, legal basis, requests, retention) will be needed before
+  integrations or AML features.
 
 ## Explicitly Not In The Pilot
 
-- Native iOS or Android applications
+- Native iOS or Android apps
 - Full WhatsApp or Viber two-way inbox
-- Listing syndication
-- Public property portal
+- Listing syndication or a public property portal
 - Complex marketing automation
 - Commission accounting
-- E-signatures
-- AI lead scoring
-- AI-generated workflows
-- Document generation
+- E-signatures and document generation
+- AI lead scoring or AI-generated workflows
 - Advanced transaction management
 - AML/KYC document handling
 - MLS-like marketplace
 - Multi-country or multi-language expansion
 
-## Domain Model Direction
+## Platform Requirements Still Open
 
-The schema must preserve durable relationships without forcing all future features into the first migration.
+Already in place: tenant isolation, membership-based roles, RLS with automated isolation
+tests, versioned migrations, seeded test environments and idempotent imports. Still to do
+before or during the pilot:
 
-### Core Entities
+- Monitored background jobs (reminders, notifications, retention): pg_cron + Edge Functions first
+- Transactional email (Resend, AD-025), error monitoring (Sentry), product analytics (PostHog)
+- Data export, deletion and retention workflows
+- Backup and restore expectations, with a tested restore
+- Rate limiting and abuse protection
+- Private file storage with signed access, once attachments exist
+- Integration adapters that isolate portal and messaging providers
+- EEA hosting and documented subprocessors, subject to legal review
+- Good performance on ordinary broker phones and office computers
 
-- **Agency** - tenant and customer workspace
-- **User** - authenticated human identity
-- **AgencyMembership** - a user's role, status, invitation, and membership in an agency
-- **Contact** - durable person or organization
-- **ContactMethod** - phone, email, or external communication identifier
-- **PrivacyRecord** - processing purpose, legal basis where required, requests, and retention metadata
-- **Inquiry** - original inbound lead event and source payload
-- **Opportunity** - commercial pursuit with type, owner, stage, source, status, and value hypothesis
-- **OpportunityParticipant** - contact or user participation with a role such as buyer, seller, landlord, tenant, co-owner, representative, or broker
-- **Requirement** - criteria for a buyer or tenant search
-- **Property** - physical real estate asset
-- **PropertyParty** - contact relationship to a property, including ownership or representation where appropriate
-- **Listing** - time-bound agency mandate or marketed offering for a property
-- **OpportunityProperty** - candidate, viewed, offered, rejected, or selected property/listing relationship
-- **Viewing** - scheduled or completed viewing involving an opportunity, property/listing, participants, and outcome
-- **Offer** - structured proposal or negotiation event associated with an opportunity and property/listing
-- **Task** - owned follow-up action with due time and outcome
-- **Activity** - normalized timeline representation or event reference
-- **LeadSource** - configurable origin taxonomy
-- **SourceAttribution** - original and later source metadata
-- **Pipeline/Stage** - configurable opportunity lifecycle
-- **ActionPlan** - reusable workflow template introduced after validation
-- **MergeHistory** - duplicate resolution and record lineage
-- **AuditLog** - security and compliance-sensitive change history
+## Security, Privacy And Compliance
 
-### Relationship And Lifecycle Rules
+GDPR is an operating model, not a checkbox. Subject to legal review, the agency is
+controller for its customer data and we are primarily processor; we are controller for our
+own billing, account, security and product data.
 
-- Every tenant-owned record is scoped to an agency.
-- A user accesses an agency through AgencyMembership, not through a permanent role stored only on User.
-- An inquiry is preserved as the original inbound event even after matching or conversion.
-- One contact may have many inquiries and many concurrent opportunities.
-- The pipeline stage belongs to Opportunity, not Contact.
-- One opportunity may have several contacts and brokers with explicit roles.
-- A Bulgarian agency may participate on more than one side of a transaction; the model must not force a single buyer or seller column.
-- A Requirement describes a search and is not a Property.
-- A Property is the physical asset; a Listing is a time-bound commercial or advertising relationship for that asset.
-- A property may have several parties and ownership history; it should not rely on one permanent `owner_contact_id`.
-- An active opportunity may relate to several candidate properties. A completed transaction may later identify one selected property/listing.
-- Viewings and offers may involve multiple participants and must preserve their own outcomes and history.
-- Activity is the common timeline view, while domain records such as Task, Viewing, and Offer retain structured storage.
-- Imports and integrations must be idempotent where an external reference is available.
-- Duplicate merges must be reversible or at minimum fully traceable.
-- Cross-agency relationships are prohibited and enforced through database constraints and authorization policies.
+Product and company processes must cover: purpose and legal basis (consent is not always
+the right basis), data-processing agreements and subprocessors, least-privilege access,
+access/correction/export/restriction/erasure requests, retention with deletion vs
+anonymisation, portability when an agency leaves, access and security logging, incident
+response and breach notification, and secure handling of imports and exports.
 
-### Preliminary Lifecycle
-
-1. An Inquiry arrives from an import, portal, form, phone call, referral, or manual entry.
-2. The system suggests an existing Contact or creates a new one.
-3. The Inquiry creates or attaches to an Opportunity.
-4. The Opportunity receives participants, an owner, type, stage, source, and next action.
-5. Brokers record outcomes, tasks, candidate properties, and later viewings or offers.
-6. The Opportunity becomes won, lost, or nurture while its full history remains available.
-7. A later transaction module may create a formal Transaction record from a won Opportunity.
-
-The detailed ER diagram, cardinalities, indexes, deletion behavior, and PostgreSQL schema belong in a separate technical data-model specification.
-
-## Technical Direction
-
-The technology choices are preliminary but appropriate for a lean, AI-assisted product team:
-
-- **Frontend:** Next.js, React, TypeScript
-- **UI:** Tailwind CSS, shadcn/ui, lucide icons
-- **Application layer:** Next.js server actions and API routes with business rules isolated in domain/service modules
-- **Database:** PostgreSQL
-- **Platform:** Supabase for managed PostgreSQL, authentication, storage, row-level security, and selected realtime capabilities
-- **Background jobs:** Supabase Cron/pg_cron and Edge Functions initially; evaluate a dedicated workflow service only when retries or long-running orchestration justify it
-- **Search:** PostgreSQL full-text and trigram search initially
-- **Hosting:** Vercel
-- **Payments:** Stripe or another provider appropriate to the operating company
-- **Transactional email:** Resend, Postmark, or SendGrid
-- **Product analytics:** PostHog
-- **Error monitoring:** Sentry
-- **AI later:** model APIs for summaries, drafts, extraction, and suggestions after the underlying workflow is proven
-
-Realtime updates are optional, not a requirement for every dashboard. The application should prefer clear, reliable state over unnecessary live complexity.
-
-### Architecture Requirements From Day One
-
-- Tenant isolation anchored by agency_id on tenant-owned data
-- AgencyMembership-based authorization and a documented role/permission matrix
-- Row-level security plus service-layer authorization for sensitive operations
-- Database constraints that prevent cross-tenant references
-- Version-controlled migrations and seeded test environments
-- Automated tenant-isolation and permission tests
-- Idempotency for imports, webhooks, and repeated background work
-- A monitored job mechanism for reminders, imports, notifications, and later integrations
-- Structured audit and activity histories with distinct purposes
-- Secure file storage with private buckets and signed access
-- Data export, deletion, and retention workflows
-- Backup and restore expectations with recovery tests
-- Monitoring, incident handling, rate limiting, and abuse protection
-- Integration adapters that isolate portal and communication-provider differences
-- EEA hosting preference and documented subprocessors, subject to legal and operational review
-- Responsive performance on ordinary broker phones and office computers
-
-Precise recovery objectives, scale targets, service-level expectations, API contracts, deployment topology, and incident procedures belong in the technical architecture specification.
-
-## Security, Privacy, And Compliance Direction
-
-GDPR should be treated as an operating model, not a checkbox.
-
-The expected relationship, subject to legal review, is that the agency acts as controller for its customer data and the software company acts primarily as processor. The company may act as controller for its own billing, account, security, and product-operation data.
-
-The product and company processes should address:
-
-- Purpose and legal basis for processing, without assuming consent is always the correct basis
-- Data-processing agreements and subprocessor disclosure
-- Least-privilege access and agency-configurable visibility
-- Access, correction, export, restriction, and erasure requests
-- Retention rules and deletion versus anonymization
-- Data portability when an agency leaves
-- Access and security-event logging
-- Incident-response and breach-notification procedures
-- Secure handling of imports, attachments, and exports
-
-Real estate intermediaries may also have Bulgarian and EU anti-money-laundering obligations. AML/KYC support could become a premium product area, but it introduces sensitive identity data, retention requirements, and significant legal and security risk. It is a discovery topic, not a pilot feature, and must be designed with qualified Bulgarian/EU counsel.
-
-## Record Visibility Decision
-
-One unresolved product and policy question is whether records are:
-
-- Agency-visible by default
-- Team-visible with manager override
-- Private to the broker unless explicitly shared
-- Controlled through a hybrid model
-
-This decision affects trust, sales positioning, RLS policies, collaboration, reassignment, exports, and what happens when a broker leaves. It must be resolved through customer interviews before finalizing authorization rules.
-
-## Communication Strategy
-
-Viber and WhatsApp are external communication channels, not the design model for the CRM.
-
-- Brokers currently use personal messaging because they lack a structured system.
-- The CRM provides ownership, next actions, history, and team continuity.
-- The pilot allows a broker to record that an external conversation happened.
-- Later integrations may capture approved metadata or messages where APIs, permissions, cost, and law make sense.
-- The product remains a professional CRM interface.
+Real estate intermediaries may have Bulgarian and EU anti-money-laundering obligations.
+AML/KYC could become a premium area, but it brings sensitive identity data and significant
+legal risk. It is a discovery topic, to be designed with qualified counsel.
 
 ## Market Validation Plan
 
-Before committing to a broad production build:
+1. Interview 10–15 owners or managers and 15–25 brokers.
+2. Examine anonymised spreadsheets, lead exports and recent lost-opportunity examples.
+3. Observe brokers during an ordinary working day, including on mobile.
+4. Map how inquiries arrive, how ownership is decided and where follow-up breaks.
+5. Run a concierge pilot with manual import and configuration.
+6. Ask for payment or a signed paid-pilot commitment before expanding scope.
 
-1. Interview 10-15 owners or managers and 15-25 brokers.
-2. Examine anonymized spreadsheets, lead exports, and recent lost-opportunity examples.
-3. Observe several brokers during an ordinary working day, including mobile use.
-4. Map how inquiries arrive, how ownership is decided, and where follow-up breaks.
-5. Prototype the Today, Contact, Opportunity, and Next Action workflow.
-6. Run a concierge pilot with manual import and configuration.
-7. Ask for payment or a signed paid-pilot commitment before expanding scope.
-8. Finalize detailed lifecycle and schema decisions using real customer data.
-
-Interview counts are planning targets, not proof by themselves. Evidence should include observed behavior and willingness to pay, not only positive opinions.
+Interview counts are targets, not proof. Evidence means observed behaviour and willingness
+to pay, not positive opinions.
 
 ## Critical Assumptions And Experiments
 
@@ -530,159 +256,107 @@ Interview counts are planning targets, not proof by themselves. Evidence should 
 | Agencies lose meaningful opportunities because follow-up is missed | High | Review recent inquiries and lost cases with owners |
 | Brokers will consistently record outcomes and next actions | Critical | Two-week concierge workflow test |
 | Owners value exception visibility enough to pay monthly | High | Request paid pilot commitments |
-| Agencies will accept agency ownership of shared customer history | High | Interview owners and brokers separately |
-| CSV import is sufficient for initial onboarding | Medium | Inspect real exports and spreadsheets |
+| Agencies accept agency ownership of shared customer history | High | Interview owners and brokers separately |
+| CSV import is enough for initial onboarding | Medium | Inspect real exports and spreadsheets |
 | Local portal integrations can wait | High | Map where qualified inquiries originate |
-| Responsive web is adequate for initial field use | Medium | Observe brokers on real devices and weak connections |
-| One initial opportunity pipeline is understandable across the target segment | Medium | Test workflows with buyer and seller cases |
+| Responsive web is adequate for field use | Medium | Observe brokers on real devices and weak connections |
+| One pipeline is understandable across the segment | Medium | Test with buyer and seller cases |
 | Setup and support can be delivered economically | High | Track onboarding and weekly support time per agency |
-| A real estate-specific workflow beats a configured generic CRM | High | Interview agencies that have tried generic CRMs |
+| A real estate-specific workflow beats a configured generic CRM | High | Interview agencies that tried generic CRMs |
 
 ## Go-To-Market Starting Point
 
-The initial sales motion should target 3-5 paid pilot agencies that fit the beachhead profile.
+Target 3–5 paid pilot agencies that fit the beachhead profile:
 
 - Import and clean their existing data with them.
-- Configure sources, stages, permissions, and Smart Lists.
+- Configure sources, stages, permissions and Smart Lists.
 - Train one daily habit: open Today and clear due work.
 - Meet the owner and brokers weekly during the pilot.
-- Track usage, missing workflow steps, support effort, and operational outcomes.
-- Avoid custom development for one agency unless the need repeats across the target segment.
-
-Hands-on onboarding is part of the early offer. It reduces adoption risk and teaches the product team how real agency data and workflows behave.
+- Track usage, missing workflow steps, support effort and outcomes.
+- No custom development for one agency unless the need repeats across the segment.
 
 ## Pricing And Packaging Hypotheses
 
-Pricing is not validated. Initial tests may include:
+Not validated. Initial tests:
 
-- Agency subscription: EUR 99-249 per month depending on included users and capabilities
-- Additional users: EUR 15-25 per user per month
-- Setup, import, and onboarding: EUR 150-500 one-time
-- Paid pilot: a fixed onboarding fee plus a limited pilot subscription
+- Agency subscription: EUR 99–249 per month depending on users and capabilities
+- Additional users: EUR 15–25 per user per month
+- Setup, import and onboarding: EUR 150–500 one-time
+- Paid pilot: fixed onboarding fee plus a limited pilot subscription
 
-The final model may be per agency, per active user, or tiered. Pricing interviews are insufficient; validation requires an accepted offer, payment, or signed commercial commitment.
-
-Early unit economics must track:
-
-- Acquisition cost and founder sales time
-- Import and onboarding hours
-- Monthly support time per agency
-- Infrastructure and communication costs
-- Gross margin by package
-- Retention and expansion
+Validation requires an accepted offer, payment or signed commitment, not interview answers.
+Track: acquisition cost and founder sales time, import and onboarding hours, monthly support
+time per agency, infrastructure and communication costs, gross margin by package, retention
+and expansion.
 
 ## Pilot Success Criteria
 
-The targets below are hypotheses to calibrate, not universal benchmarks.
+North-star metric:
 
-Primary north-star metric:
+> Percentage of active opportunities with a completed or scheduled next action inside the
+> expected follow-up window.
 
-> Percentage of active opportunities with a completed or scheduled next action inside the expected follow-up window.
+Supporting measures (targets are hypotheses to calibrate):
 
-Supporting measures:
-
-- At least 80% of invited brokers active weekly during the pilot
+- At least 80% of invited brokers active weekly
 - At least 90% of active opportunities have an owner and next action
-- Reduction in new inquiries uncontacted after one business day
-- Reduction in overdue follow-ups
-- Broker retention after 4, 8, and 12 weeks
-- Time required to import and activate an agency
+- Fewer new inquiries uncontacted after one business day
+- Fewer overdue follow-ups
+- Broker retention after 4, 8 and 12 weeks
+- Time to import and activate an agency
 - Weekly support time per agency
-- Percentage of pilot agencies converting to an ongoing paid subscription
-- Lead-to-qualified, qualified-to-viewing, viewing-to-offer, and offer-to-won progression where data quality permits
+- Share of pilot agencies converting to a paid subscription
+- Stage progression (lead → qualified → viewing → offer → won) where data allows
 
-The product is not validated merely because users log in. It is validated when agencies repeatedly use the operating loop, improve an important outcome, and continue paying.
+Logins don't validate the product. Repeated use of the loop, an improved outcome and
+continued payment do.
 
 ## Key Risks And Mitigations
 
-### Adoption Risk
-
-Brokers may resist data entry or perceive the system as surveillance.
-
-Mitigation: make Today and next-action updates extremely fast, involve brokers in workflow design, and position manager reporting around exception removal and opportunity protection.
-
-### Scope Risk
-
-The product may expand into property portals, messaging, transaction management, accounting, and AI before proving the core workflow.
-
-Mitigation: require pilot evidence before adding a major module.
-
-### Data Quality Risk
-
-Imports may contain duplicates, inconsistent phone formats, incomplete source information, and conflicting ownership.
-
-Mitigation: make mapping, validation, deduplication, merge history, and onboarding first-class concerns.
-
-### Trust And Ownership Risk
-
-Owners want agency continuity while brokers may expect control over personal relationships.
-
-Mitigation: define record-visibility policy explicitly and communicate it before onboarding.
-
-### Integration Risk
-
-Local portals and messaging providers may lack stable APIs or impose restrictions and cost.
-
-Mitigation: validate integration access separately and keep providers behind adapters.
-
-### Security And Compliance Risk
-
-Cross-agency exposure, excessive permissions, or mishandled personal data could be existential.
-
-Mitigation: tenant isolation, RLS, constraints, automated authorization tests, auditability, secure defaults, and qualified legal review.
-
-### Support Economics Risk
-
-Manual import and onboarding may win pilots but become too expensive to scale.
-
-Mitigation: measure support hours, standardize onboarding, and automate only repeated steps.
+| Risk | Description | Mitigation |
+|---|---|---|
+| Adoption | Brokers resist data entry or see surveillance | Make Today and next-action updates extremely fast; involve brokers in design; frame reporting as protecting opportunities |
+| Scope | Expanding into portals, messaging, transactions, accounting or AI before the loop is proven | Require pilot evidence before any major module |
+| Data quality | Imports with duplicates, inconsistent phones, missing sources, conflicting ownership | Mapping, validation, deduplication, merge history and onboarding as first-class features |
+| Trust and ownership | Owners want continuity; brokers want control of relationships | Explain the agency-wide visibility policy (AD-001) before onboarding |
+| Integration | Portals and messaging providers lack stable APIs or cost too much | Validate access separately; keep providers behind adapters |
+| Security and compliance | Cross-agency exposure or mishandled personal data could be fatal | Tenant isolation, RLS, automated authorisation tests, audit trail, legal review |
+| Support economics | Hands-on onboarding wins pilots but doesn't scale | Measure support hours, standardise onboarding, automate repeated steps |
 
 ## Outcome-Based Roadmap
 
-### Phase 0: Discovery And Prototype
+Each phase starts only after the previous outcome is demonstrated.
 
-Outcome: confirm the target customer, daily operating loop, willingness to pay, and essential data relationships.
-
-### Phase 1: Paid Pilot CRM
-
-Outcome: brokers consistently manage ownership and next actions while managers can see exceptions.
-
-### Phase 2: Real Estate Workflow Depth
-
-Outcome: validated property, listing, viewing, offer, and matching workflows improve conversion without slowing daily use.
-
-### Phase 3: Automation And Integrations
-
-Outcome: repeated manual work is reduced through action plans, lead routing, email/calendar sync, portals, and approved communication channels.
-
-### Phase 4: Brokerage Operating Platform
-
-Outcome: transaction workflows, reporting, commissions, documents, compliance support, client portals, and selected AI capabilities deepen retention and expansion.
-
-Each phase should begin only after the preceding outcome is demonstrated.
+0. **Discovery and prototype:** target customer, daily loop, willingness to pay and data relationships confirmed.
+1. **Paid pilot CRM:** brokers consistently manage ownership and next actions; managers see exceptions.
+2. **Real estate workflow depth:** property, listing, viewing, offer and matching improve conversion without slowing daily use.
+3. **Automation and integrations:** action plans, routing, email/calendar sync, portals and approved channels reduce manual work.
+4. **Brokerage operating platform:** transactions, reporting, commissions, documents, compliance, client portals and selected AI deepen retention.
 
 ## Open Decisions
 
 - Final beachhead segment and city coverage
-- Agency, team, and private record visibility
-- Exact opportunity types and initial stages
-- Inquiry deduplication and merge rules
+- Whether stages differ by opportunity type (buyer, seller, landlord, tenant)
 - Required portal import formats
-- Whether a minimal viewing record is necessary in the pilot
-- Notification channels and reminder timing
-- Offline draft and retry behavior for mobile forms
+- Whether a minimal viewing record is needed in the pilot
+- Reminder timing beyond the AD-025 defaults
+- Offline draft and retry behaviour for mobile forms
 - Pricing and packaging
-- Hosting region, retention periods, and subprocessor choices
-- What evidence must be achieved before adding property inventory or integrations
+- Hosting region, retention periods and subprocessors
+- What evidence is needed before adding property inventory or integrations
+
+Resolved: record visibility is agency-wide (AD-001); all four opportunity types from the
+start (AD-009); duplicate matching and archive-loser merge (AD-015, AD-017); notifications
+are email-only for the pilot (AD-025).
 
 ## Long-Term Vision
 
-Begin by making the daily broker workflow reliable: every inquiry is handled, every opportunity has an owner, every active opportunity has a next action, and every important outcome becomes part of the agency's history.
+First make the daily broker workflow reliable: every inquiry handled, every opportunity
+owned, every active opportunity with a next action, every important outcome in the agency's
+history. Then expand into listings, matching, portal distribution, communication capture,
+marketing automation, transactions, commissions, compliance, client portals and carefully
+chosen AI, and later into similar Central and Eastern European markets.
 
-After that behavior is proven, expand into listings, property matching, portal distribution, communication capture, marketing automation, transaction workflows, commission tracking, compliance support, client portals, and carefully selected AI assistance.
-
-The long-term opportunity is to become the operating system for residential real estate agencies in Bulgaria and later for similar underserved Central and Eastern European markets.
-
-The central discipline is:
-
-> Do not build a smaller copy of a famous CRM. Build the smallest operating system that a narrowly defined Bulgarian brokerage will pay for, use every day, and be unwilling to return to working without.
+> Do not build a smaller copy of a famous CRM. Build the smallest operating system that a
+> narrowly defined Bulgarian brokerage will pay for, use every day, and be unwilling to
+> return to working without.
