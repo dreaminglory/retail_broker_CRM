@@ -388,4 +388,63 @@
 
 ---
 
+## Product Direction Decisions
+
+### AD-039: Full Agency System, Not a Follow-Up Layer
+**Date:** 2026-10-28 | **Status:** Accepted (founder decision)
+
+**Context:** The competitive gap analysis (`docs/research/crm-competitive-gap-analysis.md`) found
+that every CRM Bulgarian agencies buy leads with property inventory, portal syndication and
+buyer-requirement matching. Local prices are €0–32 per broker per month. BrokerCRM scored about
+2.5/10, against 4.9–7.3 for local alternatives. The founding brief positioned BrokerCRM as a
+follow-up-discipline tool and gated property, integrations and other major modules behind pilot
+evidence ("each phase starts only after the previous outcome is demonstrated"). With that gate,
+BrokerCRM could only be sold as an add-on next to an agency's listing tool.
+
+Options: (a) a follow-up layer next to the agency's listing tool (cheaper to build, but needs
+sync with Estate Assistant/EstatePlus-style tools and a price well below theirs); (b) a full
+agency system that replaces them; (c) keep the evidence gate and decide later.
+
+**Decision:** (b). BrokerCRM becomes a complete agency system for Bulgarian residential sales
+agencies, with follow-up discipline as its differentiator.
+
+1. **Committed modules:** properties and mandates; buyer/tenant requirements and matching;
+   viewings with feedback; offers; portal syndication; portal and email lead intake; lead
+   routing and a lead pool; reminders; action plans; saved lists (Smart Lists); reports; GDPR
+   tools; a PWA.
+2. **Evidence sets order, not permission.** Pilot evidence decides the order and details of the
+   committed modules, not whether they are built. Committed modules count as E2 (founding brief)
+   evidence in sprint planning.
+3. **Non-goals:** only *listing syndication* leaves the list. Native apps, a WhatsApp/Viber
+   inbox, AI lead scoring, commission accounting, e-signatures and document generation,
+   transaction management, AML document handling and an MLS-like marketplace stay non-goals.
+4. **Market:** Bulgaria first. Other Eastern European markets are a later phase, and
+   multi-country expansion stays a non-goal for now.
+5. **Target customer:** residential sales agencies with 2–30 brokers (was 5–15).
+6. **Pilot start:** the paid pilot begins once the core-loop defects are fixed and reminders,
+   a light property record, requirements and matching ship. Recruiting pilot agencies can start
+   earlier.
+7. **Pricing hypothesis:** €20 per broker per month, all modules included. A one-time
+   onboarding/import fee (€150–500) stays a hypothesis to test.
+
+**Rationale:** Bulgarian agencies buy property-first. Without properties, matching and
+syndication, BrokerCRM competes with free and €11–22 tools while offering less. No local product
+proves strong follow-up discipline, so keeping it as the edge differentiates a full system.
+
+**Supersedes:** the evidence gate in `docs/business-description.md` (Candidate V1, Key Risks
+"Scope", Outcome-Based Roadmap), the *listing syndication* pilot non-goal, and the
+€99–249 per-agency pricing hypothesis.
+
+**Consequences:**
+- `AGENTS.md` Product scope, `docs/business-description.md`, the BRD deferred items and the
+  `sprint-planning` references are updated in the same change.
+- `docs/domain-model.md` is **not** changed now. It describes what is built; each module adds
+  its area when its migrations land, following the brief's "Future data model direction" rules.
+- The property ↔ requirement ↔ opportunity model needs a design session
+  (`/supermatt:grill-with-docs`) before the sprint that builds it.
+- Portal syndication depends on portal access. alo.bg publishes an open import spec; imot.bg
+  terms and pricing must be negotiated (gap analysis §8).
+
+---
+
 _New decisions will be added as they are made during development._

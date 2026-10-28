@@ -316,6 +316,14 @@ These break the follow-up promise the product is built on, and they're cheap. *(
 
 ## 6. Conflicts with the pilot non-goals: founder decisions
 
+> **Decided 2026-10-28 (AD-039).** BrokerCRM becomes a **full agency system**: option (B),
+> staged as recommended below. Only *listing syndication* leaves the non-goals; every other
+> row below stays a non-goal. Bulgaria first. Target customer: residential sales agencies with
+> 2–30 brokers. Pricing hypothesis: **€20 per broker per month, all modules included**. The
+> paid pilot starts once light properties, requirements and matching ship. See
+> `docs/decisions-log.md` AD-039 and `docs/business-description.md` *Committed Modules*. The
+> table below is kept as the evidence behind that decision.
+
 `AGENTS.md` lists these as pilot non-goals. The evidence below doesn't decide them; it shows
 the cost of each choice. *(The evidence is Observed; the "Options" column is Recommendation.)*
 
