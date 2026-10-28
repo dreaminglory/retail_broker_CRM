@@ -246,10 +246,10 @@ on all input, Server Actions for mutations, `updated_at` triggers) are enforced 
 | Smart Lists | Sprint 6 | Saved filters for inquiries and opportunities; part of pilot scope |
 | Retention purge job | Sprint 6 | Purge reverted import rows and soft-deleted data |
 | Opportunity import | Sprint 6+ | CSV import of opportunities |
-| Requirement / property reference | Sprint 7 | What a contact wants to buy or sell; part of pilot scope |
+| Light property record, requirements and matching | Sprint 7 (target; set in sprint planning) | Pilot gate: the paid pilot starts once these ship (AD-039) |
 | pg_trgm to `extensions` schema | Backlog | Supabase advisor finding |
 | Offline draft and retry | Post-pilot | Mobile form resilience |
-| Property inventory and integrations | Post-pilot | Needs evidence of core-loop adoption |
+| Committed modules: mandates, viewings, offers, portal syndication and lead intake, routing, action plans, reports, GDPR tools, PWA | Roadmap phases 2–3 | Committed by AD-039; pilot evidence sets the order. See the brief's *Committed Modules* |
 
 Known gaps in the built product are listed in `domain-model.md` §6 and are candidates for
 the next sprint.

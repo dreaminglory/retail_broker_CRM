@@ -113,13 +113,26 @@ or `docs/decisions-log.md`.
 
 ## Product scope
 
+BrokerCRM is a full agency system for Bulgarian residential sales agencies (2–30 brokers),
+with follow-up discipline as its edge (AD-039).
+
 Core loop: inquiry arrives → contact matched or created → opportunity created → broker
 assigned → next action scheduled → broker sees it on Today → outcome recorded → new next
 action or stage change → manager sees exceptions. Details in `docs/domain-model.md`.
 
-Non-goals for the pilot (don't build unless asked): native mobile apps, WhatsApp/Viber
-inbox, listing syndication, commission accounting, AI lead scoring, document generation,
-transaction management.
+Property side of the loop (committed, built sprint by sprint): property and mandate
+recorded → published to portals → buyer requirement recorded → matched to properties →
+viewing with feedback → offer → won or lost. These attach to the core loop's contacts and
+opportunities; they don't replace it.
+
+Committed modules (AD-039): properties and mandates, requirements and matching, viewings,
+offers, portal syndication, portal/email lead intake, routing and lead pool, reminders,
+action plans, Smart Lists, reports, GDPR tools, PWA. Pilot evidence sets their order.
+
+Non-goals (don't build unless asked): native mobile apps, WhatsApp/Viber inbox, commission
+accounting, AI lead scoring, complex marketing automation, document generation and
+e-signatures, transaction management, AML document handling, MLS-like marketplace,
+multi-country expansion.
 
 ## Workflow
 

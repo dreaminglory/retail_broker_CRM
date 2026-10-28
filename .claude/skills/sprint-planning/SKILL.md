@@ -33,7 +33,7 @@ Read in this order. Stop reading a file once you have what the phase needs.
 4. `docs/BRD.md` — find the **Deferred Items** section by heading, not by number.
    Requirements there are done unless marked ⚠️ or ❌; those marks are carry-over candidates.
 5. `docs/business-description.md` — focus on these sections: *Pilot MVP → Included*,
-   *Pilot Acceptance Criteria*, *Candidate V1 Features*, *Explicitly Not In The Pilot*,
+   *Pilot Acceptance Criteria*, *Committed Modules*, *Explicitly Not In The Pilot*,
    *Pilot Success Criteria*, *Critical Assumptions*, *Product Principles*.
 6. `docs/decisions-log.md` — read the AD **index** (headings). Read the full text only
    for ADs that touch candidate scope. Find the highest AD number yourself.
@@ -71,7 +71,7 @@ Follow [references/product-discovery.md](references/product-discovery.md) exactl
 2. **Filter** out non-goals and anything that conflicts with an AD (unless you propose
    superseding it with a new AD).
 3. **Score** each candidate with the rubric. Benchmark-only ideas are capped
-   (per the brief: "not merely because established CRMs contain them").
+   (per the brief: ideas outside the committed modules need pilot evidence, AD-039).
 4. **Specify the business rules** for the top candidates. Write a mini-spec for each:
    the user problem, rules, edge cases, and what "good" looks like in a Bulgarian agency.
    Mark each rule `[ASSUMPTION — validate in pilot: <how>]` unless it has E3 evidence.

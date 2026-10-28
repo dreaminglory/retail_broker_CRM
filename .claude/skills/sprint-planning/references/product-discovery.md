@@ -11,14 +11,17 @@ Every candidate and every business rule gets an evidence level.
 | Level | Meaning | Example |
 |---|---|---|
 | **E3** | Observed in the pilot: feedback, usage data, support requests | "Two brokers asked for overdue reminders by email" in `pilot-feedback.md` |
-| **E2** | Explicit in the founding brief or the BRD (pilot-included, PAC, deferred item) | Smart Lists are listed as a "core pilot feature" |
+| **E2** | Explicit in the founding brief or the BRD (pilot-included, PAC, committed module per AD-039, deferred item) | Smart Lists are listed as a "core pilot feature" |
 | **E1** | Inferred from the core-loop gap walk or a product principle | "Today screen has no way to see work missed yesterday" |
 | **E0** | Benchmark only: a competitor has it | "Pipedrive highlights rotting deals" |
 
-The founding brief says V1 features "should be prioritized from observed pilot
-behavior, not merely because established CRMs contain them". So:
+The founding brief commits to a set of modules (*Committed Modules*, AD-039); pilot
+evidence sets their order and details, not whether they are built. Anything outside that
+set is prioritised from observed pilot behaviour, not because established CRMs have it. So:
 **E0 items can never outrank E2/E3 items of similar value.** E0 items are mainly
-used to shape *how* we build an E1–E3 need.
+used to shape *how* we build an E1–E3 need. Market research
+(`docs/research/crm-competitive-gap-analysis.md`) informs the order and the business
+rules of committed modules; it does not raise an uncommitted idea above E0.
 
 ## 2. Candidate sources (build the pool from all six)
 
