@@ -60,6 +60,7 @@ After fixing suppressed errors, shrink it with `npx eslint . --prune-suppression
 | Requirements and status per feature | `docs/BRD.md` |
 | Product brief, personas, pilot scope | `docs/business-description.md` |
 | Current state and carry-over | `docs/STATUS.md` (created by the `sprint-planning` skill) |
+| Sprint targets to the pilot gate | `docs/roadmap.md` |
 | Pilot evidence for prioritisation | `docs/pilot-feedback.md` |
 
 Finished sprint plans are in `docs/archive/`. Don't read them unless a question needs them.
