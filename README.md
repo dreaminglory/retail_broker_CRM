@@ -41,7 +41,10 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ## Documentation
-- `docs/BRD.md`: Business Requirements Document
-- `docs/sprint-*-implementation-plan.md`: Technical implementation details for each sprint
-- `docs/technical-architecture.md`: Engineering runbook and architectural decisions
+- `AGENTS.md`: Commands, architecture and rules for contributors and AI agents
+- `docs/business-description.md`: Product and business brief
+- `docs/BRD.md`: Requirements and their status
+- `docs/domain-model.md`: Entities, lifecycles, invariants and glossary
 - `docs/decisions-log.md`: ADRs (Architecture Decision Records)
+- `docs/learnings.md`: Patterns and gotchas
+- `docs/sprint-*-implementation-plan.md`: Current sprint plan (finished sprints in `docs/archive/`)

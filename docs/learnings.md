@@ -1,7 +1,7 @@
 # Learnings & Best Practices
 
 > A living document of patterns, gotchas, and best practices discovered during development.
-> Updated continuously. Referenced by the `learnings-and-decisions` skill.
+> Updated continuously. Key gotchas are summarised in `AGENTS.md` ("Rules that are easy to get wrong").
 > Use IDs (e.g., "see L-002") when referencing in code comments.
 
 ---
@@ -35,11 +35,11 @@
 - **Middleware**: Uses a separate `updateSession()` helper from `@/lib/supabase/middleware` to refresh tokens on every request.
 **Impact:** Always check whether you're in a server or client context before choosing the Supabase client. Server Actions should always use the server client.
 
-### L-005: Signup Flow — Agency + Membership in One Transaction
-**Date:** 2026-08-27
+### L-005: Signup Flow — Agency + Membership in One Transaction (Superseded by AD-027)
+**Date:** 2026-08-27 | **Status:** Superseded by AD-027
 **Context:** When a new user signs up, they need a User record, an Agency, and an AgencyMembership created atomically.
-**Learning:** The signup flow creates all three sequentially from the client: (1) `auth.signUp()` creates the user, (2) insert into `agencies` creates the tenant, (3) insert into `agency_memberships` links the user as `owner` with `status: 'active'`. If step 2 or 3 fails, the user sees a partial-success error message.
-**Impact:** Future improvement: wrap steps 2-3 in a database function or edge function for true atomicity. For now, the RLS policies are permissive enough to allow this client-side flow (see `authenticated_can_create_agency` and `authenticated_can_create_own_membership` policies).
+**Original Learning:** The signup flow originally created all three sequentially from the client.
+**Current Architecture (AD-027):** Atomic `create_agency_with_owner(p_agency_name, p_locale)` SECURITY DEFINER RPC encapsulates agency creation, owner membership assignment, and default seeds in a single transaction. Client-side sequential creation was deprecated and disallowed by hardened RLS.
 
 ### L-006: Migration File Naming Convention
 **Date:** 2026-08-27
@@ -147,13 +147,15 @@ export function createSupabaseAdmin() {
 ```
 **Usage:** Only call `createSupabaseAdmin()` inside Server Actions or Route Handlers where the calling user's authorization has already been verified via the regular server client. Never import this module from client components — Next.js tree-shaking will exclude it from the client bundle as long as it's only imported in server-side code paths.
 
-### P-006: User-Level RLS (Non-Tenant Tables)
-**Date:** 2026-10-01
-**Pattern:** Not all tables follow the standard `agency_id = current_agency_id()` RLS template. User-level tables like `profiles` use a different pattern:
+### P-006: User-Level RLS (Non-Tenant Tables, Revised by AD-029)
+**Date:** 2026-10-01 | **Revised:** 2026-10-05 (AD-029)
+**Pattern:** Not all tables follow the standard `agency_id = current_agency_id()` RLS template. User-level tables like `profiles` represent user identity rather than tenant data:
 ```sql
--- Any authenticated user can read (cross-tenant visibility needed)
-CREATE POLICY "authenticated_can_view" ON profiles
-  FOR SELECT USING ((SELECT auth.uid()) IS NOT NULL);
+-- Profile visibility restricted to self + colleagues (AD-029)
+CREATE POLICY "profiles_select_self_or_colleague" ON profiles
+  FOR SELECT USING (
+    id = (SELECT auth.uid()) OR shares_agency_with(id)
+  );
 
 -- Only the row owner can update
 CREATE POLICY "owner_can_update" ON profiles
@@ -162,7 +164,7 @@ CREATE POLICY "owner_can_update" ON profiles
 
 -- No INSERT policy — only SECURITY DEFINER triggers can create rows
 ```
-**Usage:** Use this pattern for tables that represent user identity rather than tenant data. The key difference: no `agency_id` column, no `current_agency_id()` calls. Document the deviation from P-001 in the migration comments.
+**Usage:** Use this pattern for tables that represent user identity rather than tenant data. The key difference: no `agency_id` column, but colleague scoping via `shares_agency_with()` prevents cross-tenant enumeration. Document the deviation from P-001 in migration comments.
 
 ### P-007: Batch Profile Resolution via Map
 **Date:** 2026-10-01
@@ -203,12 +205,25 @@ async getProfilesByIds(userIds: string[]): Promise<Map<string, Profile>> {
 **Fix:** The invitation flow was adjusted: (1) call `inviteUserByEmail()` first to get the user ID, (2) create the `agency_memberships` row with that user ID and `status: 'invited'`. The auth callback activates the membership when the user clicks the link.
 **Prevention:** When using Supabase admin APIs, test the exact sequence of side effects (trigger firing, row creation) before designing the application flow around assumptions.
 
+---
 
-### L-006: Handling Timezones with TZDate vs Supabase Naive Dates
+## Additional Best Practices (Sprint 5)
+
+### L-007: Handling Timezones with TZDate vs Supabase Naive Dates
 **Date:** 2026-10-07
-**Context:** Supabase 	imestamp with time zone fields return as ISO strings in UTC. The Today Screen queries required agency-specific "day boundaries" (e.g., what is "today" in Europe/Sofia?).
-**Pattern:** We use @date-fns/tz (TZDate) to compute the start/end of day boundaries relative to the agency's timezone, and convert those boundaries back to UTC ISO strings for querying Supabase.
-**Usage:** The getDayBounds(timezone, date) helper converts a UTC server time into a localized TZDate, computes startOfDay and endOfDay, and returns them as UTC strings for database queries.
+**Context:** Supabase timestamp with time zone fields return as ISO strings in UTC. The Today Screen queries required agency-specific "day boundaries" (e.g., what is "today" in Europe/Sofia?).
+**Pattern:** We use `@date-fns/tz` (`TZDate`) to compute the start/end of day boundaries relative to the agency's timezone, and convert those boundaries back to UTC ISO strings for querying Supabase.
+**Usage:** The `getDayBounds(timezone, date)` helper converts a UTC server time into a localized TZDate, computes `startOfDay` and `endOfDay`, and returns them as UTC strings for database queries.
+
+### L-008: Catalog Guard Test
+**Date:** 2026-10-05
+**Pattern:** Ensure every new table gets tested for RLS.
+**Usage:** `010-rls-catalog.sql` automatically checks every table in the `public` schema for `agency_id` and `relforcerowsecurity`. Never merge a table without it.
+
+### L-009: Explicit GRANT Rule
+**Date:** 2026-10-05
+**Pattern:** Supabase grants EXECUTE to anon/authenticated by default on new functions.
+**Usage:** After creating a function, always `REVOKE EXECUTE ON FUNCTION fn FROM PUBLIC, anon, authenticated;` and then explicitly `GRANT EXECUTE ON FUNCTION fn TO authenticated;` if it is an RPC intended for application use.
 
 ### P-009: Import Pipeline Chunking Pattern
 **Date:** 2026-10-07

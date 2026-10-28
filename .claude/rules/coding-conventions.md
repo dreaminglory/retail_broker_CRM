@@ -29,9 +29,15 @@
 - Use shadcn/ui primitives — don't reinvent buttons, inputs, dialogs, etc.
 
 ## Error Handling
-- Server actions return `{ success: true, data }` or `{ success: false, error }` — never throw
-- Display user-friendly error messages via toast notifications
-- Log technical errors to console (later to Sentry)
+- Server Actions return `ActionResult<T>` (`src/lib/actions.ts`) and never throw; wrap caught errors with `toActionError()`
+- Business-rule violations throw `DomainError` with an i18n key; Zod messages are i18n keys too
+- Show errors to the user with a `sonner` toast, using the translated message
+- Log technical errors with `console.error` (Sentry later)
+
+## Tests
+- Vitest for domain services and validation: co-locate as `<file>.test.ts`
+- pgTAP for RLS, triggers and RPCs: `supabase/tests/database/0NN-<desc>.sql`
+- A bug fix starts with a test that fails without the fix
 
 ## Git Commits
 - Use conventional commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`
