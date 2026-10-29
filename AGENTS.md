@@ -25,12 +25,24 @@ npm run lint                         # eslint; i18next/no-literal-string flags h
 npm run test                         # vitest (node env, globals on)
 npx vitest run path/to/file.test.ts  # one file
 npm run test:db                      # pgTAP, supabase/tests/database (local Supabase must be running)
+npm run stack:up                     # start dockerd if needed, local Supabase, write .env.local
+npm run test:e2e                     # Playwright core-loop smoke, bg + en, 1280 and 390 px (needs stack:up)
 npx supabase start                   # local stack via Docker, applies migrations
 npx supabase db reset                # clean DB + supabase/seed.sql (two agencies, sample data)
 npm run build
 ```
 
 Env vars: `.env.example`. `SUPABASE_SERVICE_ROLE_KEY` is server-only.
+
+### QA in a cloud session
+
+Cloud containers ship Docker but don't start it. `npm run stack:up && npm run dev` brings
+up the app against local Supabase (first run pulls images, a few minutes). Sign in with a
+seeded login, password `password123`: `owner|manager|broker@alpha.bg` or `@beta.bg`.
+Login sets the locale from the profile; set the `NEXT_LOCALE` cookie (`bg`/`en`) after
+signing in to switch. Drive the browser with the pre-installed Playwright (`e2e/fixtures.ts`
+has a sign-in helper). `npx supabase db reset` restores the seed; seeded task dates are
+relative to now.
 
 ## Definition of done
 

@@ -46,3 +46,8 @@ supabase/.temp/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Playwright (npm run test:e2e)
+/test-results/
+/playwright-report/
+/blob-report/
