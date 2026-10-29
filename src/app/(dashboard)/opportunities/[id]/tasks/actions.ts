@@ -1,11 +1,35 @@
 "use server";
 
+/**
+ * Task Server Actions, shared by the opportunity page and Today.
+ * Due dates without an offset are read in the agency's timezone (Sprint 6.2).
+ * next_action_at is maintained by the sync_opportunity_next_action trigger.
+ */
+
 import { revalidatePath } from 'next/cache';
 import { TaskService } from '@/domain/tasks/service';
-import { createTaskSchema, updateTaskSchema, completeTaskSchema } from '@/domain/tasks/validation';
-import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { taskSchemas } from '@/domain/tasks/validation';
+import type {
+  CancelTaskInput,
+  CompleteTaskWithNextInput,
+  RescheduleTaskInput,
+  Task,
+  UpdateTaskInput,
+} from '@/domain/tasks/types';
+import { getAgencySettings } from '@/domain/agencies/settings';
+import { getAuthContext, toActionError, type ActionResult, type AuthContext } from '@/lib/actions';
 
 export type { ActionResult };
+
+async function taskServiceFor(ctx: AuthContext) {
+  const { timezone } = await getAgencySettings(ctx.agencyId);
+  return { service: new TaskService(ctx.supabase, { timezone }), timezone };
+}
+
+function revalidateTask(task: Pick<Task, 'opportunity_id'>) {
+  revalidatePath('/today');
+  if (task.opportunity_id) revalidatePath(`/opportunities/${task.opportunity_id}`);
+}
 
 // ── Task actions ──────────────────────────────────────────────────────────────
 
@@ -15,7 +39,8 @@ export async function createTaskAction(
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    const { supabase, userId, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    const { service, timezone } = await taskServiceFor(ctx);
 
     const raw = {
       opportunity_id: opportunityId || null,
@@ -26,82 +51,62 @@ export async function createTaskAction(
       assigned_to: formData.get('assigned_to') || null,
     };
 
-    const parsed = createTaskSchema.safeParse(raw);
+    const parsed = taskSchemas(timezone).create.safeParse(raw);
     if (!parsed.success) return toActionError(parsed.error);
 
-    const service = new TaskService(supabase);
-    const task = await service.create(agencyId, userId, parsed.data);
+    const task = await service.create(ctx.agencyId, ctx.userId, parsed.data);
 
-    revalidatePath(`/opportunities/${opportunityId}`);
+    revalidateTask(task);
     return { success: true, data: { id: task.id } };
   } catch (error) { return toActionError(error); }
 }
 
-export async function updateTaskAction(
-  id: string,
-  opportunityId: string,
-  _prevState: ActionResult,
-  formData: FormData
-): Promise<ActionResult> {
+/** Edits a pending task (FR-TSK-08). */
+export async function updateTaskAction(id: string, input: UpdateTaskInput): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
-
-    const raw = {
-      title: formData.get('title') ?? undefined,
-      description: formData.get('description') !== null ? (formData.get('description') || null) : undefined,
-      due_at: formData.get('due_at') !== null ? (formData.get('due_at') || null) : undefined,
-      assigned_to: formData.get('assigned_to') !== null ? (formData.get('assigned_to') || null) : undefined,
-    };
-
-    const parsed = updateTaskSchema.safeParse(raw);
-    if (!parsed.success) return toActionError(parsed.error);
-
-    const service = new TaskService(supabase);
-    await service.update(id, agencyId, parsed.data);
-
-    revalidatePath(`/opportunities/${opportunityId}`);
+    const ctx = await getAuthContext();
+    const { service } = await taskServiceFor(ctx);
+    const task = await service.update(id, ctx.agencyId, input);
+    revalidateTask(task);
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }
 
 /**
- * Marks a task as completed with an optional outcome note.
- * The DB trigger sync_opportunity_next_action automatically updates
- * the parent opportunity's next_action_at (FR-TSK-07).
+ * Completes a task with its outcome, and optionally schedules the next task
+ * and moves the opportunity's stage, in one step (AD-014, FR-TSK-04).
  */
 export async function completeTaskAction(
   id: string,
-  opportunityId: string,
-  _prevState: ActionResult,
-  formData: FormData
-): Promise<ActionResult> {
+  input: CompleteTaskWithNextInput
+): Promise<ActionResult<{ completedTask: Task; nextTask?: Task }>> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    const { service } = await taskServiceFor(ctx);
+    const result = await service.completeWithNext(id, ctx.agencyId, ctx.userId, input);
+    revalidateTask(result.completedTask);
+    return { success: true, data: result };
+  } catch (error) { return toActionError(error); }
+}
 
-    const raw = {
-      outcome: formData.get('outcome') || null,
-    };
-
-    const parsed = completeTaskSchema.safeParse(raw);
-    if (!parsed.success) return toActionError(parsed.error);
-
-    const service = new TaskService(supabase);
-    await service.complete(id, agencyId, parsed.data);
-
-    revalidatePath(`/opportunities/${opportunityId}`);
+/** Moves a pending task to a preset (agency time) or a given date (FR-TSK-08). */
+export async function rescheduleTaskAction(id: string, input: RescheduleTaskInput): Promise<ActionResult> {
+  try {
+    const ctx = await getAuthContext();
+    const { service } = await taskServiceFor(ctx);
+    const task = await service.reschedule(id, ctx.agencyId, input);
+    revalidateTask(task);
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }
 
-export async function cancelTaskAction(
-  id: string,
-  opportunityId: string
-): Promise<ActionResult> {
+/** Cancels a pending task with an optional reason (FR-TSK-08). */
+export async function cancelTaskAction(id: string, input: CancelTaskInput): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
-    const service = new TaskService(supabase);
-    await service.cancel(id, agencyId);
-    revalidatePath(`/opportunities/${opportunityId}`);
+    const ctx = await getAuthContext();
+    const { service } = await taskServiceFor(ctx);
+    const task = await service.cancel(id, ctx.agencyId, input);
+    revalidateTask(task);
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }

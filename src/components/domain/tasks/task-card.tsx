@@ -1,9 +1,7 @@
 "use client";
-import { useTranslations } from "next-intl";
-
+import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import Link from "next/link";
-import { formatDistanceToNow, format, isToday, isPast } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,13 +17,20 @@ import {
   Briefcase,
 } from "lucide-react";
 import type { Task, TaskType } from "@/domain/tasks/types";
+import { todayBucket } from "@/lib/time/agency-day";
 import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
   task: Task;
+  /** The agency's timezone: "today" and the times shown are agency time. */
+  timeZone: string;
   opportunityTitle?: string;
+  /** Shown under the title, e.g. on Today's agency scope. */
+  assigneeName?: string;
   onComplete: (taskId: string) => void;
   showOpportunity?: boolean;
+  /** The task menu (edit, reschedule, cancel). */
+  menu?: React.ReactNode;
 }
 
 const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
@@ -37,15 +42,27 @@ const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ className
   other: { icon: MoreHorizontal, label: "Other", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
 };
 
-export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity = true }: TaskCardProps) {
+export function TaskCard({
+  task,
+  timeZone,
+  opportunityTitle,
+  assigneeName,
+  onComplete,
+  showOpportunity = true,
+  menu,
+}: TaskCardProps) {
   const t = useTranslations('TaskCard');
-  const isOverdue = task.due_at && isPast(new Date(task.due_at)) && task.status === "pending";
-  const isDueToday = task.due_at && isToday(new Date(task.due_at));
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
+  const bucket = task.due_at ? todayBucket(task.due_at, timeZone, now) : null;
+  const isOverdue = bucket === "overdue" && task.status === "pending";
+  const isDueToday = bucket === "dueToday";
   const typeConfig = task.task_type ? TASK_TYPE_CONFIG[task.task_type] : null;
   const TypeIcon = typeConfig?.icon ?? CalendarCheck;
 
   const resolvedOppTitle = opportunityTitle || ("opportunity_title" in task ? (task as unknown as Record<string, string>).opportunity_title : undefined);
-  const resolvedAssignee = "assignee_name" in task ? (task as unknown as Record<string, string>).assignee_name : undefined;
+  const resolvedAssignee =
+    assigneeName ?? ("assignee_name" in task ? (task as unknown as Record<string, string>).assignee_name : undefined);
 
   return (
     <div
@@ -110,7 +127,7 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
               <>
                 <AlertTriangle className="h-3 w-3 text-destructive" />
                 <span className="font-medium text-destructive">
-                  {t('overdueDuration', { duration: formatDistanceToNow(new Date(task.due_at!), { addSuffix: false }) })}
+                  {t('overdueSince', { relative: format.relativeTime(new Date(task.due_at!), now) })}
                 </span>
               </>
             ) : task.due_at ? (
@@ -118,8 +135,18 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
                 <Clock className="h-3 w-3 text-muted-foreground" />
                 <span className="text-muted-foreground">
                   {isDueToday
-                    ? `t('dueTodayTime', { time: format(new Date(task.due_at), 'HH:mm') })`
-                    : t('dueDateTime', { date: format(new Date(task.due_at), 'MMM d, HH:mm') })}
+                    ? t('dueTodayTime', {
+                        time: format.dateTime(new Date(task.due_at), { hour: '2-digit', minute: '2-digit', timeZone }),
+                      })
+                    : t('dueDateTime', {
+                        date: format.dateTime(new Date(task.due_at), {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          timeZone,
+                        }),
+                      })}
                 </span>
               </>
             ) : (
@@ -128,6 +155,7 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
           </div>
 
           {task.status === "pending" && (
+            <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
@@ -139,6 +167,8 @@ export function TaskCard({ task, opportunityTitle, onComplete, showOpportunity =
             >
               <CheckCircle className="mr-1 h-3.5 w-3.5" />
               {t("complete")}</Button>
+            {menu}
+            </div>
           )}
         </div>
       </div>

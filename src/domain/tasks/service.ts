@@ -3,27 +3,43 @@
  * Validates inputs and enforces task lifecycle rules.
  * Sprint 2: Enhanced with "complete → schedule next" workflow (AD-014),
  * Today Screen query methods, and task_type support.
+ * Sprint 6.2: due dates are read in agency time; edit, reschedule, cancel
+ * and complete work on pending tasks only.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { TaskRepository } from './repository';
 import type { AtRiskOpportunity } from './repository';
-import type { Task, CreateTaskInput, CompleteTaskInput, CompleteTaskWithNextInput } from './types';
-import {
-  createTaskSchema,
-  completeTaskSchema,
-  completeTaskWithNextSchema,
-  updateTaskSchema,
-} from './validation';
+import type {
+  Task,
+  CreateTaskInput,
+  CompleteTaskWithNextInput,
+  CancelTaskInput,
+  RescheduleTaskInput,
+  UpdateTaskInput,
+} from './types';
+import { cancelTaskSchema, taskSchemas, type TaskSchemas } from './validation';
+import { rescheduleDueAt } from './reschedule';
 import type { TaskListOptions } from './repository';
+import { DomainError } from '@/lib/errors';
+import { DEFAULT_AGENCY_TIMEZONE, getTodayWindows } from '@/lib/time/agency-day';
+
+export type TaskServiceOptions = {
+  /** The agency's timezone; due dates without an offset are read in it. */
+  timezone?: string;
+};
 
 export class TaskService {
   private readonly repo: TaskRepository;
   private readonly db: SupabaseClient;
+  private readonly timezone: string;
+  private readonly schemas: TaskSchemas;
 
-  constructor(db: SupabaseClient) {
+  constructor(db: SupabaseClient, opts: TaskServiceOptions = {}) {
     this.db = db;
     this.repo = new TaskRepository(db);
+    this.timezone = opts.timezone ?? DEFAULT_AGENCY_TIMEZONE;
+    this.schemas = taskSchemas(this.timezone);
   }
 
   // ── Queries ───────────────────────────────────────────────────────────────
@@ -43,19 +59,18 @@ export class TaskService {
 
   // ── Today Screen Queries ─────────────────────────────────────────────────
 
-  /** Overdue tasks: pending with due_at in the past. */
-  async listOverdue(agencyId: string, assignedTo?: string): Promise<Task[]> {
-    return this.repo.findOverdue(agencyId, assignedTo);
-  }
-
-  /** Tasks due today. */
-  async listDueToday(agencyId: string, assignedTo?: string, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
-    return this.repo.findDueToday(agencyId, assignedTo, timezone);
-  }
-
-  /** Tasks due in the next 3 days (excluding today). */
-  async listUpcoming(agencyId: string, assignedTo?: string, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
-    return this.repo.findUpcoming(agencyId, assignedTo, 3, timezone);
+  /**
+   * The Today task sections, each task in exactly one (agency time):
+   * overdue (due before now), due today (now to midnight), upcoming (next 3 days).
+   */
+  async listToday(agencyId: string, assignedTo?: string): Promise<{ overdue: Task[]; dueToday: Task[]; upcoming: Task[] }> {
+    const w = getTodayWindows(this.timezone);
+    const [overdue, dueToday, upcoming] = await Promise.all([
+      this.repo.findPendingDue(agencyId, { before: w.overdueBefore }, assignedTo),
+      this.repo.findPendingDue(agencyId, w.dueToday, assignedTo),
+      this.repo.findPendingDue(agencyId, w.upcoming, assignedTo),
+    ]);
+    return { overdue, dueToday, upcoming };
   }
 
   /** Active opportunities with no pending task. */
@@ -71,7 +86,7 @@ export class TaskService {
     userId: string,
     input: CreateTaskInput
   ): Promise<Task> {
-    const parsed = createTaskSchema.parse(input) as CreateTaskInput;
+    const parsed = this.schemas.create.parse(input) as CreateTaskInput;
     
     // Automatically inherit assigned_to from the opportunity if not provided
     if (!parsed.assigned_to && parsed.opportunity_id) {
@@ -88,27 +103,25 @@ export class TaskService {
     return this.repo.create(agencyId, userId, parsed);
   }
 
-  /** Updates mutable fields (title, description, task_type, due_at, assigned_to). */
-  async update(
-    id: string,
-    agencyId: string,
-    input: Partial<Pick<Task, 'title' | 'description' | 'task_type' | 'due_at' | 'assigned_to'>>
-  ): Promise<Task> {
-    const parsed = updateTaskSchema.parse(input);
+  /** Edits a pending task (title, description, task_type, due_at, assigned_to). */
+  async update(id: string, agencyId: string, input: UpdateTaskInput): Promise<Task> {
+    const parsed = this.schemas.update.parse(input);
+    await this.getPending(id, agencyId);
     return this.repo.update(id, agencyId, parsed);
   }
 
   /**
-   * Completes a task (simple — outcome required per AD-014).
-   * DB trigger sync_opportunity_next_action updates next_action_at.
+   * Moves a pending task's due date to a preset (agency time) or a given date.
+   * The trigger sync_opportunity_next_action recomputes next_action_at.
    */
-  async complete(
-    id: string,
-    agencyId: string,
-    input: CompleteTaskInput
-  ): Promise<Task> {
-    const parsed = completeTaskSchema.parse(input);
-    return this.repo.complete(id, agencyId, parsed as CompleteTaskInput);
+  async reschedule(id: string, agencyId: string, input: RescheduleTaskInput): Promise<Task> {
+    const due_at =
+      'preset' in input
+        ? rescheduleDueAt(input.preset, this.timezone).toISOString()
+        : this.schemas.update.parse({ due_at: input.due_at }).due_at;
+    if (!due_at) throw new DomainError('validation.invalid_date');
+    await this.getPending(id, agencyId);
+    return this.repo.update(id, agencyId, { due_at });
   }
 
   /**
@@ -126,7 +139,8 @@ export class TaskService {
     userId: string,
     input: CompleteTaskWithNextInput
   ): Promise<{ completedTask: Task; nextTask?: Task }> {
-    const parsed = completeTaskWithNextSchema.parse(input);
+    const parsed = this.schemas.completeWithNext.parse(input);
+    await this.getPending(id, agencyId);
 
     // 1. Complete the current task
     const completedTask = await this.repo.complete(id, agencyId, {
@@ -158,8 +172,18 @@ export class TaskService {
     return { completedTask, nextTask };
   }
 
-  /** Cancels a pending task. */
-  async cancel(id: string, agencyId: string): Promise<Task> {
-    return this.repo.cancel(id, agencyId);
+  /** Cancels a pending task, keeping the optional reason as its outcome. */
+  async cancel(id: string, agencyId: string, input: CancelTaskInput): Promise<Task> {
+    const { reason } = cancelTaskSchema.parse(input);
+    await this.getPending(id, agencyId);
+    return this.repo.cancel(id, agencyId, reason ?? null);
+  }
+
+  /** Completed and cancelled tasks are final (Sprint 6.2). */
+  private async getPending(id: string, agencyId: string): Promise<Task> {
+    const task = await this.repo.findById(id, agencyId);
+    if (!task) throw new DomainError('errors.task_not_found');
+    if (task.status !== 'pending') throw new DomainError('errors.task_not_pending');
+    return task;
   }
 }

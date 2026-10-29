@@ -10,7 +10,17 @@ export type FakeSupabase = {
   client: unknown;
   /** Tables queried, other than the membership lookup done by getAuthContext. */
   touchedTables: string[];
+  /** Every insert, update, upsert or delete, with the values it was given. */
+  writes: FakeWrite[];
+  /** Every `.eq(column, value)` filter, by table. */
+  filters: FakeFilter[];
 };
+
+export type FakeFilter = { table: string; column: string; value: unknown };
+
+export type FakeWrite = { table: string; op: 'insert' | 'update' | 'upsert' | 'delete'; values: unknown };
+
+const WRITE_OPS = new Set(['insert', 'update', 'upsert', 'delete']);
 
 export function createFakeSupabase(member: {
   userId?: string;
@@ -20,10 +30,12 @@ export function createFakeSupabase(member: {
   tables?: Record<string, unknown>;
 }): FakeSupabase {
   const touchedTables: string[] = [];
+  const writes: FakeWrite[] = [];
+  const filters: FakeFilter[] = [];
   const userId = member.userId ?? 'user-1';
   const agencyId = member.agencyId ?? 'agency-1';
 
-  const chain = (result: { data: unknown; error: null }) => {
+  const chain = (result: { data: unknown; error: null }, table?: string) => {
     const builder: Record<string, unknown> = {};
     const proxy: unknown = new Proxy(builder, {
       get(_target, prop) {
@@ -32,6 +44,18 @@ export function createFakeSupabase(member: {
         }
         if (prop === 'single' || prop === 'maybeSingle') {
           return () => Promise.resolve({ data: result.data, error: null });
+        }
+        if (table && typeof prop === 'string' && WRITE_OPS.has(prop)) {
+          return (values: unknown) => {
+            writes.push({ table, op: prop as FakeWrite['op'], values });
+            return proxy;
+          };
+        }
+        if (table && prop === 'eq') {
+          return (column: string, value: unknown) => {
+            filters.push({ table, column, value });
+            return proxy;
+          };
         }
         return () => proxy;
       },
@@ -48,7 +72,7 @@ export function createFakeSupabase(member: {
         return chain({ data: { agency_id: agencyId, role: member.role }, error: null });
       }
       touchedTables.push(table);
-      return chain({ data: member.tables?.[table] ?? [], error: null });
+      return chain({ data: member.tables && table in member.tables ? member.tables[table] : [], error: null }, table);
     },
     rpc(fn: string) {
       touchedTables.push(`rpc:${fn}`);
@@ -56,5 +80,5 @@ export function createFakeSupabase(member: {
     },
   };
 
-  return { client, touchedTables };
+  return { client, touchedTables, writes, filters };
 }

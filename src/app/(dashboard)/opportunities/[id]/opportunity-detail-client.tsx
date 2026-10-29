@@ -39,7 +39,7 @@ import type { Contact } from "@/domain/contacts/types";
 import type { Task } from "@/domain/tasks/types";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import type { ActiveBroker } from "@/domain/members/types";
-import { ArrowLeft, Pencil, Link as LinkIcon, Building2, Calendar, FileText, Users } from "lucide-react";
+import { ArrowLeft, Pencil, Link as LinkIcon, FileText, Users } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 
@@ -52,6 +52,8 @@ interface OpportunityDetailClientProps {
   tasks: Task[];
   timeline: TimelineEntry[];
   currentUserId?: string;
+  /** The agency's timezone, for task due times. */
+  timeZone: string;
   // inquiry?: Inquiry; // Optionally show inquiry details
 }
 
@@ -64,6 +66,7 @@ export function OpportunityDetailClient({
   tasks,
   timeline,
   currentUserId,
+  timeZone,
 }: OpportunityDetailClientProps) {
   const t = useTranslations("OpportunityDetail");
   const getStageName = useStageTranslation();
@@ -267,6 +270,8 @@ export function OpportunityDetailClient({
             opportunityId={opportunity.id}
             tasks={tasks}
             brokers={brokers}
+            stages={stages}
+            timeZone={timeZone}
             createAction={createTaskAction}
             completeAction={completeTaskAction}
           />

@@ -9,7 +9,6 @@ import {
   Inbox,
   Briefcase,
   ArrowRight,
-  CheckCircle,
 } from "lucide-react";
 import { TaskService } from "@/domain/tasks/service";
 import { getTranslations } from "next-intl/server";
@@ -39,18 +38,17 @@ export default async function DashboardPage() {
     .eq("status", "active")
     .single();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const agencyData = membership?.agencies as unknown as { name: string } | null;
   const agencyId = membership?.agency_id ?? "";
 
   // Fetch Today counts
-  const taskService = new TaskService(supabase);
-  const inquiryService = new InquiryService(supabase);
   const settings = await getAgencySettings(agencyId);
+  const taskService = new TaskService(supabase, { timezone: settings.timezone });
+  const inquiryService = new InquiryService(supabase);
 
-  const [overdue, dueToday, atRisk, newInquiries] = await Promise.all([
-    taskService.listOverdue(agencyId, user!.id),
-    taskService.listDueToday(agencyId, user!.id, settings.timezone),
+  const [{ overdue, dueToday }, atRisk, newInquiries] = await Promise.all([
+    taskService.listToday(agencyId, user!.id),
     taskService.listAtRisk(agencyId, user!.id),
     inquiryService.list(agencyId, { status: "new", assignedTo: user!.id }),
   ]);

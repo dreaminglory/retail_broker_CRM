@@ -5,6 +5,8 @@
  * the "complete → schedule next" workflow (AD-014).
  */
 
+import type { ReschedulePreset } from './reschedule';
+
 export type TaskStatus = 'pending' | 'completed' | 'cancelled';
 
 /** AD-013: Task type categorization for UI display and filtering. */
@@ -93,3 +95,12 @@ export interface CompleteTaskWithNextInput {
   /** Optional: advance the opportunity to a new stage. */
   new_stage_id?: string | null;
 }
+
+/** Input for editing a pending task. `due_at` is read in agency time. */
+export type UpdateTaskInput = Partial<Pick<Task, 'title' | 'description' | 'task_type' | 'due_at' | 'assigned_to'>>;
+
+/** Sprint 6.2: a preset (agency time) or an explicit due date. */
+export type RescheduleTaskInput = { preset: ReschedulePreset } | { due_at: string };
+
+/** Sprint 6.2: the optional reason is kept as the task's outcome. */
+export type CancelTaskInput = { reason?: string | null };

@@ -1,27 +1,27 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { TaskCard } from "@/components/domain/tasks/task-card";
 import { TaskCompleteDialog } from "@/components/domain/tasks/task-complete-dialog";
+import { TaskActionsMenu } from "@/components/domain/tasks/task-actions-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle,
   CalendarCheck,
   CalendarClock,
-  Clock,
   Inbox,
   ArrowRight,
   CheckCircle,
   Briefcase,
   Phone,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import type { Task } from "@/domain/tasks/types";
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { Stage } from "@/domain/stages/types";
@@ -29,8 +29,13 @@ import type { ActiveBroker } from "@/domain/members/types";
 import type { AtRiskOpportunity } from "@/domain/tasks/repository";
 import type { CompleteTaskWithNextInput } from "@/domain/tasks/types";
 import type { ActionResult } from "@/lib/actions";
+import type { TodayScope } from "./actions";
 
 interface TodayPageClientProps {
+  scope: TodayScope;
+  timezone: string;
+  /** Owners and managers can switch between their own work and the agency's (AD-044). */
+  canSwitchScope: boolean;
   overdue: Task[];
   dueToday: Task[];
   upcoming: Task[];
@@ -45,6 +50,9 @@ interface TodayPageClientProps {
 }
 
 export function TodayPageClient({
+  scope,
+  timezone,
+  canSwitchScope,
   overdue,
   dueToday,
   upcoming,
@@ -56,7 +64,22 @@ export function TodayPageClient({
 }: TodayPageClientProps) {
   const router = useRouter();
   const t = useTranslations('Today');
+  const format = useFormatter();
+  const enums = useTranslations("Enums");
+  const getStageName = useStageTranslation();
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
+  const brokerNames = new Map(brokers.map((b) => [b.id, b.display_name]));
+
+  const renderTask = (task: Task) => (
+    <TaskCard
+      key={task.id}
+      task={task}
+      timeZone={timezone}
+      assigneeName={scope === "agency" && task.assigned_to ? brokerNames.get(task.assigned_to) : undefined}
+      onComplete={() => setCompletingTask(task)}
+      menu={<TaskActionsMenu task={task} timeZone={timezone} brokers={brokers} />}
+    />
+  );
 
   const totalItems = overdue.length + dueToday.length + newInquiries.length;
   const hasWork = totalItems > 0 || atRisk.length > 0 || upcoming.length > 0;
@@ -65,13 +88,30 @@ export function TodayPageClient({
     <>
       <div className="mx-auto max-w-3xl">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {hasWork
-              ? `You have ${totalItems} item${totalItems !== 1 ? "s" : ""} that need attention`
-              : "All caught up — no pending work right now!"}
-          </p>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {hasWork ? t("hasWorkSubtitle", { count: totalItems }) : t("allCaughtUpSubtitle")}
+            </p>
+          </div>
+          {canSwitchScope && (
+            <div role="group" aria-label={t("scope.label")} className="inline-flex rounded-md border p-0.5 text-sm">
+              {(["mine", "agency"] as const).map((option) => (
+                <Link
+                  key={option}
+                  href={option === "agency" ? "/today?scope=agency" : "/today"}
+                  aria-current={scope === option ? "page" : undefined}
+                  className={cn(
+                    "rounded px-3 py-1 transition-colors",
+                    scope === option ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t(`scope.${option}`)}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Summary badges */}
@@ -114,13 +154,7 @@ export function TodayPageClient({
               variant="destructive"
             >
               <div className="space-y-2">
-                {overdue.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={() => setCompletingTask(task)}
-                  />
-                ))}
+                {overdue.map(renderTask)}
               </div>
             </Section>
           )}
@@ -154,7 +188,7 @@ export function TodayPageClient({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {formatDistanceToNow(new Date(inq.received_at), { addSuffix: true })}
+                      {format.relativeTime(new Date(inq.received_at))}
                     </span>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Link>
@@ -172,13 +206,7 @@ export function TodayPageClient({
               variant="warning"
             >
               <div className="space-y-2">
-                {dueToday.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={() => setCompletingTask(task)}
-                  />
-                ))}
+                {dueToday.map(renderTask)}
               </div>
             </Section>
           )}
@@ -192,14 +220,7 @@ export function TodayPageClient({
               variant="default"
             >
               <div className="space-y-2">
-                {upcoming.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={() => setCompletingTask(task)}
-                    showOpportunity
-                  />
-                ))}
+                {upcoming.map(renderTask)}
               </div>
             </Section>
           )}
@@ -208,7 +229,7 @@ export function TodayPageClient({
           {atRisk.length > 0 && (
             <Section
               icon={<Briefcase className="h-4 w-4 text-orange-500" />}
-              title="At Risk — No Next Action"
+              title={t("sections.atRisk")}
               count={atRisk.length}
               variant="warning"
             >
@@ -225,12 +246,12 @@ export function TodayPageClient({
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm truncate">{opp.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {opp.stage_name} · {opp.type}
+                        {getStageName(opp.stage_name)} · {enums(`opportunityType.${opp.type}` as never)}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-muted-foreground">
-                        {t('updated')} {formatDistanceToNow(new Date(opp.updated_at), { addSuffix: true })}
+                        {t('updated')} {format.relativeTime(new Date(opp.updated_at))}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
