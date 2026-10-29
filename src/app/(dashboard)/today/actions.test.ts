@@ -16,16 +16,26 @@ function signIn(role: string) {
   fake = createFakeSupabase({ role, userId: 'user-1', tables: { agencies: { settings: { timezone: 'Europe/Sofia' } } } });
 }
 
+const TODAY_TABLES = ['tasks', 'opportunities', 'inquiries'];
+
 const assigneeFilters = () =>
-  fake.filters.filter((f) => f.column === 'assigned_to' && ['tasks', 'opportunities', 'inquiries'].includes(f.table));
+  fake.filters.filter((f) => f.column === 'assigned_to' && TODAY_TABLES.includes(f.table));
+
+/** Every Today query (tasks, at-risk opportunities, new inquiries) is filtered to the user. */
+function expectOnlyOwnWork() {
+  for (const table of TODAY_TABLES) {
+    const filters = assigneeFilters().filter((f) => f.table === table);
+    expect(filters, table).not.toEqual([]);
+    expect(filters.every((f) => f.value === 'user-1'), table).toBe(true);
+  }
+}
 
 describe('Today scope (AD-044)', () => {
   it("shows a manager only their own work by default (AC-6.2-4)", async () => {
     signIn('manager');
     const result = await getTodayScreenData();
     expect(result).toMatchObject({ success: true, data: { scope: 'mine' } });
-    expect(assigneeFilters().length).toBeGreaterThan(0);
-    expect(assigneeFilters().every((f) => f.value === 'user-1')).toBe(true);
+    expectOnlyOwnWork();
   });
 
   it("shows a manager everyone's work with scope=agency", async () => {
@@ -39,7 +49,6 @@ describe('Today scope (AD-044)', () => {
     signIn('broker');
     const result = await getTodayScreenData('agency');
     expect(result).toMatchObject({ success: true, data: { scope: 'mine' } });
-    expect(assigneeFilters().every((f) => f.value === 'user-1')).toBe(true);
-    expect(assigneeFilters().length).toBeGreaterThan(0);
+    expectOnlyOwnWork();
   });
 });
