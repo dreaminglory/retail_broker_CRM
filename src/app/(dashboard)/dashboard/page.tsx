@@ -38,7 +38,6 @@ export default async function DashboardPage() {
     .eq("status", "active")
     .single();
 
-   
   const agencyData = membership?.agencies as unknown as { name: string } | null;
   const agencyId = membership?.agency_id ?? "";
 

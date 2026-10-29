@@ -481,7 +481,7 @@
     "save": "Save",
     "saving": "Saving...",
     "cancelTitle": "Cancel task",
-    "cancelDescription": "“{title}” will be closed without an outcome. If no other task is pending, the opportunity shows as at risk.",
+    "cancelDescription": "“{title}” will be cancelled and kept with your reason. If no other task is pending, the opportunity shows as at risk.",
     "keepTask": "Keep task",
     "confirmCancel": "Cancel task"
   },

@@ -71,6 +71,8 @@ export function TaskActionsMenu({ task, timeZone, brokers }: TaskActionsMenuProp
       const result = await action();
       if (!result.success) {
         toast.error(result.error);
+        // The task may have been completed or cancelled elsewhere: show its current state.
+        router.refresh();
         return false;
       }
       toast.success(success);

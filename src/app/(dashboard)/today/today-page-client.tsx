@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ import type { TodayScope } from "./today-data";
 
 interface TodayPageClientProps {
   scope: TodayScope;
-  timezone: string;
+  timeZone: string;
   /** Owners and managers can switch between their own work and the agency's (AD-044). */
   canSwitchScope: boolean;
   overdue: Task[];
@@ -51,7 +51,7 @@ interface TodayPageClientProps {
 
 export function TodayPageClient({
   scope,
-  timezone,
+  timeZone,
   canSwitchScope,
   overdue,
   dueToday,
@@ -65,6 +65,7 @@ export function TodayPageClient({
   const router = useRouter();
   const t = useTranslations('Today');
   const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
   const enums = useTranslations("Enums");
   const getStageName = useStageTranslation();
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
@@ -74,10 +75,10 @@ export function TodayPageClient({
     <TaskCard
       key={task.id}
       task={task}
-      timeZone={timezone}
+      timeZone={timeZone}
       assigneeName={scope === "agency" && task.assigned_to ? brokerNames.get(task.assigned_to) : undefined}
       onComplete={() => setCompletingTask(task)}
-      menu={<TaskActionsMenu task={task} timeZone={timezone} brokers={brokers} />}
+      menu={<TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />}
     />
   );
 
@@ -188,7 +189,7 @@ export function TodayPageClient({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {format.relativeTime(new Date(inq.received_at))}
+                      {format.relativeTime(new Date(inq.received_at), now)}
                     </span>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Link>
@@ -251,7 +252,7 @@ export function TodayPageClient({
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-muted-foreground">
-                        {t('updated')} {format.relativeTime(new Date(opp.updated_at))}
+                        {t('updated')} {format.relativeTime(new Date(opp.updated_at), now)}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />

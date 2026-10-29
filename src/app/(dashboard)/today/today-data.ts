@@ -16,7 +16,8 @@ export type TodayScope = "mine" | "agency";
 
 export interface TodayScreenData {
   scope: TodayScope;
-  timezone: string;
+  /** The agency's timezone, for the UI's Intl formatting. */
+  timeZone: string;
   overdue: Task[];
   dueToday: Task[];
   upcoming: Task[];
@@ -50,5 +51,5 @@ export async function loadTodayScreenData(
     inquiryService.list(agencyId, { status: "new", assignedTo }),
   ]);
 
-  return { scope, timezone, ...tasks, atRisk, newInquiries };
+  return { scope, timeZone: timezone, ...tasks, atRisk, newInquiries };
 }

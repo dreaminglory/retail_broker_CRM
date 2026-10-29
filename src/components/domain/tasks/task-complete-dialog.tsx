@@ -26,7 +26,6 @@ import {
 import { TASK_TYPE_CONFIG } from "./task-card";
 import type { Task, TaskType } from "@/domain/tasks/types";
 import type { Stage } from "@/domain/stages/types";
- 
 import type { ActionResult } from "@/lib/actions";
 import type { CompleteTaskWithNextInput } from "@/domain/tasks/types";
 import { TASK_TYPES } from "@/domain/tasks/validation";
