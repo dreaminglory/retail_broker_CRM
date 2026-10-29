@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { createSupabaseServer } from "@/lib/supabase/server";
-import { CONFIG_ROLES } from "@/lib/actions";
+import { CONFIG_ROLES, hasRole } from "@/lib/roles";
+import { getCurrentMembership } from "@/lib/membership";
 import { Settings, Radio, ChevronRight, User, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -24,27 +24,10 @@ interface SettingSection {
 
 
 
-async function getRole(): Promise<string | null> {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: membership } = await supabase
-    .from("agency_memberships")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .single();
-
-  return membership?.role ?? null;
-}
-
 export default async function SettingsPage() {
   const t = await getTranslations("settings");
-  const role = await getRole();
-  const canConfigure = (CONFIG_ROLES as readonly string[]).includes(role ?? "");
+  const membership = await getCurrentMembership();
+  const canConfigure = hasRole(membership?.role, CONFIG_ROLES);
 
   const settingSections: SettingSection[] = [
     {

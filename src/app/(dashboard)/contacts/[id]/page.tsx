@@ -4,7 +4,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { ContactService } from "@/domain/contacts/service";
 import { ContactMethodList } from "@/components/domain/contacts/contact-method-list";
 import { ContactDetailClient } from "./contact-detail-client";
-import { CONFIG_ROLES } from "@/lib/actions";
+import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 import {
   ChevronLeft,
   Building2,
@@ -125,7 +125,7 @@ export default async function ContactDetailPage({
         <ContactDetailClient
           contact={contact}
           agencyId={agencyId}
-          canMerge={(CONFIG_ROLES as readonly string[]).includes(membership?.role ?? "")}
+          canMerge={hasRole(membership?.role, CONFIG_ROLES)}
         />
       </div>
 
