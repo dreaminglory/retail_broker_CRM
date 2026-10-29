@@ -12,17 +12,21 @@ export const taskTypeSchema = z.enum(TASK_TYPES).nullable().optional();
 // A `datetime-local` value has no offset, so it is read as agency time
 // (Sprint 6.2), never as the server's timezone. '' clears the due date.
 
-function agencyDateTimeSchema(timezone: string, { allowEmpty }: { allowEmpty: boolean }) {
+function agencyDateTimeSchema(timezone: string) {
   return z
     .string()
-    .refine((val) => (allowEmpty && val === '') || parseAgencyLocal(val, timezone) !== null, {
-      message: 'validation.invalid_date',
-    })
-    .transform((val) => (val === '' ? null : parseAgencyLocal(val, timezone)!.toISOString()));
+    .refine((val) => parseAgencyLocal(val, timezone) !== null, { message: 'validation.invalid_date' })
+    .transform((val) => parseAgencyLocal(val, timezone)!.toISOString());
 }
 
+/** Optional due date; '' clears it. */
 function dueAtSchema(timezone: string) {
-  return agencyDateTimeSchema(timezone, { allowEmpty: true }).nullable().optional();
+  return z
+    .string()
+    .transform((val) => (val === '' ? null : val))
+    .pipe(agencyDateTimeSchema(timezone).nullable())
+    .nullable()
+    .optional();
 }
 
 const titleSchema = z
@@ -78,7 +82,7 @@ export function taskSchemas(timezone: string) {
 
   // Sprint 6.2: reschedule to a preset, or to an explicit due date (required here).
   const reschedulePreset = z.object({ preset: z.enum(RESCHEDULE_PRESETS) }).strict();
-  const rescheduleDate = z.object({ due_at: agencyDateTimeSchema(timezone, { allowEmpty: false }) }).strict();
+  const rescheduleDate = z.object({ due_at: agencyDateTimeSchema(timezone) }).strict();
 
   return { create, update, completeWithNext, reschedulePreset, rescheduleDate };
 }
