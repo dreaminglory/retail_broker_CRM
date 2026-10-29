@@ -2,7 +2,7 @@
 
 Use this catalogue to find proven solutions for weak loop steps. Borrow the **pattern**
 and adapt it to Bulgarian agencies. Never copy text, branding, or proprietary UI.
-Treat the "Status" column as a hint only: **verify in the code during Phase 1**.
+Treat the "Status" column as a hint only: **verify it in the code**. Used by the `feature-ideas` skill.
 
 Product names are listed for research only. The founding brief forbids
 claiming any of them dominates the Bulgarian market without evidence.
@@ -27,8 +27,8 @@ Loop step = which step of the 9-step core loop the pattern strengthens.
 
 | # | Pattern | Seen in | Loop step | Brief / BRD position | Status hint |
 |---|---|---|---|---|---|
-| B-01 | **Smart Lists**: saved dynamic filters with counts, "work the list to zero" | FUB, Close, HubSpot | 6, 9 | Brief: *core pilot feature*; BRD deferred → Sprint 6 | Gap |
-| B-02 | **Daily email digest + due/overdue reminders** | FUB, Pipedrive, HubSpot | 6 | BRD deferred (AD-025 email via Resend + pg_cron) | Gap |
+| B-01 | **Smart Lists**: saved dynamic filters with counts, "work the list to zero" | FUB, Close, HubSpot | 6, 9 | Brief: *core pilot feature*; module `smart-lists` | Gap |
+| B-02 | **Daily email digest + due/overdue reminders** | FUB, Pipedrive, HubSpot | 6 | Module `reminders` (AD-042) | Gap |
 | B-03 | **Action Plans**: reusable task sequences applied to an opportunity | FUB, BoldTrail | 5, 8 | Brief: committed module (AD-039, "simple action-plan templates") | Gap |
 | B-04 | **Lead routing**: round-robin / first-to-claim pond / by source | FUB, Salesforce | 4 | Brief: committed module (AD-039) | Gap |
 | B-05 | **Speed-to-lead metric**: time from inquiry to first contact, per broker | FUB | 1→7, 9 | Brief success metric "uncontacted after 1 business day" | Verify |
@@ -37,7 +37,7 @@ Loop step = which step of the 9-step core loop the pattern strengthens.
 | B-08 | **Task queue / power hour**: step through due calls one by one, log outcome, next | HubSpot, Close | 6–8 | Broker adoption | Gap |
 | B-09 | **Quick outcome sheet (mobile)**: one tap for outcome + next action date presets | FUB mobile, Close | 7–8 | Brief: "record outcome … quickly from phone" | Verify |
 | B-10 | **Click-to-call / tel: links + call logging prompt** on return to the app | FUB, Close | 7 | Brief: manual call recording | Verify |
-| B-11 | **Buyer/tenant requirement** (budget, area, rooms, type) on an opportunity | onOffice, Reapit | 3 | Brief: *pilot included*; BRD deferred → Sprint 7 | Gap |
+| B-11 | **Buyer/tenant requirement** (budget, area, rooms, type) on an opportunity | onOffice, Reapit | 3 | Brief: *pilot included*; module `requirements` | Gap |
 | B-12 | **Requirement ↔ property matching** | onOffice, Reapit | 3, 8 | Brief: *pilot included* (AD-039; needs the light property record) | Gap |
 | B-13 | **Viewing records + feedback chasing** | Reapit, Alto | 8 | Brief: viewing as task in pilot; module is V1 | Partial via tasks |
 | B-14 | **Lost-reason capture + analysis** | Pipedrive, Salesforce | 8, 9 | Brief: "lost reasons should be preserved" | Verify |

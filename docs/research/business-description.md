@@ -5,7 +5,7 @@ we will sell it. Use it to decide **what to build next**. For what is built, see
 For how it works, see `domain-model.md` and `decisions-log.md`.
 
 Unless marked as validated, market claims, customer behaviour, pricing and targets here are
-hypotheses to test with Bulgarian agencies. Record evidence in `pilot-feedback.md`.
+hypotheses to test with Bulgarian agencies. Record evidence in `SPEC.md` *Pilot evidence*.
 
 ## Executive Summary
 
@@ -159,7 +159,7 @@ One complete operational loop, not a miniature of every future module.
 The paid pilot starts when these ship, together with fixes for the known core-loop defects
 (AD-039). A viewing can be a task plus a property link in the pilot. The other committed
 modules (mandates, viewings, offers, syndication, lead intake, routing and the rest) follow
-in roadmap order, during or after the pilot.
+in capability-map order (`SPEC.md` §3), during or after the pilot.
 
 Smart Lists should cover at least: new inquiries not contacted, unassigned opportunities,
 no next action, due today, overdue, hot with no recent activity, sellers needing an update,
@@ -366,7 +366,7 @@ continued payment do.
 | Risk | Description | Mitigation |
 |---|---|---|
 | Adoption | Brokers resist data entry or see surveillance | Make Today and next-action updates extremely fast; involve brokers in design; frame reporting as protecting opportunities |
-| Scope | The committed modules (AD-039) dilute the follow-up edge or delay the pilot; messaging, transactions, accounting or AI creep in | Build in roadmap order with pilot evidence setting the order; start the pilot once light properties and matching ship; anything outside the committed modules still needs pilot evidence and a new AD |
+| Scope | The committed modules (AD-039) dilute the follow-up edge or delay the pilot; messaging, transactions, accounting or AI creep in | Build in capability-map order (`SPEC.md` §3) with pilot evidence setting the order; start the pilot once light properties and matching ship; anything outside the committed modules still needs pilot evidence and a new AD |
 | Data quality | Imports with duplicates, inconsistent phones, missing sources, conflicting ownership | Mapping, validation, deduplication, merge history and onboarding as first-class features |
 | Trust and ownership | Owners want continuity; brokers want control of relationships | Explain the agency-wide visibility policy (AD-001) before onboarding |
 | Integration | Portals and messaging providers lack stable APIs or cost too much | Validate access separately; keep providers behind adapters |
@@ -380,9 +380,9 @@ and details of the modules inside them, not whether they are built. Phase 4 stil
 evidence and a new AD.
 
 0. **Discovery and prototype:** target customer, daily loop, willingness to pay and data relationships confirmed.
-1. **Paid pilot CRM:** core-loop defects fixed, reminders, light property records, requirements and matching. Brokers consistently manage ownership and next actions; managers see exceptions.
+1. **Paid pilot CRM:** the `SPEC.md` §2 pilot gate: core-loop defects fixed, reminders, light property records, requirements, matching and Smart Lists. Brokers consistently manage ownership and next actions; managers see exceptions.
 2. **Real estate workflow depth:** mandates, viewings, offers, portal syndication and portal/email lead intake improve conversion without slowing daily use.
-3. **Automation and reporting:** routing and lead pool, action plans, Smart Lists, reports, GDPR tools and the PWA reduce manual work.
+3. **Automation and reporting:** routing and lead pool, action plans, reports, GDPR tools and the PWA reduce manual work.
 4. **Brokerage operating platform (vision, not committed):** transactions, commissions, documents, compliance, client portals, selected AI, then other Eastern European markets.
 
 ## Open Decisions
@@ -391,16 +391,16 @@ evidence and a new AD.
 - Whether stages differ by opportunity type (buyer, seller, landlord, tenant)
 - Required portal import and publishing formats, and portal agreements (imot.bg first)
 - Whether a minimal viewing record is needed in the pilot
-- Reminder timing beyond the AD-025 defaults
+- Reminder timing beyond the defaults in `spec/reminders.md` (AD-042)
 - Offline draft and retry behaviour for mobile forms
 - Onboarding fee vs free migration
 - Hosting region, retention periods and subprocessors
-- The property ↔ requirement ↔ opportunity data model (design session before the sprint
-  that builds properties)
+- The property ↔ requirement ↔ opportunity data model (an AD at the start of the `properties`
+  module)
 
 Resolved: record visibility is agency-wide (AD-001); all four opportunity types from the
 start (AD-009); duplicate matching and archive-loser merge (AD-015, AD-017); notifications
-are email-only for the pilot (AD-025); full agency system with committed modules, segment of
+are email-only for the pilot (AD-025, AD-042); full agency system with committed modules, segment of
 2–30 brokers, Bulgaria first, and a pricing hypothesis of EUR 20 per broker (AD-039).
 
 ## Long-Term Vision

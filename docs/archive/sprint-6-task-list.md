@@ -49,7 +49,7 @@
 - [ ] Founder: fix the cloud environment setup script so `npm ci` runs inside the repo directory
 - [ ] `scripts/stack-up.sh` + `npm run stack:up` (dockerd if needed, `supabase start -x …`, `.env.local` from `supabase status -o env`)
 - [ ] `supabase/seed.sql`: tasks relative to `now()` (overdue, due today in Sofia, upcoming), new inquiries, BG and foreign phones
-- [ ] Vet and add `@playwright/test` matched to the pre-installed browser (`supermatt:dependency-vetting`)
+- [ ] Vet and add `@playwright/test` matched to the pre-installed browser
 - [ ] `e2e/core-loop.spec.ts` + `npm run test:e2e` (BG and EN; 1280 px and 390 px **(Should)**)
 - [ ] AGENTS.md Commands: `stack:up`, `test:e2e`; a short "QA in a cloud session" note
 

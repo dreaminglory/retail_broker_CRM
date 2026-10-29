@@ -1,8 +1,8 @@
 # Business Requirements Document — BrokerCRM
 
-> **Last updated:** 2026-10-27 (after Sprint 5)
+> **Last updated:** 2026-10-29 (Sprint 6 work recorded; planned rows come from `spec/`)
 > **Purpose:** what the product must do, with stable IDs that plans, code and migrations
-> reference. Product context is in `business-description.md`. Entities, states and rules
+> reference. Product context is in `research/business-description.md`. Entities, states and rules
 > are in `domain-model.md`. Reasons behind decisions are in `decisions-log.md`.
 
 ## 1. Summary and objectives
@@ -20,9 +20,10 @@ active opportunity has an owner, a next action and a complete history.
 - **IDs are permanent.** Never renumber or reuse one. New requirements continue the numbering
   in their area (FR-XXX-NN); new areas get a new three-letter code.
 - **Status:** every requirement below is done unless marked ⚠️ (partial) or ❌ (not done).
-  Planned requirements are added by the `sprint-planning` skill with a status column.
-- **User stories** (US-B/M/O/Tnnn) live in each sprint's plan. The Sprint 0–5 stories are
-  all delivered; their original text is in git history and `archive/`.
+  A planned requirement is added with ❌ and its module id when that module's spec
+  (`spec/<module-id>.md`) is approved, and becomes ✅ when the module is done.
+- **User stories** (US-B/M/O/Tnnn) live in the module spec. The Sprint 0–6 stories are in
+  git history and `archive/`.
 - **Retired IDs** (schema-only rows, now described in `domain-model.md`): FR-AUT-06, FR-AUT-08,
   FR-SRC-01, FR-CON-01, FR-CON-02, FR-CON-12 (constraint dropped, AD-018), FR-INQ-01,
   FR-OPP-01, FR-OPP-13 (same as FR-TSK-07), FR-SET-01, FR-SET-05 (same as FR-LOC-01),
@@ -46,7 +47,7 @@ active opportunity has an owner, a next action and a complete history.
 | ID | Requirement |
 |----|------------|
 | FR-SRC-02 | Default lead sources are seeded on agency creation, in the signup language |
-| FR-SRC-03 | Settings page to add, rename, deactivate and reorder lead sources |
+| FR-SRC-03 | ⚠️ Settings page to add, rename, deactivate and reorder lead sources. Reorder is not built |
 | FR-SRC-04 | Inquiry and opportunity forms offer only active sources |
 | FR-SRC-05 | Each source has a channel: portal, referral, website, phone, social, email, walk-in, other |
 
@@ -61,10 +62,11 @@ active opportunity has an owner, a next action and a complete history.
 | FR-CON-07 | Add and remove contact methods |
 | FR-CON-08 | Person and organization have type-specific fields |
 | FR-CON-09 | Display name is generated from first + last name, or company name |
-| FR-CON-10 | Contact list is paginated |
+| FR-CON-10 | ⚠️ Contact list is paginated. Server-side `?page=` only; no pager in the UI (module `trustworthy-loop`) |
 | FR-CON-11 | Contacts are archived (soft), not deleted |
 | FR-CON-13 | Warn about likely duplicates (phone, email, similar name) before creating a contact (Sprint 2) |
 | FR-CON-14 | Merge duplicates: the loser is archived and snapshotted in merge history (Sprint 2) |
+| FR-CON-15 | ❌ International and landline phone numbers are accepted and stored as E.164 (AD-041, module `trustworthy-loop`) |
 
 ### FR-INQ: Inquiries (Sprint 1)
 
@@ -73,14 +75,16 @@ active opportunity has an owner, a next action and a complete history.
 | FR-INQ-02 | Inquiry inbox with status filter |
 | FR-INQ-03 | Manual inquiry creation: caller info, source, subject, description |
 | FR-INQ-04 | Status lifecycle: new → contacted → converted, or dismissed |
-| FR-INQ-05 | Assign an inquiry to a broker |
+| FR-INQ-05 | ⚠️ Assign an inquiry to a broker. Only at creation or conversion until FR-INQ-13 |
 | FR-INQ-06 | Link an inquiry to an existing contact |
 | FR-INQ-07 | Create a contact from inquiry data (prefilled) |
 | FR-INQ-08 | Convert an inquiry into an opportunity linked to the inquiry and contact |
 | FR-INQ-09 | Dismiss an inquiry with an optional reason |
 | FR-INQ-10 | Original source data is preserved unchanged in `raw_payload` |
-| FR-INQ-11 | Inquiry rows show caller, source, status, assigned broker and age |
+| FR-INQ-11 | ⚠️ Inquiry rows show caller, source, status, assigned broker and age. Cards show "Assigned" without a name |
 | FR-INQ-12 | External reference for portal IDs and other tracking numbers |
+| FR-INQ-13 | ❌ Edit an inquiry and reassign it from the inbox and Exceptions; the card shows the assignee's name (module `trustworthy-loop`) |
+| FR-INQ-14 | ❌ Inquiry caller phone and email are normalised, and the conversion duplicate check uses them (module `trustworthy-loop`) |
 
 ### FR-OPP: Opportunities and pipeline (Sprint 1)
 
@@ -95,9 +99,10 @@ active opportunity has an owner, a next action and a complete history.
 | FR-OPP-08 | Add and remove participants with roles |
 | FR-OPP-09 | Status: active, won, lost, nurture, archived |
 | FR-OPP-10 | Temperature: hot, warm, cold |
-| FR-OPP-11 | Filter by status, stage, type, broker and temperature |
+| FR-OPP-11 | ⚠️ Filter by status, stage, type, broker and temperature. No broker or temperature filter in the UI (module `trustworthy-loop`) |
 | FR-OPP-12 | Close as won, lost (reason required) or nurture, and reactivate |
 | FR-OPP-14 | Keeps a reference to the inquiry it came from |
+| FR-OPP-16 | ❌ The opportunity list is paginated, and contact pickers search the whole agency (module `trustworthy-loop`) |
 | FR-OPP-15 | Optional expected value and currency |
 
 ### FR-STG: Pipeline stages (Sprints 1–2)
@@ -160,7 +165,7 @@ active opportunity has an owner, a next action and a complete history.
 |----|------------|
 | FR-PRF-01 | Every user automatically gets a profile |
 | FR-PRF-02 | Users edit their own display name and language |
-| FR-PRF-03 | Real names appear on timeline, notes, tasks and audit entries |
+| FR-PRF-03 | ⚠️ Real names appear on timeline, notes, tasks and audit entries. A new signup's name defaults to the email prefix (module `trustworthy-loop`) |
 | FR-PRF-04 | A profile is visible only to its user and their colleagues (AD-029) |
 
 ### FR-TEM: Team and invitations (Sprint 4)
@@ -173,7 +178,7 @@ active opportunity has an owner, a next action and a complete history.
 | FR-TEM-04 | Owner can't deactivate themselves; an agency always keeps an owner |
 | FR-TEM-05 | Invite members by email (magic link) |
 | FR-TEM-06 | Accepting an invitation activates the membership |
-| FR-TEM-07 | Pending invitations can be resent or cancelled |
+| FR-TEM-07 | ⚠️ Pending invitations can be resent or cancelled. Resend is not built (module `conversion-join`) |
 | FR-TEM-08 | No duplicate invitations or re-inviting existing members |
 
 ### FR-SRH: Global search (Sprint 4)
@@ -197,6 +202,7 @@ active opportunity has an owner, a next action and a complete history.
 | FR-SEC-04 | Only owners grant owner or manager roles; managers invite brokers |
 | FR-SEC-05 | Every database function has a fixed `search_path` and explicit grants |
 | FR-SEC-06 | Exploit regression tests block known attacks |
+| FR-SEC-07 | ✅ The prod schema equals the repo migrations, with history; prod changes go only through migrations (AD-040, Sprint 6) |
 
 ### FR-TST: Test harness (Sprint 5)
 
@@ -204,8 +210,10 @@ active opportunity has an owner, a next action and a complete history.
 |----|------------|
 | FR-TST-01 | `supabase db reset` builds the full schema and seed data from scratch |
 | FR-TST-02 | pgTAP tests prove tenant isolation on every table |
-| FR-TST-03 | ⚠️ Vitest tests for business logic. Phone parsing and timezone logic are covered; domain services are not |
+| FR-TST-03 | ⚠️ Vitest tests for business logic. Phone, timezone, validation and the task service are covered; the other domain services are not (module `trustworthy-loop`) |
 | FR-TST-04 | CI runs typecheck, lint, Vitest and pgTAP on every pull request and push to `main` |
+| FR-TST-05 | ✅ One command brings up the app with local Supabase and seeded logins on a local machine (AD-043, AD-048, Sprint 6) |
+| FR-TST-06 | ✅ An E2E smoke test covers the core loop in `bg` and `en` at 1280 and 390 px (AD-043, Sprint 6) |
 
 ### FR-IMP: CSV import (Sprint 5)
 
@@ -225,10 +233,19 @@ active opportunity has an owner, a next action and a complete history.
 | FR-SET-02 | Agency timezone (default Europe/Sofia) defines "today" |
 | FR-SET-03 | Agency default currency (EUR) |
 | FR-SET-04 | Each user chooses `bg` or `en`; the choice follows them across devices |
-| FR-LOC-01 | Bulgarian is the default language everywhere, including errors and empty states |
+| FR-SET-06 | ✅ Stages, lead sources and contact merge are restricted to owners and managers (AD-045, Sprint 6) |
+| FR-LOC-01 | ⚠️ Bulgarian is the default language everywhere, including errors and empty states. Some English strings and untranslated repository errors remain (module `trustworthy-loop`) |
 | FR-LOC-02 | Money is formatted with the agency currency and the user's locale |
 | FR-LOC-03 | Date boundaries ("today", "overdue") use the agency timezone |
-| FR-LOC-04 | Auth emails are sent in the user's language |
+| FR-LOC-04 | ⚠️ Auth emails are sent in the user's language. The templates are Bulgarian only |
+
+### FR-NTF: Notifications (module `reminders`)
+
+| ID | Requirement |
+|----|------------|
+| FR-NTF-01 | ❌ A daily digest email on working days at about 08:00 agency time (AD-042) |
+| FR-NTF-02 | ❌ An immediate email when an inquiry is assigned to you by someone else |
+| FR-NTF-03 | ❌ Each user can turn off the digest |
 
 ## 4. Non-functional requirements
 
@@ -244,16 +261,15 @@ on all input, Server Actions for mutations, `updated_at` triggers) are enforced 
 
 ## 5. Deferred items
 
+What gets built next, and in which order, is the capability map in `SPEC.md`. Items that are
+not modules there:
+
 | Item | Target | Notes |
 |------|--------|-------|
-| Notifications and reminders | Sprint 6 | Email via Resend + pg_cron (AD-025) |
-| Smart Lists | Sprint 6 | Saved filters for inquiries and opportunities; part of pilot scope |
-| Retention purge job | Sprint 6 | Purge reverted import rows and soft-deleted data |
-| Opportunity import | Sprint 6+ | CSV import of opportunities |
-| Light property record, requirements and matching | Sprint 7 (target; set in sprint planning) | Pilot gate: the paid pilot starts once these ship (AD-039) |
-| pg_trgm to `extensions` schema | Backlog | Supabase advisor finding |
+| Retention purge job | Module `gdpr` | Purge reverted import rows and soft-deleted data |
+| Opportunity import | Backlog | No evidence; property import matters more for onboarding |
+| `pg_trgm` to the `extensions` schema | Module `gdpr` (hardening) | Supabase advisor finding; touches the duplicate-detection functions |
+| Lead-source reorder (FR-SRC-03) | Backlog | Small; pick up with nearby work |
 | Offline draft and retry | Post-pilot | Mobile form resilience |
-| Committed modules: mandates, viewings, offers, portal syndication and lead intake, routing, action plans, reports, GDPR tools, PWA | Roadmap phases 2–3 | Committed by AD-039; pilot evidence sets the order. See the brief's *Committed Modules* |
 
-Known gaps in the built product are listed in `domain-model.md` §6 and are candidates for
-the next sprint.
+Known gaps in the built product are listed in `domain-model.md` §6.

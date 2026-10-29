@@ -240,7 +240,7 @@ export class TaskRepository {
       })
       .eq('id', id)
       .eq('agency_id', agencyId)
-      .eq('status', 'pending') // Guard: can only complete a pending task (L-004)
+      .eq('status', 'pending') // Guard: can only complete a pending task
       .select()
       .maybeSingle();
 
@@ -254,7 +254,7 @@ export class TaskRepository {
       .update({ status: 'cancelled', outcome: reason })
       .eq('id', id)
       .eq('agency_id', agencyId)
-      .eq('status', 'pending') // Guard: can only cancel a pending task (L-004)
+      .eq('status', 'pending') // Guard: can only cancel a pending task
       .select()
       .maybeSingle();
 

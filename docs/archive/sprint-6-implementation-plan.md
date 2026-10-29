@@ -128,7 +128,7 @@ Order: 6.0 → 6.1 → {6.2, 6.3} → {6.4, 6.5, 6.6, 6.7} → 6.8.
 - **Repo:** `scripts/stack-up.sh` and `npm run stack:up`. It starts `dockerd` if there's no socket, runs `supabase start -x` without the unused services, and writes `.env.local` from `supabase status -o env`. It's idempotent.
 - **Seed:** tasks relative to `now()` (overdue, due today in Sofia, upcoming), new inquiries, and BG and foreign phones. Logins: `owner|manager|broker@alpha.bg` and `@beta.bg`.
 - **E2E smoke:** the vetted `@playwright/test` (matched to the pre-installed browser). `e2e/core-loop.spec.ts`: inquiry → convert → task → complete with next on the opportunity page → Today. Runs in `bg` and `en` at 1280 px and 390 px. `npm run test:e2e`; the CI job comes in Sprint 8.
-- **Docs:** add `stack:up` and `test:e2e` to the AGENTS.md Commands, plus a "QA in a cloud session" note for `supermatt:qa`.
+- **Docs:** add `stack:up` and `test:e2e` to the AGENTS.md Commands, plus a "QA in a cloud session" note.
 - **Acceptance criteria:**
   - AC-6.1-1: in a fresh cloud session, `npm run stack:up && npm run dev` serves a logged-in Today page within 10 minutes.
   - AC-6.1-2: `npm run test:e2e` passes in both locales.

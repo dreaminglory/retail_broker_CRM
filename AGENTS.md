@@ -1,159 +1,94 @@
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
-
 # BrokerCRM
 
-Multi-tenant SaaS CRM for Bulgarian residential real estate brokerages. The product
-promise: every opportunity has an owner, a next action, and a complete history.
+Multi-tenant CRM for Bulgarian residential brokerages (2–30 brokers). Promise: every
+opportunity has an owner, a next action and a complete history. **What we're building and
+what's next: `SPEC.md`.**
 
-This file holds the project instructions; Claude Code loads it through `CLAUDE.md`.
-Coding conventions: `.claude/rules/coding-conventions.md`. Skills: `.claude/skills/`.
+## Where things are
+
+| File | What it is | Read it when |
+|---|---|---|
+| `SPEC.md` | Product spec: objective, non-goals, pilot gate, module map with status, ideas backlog, pilot evidence | Starting any work; picking what's next |
+| `spec/<module-id>.md` | One module's approved scope: rules, edge cases, acceptance criteria | Planning or building that module |
+| `tasks/plan.md`, `tasks/todo.md` | Plan and checklist of the **one** active module | Building; tick tasks only after the Definition of Done |
+| `docs/domain-model.md` | Entities, states and invariants as built | Touching a table, status or rule (with `crm-domain-model`) |
+| `docs/decisions-log.md` | Decisions in force (AD-NNN), cited from code | Before changing something an AD covers |
+| `docs/BRD.md` | Functional requirements (FR-xxx) with built status | Closing a module; checking a requirement |
+| `docs/research/` | Business brief, competitor gap analysis, pattern benchmark | Only for `/feature-ideas` and new specs |
+| `docs/archive/` | Finished plans and old sprint docs | Rarely; history only |
 
 ## Commands
 
 ```bash
-npm run dev                          # localhost:3000
-npm run typecheck                    # tsc --noEmit
-npm run lint                         # eslint; i18next/no-literal-string flags hardcoded JSX text
-npm run test                         # vitest (node env, globals on)
-npx vitest run path/to/file.test.ts  # one file
-npm run test:db                      # pgTAP, supabase/tests/database (local Supabase must be running)
-npm run stack:up                     # start dockerd if needed, local Supabase, write .env.local
-npm run test:e2e                     # Playwright core-loop smoke, bg + en, 1280 and 390 px (needs stack:up)
-npx supabase start                   # local stack via Docker, applies migrations
-npx supabase db reset                # clean DB + supabase/seed.sql (two agencies, sample data)
-npm run build
+npm run dev            # localhost:3000
+npm run typecheck      # tsc --noEmit
+npm run lint           # eslint (i18next/no-literal-string flags hardcoded JSX text)
+npm run test           # vitest; one file: npx vitest run <path>
+npm run stack:up       # local Supabase (Docker Desktop running) + .env.local
+npx supabase db reset  # clean DB + seed (two agencies)
+npm run test:db        # pgTAP (needs the local stack)
+npm run test:e2e       # Playwright core loop, bg + en, 1280 and 390 px (needs the local stack;
+                       # first time: npx playwright install chromium)
 ```
 
-Env vars: `.env.example`. `SUPABASE_SERVICE_ROLE_KEY` is server-only.
-
-### QA in a cloud session
-
-Cloud containers ship Docker but don't start it. `npm run stack:up && npm run dev` brings
-up the app against local Supabase (first run pulls images, a few minutes). Sign in with a
-seeded login, password `password123`: `owner|manager|broker@alpha.bg` or `@beta.bg`.
-Login sets the locale from the profile; set the `NEXT_LOCALE` cookie (`bg`/`en`) after
-signing in to switch. Drive the browser with the pre-installed Playwright (`e2e/fixtures.ts`
-has a sign-in helper). `npx supabase db reset` restores the seed; seeded task dates are
-relative to now.
-
-## Definition of done
-
-A change is not done until all of these pass, and you have seen them pass in this session:
-
-1. `npm run typecheck` and `npm run lint` (no new warnings in touched files).
-2. `npm run test`, plus new Vitest tests for any new or changed service/validation logic.
-3. If you touched `supabase/`: `npx supabase db reset` then `npm run test:db`.
-4. If you changed UI: check it in the browser in both `bg` and `en`.
-5. Docs updated in the same change: `docs/domain-model.md` for schema or rule changes,
-   `docs/decisions-log.md` for a design decision, `docs/BRD.md` for a new screen,
-   requirement or business rule.
-
-If a step can't run (e.g. Docker is down), say so explicitly. Never report it as passed.
-
-CI (`.github/workflows/ci.yml`) runs steps 1–3 on every pull request and push to `main`.
-Existing lint errors are baselined in `eslint-suppressions.json`: never add entries to it.
-After fixing suppressed errors, shrink it with `npx eslint . --prune-suppressions`.
-
-## Where things are
-
-| Need | Read |
-|---|---|
-| Entities, states, invariants, glossary | `docs/domain-model.md` (keep it current) |
-| Why something is the way it is | `docs/decisions-log.md` (AD-0xx) |
-| Patterns and past mistakes | `docs/learnings.md` (L-, P-, G-) |
-| Requirements and status per feature | `docs/BRD.md` |
-| Product brief, personas, pilot scope | `docs/business-description.md` |
-| Current state and carry-over | `docs/STATUS.md` (created by the `sprint-planning` skill) |
-| Sprint targets to the pilot gate | `docs/roadmap.md` |
-| Pilot evidence for prioritisation | `docs/pilot-feedback.md` |
-
-Finished sprint plans are in `docs/archive/`. Don't read them unless a question needs them.
+Seeded logins, password `password123`: `owner|manager|broker@alpha.bg` (or `@beta.bg`).
+Switch language with the `NEXT_LOCALE` cookie (`bg`/`en`). `SUPABASE_SERVICE_ROLE_KEY` is server-only.
 
 ## Architecture
 
-- **Per entity** (`src/domain/<entity>/`): `types.ts`, `validation.ts` (Zod),
-  `repository.ts` (Supabase queries), `service.ts` (business rules; takes a
-  `SupabaseClient` in the constructor). UI: `src/components/ui/` (shadcn primitives),
-  `src/components/domain/<entity>/`.
-- **Mutations**: component → Server Action in `src/app/(dashboard)/<feature>/actions.ts`
-  → `getAuthContext()` (`src/lib/actions.ts`: user, `agencyId`, `role`) → Zod → Service
-  → `revalidatePath()`. Actions return `ActionResult<T>` and never throw; wrap errors
-  with `toActionError()` (same file). Throw `DomainError` (`src/lib/errors.ts`) with an
-  i18n key for business-rule violations.
-- **Supabase clients** (`src/lib/supabase/`): `server.ts` for Server Components and
-  Actions, `client.ts` for client components, `admin.ts` (service role) only inside
-  Server Actions that need it (invitations).
-- **i18n** (next-intl, no locale routing): locale from the `NEXT_LOCALE` cookie, synced
-  from `profiles.locale`. Bulgarian is the default. Add every key to **both**
-  `messages/bg.json` and `messages/en.json`. Zod messages and `DomainError.code` are
-  translation keys, translated in `toActionError`. Default stage names are translated
-  via `useStageTranslation`; custom names pass through. Format dates and numbers with
-  `useFormatter`.
-- **Time**: "today" is agency-local (`src/lib/time/agency-day.ts`, default Europe/Sofia).
-- **Authorization** is enforced in Server Component layouts and by RLS.
+- Next.js 16 differs from older versions: check `node_modules/next/dist/docs/` before using an
+  API you are not sure of.
+- Per entity `src/domain/<entity>/`: `types.ts`, `validation.ts` (Zod), `repository.ts`
+  (queries), `service.ts` (rules; takes a `SupabaseClient`). UI in `src/components/domain/<entity>/`,
+  shadcn primitives in `src/components/ui/`.
+- Mutation: component → Server Action `src/app/(dashboard)/<feature>/actions.ts` →
+  `getAuthContext()` → Zod → service → `revalidatePath()`. Actions return `ActionResult<T>`,
+  never throw, and wrap errors with `toActionError()` (`src/lib/actions.ts`). Business-rule
+  violations throw `DomainError` with an i18n key.
+- Supabase clients `src/lib/supabase/`: `server.ts`, `client.ts`, `admin.ts` (service role,
+  only in Server Actions that need it and the reminders cron route, AD-042).
+- i18n: next-intl, no locale routing, Bulgarian default. Every key goes in **both**
+  `messages/bg.json` and `messages/en.json`. Dates and numbers via `useFormatter`.
+  "Today" is agency-local (`src/lib/time/agency-day.ts`).
+- Authorization lives in Server Component layouts and RLS; `src/proxy.ts` only refreshes the session.
+- Style: `type` over `interface`, named exports, kebab-case files, Server Components unless a
+  client one is needed, errors shown with a `sonner` toast.
 
-## Rules that are easy to get wrong
+## Rules that fail silently
 
-These fail silently or only in production. Each has a reference in `docs/learnings.md`
-or `docs/decisions-log.md`.
+- Migrations, policies, functions, RPCs: load the `supabase-patterns` skill first.
+  Tables, statuses, business rules: load `crm-domain-model` first.
+- Filter by `agencyId` in code too; RLS is the safety net.
+- Never write `audit_log` from app code (triggers do it) or set `opportunities.next_action_at`
+  (the `tasks` trigger does it).
+- Phones stored E.164 via `normalizePhone()`, emails lowercase. An inquiry's `raw_payload` is never modified.
+- RPCs don't see the request locale: return i18n keys. Server Action bodies max 1 MB: chunk large payloads.
+- No synchronous `setState` inside `useEffect`.
+- Stages, lead sources and merge are owner/manager only: `requireRole(ctx, CONFIG_ROLES)`.
+- Never add entries to `eslint-suppressions.json`.
 
-- Every tenant table: `agency_id NOT NULL`, RLS `ENABLE` **and** `FORCE`, policies via
-  `current_agency_id()` / `current_user_role()`. Add new tables to the `tables_are` list
-  in `supabase/tests/database/010-rls-catalog.sql`. Template: `supabase-patterns` skill.
-- A policy must never query `agency_memberships` or its own table: infinite recursion (G-001).
-- Still filter by `agencyId` in code. RLS is the safety net, not the only layer.
-- New `public` functions: revoke `EXECUTE` from `PUBLIC, anon`, grant explicitly (AD-028).
-- RPCs don't see the request locale. Pass it in, or return i18n keys (G-008).
-- Server Action bodies are limited to 1 MB. Chunk large payloads client-side (G-007, P-009).
-- `audit_log` is append-only and written by DB triggers. Never insert from app code (AD-020).
-- `opportunities.next_action_at` is maintained by the `sync_opportunity_next_action`
-  trigger on `tasks`. Never set it from app code.
-- Phones are stored E.164 via `normalizePhone()`; emails lowercase.
-- An inquiry's `raw_payload` (original source data) is never modified. Caller fields,
-  links, assignment and status are editable.
-- No synchronous `setState` inside `useEffect` (G-003).
-- `src/proxy.ts` refreshes the Supabase session on every request (AD-030). It does no
-  authorization: that stays in layouts and RLS.
-- Stages, lead sources and contact merge are owner/manager only (AD-045): gate new
-  actions on them with `requireRole(ctx, CONFIG_ROLES)` (`src/lib/actions.ts`).
+## Definition of done
 
-## Product scope
+Seen passing in this session, never assumed (if something can't run, say so):
 
-BrokerCRM is a full agency system for Bulgarian residential sales agencies (2–30 brokers),
-with follow-up discipline as its edge (AD-039).
-
-Core loop: inquiry arrives → contact matched or created → opportunity created → broker
-assigned → next action scheduled → broker sees it on Today → outcome recorded → new next
-action or stage change → manager sees exceptions. Details in `docs/domain-model.md`.
-
-Property side of the loop (committed, built sprint by sprint): property and mandate
-recorded → published to portals → buyer requirement recorded → matched to properties →
-viewing with feedback → offer → won or lost. These attach to the core loop's contacts and
-opportunities; they don't replace it.
-
-Committed modules (AD-039): properties and mandates, requirements and matching, viewings,
-offers, portal syndication, portal/email lead intake, routing and lead pool, reminders,
-action plans, Smart Lists, reports, GDPR tools, PWA. Pilot evidence sets their order.
-
-Non-goals (don't build unless asked): native mobile apps, WhatsApp/Viber inbox, commission
-accounting, AI lead scoring, complex marketing automation, document generation and
-e-signatures, transaction management, AML document handling, MLS-like marketplace,
-multi-country expansion.
+1. `npm run typecheck`, `npm run lint`, `npm run test`. New or changed service/validation
+   logic has Vitest tests; a bug fix starts with a failing test.
+2. Touched `supabase/`: `npx supabase db reset` then `npm run test:db`.
+3. Changed UI: checked in the browser in `bg` and `en`.
+4. Changed schema or a rule: `docs/domain-model.md` in the same commit. Made a design
+   decision: a new AD in `docs/decisions-log.md`.
 
 ## Workflow
 
-- Planning a sprint or feature slice: `sprint-planning` skill.
-- Schema, RLS, functions: `supabase-patterns` skill.
-- Domain questions or changes: `crm-domain-model` skill.
-- Conventional commits (`feat(sprint-N): ...`), one logical change each. Commit or push
-  only when asked.
-- After a feature: offer to update `docs/BRD.md`, and record design decisions in
-  `docs/decisions-log.md`.
+One module at a time, from the capability map in `SPEC.md`:
+
+1. **Ideas** — `/feature-ideas` finds gaps and scores them into the SPEC.md backlog.
+2. **Spec** — `/spec <module-id>` writes `spec/<module-id>.md`. The founder approves it.
+3. **Plan** — `/plan` writes `tasks/plan.md` and `tasks/todo.md`.
+4. **Build** — `/build auto` runs a whole phase after one approval (`/build` = one task).
+   It commits per task on a feature branch (`feat(<module-id>): ...`), never on `main`.
+5. **Review** — `/review` at each phase checkpoint; `/ship` before a prod `db push` or a pilot release.
+6. **Close** — mark the module Done in `SPEC.md`, set its `docs/BRD.md` rows, move `tasks/*`
+   to `docs/archive/<module-id>-*.md`.
+
+Never push, open a PR or merge without being asked. Start a fresh session per phase.
