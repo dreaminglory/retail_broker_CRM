@@ -48,10 +48,13 @@ DECLARE
   v_inq_2_1 UUID := '22222222-7777-7777-7777-777777777771';
 
   -- Today in agency time (Europe/Sofia, src/lib/time/agency-day.ts): 23:00 local, or a few
-  -- minutes from now when the seed runs later than that.
-  v_due_today TIMESTAMPTZ := greatest(
-    (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '23 hours') AT TIME ZONE 'Europe/Sofia',
-    now() + interval '5 minutes'
+  -- minutes from now when the seed runs later than that, but never past local midnight.
+  v_due_today TIMESTAMPTZ := least(
+    greatest(
+      (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '23 hours') AT TIME ZONE 'Europe/Sofia',
+      now() + interval '5 minutes'
+    ),
+    (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '1 day' - interval '1 second') AT TIME ZONE 'Europe/Sofia'
   );
 
 BEGIN
