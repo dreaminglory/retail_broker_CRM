@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseAgencyLocal } from '@/lib/time/agency-day';
+import { RESCHEDULE_PRESETS } from './reschedule';
 
 // ── Task type enum ─────────────────────────────────────────────────────────
 // AD-013: Task type categorization
@@ -73,7 +74,18 @@ export function taskSchemas(timezone: string) {
     new_stage_id: z.string().uuid().nullable().optional(),
   });
 
-  return { create, update, completeWithNext };
+  // Sprint 6.2: reschedule to a preset, or to an explicit due date (required here).
+  const reschedulePreset = z.object({ preset: z.enum(RESCHEDULE_PRESETS) }).strict();
+  const rescheduleDate = z
+    .object({
+      due_at: z
+        .string()
+        .refine((val) => parseAgencyLocal(val, timezone) !== null, { message: 'validation.invalid_date' })
+        .transform((val) => parseAgencyLocal(val, timezone)!.toISOString()),
+    })
+    .strict();
+
+  return { create, update, completeWithNext, reschedulePreset, rescheduleDate };
 }
 
 export type TaskSchemas = ReturnType<typeof taskSchemas>;

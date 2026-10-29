@@ -3,7 +3,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createFakeSupabase, type FakeSupabase } from '@/test/fake-supabase';
 import { DomainError } from '@/lib/errors';
 import { TaskService } from './service';
-import type { Task, TaskStatus } from './types';
+import type { RescheduleTaskInput, Task, TaskStatus } from './types';
+import { ZodError } from 'zod';
 
 const SOFIA = 'Europe/Sofia';
 const TASK_ID = '11111111-1111-4111-8111-111111111111';
@@ -106,9 +107,16 @@ describe('TaskService pending-only guards', () => {
 
   it('refuses a custom reschedule date that is not a date', async () => {
     const service = serviceWith('pending');
-    await expect(service.reschedule(TASK_ID, 'agency-1', { due_at: '' })).rejects.toEqual(
-      new DomainError('validation.invalid_date')
-    );
+    const error = await service.reschedule(TASK_ID, 'agency-1', { due_at: '' }).catch((e) => e);
+    expect(error).toBeInstanceOf(ZodError);
+    expect((error as ZodError).issues.map((i) => i.message)).toEqual(['validation.invalid_date']);
+    expect(taskUpdates()).toEqual([]);
+  });
+
+  it('refuses an unknown reschedule preset', async () => {
+    const service = serviceWith('pending');
+    const input = { preset: 'next_year' } as unknown as RescheduleTaskInput;
+    await expect(service.reschedule(TASK_ID, 'agency-1', input)).rejects.toBeInstanceOf(ZodError);
     expect(taskUpdates()).toEqual([]);
   });
 

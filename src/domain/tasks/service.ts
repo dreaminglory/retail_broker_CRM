@@ -117,9 +117,8 @@ export class TaskService {
   async reschedule(id: string, agencyId: string, input: RescheduleTaskInput): Promise<Task> {
     const due_at =
       'preset' in input
-        ? rescheduleDueAt(input.preset, this.timezone).toISOString()
-        : this.schemas.update.parse({ due_at: input.due_at }).due_at;
-    if (!due_at) throw new DomainError('validation.invalid_date');
+        ? rescheduleDueAt(this.schemas.reschedulePreset.parse(input).preset, this.timezone).toISOString()
+        : this.schemas.rescheduleDate.parse(input).due_at;
     await this.getPending(id, agencyId);
     return this.repo.update(id, agencyId, { due_at });
   }
