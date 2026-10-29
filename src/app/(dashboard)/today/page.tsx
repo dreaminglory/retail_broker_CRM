@@ -1,11 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { getAuthContext } from "@/lib/actions";
-import { hasRole } from "@/lib/roles";
+import { getAuthContext, type AuthContext } from "@/lib/actions";
 import { StageRepository } from "@/domain/stages/repository";
 import { MemberRepository } from "@/domain/members/repository";
 import { TodayPageClient } from "./today-page-client";
-import { getTodayScreenData } from "./actions";
+import { canSwitchTodayScope, loadTodayScreenData } from "./today-data";
 import { completeTaskAction } from "../opportunities/[id]/tasks/actions";
 
 export async function generateMetadata() {
@@ -19,19 +18,27 @@ export default async function TodayPage({
   searchParams: Promise<{ scope?: string }>;
 }) {
   const { scope } = await searchParams;
-  const result = await getTodayScreenData(scope);
-  if (!result.success) redirect("/login");
 
-  const { supabase, agencyId, role } = await getAuthContext();
-  const [stages, brokers] = await Promise.all([
+  // Only a missing session or membership means "sign in"; any other failure
+  // reaches the error boundary.
+  let ctx: AuthContext;
+  try {
+    ctx = await getAuthContext();
+  } catch {
+    redirect("/login");
+  }
+
+  const { supabase, agencyId, role } = ctx;
+  const [data, stages, brokers] = await Promise.all([
+    loadTodayScreenData(ctx, scope),
     new StageRepository(supabase).findAll(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
   return (
     <TodayPageClient
-      {...result.data}
-      canSwitchScope={hasRole(role, ["owner", "manager"])}
+      {...data}
+      canSwitchScope={canSwitchTodayScope(role)}
       stages={stages}
       brokers={brokers}
       completeAction={completeTaskAction}

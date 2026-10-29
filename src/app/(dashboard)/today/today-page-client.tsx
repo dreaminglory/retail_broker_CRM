@@ -29,7 +29,7 @@ import type { ActiveBroker } from "@/domain/members/types";
 import type { AtRiskOpportunity } from "@/domain/tasks/repository";
 import type { CompleteTaskWithNextInput } from "@/domain/tasks/types";
 import type { ActionResult } from "@/lib/actions";
-import type { TodayScope } from "./actions";
+import type { TodayScope } from "./today-data";
 
 interface TodayPageClientProps {
   scope: TodayScope;

@@ -28,6 +28,10 @@ export function createFakeSupabase(member: {
   role: string;
   /** What a query on a table returns, e.g. the row a `.single()` read gets. */
   tables?: Record<string, unknown>;
+  /** Tables whose queries fail with a database error. */
+  failingTables?: string[];
+  /** No session: auth.getUser returns no user. */
+  signedOut?: boolean;
 }): FakeSupabase {
   const touchedTables: string[] = [];
   const writes: FakeWrite[] = [];
@@ -35,7 +39,7 @@ export function createFakeSupabase(member: {
   const userId = member.userId ?? 'user-1';
   const agencyId = member.agencyId ?? 'agency-1';
 
-  const chain = (result: { data: unknown; error: null }, table?: string) => {
+  const chain = (result: { data: unknown; error: { message: string } | null }, table?: string) => {
     const builder: Record<string, unknown> = {};
     const proxy: unknown = new Proxy(builder, {
       get(_target, prop) {
@@ -43,7 +47,7 @@ export function createFakeSupabase(member: {
           return (resolve: (v: unknown) => unknown) => resolve(result);
         }
         if (prop === 'single' || prop === 'maybeSingle') {
-          return () => Promise.resolve({ data: result.data, error: null });
+          return () => Promise.resolve({ data: result.error ? null : result.data, error: result.error });
         }
         if (table && typeof prop === 'string' && WRITE_OPS.has(prop)) {
           return (values: unknown) => {
@@ -65,13 +69,16 @@ export function createFakeSupabase(member: {
 
   const client = {
     auth: {
-      getUser: async () => ({ data: { user: { id: userId } }, error: null }),
+      getUser: async () => ({ data: { user: member.signedOut ? null : { id: userId } }, error: null }),
     },
     from(table: string) {
       if (table === 'agency_memberships') {
         return chain({ data: { agency_id: agencyId, role: member.role }, error: null });
       }
       touchedTables.push(table);
+      if (member.failingTables?.includes(table)) {
+        return chain({ data: null, error: { message: 'connection reset' } }, table);
+      }
       return chain({ data: member.tables && table in member.tables ? member.tables[table] : [], error: null }, table);
     },
     rpc(fn: string) {
