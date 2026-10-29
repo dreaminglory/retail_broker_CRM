@@ -10,7 +10,7 @@
   property record + requirements + matching (AD-039). Target: end of Sprint 8 (`docs/roadmap.md`).
 - **Production:** Supabase project `emflwmivjachbnaqumnn` (eu-west-2). **Migrations in sync: NO.**
   Prod is on the Sprint 4 schema (14 tables, no migration-history table); Sprint 5 migrations
-  `20261005000001`…`20261007000004` were never applied. App hosting (Vercel) not confirmed in repo.
+  `20261005000001`…`20261007000004` were never applied. App hosting: none confirmed. Development runs locally; domain, Resend and hosting are go-live prerequisites (founder, 2026-10-29).
 - **Checks on 2026-10-28 (this session):** typecheck ✅ · lint ✅ (0 errors, 80 warnings) ·
   Vitest ✅ 19 passed / 2 todo (2 files) · pgTAP ✅ 93/93 locally (14 files).
 
@@ -41,6 +41,7 @@
 | BRD rows claim unbuilt features: FR-OPP-11, SRC-03, TEM-07, CON-10, INQ-05/11, TSK-04, LOC-01/04, PRF-03 | Inventory §4 | Docs |
 | Sprint 5 unticked: founder `bg.json` review, BG click-through at 390 px, onboarding dry run, `translateDefaultNamesAction` (Should) | `archive/sprint-5-task-list.md` | Low |
 | `pilot-feedback.md` empty: no E3 evidence yet | — | Process |
+| Go-live prerequisites: domain + Resend sending domain, hosting plan with daily crons, prod env vars | Sprint 6 plan §8 | Before the pilot |
 
 ## Open decisions
 AD-040 … AD-045 (Proposed in `docs/sprint-6-implementation-plan.md` §5).

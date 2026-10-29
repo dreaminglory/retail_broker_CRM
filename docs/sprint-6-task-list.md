@@ -19,7 +19,7 @@
 - [ ] `supabase migration repair --status applied` for every version ≤ `20261003000003`
 - [ ] `supabase db push --dry-run`, then `supabase db push`
 - [ ] Advisor re-run, leaked-password protection on, exploit replay with a throwaway account, signup/login smoke test
-- [ ] Deploy the matching app build. Confirm the hosting target (Vercel?) and record it in STATUS
+- [ ] If an app build is deployed anywhere, redeploy it to match; record the hosting state in STATUS
 #### Database
 - [ ] Migration `20261102000001_restrict_audit_inserts.sql` (drop `audit_log.tenant_insert`; triggers and RPCs still write)
 - [ ] Migration `20261102000002_config_role_policies.sql` (stages, lead_sources INSERT/UPDATE and merge_history INSERT need owner/manager)
@@ -183,22 +183,22 @@
 - [ ] Migration `20261123000001_notifications.sql` (`notification_deliveries` per P-001; `profiles.digest_enabled`)
 - [ ] Add `notification_deliveries` to `010-rls-catalog.sql`; pgTAP `070-notification-deliveries.sql`
 #### Domain (`src/domain/notifications/`)
-- [ ] Vet and add `resend`; `mailer.ts` (Resend + console adapters)
+- [ ] `mailer.ts`: interface + Mailpit SMTP adapter (dev/test) + Resend adapter (prod, vet and add `resend`)
 - [ ] `digest-builder.ts` (pure) + Vitest (empty means no send, cap 10 + "+N", owner extras, timezone edges)
 - [ ] Email templates via next-intl `createTranslator` (BG/EN)
 - [ ] `service.ts` with idempotent sends + Vitest using a fake mailer
 #### Route / actions
 - [ ] `src/app/api/cron/daily-digest/route.ts` (`CRON_SECRET`, service role, 08:xx agency time, weekdays)
-- [ ] `vercel.json` crons at 05:00 and 06:00 UTC (or the pg_cron + `pg_net` fallback, AD-042)
+- [ ] `npm run digest:run` (calls the route locally with `CRON_SECRET`; `?now=` override outside production)
+- [ ] `vercel.json` crons at 05:00 and 06:00 UTC written but not relied on until go-live (AD-042)
 - [ ] **(Should)** `inquiry_assigned` email via `after()` from inquiry create, update, reassign and convert
 #### UI / env
 - [ ] Digest toggle in Profile settings; `notifications.*` keys in both files
-- [ ] `.env.example`: `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`
-- [ ] Founder: verify the sending domain in Resend; confirm the Vercel plan
-- [ ] Mailpit check in BG and EN
+- [ ] `.env.example`: `MAIL_TRANSPORT`, `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`
+- [ ] Mailpit check in BG and EN (all acceptance runs locally; no domain needed)
 
 ### Acceptance criteria
-- [ ] **AC-6.7-1** Calling the cron route twice on one day sends one digest per eligible user (FR-NTF-01)
+- [ ] **AC-6.7-1** Calling the digest route twice on one day sends one digest per eligible user, seen in Mailpit (FR-NTF-01)
 - [ ] **AC-6.7-2** A broker with an overdue task gets a BG digest listing it; the link opens Today
 - [ ] **AC-6.7-3** Assigning an inquiry to a colleague emails them within a minute; self-assignment sends nothing (FR-NTF-02)
 - [ ] **AC-6.7-4** Turning the digest off stops it; inquiry-assigned emails still arrive (FR-NTF-03)
@@ -215,4 +215,5 @@
 - [ ] `docs/decisions-log.md`: AD-040…AD-045; `docs/learnings.md`: prod drift / migration repair, cloud dockerd, `after()` email
 - [ ] `crm-benchmark.md`: add N-01…N-12 from gap analysis §7 as B-23…
 - [ ] `docs/STATUS.md` and `docs/roadmap.md` refreshed
+- [ ] Go-live prerequisites (domain, Resend, hosting plan; plan §8) still listed in STATUS carry-over
 - [ ] Sprint 5 is already archived; the Sprint 6 plan and task list move to `docs/archive/` at the Sprint 7 close

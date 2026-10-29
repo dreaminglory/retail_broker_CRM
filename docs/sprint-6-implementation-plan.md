@@ -195,17 +195,17 @@ Order: 6.0 → 6.1 → {6.2, 6.3} → {6.4, 6.5, 6.6, 6.7} → 6.8.
 ### Slice 6.7 — Reminders & daily digest
 **Goal:** brokers learn about due work and new inquiries without opening the app. · AD-042 (supersedes the AD-025 mechanism)
 - **Migrations:** `20261123000001_notifications.sql`: tenant table `notification_deliveries` per P-001 (`user_id`, `kind` `daily_digest|inquiry_assigned`, `period_key`, `entity_id`, `status` `sent|failed|skipped`, `provider_id`, `error`; unique `(user_id, kind, period_key)`). Members read their own rows, owners and managers read the agency's, and there are no client writes. Add `profiles.digest_enabled boolean NOT NULL DEFAULT true`, and add the table to `010-rls-catalog.sql`.
-- **Domain** (`src/domain/notifications/`): `digest-builder.ts` (pure, built on the Today and Exceptions queries in agency time), templates rendered with next-intl `createTranslator` per recipient locale, `mailer.ts` (Resend adapter behind an interface, console adapter in dev), and `service.ts` (idempotent send).
-- **Route:** `src/app/api/cron/daily-digest/route.ts` (`CRON_SECRET`, service role per AD-042). It sends to agencies whose local time is 08:xx on a weekday. `vercel.json` crons at 05:00 and 06:00 UTC cover DST.
+- **Domain** (`src/domain/notifications/`): `digest-builder.ts` (pure, built on the Today and Exceptions queries in agency time), templates rendered with next-intl `createTranslator` per recipient locale, `mailer.ts` (an interface with an SMTP adapter pointed at local Mailpit for development and a Resend adapter for production, picked by env), and `service.ts` (idempotent send).
+- **Route:** `src/app/api/cron/daily-digest/route.ts` (`CRON_SECRET`, service role per AD-042). It sends to agencies whose local time is 08:xx on a weekday, with an optional `?now=` override (non-production only) for testing. Locally it is triggered by hand (`npm run digest:run`, a `curl` call). Production scheduling (`vercel.json` crons at 05:00 and 06:00 UTC, or the pg_cron + `pg_net` fallback) is written but only switched on at go-live.
 - **Immediate:** an `inquiry_assigned` email from the inquiry create, update, reassign and convert actions, sent with `after()`.
-- **UI and env:** a digest toggle in Profile, `notifications.*` keys in both locales, and `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL` in `.env.example`. The founder verifies the sending domain.
+- **UI and env:** a digest toggle in Profile, `notifications.*` keys in both locales, and `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`, `MAIL_TRANSPORT` (`mailpit` or `resend`) in `.env.example`. No domain or Resend account is needed to build and accept this slice (see §8, go-live prerequisites).
 - **Tests:** Vitest for the builder (empty means no send, cap 10 plus "+N", owner extras, timezone edges) and idempotency with a fake mailer. pgTAP `070-notification-deliveries.sql`. A Mailpit check in BG and EN.
 - **Acceptance criteria:**
   - AC-6.7-1: calling the cron route twice on one day sends one digest per eligible user.
   - AC-6.7-2: a broker with an overdue task gets a BG digest listing it, and the link opens Today.
   - AC-6.7-3: assigning an inquiry to a colleague emails them within a minute. Self-assignment sends nothing.
   - AC-6.7-4: turning the digest off stops it, and inquiry-assigned emails still arrive.
-- **Risks:** a once-a-day cron limit on the Vercel Hobby plan (needs Pro, or pg_cron + `pg_net` calling the route as a fallback). Resend domain verification lead time. A cross-agency read with the service role must filter by `agency_id` in every query (reviewed in code review).
+- **Risks:** a cross-agency read with the service role must filter by `agency_id` in every query (reviewed in code review).
 
 ### Slice 6.8 — Sprint close
 Tick the task list. In the BRD: mark the F-09 rows ⚠️ or fix them, add the §6 FRs, and update Deferred Items. In `domain-model.md`: add `notification_deliveries`, the digest rules, and the role-gated configuration invariant, and refresh §6 known gaps. Append AD-040…045 to `decisions-log.md` and the learnings (prod drift, `migration repair`, cloud dockerd) to `learnings.md`. Refresh `STATUS.md` and `roadmap.md`. Move `archive/`: Sprint 5 is already archived; move the Sprint 6 files at the Sprint 7 close. Add B-23… from gap analysis §7 to `crm-benchmark.md`.
@@ -263,10 +263,9 @@ User stories (US-B056–058, US-M058–059, US-O056, US-T051) are in the task li
 |---|---|---|---|
 | Prod push fails or reveals drift | Medium | High | Backup, parity diff, dry-run, and a founder present at push |
 | The prod exploit is used before 6.0 lands | Low | Critical | Run 6.0 first, on day 1 to 2 |
-| Vercel plan limits cron | Medium | Medium | pg_cron + `pg_net` fallback (AD-042 C) |
-| Resend domain not verified in time | Medium | Medium | Founder starts DNS in week 1; console mailer until then |
 | Docker unavailable in some cloud images | Low | Medium | Supabase branch fallback (AD-043 B) |
-| App hosting not confirmed (no `vercel.json` in the repo) | Medium | Medium | Founder confirms in week 1; cron is designed for Vercel |
+
+**Go-live prerequisites (not Sprint 6 work; founder, before the first real agency, at latest the pilot at the end of Sprint 8):** buy a domain and verify it as the Resend sending domain (DNS lead time of a few days); pick the hosting (Vercel assumed) and a plan that allows two daily crons, or use the pg_cron + `pg_net` fallback (AD-042 C); set the production env vars. Development and acceptance use local Mailpit and manual triggers only (founder, 2026-10-29).
 
 ## 9. Pilot Validation Hooks
 | Assumption | How we'll measure it in the pilot | Feeds sprint |

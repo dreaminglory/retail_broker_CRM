@@ -35,8 +35,8 @@ Pilot recruiting can start during Sprint 7 (AD-039 §6).
 
 ### Sprint 6 — "Make the loop trustworthy" (planned)
 Bring prod to the Sprint 5 security baseline with real migration history. Fix the nine §5.0 defects. Set up
-the cloud QA stack and the first service tests. Ship the daily digest and inquiry-assigned email (Vercel
-Cron + Resend). Details: `docs/sprint-6-implementation-plan.md`.
+the cloud QA stack and the first service tests. Build the daily digest and inquiry-assigned email, tested locally through Mailpit (Resend and a scheduled cron
+are switched on at go-live). Details: `docs/sprint-6-implementation-plan.md`.
 
 ### Sprint 7 — "Properties and the phone loop" (target)
 - **Kickoff:** the property ↔ requirement ↔ opportunity design session (AD-039 consequence), following the brief's
@@ -63,6 +63,7 @@ Cron + Resend). Details: `docs/sprint-6-implementation-plan.md`.
   or other tools. About 3 d.
 - QA thread: **E2E in CI**, plus coverage thresholds on `src/domain/**`. Once both hold for two sprints,
   revisit whether `ship-pr` can replace `babysit-pr` (CLAUDE.md).
+- Go-live: domain, Resend sending domain, hosting plan and cron switched on (Sprint 6 plan §8).
 - Onboarding dry run, then a pilot-gate review with the founder, then the paid pilot starts.
 
 ### Sprint 9 — "Leads in automatically" (target; pilot evidence may reorder it)
