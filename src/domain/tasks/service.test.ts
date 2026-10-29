@@ -137,6 +137,16 @@ describe('TaskService pending-only guards', () => {
     expect(taskUpdates()[0].values).toEqual({ title: 'Viewing', due_at: '2026-01-15T12:00:00.000Z' });
   });
 
+  it.each([
+    ['completes', (s: TaskService) => s.completeWithNext(TASK_ID, 'agency-1', 'user-1', { outcome: 'Done' })],
+    ['cancels', (s: TaskService) => s.cancel(TASK_ID, 'agency-1', {})],
+    ['reschedules', (s: TaskService) => s.reschedule(TASK_ID, 'agency-1', { preset: 'plus_1h' })],
+  ] as const)('reports a task someone else %s first as no longer pending', async (_verb, act) => {
+    fake = createFakeSupabase({ role: 'broker', tables: { tasks: task('pending') }, writesMatchNothing: ['tasks'] });
+    const service = new TaskService(fake.client as SupabaseClient, { timezone: SOFIA });
+    await expect(act(service)).rejects.toEqual(new DomainError('errors.task_not_pending'));
+  });
+
   it('refuses a task that does not exist in the agency', async () => {
     fake = createFakeSupabase({ role: 'broker', tables: { tasks: null } });
     const service = new TaskService(fake.client as SupabaseClient, { timezone: SOFIA });

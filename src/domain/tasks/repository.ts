@@ -7,6 +7,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DomainError } from '@/lib/errors';
 import type { Task, CreateTaskInput, CompleteTaskInput } from './types';
 
 export interface TaskListOptions {
@@ -205,9 +206,11 @@ export class TaskRepository {
       .eq('agency_id', agencyId)
       .eq('status', 'pending') // Guard: only a pending task can be edited (Sprint 6.2)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(`Failed to update task: ${error.message}`);
+    // No row: someone completed or cancelled it after the service checked.
+    if (!data) throw new DomainError('errors.task_not_pending');
     return data as Task;
   }
 
@@ -232,9 +235,11 @@ export class TaskRepository {
       .eq('agency_id', agencyId)
       .eq('status', 'pending') // Guard: can only complete a pending task (L-004)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(`Failed to complete task: ${error.message}`);
+    // No row: someone completed or cancelled it after the service checked.
+    if (!data) throw new DomainError('errors.task_not_pending');
     return data as Task;
   }
 
@@ -247,9 +252,11 @@ export class TaskRepository {
       .eq('agency_id', agencyId)
       .eq('status', 'pending') // Guard: can only cancel a pending task (L-004)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(`Failed to cancel task: ${error.message}`);
+    // No row: someone completed or cancelled it after the service checked.
+    if (!data) throw new DomainError('errors.task_not_pending');
     return data as Task;
   }
 }

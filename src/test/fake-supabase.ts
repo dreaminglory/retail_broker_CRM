@@ -32,6 +32,8 @@ export function createFakeSupabase(member: {
   failingTables?: string[];
   /** No session: auth.getUser returns no user. */
   signedOut?: boolean;
+  /** Tables whose guarded writes match no row (another user changed it first). */
+  writesMatchNothing?: string[];
 }): FakeSupabase {
   const touchedTables: string[] = [];
   const writes: FakeWrite[] = [];
@@ -39,19 +41,29 @@ export function createFakeSupabase(member: {
   const userId = member.userId ?? 'user-1';
   const agencyId = member.agencyId ?? 'agency-1';
 
-  const chain = (result: { data: unknown; error: { message: string } | null }, table?: string) => {
+  const chain = (result: { data: unknown; error: { code?: string; message: string } | null }, table?: string) => {
     const builder: Record<string, unknown> = {};
+    let wrote = false;
     const proxy: unknown = new Proxy(builder, {
       get(_target, prop) {
         if (prop === 'then') {
           return (resolve: (v: unknown) => unknown) => resolve(result);
         }
         if (prop === 'single' || prop === 'maybeSingle') {
+          if (wrote && table && member.writesMatchNothing?.includes(table)) {
+            return () =>
+              Promise.resolve(
+                prop === 'single'
+                  ? { data: null, error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' } }
+                  : { data: null, error: null }
+              );
+          }
           return () => Promise.resolve({ data: result.error ? null : result.data, error: result.error });
         }
         if (table && typeof prop === 'string' && WRITE_OPS.has(prop)) {
           return (values: unknown) => {
             writes.push({ table, op: prop as FakeWrite['op'], values });
+            wrote = true;
             return proxy;
           };
         }
