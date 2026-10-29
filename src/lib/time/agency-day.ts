@@ -71,3 +71,12 @@ export function todayBucket(dueAt: string, timezone: string, now: Date = new Dat
 export function toAgencyLocalInput(iso: string, timezone: string): string {
   return format(new TZDate(new Date(iso), timezone), "yyyy-MM-dd'T'HH:mm");
 }
+
+/**
+ * The `now` to measure a past event's relative time from. Data refreshed after
+ * the clock last ticked can be newer than `now`; it then reads as "now", never
+ * as "in 1 second".
+ */
+export function relativeTimeBase(date: Date, now: Date): Date {
+  return date > now ? date : now;
+}

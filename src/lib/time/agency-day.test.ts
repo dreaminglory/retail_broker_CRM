@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getStaleThreshold, getTodayWindows, parseAgencyLocal, toAgencyLocalInput, todayBucket } from './agency-day';
+import { getStaleThreshold, getTodayWindows, parseAgencyLocal, toAgencyLocalInput, todayBucket, relativeTimeBase } from './agency-day';
 
 const SOFIA = 'Europe/Sofia';
 const utc = (iso: string) => new Date(iso).toISOString();
@@ -78,5 +78,18 @@ describe('toAgencyLocalInput', () => {
   it('shows a stored instant as the agency wall clock for a datetime-local input', () => {
     expect(toAgencyLocalInput('2026-01-15T12:00:00.000Z', SOFIA)).toBe('2026-01-15T14:00');
     expect(toAgencyLocalInput('2026-07-15T21:30:00.000Z', SOFIA)).toBe('2026-07-16T00:30');
+  });
+});
+
+describe('relativeTimeBase', () => {
+  const now = new Date('2026-01-15T12:00:00Z');
+
+  it('measures a past event from now', () => {
+    expect(relativeTimeBase(new Date('2026-01-15T11:00:00Z'), now)).toEqual(now);
+  });
+
+  it('never makes a past event read as in the future when the data is newer than now', () => {
+    const justNow = new Date('2026-01-15T12:00:01Z');
+    expect(relativeTimeBase(justNow, now)).toEqual(justNow);
   });
 });

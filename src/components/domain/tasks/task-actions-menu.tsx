@@ -46,6 +46,7 @@ import type { CancelTaskInput, RescheduleTaskInput, Task, TaskType, UpdateTaskIn
 import type { ActiveBroker } from "@/domain/members/types";
 import type { ActionResult } from "@/lib/actions";
 import { toAgencyLocalInput } from "@/lib/time/agency-day";
+import { actionErrorMessage } from "@/lib/action-errors";
 import {
   cancelTaskAction,
   rescheduleTaskAction,
@@ -71,8 +72,7 @@ export function TaskActionsMenu({ task, timeZone, brokers }: TaskActionsMenuProp
       const result = await action();
       if (!result.success) {
         // The dialogs don't mark fields, so show the first field's own message.
-        const fieldError = Object.values(result.fieldErrors ?? {}).flat()[0];
-        toast.error(fieldError ?? result.error);
+        toast.error(actionErrorMessage(result));
         // The task may have been completed or cancelled elsewhere: show its current state.
         router.refresh();
         return false;

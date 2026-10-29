@@ -1,3 +1,4 @@
+import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getAuthContext, type AuthContext } from "@/lib/actions";
@@ -35,13 +36,17 @@ export default async function TodayPage({
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
+  // A fresh `now` per render: the root layout's survives soft navigations, and
+  // relative times ("overdue · 2 hours ago") start from it.
   return (
-    <TodayPageClient
-      {...data}
-      canSwitchScope={canSwitchTodayScope(role)}
-      stages={stages}
-      brokers={brokers}
-      completeAction={completeTaskAction}
-    />
+    <NextIntlClientProvider now={new Date()}>
+      <TodayPageClient
+        {...data}
+        canSwitchScope={canSwitchTodayScope(role)}
+        stages={stages}
+        brokers={brokers}
+        completeAction={completeTaskAction}
+      />
+    </NextIntlClientProvider>
   );
 }

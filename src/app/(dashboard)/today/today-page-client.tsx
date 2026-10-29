@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
+import { relativeTimeBase } from "@/lib/time/agency-day";
 import type { Task } from "@/domain/tasks/types";
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { Stage } from "@/domain/stages/types";
@@ -66,10 +67,9 @@ export function TodayPageClient({
   const t = useTranslations('Today');
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
-  // Past events only: after a refresh the data can be newer than `now`.
   const since = (iso: string) => {
     const date = new Date(iso);
-    return format.relativeTime(date, date > now ? date : now);
+    return format.relativeTime(date, relativeTimeBase(date, now));
   };
   const enums = useTranslations("Enums");
   const getStageName = useStageTranslation();
