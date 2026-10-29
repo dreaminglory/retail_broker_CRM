@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseAgencyLocal } from '@/lib/time/agency-day';
+import { nullableUuid } from '@/lib/validation';
 import { RESCHEDULE_PRESETS } from './reschedule';
 
 // ── Task type enum ─────────────────────────────────────────────────────────
@@ -63,7 +64,7 @@ export function taskSchemas(timezone: string) {
     description: z.string().max(5000).nullable().optional(),
     task_type: taskTypeSchema,
     due_at: dueAtSchema(timezone),
-    assigned_to: z.string().uuid().nullable().optional(),
+    assigned_to: nullableUuid(),
   });
 
   const update = z.object({
@@ -71,7 +72,7 @@ export function taskSchemas(timezone: string) {
     description: z.string().max(5000).nullable().optional(),
     task_type: taskTypeSchema,
     due_at: dueAtSchema(timezone),
-    assigned_to: z.string().uuid().nullable().optional(),
+    assigned_to: nullableUuid(),
   });
 
   const completeWithNext = z.object({

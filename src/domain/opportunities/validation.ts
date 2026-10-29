@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { nullableUuid } from '@/lib/validation';
 
 // ── Sub-schemas ────────────────────────────────────────────────────────────
 
@@ -39,10 +40,10 @@ export const createOpportunitySchema = z.object({
     .max(300, 'validation.title_too_long'),
   type: opportunityTypeSchema,
   stage_id: z.string().uuid('validation.stage_required'),
-  source_id: z.string().uuid().nullable().optional(),
-  inquiry_id: z.string().uuid().nullable().optional(),
-  primary_contact_id: z.string().uuid().nullable().optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
+  source_id: nullableUuid(),
+  inquiry_id: nullableUuid(),
+  primary_contact_id: nullableUuid(),
+  assigned_to: nullableUuid(),
   temperature: temperatureSchema.optional().default('warm'),
   expected_value: z.number().positive().nullable().optional(),
   currency: z.string().length(3, 'validation.invalid_currency').optional().default('EUR'),
@@ -57,9 +58,9 @@ export const updateOpportunitySchema = z.object({
     .optional(),
   type: opportunityTypeSchema.optional(),
   stage_id: z.string().uuid().optional(),
-  source_id: z.string().uuid().nullable().optional(),
-  primary_contact_id: z.string().uuid().nullable().optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
+  source_id: nullableUuid(),
+  primary_contact_id: nullableUuid(),
+  assigned_to: nullableUuid(),
   temperature: temperatureSchema.nullable().optional(),
   expected_value: z.number().positive().nullable().optional(),
   currency: z.string().length(3, 'validation.invalid_currency').optional(),

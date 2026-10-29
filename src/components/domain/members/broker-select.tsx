@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ActiveBroker } from "@/domain/members/types";
+import { NONE_SELECT_VALUE } from "@/lib/validation";
 import { useTranslations } from "next-intl";
 
 export interface BrokerSelectProps {
@@ -34,8 +35,9 @@ export function BrokerSelect({
   allowUnassigned = true,
 }: BrokerSelectProps) {
   const enums = useTranslations("Enums");
-  // Translate null/undefined defaultValue to "none" if we allow unassigned
-  const mappedDefault = defaultValue === null ? "none" : defaultValue;
+  // null means unassigned. The sentinel is submitted as-is and mapped back to
+  // null by nullableUuid() in the domain schemas.
+  const mappedDefault = defaultValue === null ? NONE_SELECT_VALUE : defaultValue;
 
   return (
     <Select
@@ -49,7 +51,7 @@ export function BrokerSelect({
       <SelectTrigger>
         <SelectValue placeholder={placeholder}>
           {(val: string | null) => {
-            if (val === "none") return enums("unassigned");
+            if (val === NONE_SELECT_VALUE) return enums("unassigned");
             if (!val) return placeholder;
             return brokers.find((b) => b.id === val)?.display_name ?? placeholder;
           }}
@@ -57,7 +59,7 @@ export function BrokerSelect({
       </SelectTrigger>
       <SelectContent>
         {allowUnassigned && (
-          <SelectItem value="none" className="italic text-muted-foreground">
+          <SelectItem value={NONE_SELECT_VALUE} className="italic text-muted-foreground">
             {enums("unassigned")}
           </SelectItem>
         )}
