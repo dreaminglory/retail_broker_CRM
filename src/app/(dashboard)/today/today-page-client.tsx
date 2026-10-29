@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
-import { relativeTimeBase } from "@/lib/time/agency-day";
+import { relativeTimeBase } from "@/lib/time/relative-time";
 import type { Task } from "@/domain/tasks/types";
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { Stage } from "@/domain/stages/types";
