@@ -81,13 +81,13 @@
 - [x] Task menu: edit, reschedule presets (+1 h, tomorrow 09:00, +2 days, next Monday 09:00), cancel with an optional reason
 - [x] Mine/Agency toggle on Today (owner/manager)
 - [x] i18n keys in `messages/bg.json` + `messages/en.json`
-- [ ] Browser check: desktop + 390 px, BG and EN
+- [x] Browser check: desktop + 390 px, BG and EN
 
 ### Acceptance criteria
-- [ ] **AC-6.2-1** A task due 14:00 Sofia shows "Today 14:00" in BG, in exactly one section, and is stored as 12:00Z in winter
-- [ ] **AC-6.2-2** Completing on the opportunity page with a next task and stage creates the task and moves the stage (FR-TSK-04 ✅)
-- [ ] **AC-6.2-3** Reschedule and cancel update `next_action_at` through the trigger; with no pending task, the opportunity is at-risk (FR-TSK-08)
-- [ ] **AC-6.2-4** A manager's Today defaults to Mine; `?scope=agency` shows everyone's (FR-TOD-04)
+- [x] **AC-6.2-1** A task due 14:00 Sofia shows "Today 14:00" in BG, in exactly one section, and is stored as 12:00Z in winter
+- [x] **AC-6.2-2** Completing on the opportunity page with a next task and stage creates the task and moves the stage (FR-TSK-04 ✅)
+- [x] **AC-6.2-3** Reschedule and cancel update `next_action_at` through the trigger; with no pending task, the opportunity is at-risk (FR-TSK-08)
+- [x] **AC-6.2-4** A manager's Today defaults to Mine; `?scope=agency` shows everyone's (FR-TOD-04)
 
 ---
 

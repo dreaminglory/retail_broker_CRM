@@ -334,7 +334,8 @@ enforcement); the UI prompts for them. Every insert, delete, or change to `statu
 
 Only a `pending` task can be edited, rescheduled, cancelled or completed; `completed` and
 `cancelled` are final (`TaskService`, `DomainError('errors.task_not_pending')`, plus a
-`status = 'pending'` filter on the write; AD-046). Cancelling keeps the optional reason in
+`status = 'pending'` filter on the write, which raises the same error when someone else
+changed the task first; AD-046). Cancelling keeps the optional reason in
 `outcome`. Reschedule presets (+1 h, tomorrow 09:00, +2 days, next Monday 09:00) and every
 `datetime-local` due date are read in the agency's timezone (`parseAgencyLocal`,
 `src/domain/tasks/reschedule.ts`).
