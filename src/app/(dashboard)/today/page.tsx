@@ -1,9 +1,9 @@
-import { NextIntlClientProvider } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getAuthContext, type AuthContext } from "@/lib/actions";
 import { StageRepository } from "@/domain/stages/repository";
 import { MemberRepository } from "@/domain/members/repository";
+import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 import { TodayPageClient } from "./today-page-client";
 import { canSwitchTodayScope, loadTodayScreenData } from "./today-data";
 import { completeTaskAction } from "../opportunities/[id]/tasks/actions";
@@ -36,10 +36,10 @@ export default async function TodayPage({
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
-  // A fresh `now` per render: the root layout's survives soft navigations, and
-  // relative times ("overdue · 2 hours ago") start from it.
+  // A fresh `now` per render, so relative times ("overdue · 2 hours ago")
+  // don't start from the first page load after a soft navigation.
   return (
-    <NextIntlClientProvider now={new Date()}>
+    <FreshNowProvider now={new Date().toISOString()}>
       <TodayPageClient
         {...data}
         canSwitchScope={canSwitchTodayScope(role)}
@@ -47,6 +47,6 @@ export default async function TodayPage({
         brokers={brokers}
         completeAction={completeTaskAction}
       />
-    </NextIntlClientProvider>
+    </FreshNowProvider>
   );
 }
