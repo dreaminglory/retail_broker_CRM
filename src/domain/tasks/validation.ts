@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { nullableUuid } from '@/lib/validation';
 
 // ── Task type enum ─────────────────────────────────────────────────────────
 // AD-013: Task type categorization
@@ -23,7 +24,7 @@ export const createTaskSchema = z.object({
     .transform((val) => (val === '' ? null : new Date(val).toISOString()))
     .nullable()
     .optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
+  assigned_to: nullableUuid(),
 });
 
 // ── Complete task (AD-014: outcome required in Sprint 2) ───────────────────
@@ -64,7 +65,7 @@ export const updateTaskSchema = z.object({
     .transform((val) => (val === '' ? null : new Date(val).toISOString()))
     .nullable()
     .optional(),
-  assigned_to: z.string().uuid().nullable().optional(),
+  assigned_to: nullableUuid(),
 });
 
 export type CreateTaskSchema = z.infer<typeof createTaskSchema>;
