@@ -66,6 +66,11 @@ export function TodayPageClient({
   const t = useTranslations('Today');
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
+  // Past events only: after a refresh the data can be newer than `now`.
+  const since = (iso: string) => {
+    const date = new Date(iso);
+    return format.relativeTime(date, date > now ? date : now);
+  };
   const enums = useTranslations("Enums");
   const getStageName = useStageTranslation();
   const [completingTask, setCompletingTask] = useState<Task | null>(null);
@@ -189,7 +194,7 @@ export function TodayPageClient({
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {format.relativeTime(new Date(inq.received_at), now)}
+                      {since(inq.received_at)}
                     </span>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Link>
@@ -252,7 +257,7 @@ export function TodayPageClient({
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-muted-foreground">
-                        {t('updated')} {format.relativeTime(new Date(opp.updated_at), now)}
+                        {t('updated')} {since(opp.updated_at)}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />

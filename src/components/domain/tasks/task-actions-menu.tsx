@@ -70,7 +70,9 @@ export function TaskActionsMenu({ task, timeZone, brokers }: TaskActionsMenuProp
     try {
       const result = await action();
       if (!result.success) {
-        toast.error(result.error);
+        // The dialogs don't mark fields, so show the first field's own message.
+        const fieldError = Object.values(result.fieldErrors ?? {}).flat()[0];
+        toast.error(fieldError ?? result.error);
         // The task may have been completed or cancelled elsewhere: show its current state.
         router.refresh();
         return false;

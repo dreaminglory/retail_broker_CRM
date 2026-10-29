@@ -114,6 +114,8 @@ export function TaskCompleteDialog({
       router.refresh();
     } else {
       setError(result.error);
+      // The task may have been completed or cancelled elsewhere: show its current state.
+      router.refresh();
     }
 
     setLoading(false);

@@ -12,6 +12,9 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: (await import(`../../messages/${locale}.json`)).default
+    messages: (await import(`../../messages/${locale}.json`)).default,
+    // One request time for the server render and hydration, so relative
+    // times ("5 minutes ago") match on both sides.
+    now: new Date()
   };
 });
