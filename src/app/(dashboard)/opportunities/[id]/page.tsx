@@ -7,6 +7,7 @@ import { ContactService } from "@/domain/contacts/service";
 import { TaskService } from "@/domain/tasks/service";
 import { TimelineService } from "@/domain/timeline/service";
 import { MemberRepository } from "@/domain/members/repository";
+import { getAgencySettings } from "@/domain/agencies/settings";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
 
 export default async function OpportunityDetailPage({
@@ -35,13 +36,14 @@ export default async function OpportunityDetailPage({
   if (!opportunity) notFound();
 
   // Fetch parallel dependencies
-  const [stages, leadSources, contacts, tasks, timeline, brokers] = await Promise.all([
+  const [stages, leadSources, contacts, tasks, timeline, brokers, settings] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new ContactService(supabase).list(agencyId, { status: "active", limit: 500 }),
     new TaskService(supabase).list(agencyId, { opportunityId: id }),
     new TimelineService(supabase).getOpportunityTimeline(id, agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
+    getAgencySettings(agencyId),
   ]);
 
   return (
@@ -55,6 +57,7 @@ export default async function OpportunityDetailPage({
         tasks={tasks}
         timeline={timeline}
         currentUserId={user?.id}
+        timeZone={settings.timezone}
       />
     </div>
   );

@@ -238,6 +238,8 @@ Stages, lead sources and contact merge are role-gated in the action and RLS. Vis
 | FR-TST-06 | An E2E smoke test covers the core loop in `bg` and `en` | 6.1 |
 | FR-TSK-08 | Edit, reschedule (presets) and cancel a pending task | 6.2 |
 | FR-TOD-04 | Owners and managers switch Today between Mine and Agency | 6.2 |
+| FR-TSK-09 | Due dates entered in the app are read in agency time | 6.2 |
+| FR-TOD-05 | Each task appears in exactly one Today section | 6.2 |
 | FR-INQ-13 | Edit an inquiry and reassign it from the inbox and Exceptions | 6.3 |
 | FR-INQ-14 | Inquiry caller phone and email are normalised; conversion duplicate check uses them | 6.3 |
 | FR-CON-15 | International and landline phone numbers are accepted (E.164) | 6.3 |

@@ -2,7 +2,22 @@
   "errors": {
     "unauthorized": "Your session has expired. Please sign in again.",
     "forbidden": "Only owners and managers can do this.",
-    "unexpected": "Something went wrong. Please try again."
+    "unexpected": "Something went wrong. Please try again.",
+    "task_not_found": "This task no longer exists.",
+    "task_not_pending": "This task is already completed or cancelled."
+  },
+  "validation": {
+    "failed": "Please check the highlighted fields.",
+    "invalid_date": "Enter a valid date and time.",
+    "title_required": "Enter a title.",
+    "title_too_long": "The title is too long (300 characters at most).",
+    "outcome_required": "Describe what happened.",
+    "outcome_too_long": "This text is too long (5,000 characters at most)."
+  },
+  "ErrorPage": {
+    "title": "This page couldn't load",
+    "description": "Something went wrong on our side. Your data is safe; try again in a moment.",
+    "retry": "Try again"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -401,7 +416,7 @@
   "Today": {
     "title": "Today",
     "hasWorkSubtitle": "You have {count} item(s) that need attention",
-    "allCaughtUpSubtitle": "All caught up � no pending work right now!",
+    "allCaughtUpSubtitle": "All caught up — no pending work right now!",
     "overdueCount": "{count} overdue",
     "newInquiriesCount": "{count} new inquiry",
     "dueTodayCount": "{count} due today",
@@ -411,10 +426,15 @@
       "newInquiries": "New Inquiries",
       "dueToday": "Due Today",
       "comingUp": "Coming Up",
-      "atRisk": "At Risk � No Next Action"
+      "atRisk": "At Risk — No Next Action"
     },
     "unknownCaller": "Unknown caller",
     "updated": "Updated",
+    "scope": {
+      "label": "Whose work",
+      "mine": "Mine",
+      "agency": "Agency"
+    },
     "emptyState": {
       "title": "All caught up!",
       "description": "You have no overdue tasks, pending work, or at-risk opportunities. Great job staying on top of things.",
@@ -431,11 +451,44 @@
       "follow_up": "Follow-up",
       "other": "Other"
     },
-    "overdueDuration": "{duration} overdue",
+    "overdueSince": "Overdue · {relative}",
     "dueTodayTime": "Today at {time}",
     "dueDateTime": "{date}",
     "noDueDate": "No due date",
     "complete": "Complete"
+  },
+  "TaskActions": {
+    "openMenu": "Task actions",
+    "rescheduleLabel": "Reschedule",
+    "presets": {
+      "plus_1h": "In 1 hour",
+      "tomorrow_9": "Tomorrow 09:00",
+      "plus_2d": "In 2 days",
+      "next_monday_9": "Next Monday 09:00"
+    },
+    "edit": "Edit task",
+    "cancelTask": "Cancel task",
+    "rescheduled": "Task rescheduled",
+    "saved": "Task saved",
+    "cancelled": "Task cancelled",
+    "editTitle": "Edit task",
+    "fields": {
+      "title": "Title",
+      "type": "Type",
+      "typePlaceholder": "Select type",
+      "dueAt": "Due",
+      "description": "Description",
+      "assignedTo": "Assigned to",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why is this task no longer needed?"
+    },
+    "close": "Close",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancelTitle": "Cancel task",
+    "cancelDescription": "“{title}” will be cancelled. A reason you add is kept with it. If no other task is pending, the opportunity shows as at risk.",
+    "keepTask": "Keep task",
+    "confirmCancel": "Cancel task"
   },
   "TaskCompleteDialog": {
     "title": "Complete Task",
@@ -839,6 +892,7 @@
     "submitRemove": "Remove"
   },
   "OpportunityTaskList": {
+    "completeTask": "Complete “{title}”",
     "title": "Tasks",
     "pending": "pending",
     "addBtn": "Add Task",

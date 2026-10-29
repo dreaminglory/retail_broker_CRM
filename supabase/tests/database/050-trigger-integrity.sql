@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(6);
+SELECT plan(9);
 
 SELECT set_config('test.u1', gen_random_uuid()::text, true);
 SELECT set_config('test.a1', gen_random_uuid()::text, true);
@@ -66,6 +66,37 @@ SELECT results_eq(
     $$ SELECT (now() + interval '2 days')::date $$,
     'next_action_at synced on task update'
 );
+
+-- Sprint 6.2: reschedule and cancel recompute next_action_at through the trigger (AC-6.2-3)
+UPDATE opportunities SET status = 'active' WHERE id = current_setting('test.o1')::uuid;
+SELECT set_config('test.t2', gen_random_uuid()::text, true);
+INSERT INTO tasks (id, agency_id, title, due_at, opportunity_id) VALUES (current_setting('test.t2')::uuid, current_setting('test.a1')::uuid, 'Task 2', now() + interval '1 day', current_setting('test.o1')::uuid);
+
+UPDATE tasks SET due_at = now() + interval '5 days' WHERE id = current_setting('test.t2')::uuid;
+
+SELECT results_eq(
+    $$ SELECT next_action_at FROM opportunities WHERE id = current_setting('test.o1')::uuid $$,
+    $$ SELECT due_at FROM tasks WHERE id = current_setting('test.t1')::uuid $$,
+    'rescheduling the earliest task later moves next_action_at to the next earliest'
+);
+
+UPDATE tasks SET status = 'cancelled', outcome = 'Client bought elsewhere' WHERE id = current_setting('test.t1')::uuid;
+
+SELECT results_eq(
+    $$ SELECT next_action_at FROM opportunities WHERE id = current_setting('test.o1')::uuid $$,
+    $$ SELECT due_at FROM tasks WHERE id = current_setting('test.t2')::uuid $$,
+    'cancelling a task drops it from next_action_at'
+);
+
+UPDATE tasks SET status = 'cancelled' WHERE id = current_setting('test.t2')::uuid;
+
+SELECT results_eq(
+    $$ SELECT id FROM opportunities WHERE id = current_setting('test.o1')::uuid AND status = 'active' AND next_action_at IS NULL $$,
+    $$ VALUES (current_setting('test.o1')::uuid) $$,
+    'cancelling the last pending task leaves the opportunity at risk'
+);
+
+UPDATE tasks SET status = 'pending' WHERE id = current_setting('test.t1')::uuid;
 
 DELETE FROM tasks WHERE id = current_setting('test.t1')::uuid;
 

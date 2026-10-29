@@ -484,6 +484,32 @@ in Sprint 8. Service integration tests against the same stack follow in slice 6.
 
 ---
 
+### AD-044: Today defaults to "mine" for owners and managers
+**Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
+
+**Context:** `domain-model.md` §4 said Today is per broker, but the code showed owners and
+managers the whole agency, so their own calls were lost among everyone's.
+**Decision:** everyone sees their own work by default. Owners and managers get a Mine / Agency
+toggle (`/today?scope=agency`); a broker asking for `scope=agency` still gets their own.
+Exceptions stays agency-wide. Enforced in `getTodayScreenData` (`today/actions.ts`); RLS keeps
+visibility agency-wide (AD-001).
+**Revisit if:** pilot managers ask for a per-broker filter on Today.
+
+---
+
+### AD-046: Pending tasks are editable; completed and cancelled are final
+**Date:** 2026-10-29 | **Status:** Accepted (Sprint 6 plan §3.3)
+
+**Decision:** any member can edit, reschedule or cancel a pending task (AD-001); a completed or
+cancelled task can't be changed or completed again (`DomainError('errors.task_not_pending')`).
+The optional cancel reason is stored in `tasks.outcome` rather than a new column: the field
+already means "what happened to this task". The timeline does not show cancellations yet.
+Reschedule presets are
+computed on the server in agency time. `next_action_at` still changes only through the trigger.
+**Revisit if:** reporting needs to tell cancel reasons from outcomes (add `cancel_reason`).
+
+---
+
 ### AD-045: Configuration and contact merge are owner/manager only
 **Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
 

@@ -7,8 +7,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DomainError } from '@/lib/errors';
 import type { Task, CreateTaskInput, CompleteTaskInput } from './types';
-import { getDayBounds, getUpcomingRange } from '@/lib/time/agency-day';
 
 export interface TaskListOptions {
   opportunityId?: string;
@@ -30,6 +30,16 @@ export interface AtRiskOpportunity {
   assigned_to: string | null;
   updated_at: string;
   created_at: string;
+}
+
+/**
+ * The row a write guarded by `status = 'pending'` returned. No row means someone
+ * completed or cancelled the task after the service checked it.
+ */
+function pendingWriteResult(data: unknown, error: { message: string } | null, verb: string): Task {
+  if (error) throw new Error(`Failed to ${verb} task: ${error.message}`);
+  if (!data) throw new DomainError('errors.task_not_pending');
+  return data as Task;
 }
 
 export class TaskRepository {
@@ -93,89 +103,33 @@ export class TaskRepository {
   // ── Today Screen Queries ─────────────────────────────────────────────────
 
   /**
-   * Overdue tasks: due_at < now() AND status = 'pending'.
-   * Sorted by most overdue first (ascending due_at).
+   * Pending tasks due in the half-open range [from, before), soonest first.
+   * Today's sections come from `getTodayWindows`, so each task is in one only.
    */
-  async findOverdue(agencyId: string, assignedTo?: string): Promise<Task[]> {
+  async findPendingDue(
+    agencyId: string,
+    range: { from?: string; before: string },
+    assignedTo?: string
+  ): Promise<Task[]> {
     let query = this.db
       .from('tasks')
       .select('*, opportunities(title, stages(name))')
       .eq('agency_id', agencyId)
       .eq('status', 'pending')
-      .lt('due_at', new Date().toISOString())
-      .not('due_at', 'is', null)
+      .lt('due_at', range.before)
       .order('due_at', { ascending: true });
 
+    if (range.from) {
+      query = query.gte('due_at', range.from);
+    }
     if (assignedTo) {
       query = query.eq('assigned_to', assignedTo);
     }
 
     const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch overdue tasks: ${error.message}`);
-    
+    if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
+
     // Map joined fields to flat TaskWithOpportunity structure
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []).map((row: any) => ({
-      ...row,
-      opportunity_title: row.opportunities?.title ?? null,
-      opportunity_stage: row.opportunities?.stages?.name ?? null,
-      opportunities: undefined,
-    })) as Task[];
-  }
-
-  /**
-   * Tasks due today: due_at is between start and end of today.
-   */
-  async findDueToday(agencyId: string, assignedTo?: string, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
-    const { start: startOfDay, end: endOfDay } = getDayBounds(timezone);
-
-    let query = this.db
-      .from('tasks')
-      .select('*, opportunities(title, stages(name))')
-      .eq('agency_id', agencyId)
-      .eq('status', 'pending')
-      .gte('due_at', startOfDay)
-      .lt('due_at', endOfDay)
-      .order('due_at', { ascending: true });
-
-    if (assignedTo) {
-      query = query.eq('assigned_to', assignedTo);
-    }
-
-    const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch due-today tasks: ${error.message}`);
-    
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []).map((row: any) => ({
-      ...row,
-      opportunity_title: row.opportunities?.title ?? null,
-      opportunity_stage: row.opportunities?.stages?.name ?? null,
-      opportunities: undefined,
-    })) as Task[];
-  }
-
-  /**
-   * Upcoming tasks: due in the next N days (default 3), excluding today.
-   */
-  async findUpcoming(agencyId: string, assignedTo?: string, days: number = 3, timezone: string = 'Europe/Sofia'): Promise<Task[]> {
-    const { start: startOfTomorrow, end: endOfWindow } = getUpcomingRange(timezone, days);
-
-    let query = this.db
-      .from('tasks')
-      .select('*, opportunities(title, stages(name))')
-      .eq('agency_id', agencyId)
-      .eq('status', 'pending')
-      .gte('due_at', startOfTomorrow)
-      .lt('due_at', endOfWindow)
-      .order('due_at', { ascending: true });
-
-    if (assignedTo) {
-      query = query.eq('assigned_to', assignedTo);
-    }
-
-    const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch upcoming tasks: ${error.message}`);
-    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data ?? []).map((row: any) => ({
       ...row,
@@ -260,11 +214,11 @@ export class TaskRepository {
       })
       .eq('id', id)
       .eq('agency_id', agencyId)
+      .eq('status', 'pending') // Guard: only a pending task can be edited (Sprint 6.2)
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(`Failed to update task: ${error.message}`);
-    return data as Task;
+    return pendingWriteResult(data, error, 'update');
   }
 
   /**
@@ -288,23 +242,22 @@ export class TaskRepository {
       .eq('agency_id', agencyId)
       .eq('status', 'pending') // Guard: can only complete a pending task (L-004)
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(`Failed to complete task: ${error.message}`);
-    return data as Task;
+    return pendingWriteResult(data, error, 'complete');
   }
 
-  async cancel(id: string, agencyId: string): Promise<Task> {
+  /** Cancels a pending task. The optional reason is kept as its `outcome`. */
+  async cancel(id: string, agencyId: string, reason: string | null): Promise<Task> {
     const { data, error } = await this.db
       .from('tasks')
-      .update({ status: 'cancelled' })
+      .update({ status: 'cancelled', outcome: reason })
       .eq('id', id)
       .eq('agency_id', agencyId)
       .eq('status', 'pending') // Guard: can only cancel a pending task (L-004)
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw new Error(`Failed to cancel task: ${error.message}`);
-    return data as Task;
+    return pendingWriteResult(data, error, 'cancel');
   }
 }

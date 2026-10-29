@@ -26,8 +26,8 @@ import {
 import { TASK_TYPE_CONFIG } from "./task-card";
 import type { Task, TaskType } from "@/domain/tasks/types";
 import type { Stage } from "@/domain/stages/types";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 import type { ActionResult } from "@/lib/actions";
+import { actionErrorMessage } from "@/lib/action-errors";
 import type { CompleteTaskWithNextInput } from "@/domain/tasks/types";
 import { TASK_TYPES } from "@/domain/tasks/validation";
 import type { ActiveBroker } from "@/domain/members/types";
@@ -114,7 +114,9 @@ export function TaskCompleteDialog({
       onOpenChange(false);
       router.refresh();
     } else {
-      setError(result.error);
+      setError(actionErrorMessage(result));
+      // The task may have been completed or cancelled elsewhere: show its current state.
+      router.refresh();
     }
 
     setLoading(false);

@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { TaskCompleteDialog } from "../tasks/task-complete-dialog";
+import { TaskActionsMenu } from "../tasks/task-actions-menu";
 import type { Task, CompleteTaskWithNextInput } from "@/domain/tasks/types";
 import type { ActiveBroker } from "@/domain/members/types";
+import type { Stage } from "@/domain/stages/types";
 import type { ActionResult } from "@/lib/actions";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import { Plus, Calendar, CheckCircle2, Circle } from "lucide-react";
@@ -27,26 +29,26 @@ interface TaskListProps {
   opportunityId: string;
   tasks: Task[];
   brokers: ActiveBroker[];
+  stages: Stage[];
+  /** The agency's timezone: due times are shown in agency time. */
+  timeZone: string;
   createAction: (
     opportunityId: string,
     prevState: ActionResult,
     formData: FormData
   ) => Promise<ActionResult<{ id: string }>>;
-  completeAction: (
-    id: string,
-    opportunityId: string,
-    prevState: ActionResult,
-    formData: FormData
-  ) => Promise<ActionResult>;
+  /** Completes with the outcome, an optional next task and stage (AD-014, FR-TSK-04). */
+  completeAction: (id: string, input: CompleteTaskWithNextInput) => Promise<ActionResult<unknown>>;
 }
 
 const initialState: ActionResult<{ id: string }> = { success: false, error: "" };
-const completeInitialState: ActionResult = { success: false, error: "" };
 
 export function TaskList({
   opportunityId,
   tasks,
   brokers,
+  stages,
+  timeZone,
   createAction,
   completeAction,
 }: TaskListProps) {
@@ -55,8 +57,6 @@ export function TaskList({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [completeTarget, setCompleteTarget] = useState<Task | null>(null);
-  const [completing, setCompleting] = useState(false);
-  const [completeError, setCompleteError] = useState("");
 
   const [state, formAction, pending] = useActionState(
     createAction.bind(null, opportunityId) as (
@@ -181,6 +181,7 @@ export function TaskList({
                 <div key={task.id} className="flex items-start gap-3 p-3">
                   <button
                     onClick={() => setCompleteTarget(task)}
+                    aria-label={t("completeTask", { title: task.title })}
                     className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
                   >
                     <Circle className="h-4 w-4" />
@@ -195,11 +196,12 @@ export function TaskList({
                     {task.due_at && (
                       <div className={`mt-1.5 flex items-center gap-1.5 text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                         <Calendar className="h-3.5 w-3.5" />
-                        {format.dateTime(new Date(task.due_at), { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                        {format.dateTime(new Date(task.due_at), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone })}
                         {overdue && <Badge variant="destructive" className="ml-1 text-[10px] h-4 px-1 py-0">{t("overdue")}</Badge>}
                       </div>
                     )}
                   </div>
+                  <TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />
                 </div>
               );
             })}
@@ -231,52 +233,16 @@ export function TaskList({
       </div>
 
 
-      {/* Complete Task Dialog */}
+      {/* Complete Task Dialog: outcome, next task and stage in one step */}
       <TaskCompleteDialog
         open={!!completeTarget}
         onOpenChange={(o: boolean) => {
-          if (!o) {
-            setCompleteTarget(null);
-            setCompleteError("");
-          }
+          if (!o) setCompleteTarget(null);
         }}
         task={completeTarget}
+        stages={stages}
         brokers={brokers}
-        completeAction={async (taskId: string, input: CompleteTaskWithNextInput) => {
-          if (!completeTarget) return { success: false, error: "No target task" };
-          setCompleting(true);
-          setCompleteError("");
-          try {
-            // Convert 'input' back to FormData and call 'completeAction'
-            const formData = new FormData();
-            formData.append("outcome", input.outcome);
-            if (input.new_stage_id) {
-              formData.append("new_stage_id", input.new_stage_id);
-            }
-            if (input.next_task) {
-              formData.append("next_task", JSON.stringify(input.next_task));
-            }
-            const result = await completeAction(
-              completeTarget.id,
-              opportunityId,
-              completeInitialState,
-              formData
-            );
-            if (result.success) {
-              setCompleteTarget(null);
-              router.refresh();
-              return { success: true, data: undefined };
-            } else {
-              setCompleteError(result.error || "Validation failed");
-              return { success: false, error: result.error || "Validation failed" };
-            }
-          } catch (err) {
-            setCompleteError("An unexpected error occurred");
-            return { success: false, error: "An unexpected error occurred" };
-          } finally {
-            setCompleting(false);
-          }
-        }}
+        completeAction={completeAction}
       />
     </div>
   );

@@ -112,10 +112,12 @@ active opportunity has an owner, a next action and a complete history.
 |----|------------|
 | FR-TSK-02 | Create a task with title, type, due date and optional description |
 | FR-TSK-03 | Opportunity detail shows pending, completed and overdue tasks |
-| FR-TSK-04 | Complete a task with an outcome, and optionally schedule the next task or change stage, in one flow |
+| FR-TSK-04 | ✅ Complete a task with an outcome, and optionally schedule the next task or change stage, in one flow, on Today and the opportunity page (Sprint 6) |
 | FR-TSK-05 | Status: pending, completed, cancelled |
 | FR-TSK-06 | Overdue = pending and due date in the past |
 | FR-TSK-07 | `opportunities.next_action_at` always equals the earliest pending task's due date |
+| FR-TSK-08 | ✅ Edit, reschedule (presets: +1 h, tomorrow 09:00, +2 days, next Monday 09:00, agency time) and cancel (optional reason) a pending task, from Today and the opportunity page. Completed and cancelled tasks are final (Sprint 6) |
+| FR-TSK-09 | ✅ Due dates entered in the app are read in the agency's timezone, not the server's (Sprint 6) |
 
 ### FR-TOD: Today screen (Sprint 2)
 
@@ -124,6 +126,8 @@ active opportunity has an owner, a next action and a complete history.
 | FR-TOD-01 | Broker sees new inquiries, overdue tasks, tasks due today and upcoming tasks |
 | FR-TOD-02 | Broker sees at-risk opportunities (no next action) |
 | FR-TOD-03 | Complete tasks and schedule the next action directly from Today |
+| FR-TOD-04 | ✅ Owners and managers see their own work by default and switch to the agency's with a Mine / Agency toggle (`?scope=agency`, AD-044, Sprint 6) |
+| FR-TOD-05 | ✅ Each task appears in exactly one Today section: overdue (before now), due today (now to agency midnight), coming up (Sprint 6) |
 
 ### FR-MGR: Manager exceptions (Sprint 2)
 

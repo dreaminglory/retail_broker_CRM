@@ -332,6 +332,14 @@ and optionally moves the opportunity's stage. Both are optional (AD-014 soft
 enforcement); the UI prompts for them. Every insert, delete, or change to `status` or
 `due_at` recomputes `opportunities.next_action_at` = earliest pending `due_at` (trigger).
 
+Only a `pending` task can be edited, rescheduled, cancelled or completed; `completed` and
+`cancelled` are final (`TaskService`, `DomainError('errors.task_not_pending')`, plus a
+`status = 'pending'` filter on the write, which raises the same error when someone else
+changed the task first; AD-046). Cancelling keeps the optional reason in
+`outcome`. Reschedule presets (+1 h, tomorrow 09:00, +2 days, next Monday 09:00) and every
+`datetime-local` due date are read in the agency's timezone (`parseAgencyLocal`,
+`src/domain/tasks/reschedule.ts`).
+
 ### 3.4 Membership and invitation
 
 ```mermaid
@@ -371,15 +379,19 @@ or linked inquiries; G-009) and marks their rows `reverted`.
 Not stored. Computed in `src/domain/tasks` and `src/domain/exceptions` using
 agency-local day boundaries (`src/lib/time/agency-day.ts`).
 
-**Today** (`/today`, per broker):
+**Today** (`/today`): "my" work for everyone by default. Owners and managers can switch to
+the whole agency with `?scope=agency`, which drops the "mine" filter (AD-044). Brokers always
+see their own.
 
 | Section | Definition |
 |---|---|
 | New inquiries | inquiries `status = 'new'` assigned to me |
 | Overdue | my tasks `pending` with `due_at < now` |
-| Due today | my tasks `pending` due within today (agency tz) |
-| Upcoming | my tasks `pending` due tomorrow through +3 days |
+| Due today | my tasks `pending` with `now ≤ due_at <` agency midnight |
+| Upcoming | my tasks `pending` from tomorrow 00:00 to the end of day +3 (agency tz) |
 | At risk | my opportunities `active` with `next_action_at` null |
+
+The ranges are half-open and contiguous (`getTodayWindows`), so a task is in one section only.
 
 **Exceptions** (`/exceptions`, owner/manager only):
 

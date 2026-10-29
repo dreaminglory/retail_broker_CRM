@@ -1,69 +1,52 @@
 import { getTranslations } from "next-intl/server";
-import { createSupabaseServer } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { TaskService } from "@/domain/tasks/service";
-import { InquiryService } from "@/domain/inquiries/service";
-import { getAgencySettings } from "@/domain/agencies/settings";
+import { getAuthContext, type AuthContext } from "@/lib/actions";
 import { StageRepository } from "@/domain/stages/repository";
 import { MemberRepository } from "@/domain/members/repository";
+import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 import { TodayPageClient } from "./today-page-client";
-import { quickCompleteTaskAction } from "./actions";
+import { canSwitchTodayScope, loadTodayScreenData } from "./today-data";
+import { completeTaskAction } from "../opportunities/[id]/tasks/actions";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
   return { title: t("today") };
 }
 
+export default async function TodayPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string }>;
+}) {
+  const { scope } = await searchParams;
 
-export default async function TodayPage() {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Only a missing session or membership means "sign in"; any other failure
+  // reaches the error boundary.
+  let ctx: AuthContext;
+  try {
+    ctx = await getAuthContext();
+  } catch {
+    redirect("/login");
+  }
 
-  if (!user) redirect("/login");
+  const { supabase, agencyId, role } = ctx;
+  const [data, stages, brokers] = await Promise.all([
+    loadTodayScreenData(ctx, scope),
+    new StageRepository(supabase).findAll(agencyId),
+    new MemberRepository(supabase).getActiveBrokers(agencyId),
+  ]);
 
-  // Resolve agency membership
-  const { data: membership } = await supabase
-    .from("agency_memberships")
-    .select("agency_id, role")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .single();
-
-  if (!membership) redirect("/login");
-
-  const agencyId = membership.agency_id;
-  const isManager = membership.role === "owner" || membership.role === "manager";
-  const filterUserId = isManager ? undefined : user.id;
-  const taskService = new TaskService(supabase);
-  const inquiryService = new InquiryService(supabase);
-  const stageRepo = new StageRepository(supabase);
-  const memberRepo = new MemberRepository(supabase);
-  const settings = await getAgencySettings(agencyId);
-
-  // Fetch all Today Screen data in parallel
-  const [overdue, dueToday, upcoming, atRisk, newInquiries, stages, brokers] =
-    await Promise.all([
-      taskService.listOverdue(agencyId, filterUserId),
-      taskService.listDueToday(agencyId, filterUserId, settings.timezone),
-      taskService.listUpcoming(agencyId, filterUserId, settings.timezone),
-      taskService.listAtRisk(agencyId, filterUserId),
-      inquiryService.list(agencyId, { status: "new", assignedTo: filterUserId }),
-      stageRepo.findAll(agencyId),
-      memberRepo.getActiveBrokers(agencyId),
-    ]);
-
+  // A fresh `now` per render, so relative times ("overdue · 2 hours ago")
+  // don't start from the first page load after a soft navigation.
   return (
-    <TodayPageClient
-      overdue={overdue}
-      dueToday={dueToday}
-      upcoming={upcoming}
-      atRisk={atRisk}
-      newInquiries={newInquiries}
-      stages={stages}
-      brokers={brokers}
-      completeAction={quickCompleteTaskAction}
-    />
+    <FreshNowProvider now={new Date().toISOString()}>
+      <TodayPageClient
+        {...data}
+        canSwitchScope={canSwitchTodayScope(role)}
+        stages={stages}
+        brokers={brokers}
+        completeAction={completeTaskAction}
+      />
+    </FreshNowProvider>
   );
 }

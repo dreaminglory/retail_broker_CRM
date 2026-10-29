@@ -82,13 +82,8 @@ test('a broker takes an inquiry through to a scheduled next action', async ({ pa
   await expect(page.getByText(nextTask).first()).toBeVisible();
 });
 
-// Known defect F-07, fixed in Sprint 6 slice 6.2 (AC-6.2-2): on the opportunity page,
-// completeTaskAction reads only the outcome and drops the next task. This test is
-// expected to fail until then; when 6.2 lands it starts passing and Playwright
-// reports it, so remove `test.fail` (founder decision, 2026-10-29).
+// AC-6.2-2 (FR-TSK-04): completing on the opportunity page keeps the next task.
 test('a broker completes a task with a next action on the opportunity page', async ({ page, m, signInAs }, testInfo) => {
-  test.fail(true, 'F-07: opportunity-page completion drops the next task until slice 6.2');
-
   const run = `${testInfo.project.name}-${Date.now()}`;
   const firstTask = `E2E opp call ${run}`;
   const nextTask = `E2E opp viewing ${run}`;
@@ -103,8 +98,7 @@ test('a broker completes a task with a next action on the opportunity page', asy
   await taskDialog.getByRole('button', { name: m.OpportunityTaskList.submitAdd }).click();
   await expect(taskDialog).toBeHidden();
 
-  // The complete control is an unlabelled circle icon at the start of the task row.
-  await page.getByText(firstTask, { exact: true }).locator('xpath=../..').getByRole('button').first().click();
+  await page.getByRole('button', { name: m.OpportunityTaskList.completeTask.replace('{title}', firstTask) }).click();
   const completeDialog = page.getByRole('dialog');
   await completeDialog.getByLabel(m.TaskCompleteDialog.fields.outcome.label).fill('Left a voicemail.');
   await completeDialog.getByRole('button', { name: m.TaskCompleteDialog.fields.nextTask.schedule }).click();
