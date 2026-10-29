@@ -19,9 +19,11 @@ read those files rather than copying code from here.
 | `shares_agency_with(uuid)` | caller and user share an agency | user-level tables such as `profiles` |
 
 All three are `SECURITY DEFINER STABLE SET search_path = public`. They exist so that
-policies never query `agency_memberships` directly (see G-001, AD-004).
+policies never query `agency_memberships` directly (AD-004).
 
 ## Tenant table template
+
+Names: tables snake_case plural, columns snake_case, foreign keys `<singular>_id`.
 
 ```sql
 CREATE TABLE <things> (
@@ -65,13 +67,13 @@ Roles are exactly `owner`, `manager`, `broker`. There is no `admin`.
 ## Never
 
 - A policy that selects from `agency_memberships` (or from its own table): infinite
-  recursion (G-001). Use the helpers above.
-- `auth.uid()` without a subselect in a policy: write `(SELECT auth.uid())` (L-001).
+  recursion. Use the helpers above.
+- `auth.uid()` without a subselect in a policy: write `(SELECT auth.uid())`.
 - `ENABLE` without `FORCE` row level security: table owners bypass RLS, which hides
-  bugs in local tests (G-002).
+  bugs in local tests.
 - Relying on the default `EXECUTE` grant. Functions in `public` have it revoked from
   `anon` and `authenticated`; grant explicitly, and never grant a `SECURITY DEFINER`
-  function to `anon` (AD-028, L-009).
+  function to `anon` (AD-028).
 - Rows in `audit_log` written from app code. It is append-only and filled by triggers (AD-020).
 
 ## Functions and RPCs
@@ -90,10 +92,10 @@ GRANT  EXECUTE ON FUNCTION public.<name>(...) TO authenticated;
 A `SECURITY DEFINER` function must check tenancy and role itself
 (`current_agency_id()`, `current_user_role()`), because RLS no longer protects it.
 RPCs don't receive the request locale: return error codes (i18n keys), not
-translated text (G-008).
+translated text.
 
 Long-running work goes through a client-driven loop that returns
-`{processed, remaining}` (see `import_commit_contacts`), not one big call (P-009, G-007).
+`{processed, remaining}` (see `import_commit_contacts`), not one big call (Server Action bodies max 1 MB).
 
 ## Migration checklist
 

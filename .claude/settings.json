@@ -1,13 +1,5 @@
 {
-  "skillOverrides": {
-    "supermatt:orchestrate": "off",
-    "supermatt:jury": "off",
-    "supermatt:wayfinder": "off",
-    "supermatt:teach": "off",
-    "supermatt:to-questionnaire": "off",
-    "supermatt:ideate": "off",
-    "supermatt:ship-pr": "off",
-    "anthropic-skills:deep-research": "on",
-    "anthropic-skills:skill-creator": "on"
+  "enabledPlugins": {
+    "agent-skills@addy-agent-skills": true
   }
 }

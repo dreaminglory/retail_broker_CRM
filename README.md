@@ -1,50 +1,30 @@
 # BrokerCRM
 
-A multi-tenant SaaS CRM for Bulgarian residential real estate brokerages.
+A multi-tenant CRM for Bulgarian residential real estate brokerages. Next.js 16 + Supabase.
 
-## Local Development Runbook
+## Run it locally
 
-To set up and run the project locally, you need Docker (for Supabase) and Node.js.
+Needs Node.js and Docker Desktop (running).
 
-### 1. Start the Database
-Start the local Supabase stack (PostgreSQL, GoTrue auth, PostgREST):
 ```bash
-npx supabase start
-```
-*Note: This will also apply any pending migrations.*
-
-### 2. Reset and Seed the Database
-If you need a clean slate with the exact production schema and local seed data (two agencies, owners, contacts, etc.):
-```bash
-npx supabase db reset
+npm install
+npm run stack:up       # local Supabase + .env.local
+npx supabase db reset  # clean DB + seed (two agencies)
+npm run dev            # http://localhost:3000
 ```
 
-### 3. Run the Test Suites
-We maintain a strict test harness. Before pushing, ensure all tests pass:
+Seeded logins (password `password123`): `owner@alpha.bg`, `manager@alpha.bg`, `broker@alpha.bg`
+(and `@beta.bg`).
 
-**Database Tests (pgTAP):** Tests RLS, tenant isolation, and SQL functions.
+## Tests
+
 ```bash
-npx supabase test db
+npm run typecheck && npm run lint && npm run test   # TypeScript, ESLint, Vitest
+npm run test:db                                      # pgTAP: RLS, tenant isolation, SQL functions
+npm run test:e2e                                     # Playwright core loop (first time: npx playwright install chromium)
 ```
-
-**Domain Logic Tests (Vitest):** Tests phone normalization, date handling, and business rules.
-```bash
-npm run test
-```
-
-### 4. Start the Application
-Start the Next.js development server:
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ## Documentation
-- `AGENTS.md`: Commands, architecture and rules for contributors and AI agents
-- `docs/business-description.md`: Product and business brief
-- `docs/BRD.md`: Requirements and their status
-- `docs/domain-model.md`: Entities, lifecycles, invariants and glossary
-- `docs/decisions-log.md`: ADRs (Architecture Decision Records)
-- `docs/learnings.md`: Patterns and gotchas
-- `docs/sprint-*-implementation-plan.md`: Current sprint plan (finished sprints in `docs/archive/`)
+
+- `AGENTS.md`: commands, architecture, rules, Definition of Done, workflow, and a map of every doc
+- `SPEC.md`: what we're building, in which order, and where it stands

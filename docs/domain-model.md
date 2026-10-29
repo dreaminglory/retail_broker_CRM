@@ -1,8 +1,9 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 33rd migration
-(`20261007000004_localized_defaults_tz_currency.sql`).
+Built from `supabase/migrations/` and `src/domain/` as of the 36th migration
+(`20261102000003_drop_untracked_profile_insert_policy.sql`). It describes what is **built**;
+planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
 constraint or a trigger updates this file in the same change. Any new business rule adds a
@@ -122,6 +123,7 @@ erDiagram
     uuid opportunity_id FK "set on conversion"
     uuid assigned_to FK
     text status "new | contacted | converted | dismissed"
+    text dismissed_reason
     text caller_name
     text caller_phone
     text caller_email
@@ -289,7 +291,9 @@ stateDiagram-v2
   dismissed --> [*]
 ```
 
-Enforced by: value list only. The update schema accepts any status.
+Enforced by: `InquiryService` checks `INQUIRY_STATUS_TRANSITIONS`
+(`src/domain/inquiries/validation.ts`); `converted` and `dismissed` are final. The database
+checks the value list only.
 
 ### 3.2 Opportunity: status and stage
 
@@ -337,8 +341,8 @@ Only a `pending` task can be edited, rescheduled, cancelled or completed; `compl
 `status = 'pending'` filter on the write, which raises the same error when someone else
 changed the task first; AD-046). Cancelling keeps the optional reason in
 `outcome`. Reschedule presets (+1 h, tomorrow 09:00, +2 days, next Monday 09:00) and every
-`datetime-local` due date are read in the agency's timezone (`parseAgencyLocal`,
-`src/domain/tasks/reschedule.ts`).
+`datetime-local` due date are read in the agency's timezone (presets in
+`src/domain/tasks/reschedule.ts`, `parseAgencyLocal` in `src/lib/time/agency-day.ts`).
 
 ### 3.4 Membership and invitation
 
@@ -369,14 +373,16 @@ stateDiagram-v2
   completed --> reverted : owner/manager, within 7 days
 ```
 
-Revert deletes only created records that haven't been touched since (no tasks, notes,
-or linked inquiries; G-009) and marks their rows `reverted`.
+Revert is meant to delete only created records that haven't been touched since (no tasks,
+notes or linked inquiries) and mark their rows `reverted`. The notes guard doesn't work yet
+(see [Known gaps](#6-known-gaps)).
 
 ---
 
 ## 4. Derived views: Today and Exceptions
 
-Not stored. Computed in `src/domain/tasks` and `src/domain/exceptions` using
+Not stored. Today is assembled in `src/app/(dashboard)/today/today-data.ts` from
+`src/domain/tasks` and `src/domain/inquiries`; Exceptions in `src/domain/exceptions`. Both use
 agency-local day boundaries (`src/lib/time/agency-day.ts`).
 
 **Today** (`/today`): "my" work for everyone by default. Owners and managers can switch to
@@ -412,26 +418,28 @@ The "Enforced by" column tells you which layer to change and test.
 | # | Rule | Enforced by |
 |---|---|---|
 | T1 | Every tenant row has `agency_id`; users see only their agency | RLS `ENABLE` and `FORCE` + `010-rls-catalog.sql` |
-| T2 | Hard delete only by owner/manager | RLS `current_user_role()` |
+| T2 | Hard delete of contacts, inquiries, opportunities, tasks, stages and lead sources only by owner/manager; contact methods, participants and notes by any member | RLS `current_user_role()` on the DELETE policies |
 | T3 | One active membership per user | partial unique index `uq_one_active_membership_per_user` |
 | T4 | Membership `user_id`/`agency_id` immutable | trigger `trg_membership_identity` |
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
 | T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
-| C2 | Phones E.164, emails lowercase | `normalizePhone()` / Zod |
+| C2 | Phones E.164, emails lowercase | `normalizePhone()` / Zod on contact methods (inquiry callers: not yet, see Known gaps) |
 | C3 | Duplicate check (phone, email, trigram name) before creating a contact | `duplicate-detection.ts` (service) |
 | C4 | Merge archives the loser and snapshots it | `merge.ts` + `merge_history` |
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
 | I1 | `raw_payload` is never modified | convention (not in update schema) |
 | I2 | Inquiry idempotent on `(agency_id, source_id, external_ref)` | unique index `uq_inquiries_source_external_ref` |
+| I3 | Inquiry status follows `new → contacted → converted / dismissed`; final states don't change | `InquiryService` + `INQUIRY_STATUS_TRANSITIONS` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
 | O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
 | O4 | `active` with no `next_action_at` ⇒ at risk | derived view (section 4) |
 | S1 | `terminal_type` set iff `is_terminal` | `CHECK terminal_type_consistency` |
 | S2 | At least one won and one lost stage per agency | `StageService` |
-| K1 | Completing a task requires an outcome | Zod `completeTaskSchema` |
+| K1 | Completing a task requires an outcome | Zod `completeWithNext` in `taskSchemas()` |
 | K2 | Next task or stage change on completion | UI prompt only (AD-014, soft) |
+| K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
@@ -442,17 +450,25 @@ The "Enforced by" column tells you which layer to change and test.
 
 ## 6. Known gaps
 
-Found while writing this doc. Each is a candidate for a fix or an ADR.
+Where the built model breaks its own rules. Each is a candidate for a fix or an AD; the
+module that fixes it is named where there is one. Remove a row when the fix lands.
 
 1. **Stage and status are independent.** Closing an opportunity does not move it to a
    terminal stage, and moving it to a terminal stage (including via `completeWithNext`)
    does not change `status`. An opportunity can sit in stage "Won" with status `active`.
 2. **Inquiries are not audited.** `audit_log.entity_type` allows `'inquiry'`, but no
    trigger exists on `inquiries`.
-3. **Status transitions are unchecked.** Any status value can follow any other for
-   inquiries, opportunities and tasks.
-4. ~~**Session refresh.**~~ Fixed in Sprint 6: `src/proxy.ts` refreshes the session per request.
-5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+3. **Opportunity status transitions are unchecked.** `close()` and `reactivate()` don't check
+   the current status (inquiries and tasks are checked: I3, K3).
+4. **Inquiry callers aren't normalized.** `caller_phone` and `caller_email` are stored and
+   copied to `contact_methods` on conversion as typed, and only Bulgarian mobiles parse
+   (C2). → `trustworthy-loop` (AD-041).
+5. **Import revert and recheck.** The revert's notes guard can't fire, and the recheck writes
+   `match_reason` values (`db_recheck…`) that the `import_rows` CHECK rejects.
+   → `trustworthy-loop`.
+6. **Signup profile name.** Sign-up sends `full_name`, but `handle_new_user` reads
+   `display_name`, so the name defaults to the email prefix. → `trustworthy-loop`.
+7. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
 
 ---
 
@@ -471,7 +487,7 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Contact method | Метод за връзка | Phone, email, Viber... | |
 | Opportunity | Сделка | Commercial pursuit (AD-038) | |
 | Stage | Етап | Pipeline position | |
-| Pipeline | Фуния | Ordered stages | пайплайн |
+| Pipeline | Фуния | Ordered stages | пайплайн (Фуния itself not used yet) |
 | Won / Lost | Спечелена / Загубена | Terminal outcomes | Изгубена |
 | Nurture | Задържана | On hold for later | Отглеждане, За подхранване |
 | Task | Задача | Scheduled follow-up | |

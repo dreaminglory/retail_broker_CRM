@@ -1,5 +1,9 @@
 # BrokerCRM feature inventory (as built)
 
+> **Outdated snapshot (2026-10-28).** Evidence behind the gap analysis, not the current state.
+> Several findings are fixed (Sprint 6.0–6.2: `src/proxy.ts`, role checks, Today defects).
+> Current state and known gaps: `SPEC.md` §5.
+
 > **Purpose:** the "our product" side of a competitive gap analysis against Follow Up Boss,
 > onOffice, Reapit, Pipedrive and Eastern European real-estate CRMs.
 > **Snapshot:** commit `5444897` (2026-10-28), after Sprint 5. 33 migrations, last one

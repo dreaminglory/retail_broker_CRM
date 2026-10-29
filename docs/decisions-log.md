@@ -1,528 +1,201 @@
-# Architecture Decision Records (ADR)
+# Decisions
 
-> Decisions are recorded here as they are made during development.
-> Each entry follows the format: context, decision, rationale, consequences.
-> Referenced by ID (e.g., "see AD-004") in code comments and commit messages.
+Decisions that still shape the code. Before changing something an AD covers, read it; to change
+the decision, add a new AD that supersedes it (don't edit an Accepted one). Code, migrations and
+specs cite these IDs. History before 2026-10-29: `docs/archive/` and git.
 
----
-
-## Sprint 0 Decisions
-
-### AD-001: Record Visibility — Agency-Wide
-**Date:** 2026-08-07 | **Status:** Accepted
-
-**Context:** Need to decide whether records are agency-visible, team-scoped, or private to brokers.
-**Decision:** Agency-visible — all members of an agency can see all records.
-**Rationale:** Simplest RLS, promotes collaboration, aligns with "agency owns the data."
-**Consequences:** If pilot agencies need privacy, we'll add scoping later. For now, one simple RLS policy per table.
+**New AD:** next free number, then `Status`, `Decision`, `Why`, and `Revisit if` when there is a
+trigger. Two to six lines. Status is Proposed, Accepted or Superseded by AD-NNN.
 
 ---
 
-### AD-002: Tech Stack — Next.js 15 + Supabase
-**Date:** 2026-08-07 | **Status:** Accepted
-
-**Context:** Evaluated 5 tech stacks across 10 criteria. See `tech-stack-evaluation.md`.
-**Decision:** Next.js 15 (App Router) + Supabase + Tailwind CSS + shadcn/ui + Vercel.
-**Rationale:** Native RLS, SQL-first for DE founder, best AI support, simplest ops, lowest cost.
-**Consequences:** Tied to Supabase for auth/storage/DB (acceptable — standard PostgreSQL underneath).
-
----
-
-### AD-003: Localization — English First
-**Date:** 2026-08-07 | **Status:** Accepted
-
-**Context:** Product targets Bulgarian market but building with AI assistance in English is faster.
-**Decision:** Build in English, localize before pilot.
-**Rationale:** Avoids i18n infrastructure complexity during the foundation slice.
-**Consequences:** Must extract all user-facing strings cleanly for later translation.
-
----
-
-### AD-004: RLS Pattern — SECURITY DEFINER Helper Functions
-**Date:** 2026-08-27 | **Status:** Accepted
-
-**Context:** RLS policies on `agency_memberships` that queried `agency_memberships` caused infinite recursion. PostgreSQL evaluates RLS on every table access, including subqueries within policies.
-**Decision:** Create `current_agency_id()` and `current_user_role()` as `SECURITY DEFINER` functions that bypass RLS to resolve the current user's tenant context.
-**Rationale:** SECURITY DEFINER runs as the function owner (superuser), bypassing RLS. Marking as `STABLE` allows caching within a query. Wrapping `auth.uid()` in `(SELECT ...)` prevents per-row re-evaluation.
-**Consequences:** All future RLS policies use `current_agency_id()` instead of inline subqueries. This is now the standard pattern — see `supabase-patterns` skill.
-
----
-
-## Sprint 1 Decisions
-
-### AD-005: Minimal Task Entity in Sprint 1
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** The BRD originally placed Tasks in Sprint 2, but the domain model requires every active Opportunity to have a next action (Task) with a due date. Without tasks, Opportunities would be incomplete — the Today Screen (Sprint 2) depends on task data existing.
-**Decision:** Pull a minimal `tasks` table with basic CRUD into Sprint 1. Full task workflows (completion with mandatory outcome, task sequences, action plans) remain in Sprint 2.
-**Rationale:** Ensures the data model is complete enough that Opportunity → Task → Next Action relationship works from Sprint 1. Sprint 2 builds the UI and business logic on top.
-**Consequences:** Sprint 1 includes `tasks` table, basic create/update/complete actions, and a simple task list on Opportunity detail. Sprint 2 adds the Today Screen, overdue tracking, completion rules, and task-driven workflows.
-
----
-
-### AD-006: Pipeline Configurability Deferred to Sprint 2
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** Should agencies be able to customize pipeline stages from Sprint 1, or use a fixed default set?
-**Decision:** Ship Sprint 1 with a `stages` table seeded with a default pipeline. No pipeline management UI in Sprint 1 — agencies use the default stages (New → Attempting Contact → Qualified → Active → Viewing → Offer → Negotiation → Won → Lost → Nurture). Pipeline configurability UI is Sprint 2.
-**Rationale:** The data model uses proper tables (not enums) so we don't need a migration when configurability is added. But the UI complexity of stage management is deferred.
-**Consequences:** Sprint 1 seed migration creates default stages. Sprint 2 adds Settings → Pipeline configuration UI. The schema is ready for configurability — only the UI is deferred.
-
----
-
-### AD-007: LeadSource — Fully Configurable from Sprint 1
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** Lead sources need to be configurable per the business description. Options: (a) full management UI, (b) seed list with inline-add only.
-**Decision:** Full LeadSource management — agencies can add, edit, and deactivate lead sources from Sprint 1. Seeded defaults are provided but fully editable.
-**Rationale:** Source attribution is critical to the CRM's value proposition. Agencies have different channels and must be able to name them. A settings page for lead sources is relatively simple.
-**Consequences:** Sprint 1 includes a Settings → Lead Sources page, plus inline source selection on Inquiry and Opportunity forms. Seed data provides sensible defaults.
-
----
-
-### AD-008: Contact Types — Person and Organization
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** Should the `contacts` table support both Person and Organization types, or start with Person only?
-**Decision:** Support both from Sprint 1. The `type` column distinguishes them. Person contacts have `first_name` + `last_name`; Organization contacts use `company_name` as the primary name. A Person can optionally have a `company_name` for affiliation.
-**Rationale:** Bulgarian real estate involves both individual buyers/sellers and corporate entities (developers, investment companies). Supporting both avoids a future migration that restructures the core entity.
-**Consequences:** Contact forms need conditional fields based on type. `display_name` is generated: `first_name + last_name` for persons, `company_name` for organizations.
-
----
-
-### AD-009: All Four Opportunity Types in Sprint 1
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** The domain model lists buyer, seller, landlord, tenant as opportunity types. Could start with buyer/seller only.
-**Decision:** Include all four types from Sprint 1.
-**Rationale:** Bulgarian agencies handle rentals alongside sales. Limiting to buyer/seller would force workarounds and create bad data. The implementation cost of four types vs. two is minimal.
-**Consequences:** Opportunity forms include all four types. Pipeline stages are shared across types for now (type-specific pipelines can come in Sprint 2 with configurability).
-
----
-
-### AD-010: Phone Format — Free Text for Now
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** The domain model skill specifies E.164 format (+359XXXXXXXXX). Should we enforce this strictly?
-**Decision:** Accept free-text phone numbers in Sprint 1. No strict E.164 validation.
-**Rationale:** Bulgarian users enter phones in various formats (0888 123 456, +359 888 123 456, 088-812-3456). Strict validation creates friction during data entry and import. Normalization can be added later as a background job or on-save hook.
-**Consequences:** Phone fields accept any text. A future sprint can add a normalization function and display formatting. Duplicate detection (Sprint 2) may need fuzzy phone matching.
-
----
-
-### AD-011: Duplicate Contact Detection Deferred to Sprint 2
-**Date:** 2026-09-01 | **Status:** Accepted
-
-**Context:** The business description emphasizes duplicate detection as critical. Should Sprint 1 include duplicate suggestions when creating contacts?
-**Decision:** Defer to Sprint 2. Sprint 1 has a unique constraint on `(agency_id, type, value)` in `contact_methods` to prevent exact duplicate contact methods, but no proactive duplicate suggestion UI.
-**Rationale:** Good duplicate detection requires fuzzy phone matching, name similarity, and a suggestion UI — significant complexity. Sprint 1 focuses on getting the core CRUD loop working. The unique constraint prevents the worst duplicates.
-**Consequences:** Sprint 2 adds: duplicate suggestion modal on contact create, merge workflow, merge history table. The `contact_methods` unique constraint provides basic protection until then.
-
----
-
-### AD-012: Phone Format — E.164 Enforced (Reverses AD-010)
-**Date:** 2026-09-05 | **Status:** Accepted
-
-**Context:** AD-010 deferred phone format enforcement to avoid friction during data entry. On review, free-text storage was reconsidered: the unique constraint on `(agency_id, type, value)` in `contact_methods` only works correctly if values are consistently formatted — `0888123456` and `+359888123456` are the same number but would create two distinct DB rows.
-**Decision:** Enforce E.164 normalization at the validation layer (not the DB layer). Accept any common Bulgarian format from the UI; normalize to `+359XXXXXXXXX` before saving. Viber and WhatsApp use the same phone normalization. Emails are lowercased on save.
-**Rationale:** Normalization at the application layer (Zod transform + `normalizePhone()` utility) avoids a DB-level constraint change while ensuring the deduplication logic in `contact_methods` works correctly. Users still type numbers naturally — the normalization is invisible to them.
-**Consequences:** `src/domain/contacts/phone.ts` provides `normalizePhone()`. Server Actions call `normalizeContactMethodValue()` before all inserts/updates to `contact_methods`. The DB schema is unchanged. Existing free-text data (if any) will need a one-time normalization backfill if agencies had data before this change.
-
----
-
-## Sprint 2 Decisions
-
-### AD-013: Task Type Column vs Table
-**Date:** 2026-09-23 | **Status:** Accepted
-
-**Context:** Need to categorize tasks (call, email, viewing, etc.). Should we use a separate lookup table or a simple text column with a CHECK constraint?
-**Decision:** Task type is a TEXT column with a CHECK constraint.
-**Rationale:** The set of task types is small and relatively fixed. Avoiding a separate table prevents unnecessary JOINs and keeps the schema simple.
-
----
-
-### AD-014: Soft Task Completion Enforcement
-**Date:** 2026-09-23 | **Status:** Accepted
-
-**Context:** The domain model says completing a task should require an outcome and a next step.
-**Decision:** Implement "soft" enforcement. The UI will prominently prompt the user to record an outcome and schedule a next action, but it will not strictly block completion if they skip it.
-**Rationale:** Hard enforcement can frustrate users during initial adoption. We encourage the right behavior without breaking their workflow.
-
----
-
-### AD-015: Basic Contact Merge Workflow (Archive Loser)
-**Date:** 2026-09-23 | **Status:** Accepted
-
-**Context:** When merging duplicate contacts, do we build a complex field-by-field merge UI, or a basic "pick winner, archive loser" flow?
-**Decision:** Basic approach. The user selects a winner; all relational data (opportunities, inquiries, tasks, contact methods) is transferred to the winner. The loser is archived, and a `merge_history` record is created storing the loser's full pre-merge state.
-**Rationale:** Vastly simpler to implement for Sprint 2 while still solving the business problem safely. The history record preserves an audit trail.
-
----
-
-### AD-016: Manager Dashboard as Role-Gated Route
-**Date:** 2026-09-23 | **Status:** Accepted
-
-**Context:** Need an exception dashboard for managers.
-**Decision:** Implement as a separate `/exceptions` route, protected by a role guard checking for `owner` or `manager`.
-**Rationale:** Keeps the operational focus on exceptions rather than full analytics. Role checks in a Server Component ensure security.
-
----
-
-### AD-017: pg_trgm for Fuzzy Contact Name Matching
-**Date:** 2026-09-23 | **Status:** Accepted
-
-**Context:** Need to detect similar contact names during creation to prevent duplicates.
-**Decision:** Use the PostgreSQL `pg_trgm` extension and a trigram index on the `display_name` column.
-**Rationale:** Native to Postgres, no external dependency required. Sufficient for pilot-scale data size and provides good enough fuzzy matching for Bulgarian and Latin names.
-
----
-
-### AD-018: Dropping Unique Constraint on Contact Methods
-**Date:** 2026-09-25 | **Status:** Accepted
-
-**Context:** AD-011 noted a unique constraint on `(agency_id, type, value)` in `contact_methods` to prevent exact duplicates. However, with the introduction of the duplicate suggestion modal in Sprint 2, users are explicitly given the option to bypass the duplicate check ("Create anyway") when they legitimately need to share a phone number or email across contacts (e.g., spouses, colleagues).
-**Decision:** Drop the `uq_contact_method_per_agency` constraint from the database.
-**Rationale:** The UI-level duplicate detection handles the core business requirement of preventing *accidental* duplicates, while dropping the strict database constraint allows for intentional sharing of contact details across different records.
-**Consequences:** Multiple contacts within an agency can now share the same exact email or phone number if the user confirms the creation. The duplicate suggestion modal is the primary defense against duplicates.
-
----
-
-## Sprint 3 Decisions
-
-### AD-019: Notes vs. Activity — Separate Table or Unified?
-**Date:** 2026-09-28 | **Status:** Accepted
-
-**Context:** Need an Activity Timeline that merges notes, tasks, stage changes, assignments, etc. into a unified chronological view.
-**Decision:** Keep structured domain records (tasks, inquiries, audit logs) in separate tables. Add a `notes` table for user-authored content. The timeline is an aggregation view generated at read-time, not a single oversized activity storage table.
-**Rationale:** Keeps the domain boundaries clean and matches the business description expectation.
-
----
-
-### AD-020: Audit Log — Database Trigger vs. Application-Layer
-**Date:** 2026-09-28 | **Status:** Accepted
-
-**Context:** AC-09 requires tracing ownership, stage, and assignment changes.
-**Decision:** Use a PostgreSQL `AFTER UPDATE` trigger on `opportunities` and `contacts` that writes to an `audit_log` table.
-**Rationale:** Trigger-based auditing is tamper-proof (even direct DB edits are captured) and aligns with existing trigger patterns in the project.
-**Consequences:** The application reads from `audit_log` but does not mutate it.
-
----
-
-### AD-021: Notes — Contact-Level, Opportunity-Level, or Both?
-**Date:** 2026-09-28 | **Status:** Accepted
-
-**Context:** Both contacts and opportunities need notes, currently stored as a flat text field on both tables.
-**Decision:** A single `notes` table with `contact_id` and `opportunity_id` columns. A note must have at least one set.
-**Rationale:** Unified structure that easily surfaces opportunity notes on the contact's timeline.
-
----
-
-### AD-022: Deferring Public User Profiles for Timeline Author Mapping
-**Date:** 2026-09-30 | **Status:** Accepted
-
-**Context:** The timeline needs to display the author of notes, tasks, and audit events. However, `auth.users` is not joinable directly from the `public` schema via PostgREST.
-**Decision:** Temporarily hardcode "Team Member" in the timeline UI and defer the creation of a `public.profiles` table (which would sync with `auth.users`) to a later sprint focused on Member Management. The database successfully stores the user `UUID`, so no data is lost.
-**Rationale:** Building the `public.profiles` architecture out of sequence would stall core CRM development. It's better to build user profiles holistically when implementing agency invitations and role management.
-**Consequences:** The UI will read "Team Member" for all actions until the `public.profiles` feature is built, after which past timeline entries will automatically display correct names based on the stored `UUID`s.
-
----
-
-## Sprint 4 Decisions
-
-### AD-023: User Profiles — `public.profiles` Sync Strategy
-**Date:** 2026-10-01 | **Status:** Accepted
-
-**Context:** AD-022 deferred `public.profiles` to the Team Management sprint. We need to decide how to keep `profiles` in sync with `auth.users` and whether `profiles` should be tenant-scoped.
-**Decision:** Create a `public.profiles` table (with `id` as PK referencing `auth.users`) populated via a PostgreSQL `AFTER INSERT` trigger on `auth.users`. The table intentionally has **no `agency_id`** because a user's identity transcends any single agency. RLS allows any authenticated user to SELECT (needed for cross-agency colleague resolution), but only the row owner can UPDATE.
-**Rationale:** The trigger-on-`auth.users` pattern ensures profiles are always created, even for users who are invited but haven't finished onboarding. Having no `agency_id` keeps profiles orthogonal to tenancy — the `agency_memberships` table already handles that relationship.
-**Consequences:** Every JOIN against `auth.users` for display names is replaced by a JOIN against `public.profiles`. This is the first table in the system that intentionally breaks the standard P-001 RLS template (no `agency_id`, no `current_agency_id()` check). The INSERT policy was also dropped — only the `SECURITY DEFINER` trigger can create profiles, preventing unauthorized inserts from the API.
-
----
-
-### AD-024: Invitation Flow — Supabase Admin API with Magic Link
-**Date:** 2026-10-01 | **Status:** Accepted
-
-**Context:** Owners need to invite brokers. Options: (a) magic link via Supabase `admin.inviteUserByEmail()`, (b) custom invitation code system, (c) shareable link.
-**Decision:** Use Supabase Auth's `admin.inviteUserByEmail()` called from a Server Action via a dedicated admin client (`src/lib/supabase/admin.ts`). The invitation creates an `agency_memberships` row with `status: 'invited'` immediately. When the invited user clicks the magic link and hits the auth callback, all their `invited` memberships are activated to `active`.
-**Rationale:** Supabase's built-in invitation system handles email delivery, token generation, and link expiry. No custom token infrastructure needed.
-**Consequences:** Requires `SUPABASE_SERVICE_ROLE_KEY` in server-side environment variables. The admin client must never be exposed to the client bundle. The auth callback route (`src/app/(auth)/auth/callback/route.ts`) was enhanced to handle invitation activation after token exchange.
-
----
-
-### AD-025: Notification Architecture — Decision Only (No Implementation)
-**Date:** 2026-10-01 | **Status:** Accepted
-
-**Context:** BRD §259 lists notifications as deferred pending a product decision on channels and timing.
-**Decision:** Email-only for the pilot via Resend. Events: (1) task due reminder at 9 AM, (2) inquiry assigned (immediate), (3) opportunity reassigned (immediate), (4) overdue task escalation (daily digest). Mechanism: Supabase Edge Functions triggered by `pg_cron` for scheduled notifications, database triggers for immediate.
-**Rationale:** Recording the decision now enables Sprint 5+ implementation without revisiting the product discussion. Email-only keeps pilot scope manageable.
-**Consequences:** No implementation in Sprint 4. The `profiles` table can later hold per-user notification preferences.
-
----
-
-### AD-026: Global Search — PostgreSQL Full-Text Search with Weighted Vectors
-**Date:** 2026-10-01 | **Status:** Accepted
-
-**Context:** Pilot agencies need to search across contacts, opportunities, and inquiries from any screen. Options: (a) PostgreSQL FTS, (b) external search service (Algolia/Meilisearch), (c) client-side filtering.
-**Decision:** Server-side search using PostgreSQL `tsvector` columns with `setweight()` for relevance ranking, maintained by `BEFORE INSERT OR UPDATE` triggers. Combined with `pg_trgm` (already enabled in Sprint 2). Searches are parallelized across entity types via `Promise.all()`.
-**Rationale:** No external service needed at pilot scale. PostgreSQL's built-in capabilities are sufficient for hundreds to low thousands of records per agency.
-**Consequences:** Added `search_vector tsvector` columns to `contacts`, `opportunities`, and `inquiries`. Contact search vectors include contact method values (phone/email) by joining `contact_methods` in the trigger. A cascading trigger on `contact_methods` updates the parent contact's search vector when methods change. Backfill done via `UPDATE ... SET id = id` to fire the triggers on existing rows.
-
-
-## Sprint 5 Decisions
-
-### AD-027: Atomic Tenant Provisioning
-**Date:** 2026-10-05 | **Status:** Accepted
-
-**Context:** The previous signup flow was a 3-step client-side process which was vulnerable to manipulation and could fail midway, leaving partial state.
-**Decision:** Implement `create_agency_with_owner` as a single atomic SECURITY DEFINER RPC.
-**Rationale:** Database-level transactions ensure the agency, owner membership, and default seeds are created all-or-nothing, while RLS policies can be tightened to prevent unauthorized inserts.
-**Consequences:** Signup logic shifted to Server Actions calling the RPC.
-
----
-
-### AD-028: Explicit Privilege Grants on Functions
-**Date:** 2026-10-05 | **Status:** Accepted
-
-**Context:** Supabase grants EXECUTE on public functions to anon and authenticated roles by default, exposing internal logic.
-**Decision:** Revoke all EXECUTE permissions on public functions by default, and explicitly GRANT EXECUTE only to necessary roles (e.g., authenticated) for specific RPCs.
-**Rationale:** Adheres to the principle of least privilege.
-**Consequences:** Internal helper functions like `seed_agency_defaults` are no longer callable via the REST API.
-
----
-
-### AD-029: Profiles Table Scope and Selection logic (revises AD-023)
-**Date:** 2026-10-05 | **Status:** Accepted
-
-**Context:** Profiles were globally viewable by any authenticated user, which raised privacy concerns.
-**Decision:** Restrict profile visibility to the user themselves and colleagues within the same agency using a `shares_agency_with` helper.
-**Rationale:** Prevents user enumeration across tenants while allowing team members to see each other's profiles.
-**Consequences:** Replaced the "authenticated_can_view_profiles" policy with a colleague-restricted policy.
-
----
-
-### AD-030: Next 16 Middleware & Proxy Strategy
-**Date:** 2026-10-06 | **Status:** Accepted
-
-**Context:** Next.js 16 deprecated traditional middleware in favor of a proxy pattern for session updates.
-**Decision:** Implement `src/proxy.ts` to update Supabase sessions and handle basic redirects.
-**Rationale:** Aligns with Next 16 conventions and fixes a bug where sessions were never refreshed in the middleware layer.
-**Consequences:** Middleware was removed, and proxy handles session token refreshing. Full authorization remains in Server Components (layouts).
-
----
-
-### AD-031: i18n Strategy
-**Date:** 2026-10-06 | **Status:** Accepted
-
-**Context:** We need full Bulgarian localization.
-**Decision:** Use `next-intl` in "without i18n routing" mode, using `NEXT_LOCALE` cookie and reading the user's preference from `profiles.locale`.
-**Rationale:** Avoids the complexity of URL-based routing (e.g. `/bg/dashboard`) while keeping the UI in the user's chosen language.
-**Consequences:** All strings are extracted to `messages/bg.json` and `en.json`.
-
----
-
-### AD-032: Validation Messages as i18n Keys
-**Date:** 2026-10-06 | **Status:** Accepted
-
-**Context:** Zod schemas return hardcoded English error messages.
-**Decision:** Zod schemas will return i18n translation keys instead of raw strings (e.g., `'validation.required'`). A client-side `FieldError` component translates them at render time.
-**Rationale:** Keeps the domain layer clean of React contexts and translation fetching.
-**Consequences:** Zod errors are now keys.
-
----
-
-### AD-033: Domain Errors mapping to translation keys
-**Date:** 2026-10-06 | **Status:** Accepted
-
-**Context:** Server Actions need to return localized errors.
-**Decision:** Introduce a `DomainError` class whose `code` property corresponds to an i18n key in the `errors` namespace.
-**Rationale:** Cleanly separates business logic failures from UI presentation.
-**Consequences:** Action wrappers catch `DomainError` and translate it using `getTranslations` before sending to the client.
-
----
-
-### AD-034: Import Pipeline Architecture
-**Date:** 2026-10-07 | **Status:** Accepted
-
-**Context:** Bulk CSV imports require validation, preview, and atomic commits, but face Vercel execution limits and payload constraints.
-**Decision:** A 3-phase chunked pipeline: (1) Client parses CSV and stages chunks via Server Actions to `import_rows`; (2) Server validates all staged rows in DB; (3) Client orchestrates batch commits via an RPC (`import_commit_contacts`).
-**Rationale:** Bypasses 1MB request limits and timeout issues by chunking and batching, while keeping validation in TS and atomic commits in PG.
-**Consequences:** Requires heavy state tracking in `import_jobs` and `import_rows`.
-
----
-
-### AD-035: Idempotency keys for Inquiries
-**Date:** 2026-10-07 | **Status:** Accepted
-
-**Context:** We must prevent duplicate inquiries on repeated CSV imports.
-**Decision:** Add a unique index on `(agency_id, source_id, external_ref)` to `inquiries`.
-**Rationale:** Portals provide reliable IDs. Using this as an idempotency key guarantees exact duplicates are rejected or skipped safely.
-**Consequences:** Requires `external_ref` mapping during import.
-
----
-
-### AD-036: Import Revert Strategy
-**Date:** 2026-10-07 | **Status:** Accepted
-
-**Context:** Owners need to undo mistaken imports.
-**Decision:** Implement a soft-revert bounded to a 7-day window. The revert RPC safely deletes only records that have remained untouched (no manual notes, no tasks, no stage changes) since import.
-**Rationale:** Prevents destroying actual work done by brokers on mistakenly imported data.
-**Consequences:** Revert relies on a CTE to check dependencies and `DELETE ... USING` to remove safely.
-
-### AD-037: Currency Standardization to EUR
-**Date:** 2026-10-07 | **Status:** Accepted
-
-**Context:** Bulgaria adopted the Euro on 2026-01-01. Historical deals used BGN.
-**Decision:** EUR is the default currency across the CRM. BGN is deprecated but historical records remain intact. `PriceDisplay` component is introduced to format currency correctly according to `bg-BG` locale and EUR.
-**Rationale:** Standardizing on EUR simplifies reporting and aligns with the national currency shift.
-**Consequences:** The default currency in `agencies.settings` and `opportunities.currency` is set to EUR.
-
----
-
-### AD-038: Opportunity Localization Terminology
-**Date:** 2026-10-07 | **Status:** Accepted
-
-**Context:** "Opportunity" translates to various terms in Bulgarian.
-**Decision:** We use "Сделка" (Deal) as the localized term for Opportunity, rather than "Възможност".
-**Rationale:** "Сделка" is the colloquial industry standard term in the Bulgarian real estate market.
-**Consequences:** UI labels and seeded pipeline stages have been updated to reflect the Bulgarian terminology.
-
----
-
-## Product Direction Decisions
-
-### AD-039: Full Agency System, Not a Follow-Up Layer
-**Date:** 2026-10-28 | **Status:** Accepted (founder decision)
-
-**Context:** The competitive gap analysis (`docs/research/crm-competitive-gap-analysis.md`) found
-that every CRM Bulgarian agencies buy leads with property inventory, portal syndication and
-buyer-requirement matching. Local prices are €0–32 per broker per month. BrokerCRM scored about
-2.5/10, against 4.9–7.3 for local alternatives. The founding brief positioned BrokerCRM as a
-follow-up-discipline tool and gated property, integrations and other major modules behind pilot
-evidence ("each phase starts only after the previous outcome is demonstrated"). With that gate,
-BrokerCRM could only be sold as an add-on next to an agency's listing tool.
-
-Options: (a) a follow-up layer next to the agency's listing tool (cheaper to build, but needs
-sync with Estate Assistant/EstatePlus-style tools and a price well below theirs); (b) a full
-agency system that replaces them; (c) keep the evidence gate and decide later.
-
-**Decision:** (b). BrokerCRM becomes a complete agency system for Bulgarian residential sales
-agencies, with follow-up discipline as its differentiator.
-
-1. **Committed modules:** properties and mandates; buyer/tenant requirements and matching;
-   viewings with feedback; offers; portal syndication; portal and email lead intake; lead
-   routing and a lead pool; reminders; action plans; saved lists (Smart Lists); reports; GDPR
-   tools; a PWA.
-2. **Evidence sets order, not permission.** Pilot evidence decides the order and details of the
-   committed modules, not whether they are built. Committed modules count as E2 (founding brief)
-   evidence in sprint planning.
-3. **Non-goals:** only *listing syndication* leaves the list. Native apps, a WhatsApp/Viber
-   inbox, AI lead scoring, commission accounting, e-signatures and document generation,
-   transaction management, AML document handling and an MLS-like marketplace stay non-goals.
-4. **Market:** Bulgaria first. Other Eastern European markets are a later phase, and
-   multi-country expansion stays a non-goal for now.
-5. **Target customer:** residential sales agencies with 2–30 brokers (was 5–15).
-6. **Pilot start:** the paid pilot begins once the core-loop defects are fixed and reminders,
-   a light property record, requirements and matching ship. Recruiting pilot agencies can start
-   earlier.
-7. **Pricing hypothesis:** €20 per broker per month, all modules included. A one-time
-   onboarding/import fee (€150–500) stays a hypothesis to test.
-
-**Rationale:** Bulgarian agencies buy property-first. Without properties, matching and
-syndication, BrokerCRM competes with free and €11–22 tools while offering less. No local product
-proves strong follow-up discipline, so keeping it as the edge differentiates a full system.
-
-**Supersedes:** the evidence gate in `docs/business-description.md` (Candidate V1, Key Risks
-"Scope", Outcome-Based Roadmap), the *listing syndication* pilot non-goal, and the
-€99–249 per-agency pricing hypothesis.
-
-**Consequences:**
-- `AGENTS.md` Product scope, `docs/business-description.md`, the BRD deferred items and the
-  `sprint-planning` references are updated in the same change.
-- `docs/domain-model.md` is **not** changed now. It describes what is built; each module adds
-  its area when its migrations land, following the brief's "Future data model direction" rules.
-- The property ↔ requirement ↔ opportunity model needs a design session
-  (`/supermatt:grill-with-docs`) before the sprint that builds it.
-- Portal syndication depends on portal access. alo.bg publishes an open import spec; imot.bg
-  terms and pricing must be negotiated (gap analysis §8).
-
----
-
-### AD-040: Baseline production migration history with `migration repair`
-**Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
-
-**Context:** Production (`emflwmivjachbnaqumnn`) was on the Sprint 4 schema with no migration
-history, so none of the Sprint 5 security migrations had reached it.
-**Options:** A) mark the migrations prod already had as applied, then push the rest; B) reset
-prod; C) a new project.
-**Decision:** A, which keeps the data. Every later prod change goes through migrations only.
-**How it was done (2026-10-29, Sprint 6 slice 6.0):** a parity check rebuilt the repo schema up
-to `20261003000003` and compared it with prod (columns, constraints, indexes, policies,
-functions, triggers, grants, RLS flags). The only drift was an untracked
-`profiles.system_can_insert_profiles` policy, dropped by `20261102000003`. The history table was
-created and versions up to `20261003000003` marked applied; the founder then ran the remaining
-migrations in one transaction in the SQL editor (the Supabase connector's confirmation prompts
-could not be answered from the session). Afterwards: history equals the repo, the schema
-fingerprint matches, the exploit replay is denied, and the advisor lists no anon-executable
-SECURITY DEFINER function. The founder waived the pre-push backup.
-**Revisit if:** a parity check finds unexplained drift again.
-
----
-
-### AD-043: Cloud QA stack and E2E smoke test
-**Date:** 2026-10-29 | **Status:** Accepted
-
-**Context:** Cloud sessions could not run the app against a database (F-06), so the definition
-of done's browser check and `test:db` could not run there.
-**Options:** A) local Supabase in Docker for cloud sessions and CI; B) a Supabase branch per
-session (paid); C) mocked clients.
-**Decision:** A. `npm run stack:up` starts dockerd if needed, runs local Supabase without the
-services the app doesn't use, and writes `.env.local`. `npm run test:e2e` runs a Playwright
-core-loop smoke in bg and en at 1280 and 390 px against the seeded logins. `@playwright/test` is
-pinned to the version of the pre-installed browser. B stays the fallback. The CI E2E job comes
-in Sprint 8. Service integration tests against the same stack follow in slice 6.6.
-**Revisit if:** cloud containers lose Docker.
-
----
-
-### AD-044: Today defaults to "mine" for owners and managers
-**Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
-
-**Context:** `domain-model.md` §4 said Today is per broker, but the code showed owners and
-managers the whole agency, so their own calls were lost among everyone's.
-**Decision:** everyone sees their own work by default. Owners and managers get a Mine / Agency
-toggle (`/today?scope=agency`); a broker asking for `scope=agency` still gets their own.
-Exceptions stays agency-wide. Enforced in `getTodayScreenData` (`today/actions.ts`); RLS keeps
-visibility agency-wide (AD-001).
-**Revisit if:** pilot managers ask for a per-broker filter on Today.
-
----
+## Product
+
+### AD-039: Full agency system, not a follow-up layer
+**Accepted** (founder, 2026-10-28). BrokerCRM replaces the agency's listing tool rather than
+sitting next to it, with follow-up discipline as the edge. Committed modules, pilot gate and
+non-goals: `SPEC.md` §1–3. Evidence sets the order of committed modules, not whether they are
+built. Bulgaria first; residential sales agencies with 2–30 brokers; pricing hypothesis €20 per
+broker per month, all modules included.
+**Why:** Bulgarian agencies buy property-first (`docs/research/crm-competitive-gap-analysis.md`).
+
+### AD-047: Module-based agent-skills workflow
+**Accepted** (founder, 2026-10-29). `/feature-ideas` → `/spec` → `/plan` → `/build` →
+`/review` → `/ship`, one module at a time, no sprints. `SPEC.md` is the single product file,
+`spec/<module-id>.md` per module, `tasks/` for the active module only. The AGENTS.md Definition
+of Done overrides the plugin's.
+
+### AD-048: Local-only development
+**Accepted** (founder, 2026-10-29). Development runs only on the founder's machine with Docker
+Desktop; `npm run stack:up` doesn't start dockerd. CI still runs typecheck, lint, Vitest, pgTAP.
+**Revisit if:** we develop in cloud sessions again.
+
+## Stack and platform
+
+### AD-002: Next.js + Supabase + Tailwind + shadcn/ui
+**Accepted.** Next.js (App Router, now 16) on Vercel, Supabase for Postgres, auth and RLS.
+**Why:** native RLS, SQL-first, simple ops, low cost.
+
+### AD-030: `src/proxy.ts` refreshes the session only
+**Accepted.** Next 16 replaced middleware with the proxy; it refreshes the Supabase session.
+Authorization lives in Server Component layouts and RLS.
+
+### AD-040: Production changes go through migrations only
+**Accepted** (founder, 2026-10-28). Prod (`emflwmivjachbnaqumnn`) history was baselined with
+`migration repair` and now equals the repo. Never change prod schema outside a migration.
+**Revisit if:** a parity check finds unexplained drift.
+
+### AD-043: Local QA stack and E2E smoke
+**Accepted.** `npm run stack:up` runs local Supabase and writes `.env.local`; `npm run test:e2e`
+runs the Playwright core loop in bg and en at 1280 and 390 px. Service integration tests run
+against the same stack as the seeded users. (Its cloud-session part is superseded by AD-048.)
+
+## Tenancy, security and roles
+
+### AD-001: Records are visible to the whole agency
+**Accepted.** Every member sees every record in their agency; one RLS policy per table.
+Assignment and Today scope are UI defaults, not visibility (see AD-044).
+**Revisit if:** pilot agencies need "own records only".
+
+### AD-004: RLS through SECURITY DEFINER helpers
+**Accepted.** Policies call `current_agency_id()` / `current_user_role()` and never query
+`agency_memberships` inline (that recursed). Template: `supabase-patterns` skill.
+
+### AD-027: Atomic tenant provisioning
+**Accepted.** Sign-up calls one SECURITY DEFINER RPC, `create_agency_with_owner(name, locale)`,
+which creates the agency, owner membership and localized default seeds in one transaction.
+
+### AD-028: Explicit function grants
+**Accepted.** Revoke EXECUTE from `PUBLIC, anon, authenticated` on every function, then grant
+only the RPCs the app calls. Internal helpers are not callable over REST.
+
+### AD-023 / AD-029: `profiles` without `agency_id`, visible to colleagues
+**Accepted** (AD-029 revises AD-023). `public.profiles` is created by a trigger on
+`auth.users`, has no `agency_id` and no INSERT policy, and is visible to the user and to
+colleagues via `shares_agency_with()`.
+
+### AD-024: Invitations through `admin.inviteUserByEmail()`
+**Accepted.** A Server Action uses the service-role client (`src/lib/supabase/admin.ts`) to invite
+and creates an `invited` membership; the auth callback activates it. The invite creates the auth
+user immediately, so the membership is written after the call.
+
+### AD-045: Configuration and merge are owner/manager only
+**Accepted** (founder, 2026-10-28). Stages, lead sources and contact merge need owner or manager:
+`requireRole(ctx, CONFIG_ROLES)` in actions, hidden in the UI, and RLS on `stages`,
+`lead_sources` and `merge_history` writes.
+**Open:** a merge is a series of ordinary edits, so RLS blocks only its history row. An atomic,
+role-checked merge RPC is in the `SPEC.md` ideas backlog.
+
+## Domain
+
+### AD-008: Contacts are persons or organizations
+**Accepted.** `contacts.type`; persons use first and last name, organizations `company_name`.
+`display_name` is generated.
+
+### AD-009: Four opportunity types
+**Accepted.** buyer, seller, landlord, tenant; one shared pipeline.
+
+### AD-006 / AD-007: Stages and lead sources are per-agency tables
+**Accepted.** Seeded on provisioning, editable in Settings (owner/manager, AD-045).
+
+### AD-012: Phones stored as E.164, emails lowercase
+**Accepted.** Normalized in validation via `normalizePhone()` / `normalizeContactMethodValue()`;
+the database doesn't enforce the format. Viber and WhatsApp use the same normalization.
+
+### AD-041: International phone parsing with libphonenumber-js
+**Proposed** (accepted when `trustworthy-loop` Task 1 lands). `libphonenumber-js` (min
+metadata), BG default region, behind the same `normalizePhone()` signature. Landlines and foreign
+numbers become valid; unparseable numbers are still rejected.
+**Revisit if:** bundle size hurts mobile.
+
+### AD-018: Contacts may share a phone or email
+**Accepted.** No unique constraint on `contact_methods`; the duplicate warning ("create anyway")
+is the defence. Spouses and colleagues share numbers.
+
+### AD-015 / AD-017: Duplicates and merge
+**Accepted.** Similar names found with `pg_trgm` on `display_name`. Merge picks a winner, moves
+all related records to it, archives the loser and stores its pre-merge state in `merge_history`.
+
+### AD-013: Task type is a CHECK-constrained text column
+**Accepted.** A small fixed set; no lookup table.
+
+### AD-014: Completing a task needs an outcome; the next step is prompted, not forced
+**Accepted.** `completeWithNext` requires `outcome`; next task and stage change are optional.
+An opportunity left with no pending task shows as at-risk.
 
 ### AD-046: Pending tasks are editable; completed and cancelled are final
-**Date:** 2026-10-29 | **Status:** Accepted (Sprint 6 plan §3.3)
+**Accepted.** Any member can edit, reschedule or cancel a pending task; anything else throws
+`errors.task_not_pending`. The cancel reason goes in `tasks.outcome`. Reschedule presets are
+computed in agency time. `next_action_at` changes only through the trigger.
+**Revisit if:** reports need cancel reasons apart from outcomes.
 
-**Decision:** any member can edit, reschedule or cancel a pending task (AD-001); a completed or
-cancelled task can't be changed or completed again (`DomainError('errors.task_not_pending')`).
-The optional cancel reason is stored in `tasks.outcome` rather than a new column: the field
-already means "what happened to this task". The timeline does not show cancellations yet.
-Reschedule presets are
-computed on the server in agency time. `next_action_at` still changes only through the trigger.
-**Revisit if:** reporting needs to tell cancel reasons from outcomes (add `cancel_reason`).
+### AD-044: Today defaults to "mine"
+**Accepted** (founder, 2026-10-28). Owners and managers get a Mine / Agency toggle
+(`?scope=agency`); a broker always gets their own. Exceptions stays agency-wide.
+**Revisit if:** managers ask for a per-broker filter.
+
+### AD-016: Exceptions is a role-gated route
+**Accepted.** `/exceptions` is owner/manager only, checked in the Server Component.
+
+### AD-019 / AD-021: Notes table; the timeline is assembled on read
+**Accepted.** One `notes` table with `contact_id` and/or `opportunity_id` (at least one). The
+timeline merges notes, tasks, inquiries and audit events at read time; no activity table.
+
+### AD-020: `audit_log` is written by triggers only
+**Accepted.** AFTER UPDATE triggers on `opportunities` and `contacts`; the app only reads it and
+RLS denies inserts from members.
+
+### AD-026: Global search with Postgres full-text search
+**Accepted.** Weighted `tsvector` columns kept by triggers (contacts include their contact
+methods via a cascading trigger), `'simple'` config for Bulgarian, plus `pg_trgm`.
+
+### AD-037: EUR is the currency
+**Accepted.** EUR by default in `agencies.settings` and `opportunities.currency`, formatted with
+`useFormatter`. Historical BGN values stay as stored.
+
+## Import
+
+### AD-034: Chunked import pipeline
+**Accepted.** The client parses the CSV and stages 500-row chunks into `import_rows` (Server
+Action bodies max 1 MB), the server validates, and the client loops batch-commit RPCs until
+`remaining = 0`.
+
+### AD-035: Inquiry idempotency key
+**Accepted.** Unique `(agency_id, source_id, external_ref)` on `inquiries`; re-imports and future
+portal feeds skip exact duplicates.
+
+### AD-036: Import revert within 7 days, untouched records only
+**Accepted.** The revert deletes only imported records with no notes, tasks, inquiries or stage
+changes since import, and marks the rest of the rows reverted.
+
+## i18n
+
+### AD-031: next-intl without locale routing
+**Accepted.** `NEXT_LOCALE` cookie, set from `profiles.locale`; Bulgarian is the default. Every key
+in both `messages/bg.json` and `messages/en.json`.
+
+### AD-032 / AD-033: Errors travel as i18n keys
+**Accepted.** Zod messages and `DomainError.code` are i18n keys; `toActionError()`
+(`src/lib/actions.ts`) translates them on the server. RPCs return keys too, since they can't see
+the request locale.
+
+### AD-038: "Сделка" for opportunity
+**Accepted.** Bulgarian UI uses "Сделка", not "Възможност". Glossary: `crm-domain-model` skill.
+
+## Notifications
+
+### AD-025 / AD-042: Email reminders via a Vercel Cron route and Resend
+**Accepted** (founder, 2026-10-28; AD-042 replaces AD-025's pg_cron + Edge Function mechanism).
+Email only. A Vercel Cron Route Handler reuses the TypeScript services (pg_cron + `pg_net`
+calling the route is the fallback). The service-role client is allowed in that route, and every
+query still filters by `agency_id`. Local development uses Mailpit and manual triggers. Scope:
+`spec/reminders.md`.
+**Revisit if:** push notifications arrive with the PWA.
 
 ---
 
-### AD-045: Configuration and contact merge are owner/manager only
-**Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
+## Retired
 
-**Decision:** creating, renaming, reordering and deleting stages and lead sources, and merging
-contacts, are owner/manager only. Visibility stays agency-wide (AD-001).
-**Enforced in:** the Server Actions (`requireRole(ctx, CONFIG_ROLES)`), the settings UI (pages
-redirect brokers; the nav and the Merge button are hidden), and RLS: INSERT/UPDATE on `stages`
-and `lead_sources` and INSERT on `merge_history` need owner or manager.
-**Open question (code review, 2026-10-29):** a merge is a sequence of ordinary edits (moving
-contact methods, opportunities, inquiries and tasks, archiving the loser) that brokers may make
-one by one under AD-001, so RLS blocks only the merge's history record. Whether to move the merge
-into a role-checked, atomic RPC is with the founder.
-
----
-
-_New decisions will be added as they are made during development._
+Kept so old references resolve: AD-003 (English first: replaced by AD-031), AD-005 and AD-011
+(sprint sequencing), AD-010 (free-text phones: reversed by AD-012), AD-022 ("Team Member"
+placeholder: replaced by AD-023).
