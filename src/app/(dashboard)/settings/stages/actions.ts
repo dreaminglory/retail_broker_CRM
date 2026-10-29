@@ -7,7 +7,7 @@ import {
   updateStageSchema,
   reorderStagesSchema,
 } from '@/domain/stages/validation';
-import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { CONFIG_ROLES, getAuthContext, requireRole, toActionError, type ActionResult } from '@/lib/actions';
 import type { ReorderStagesInput } from '@/domain/stages/validation';
 
 export type { ActionResult };
@@ -21,7 +21,9 @@ export async function createStageAction(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
 
     const raw = {
       name: formData.get('name'),
@@ -48,7 +50,9 @@ export async function updateStageAction(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
 
     const raw = {
       name: formData.get('name') ?? undefined,
@@ -81,7 +85,9 @@ export async function reorderStagesAction(
   stages: ReorderStagesInput['stages']
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
 
     const parsed = reorderStagesSchema.safeParse({ stages });
     if (!parsed.success) return toActionError(parsed.error);
@@ -98,7 +104,9 @@ export async function reorderStagesAction(
 
 export async function deleteStageAction(id: string): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
     const service = new StageService(supabase);
     await service.delete(id, agencyId);
 

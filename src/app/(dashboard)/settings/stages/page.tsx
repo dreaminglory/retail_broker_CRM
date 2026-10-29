@@ -1,25 +1,11 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { createSupabaseServer } from '@/lib/supabase/server';
+import { CONFIG_ROLES, hasRole } from '@/lib/roles';
+import { getCurrentMembership } from '@/lib/membership';
 import { StageService } from '@/domain/stages/service';
 import { StagesSettingsClient } from './stages-settings-client';
 import { ChevronLeft } from 'lucide-react';
-
-async function getAgencyId(): Promise<string | null> {
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: membership } = await supabase
-    .from('agency_memberships')
-    .select('agency_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single();
-
-  return membership?.agency_id ?? null;
-}
 
 import { getTranslations } from "next-intl/server";
 
@@ -32,11 +18,10 @@ export async function generateMetadata() {
 export default async function StagesSettingsPage() {
   const t = await getTranslations("SettingsStages");
   const supabase = await createSupabaseServer();
-  const agencyId = await getAgencyId();
-
-  const stages = agencyId
-    ? await new StageService(supabase).list(agencyId)
-    : [];
+  const membership = await getCurrentMembership();
+  // Configuration is owner/manager only (AD-045).
+  if (!membership || !hasRole(membership.role, CONFIG_ROLES)) redirect('/settings');
+  const stages = await new StageService(supabase).list(membership.agencyId);
 
   return (
     <div className="mx-auto max-w-3xl">

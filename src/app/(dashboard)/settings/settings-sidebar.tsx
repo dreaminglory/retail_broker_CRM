@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { User, Users, Radio, Settings as SettingsIcon, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 
 interface SettingsSidebarProps {
   userRole: string;
@@ -25,19 +26,22 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
       href: "/settings/team",
       icon: Users,
     },
-    {
-      i18nKey: "leadSources",
-      href: "/settings/lead-sources",
-      icon: Radio,
-    },
-    {
-      i18nKey: "pipelineStages",
-      href: "/settings/stages",
-      icon: SettingsIcon,
-    },
   ];
 
-  if (userRole === "owner" || userRole === "manager") {
+  // Configuration pages are owner/manager only (AD-045).
+  if (hasRole(userRole, CONFIG_ROLES)) {
+    sidebarNavItems.push(
+      {
+        i18nKey: "leadSources",
+        href: "/settings/lead-sources",
+        icon: Radio,
+      },
+      {
+        i18nKey: "pipelineStages",
+        href: "/settings/stages",
+        icon: SettingsIcon,
+      },
+    );
     sidebarNavItems.push({
       i18nKey: "import",
       href: "/settings/import",

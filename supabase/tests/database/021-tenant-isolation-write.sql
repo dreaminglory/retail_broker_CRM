@@ -83,9 +83,11 @@ SELECT throws_ok(
     'Cannot insert audit log into foreign agency'
 );
 
-SELECT lives_ok(
+-- AD-020: audit_log is written by triggers and RPCs only (Sprint 6, F-04).
+SELECT throws_ok(
     $$ INSERT INTO audit_log (id, agency_id, performed_by, action, entity_type, entity_id) VALUES (gen_random_uuid(), current_setting('test.a1')::uuid, current_setting('test.u1')::uuid, 'created', 'contact', gen_random_uuid()) $$,
-    'Can insert audit log into own agency'
+    'new row violates row-level security policy for table "audit_log"',
+    'Cannot insert audit log into own agency'
 );
 
 -- Test profiles (F-06 check) - user 1 cannot update user 2's profile

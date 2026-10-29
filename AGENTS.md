@@ -25,12 +25,24 @@ npm run lint                         # eslint; i18next/no-literal-string flags h
 npm run test                         # vitest (node env, globals on)
 npx vitest run path/to/file.test.ts  # one file
 npm run test:db                      # pgTAP, supabase/tests/database (local Supabase must be running)
+npm run stack:up                     # start dockerd if needed, local Supabase, write .env.local
+npm run test:e2e                     # Playwright core-loop smoke, bg + en, 1280 and 390 px (needs stack:up)
 npx supabase start                   # local stack via Docker, applies migrations
 npx supabase db reset                # clean DB + supabase/seed.sql (two agencies, sample data)
 npm run build
 ```
 
 Env vars: `.env.example`. `SUPABASE_SERVICE_ROLE_KEY` is server-only.
+
+### QA in a cloud session
+
+Cloud containers ship Docker but don't start it. `npm run stack:up && npm run dev` brings
+up the app against local Supabase (first run pulls images, a few minutes). Sign in with a
+seeded login, password `password123`: `owner|manager|broker@alpha.bg` or `@beta.bg`.
+Login sets the locale from the profile; set the `NEXT_LOCALE` cookie (`bg`/`en`) after
+signing in to switch. Drive the browser with the pre-installed Playwright (`e2e/fixtures.ts`
+has a sign-in helper). `npx supabase db reset` restores the seed; seeded task dates are
+relative to now.
 
 ## Definition of done
 
@@ -60,6 +72,7 @@ After fixing suppressed errors, shrink it with `npx eslint . --prune-suppression
 | Requirements and status per feature | `docs/BRD.md` |
 | Product brief, personas, pilot scope | `docs/business-description.md` |
 | Current state and carry-over | `docs/STATUS.md` (created by the `sprint-planning` skill) |
+| Sprint targets to the pilot gate | `docs/roadmap.md` |
 | Pilot evidence for prioritisation | `docs/pilot-feedback.md` |
 
 Finished sprint plans are in `docs/archive/`. Don't read them unless a question needs them.
@@ -107,9 +120,10 @@ or `docs/decisions-log.md`.
 - An inquiry's `raw_payload` (original source data) is never modified. Caller fields,
   links, assignment and status are editable.
 - No synchronous `setState` inside `useEffect` (G-003).
-- **Known gap:** AD-030 and G-010 describe `src/proxy.ts` refreshing the Supabase
-  session, but that file has never been committed, and there is no middleware either.
-  Don't assume token refresh happens per request.
+- `src/proxy.ts` refreshes the Supabase session on every request (AD-030). It does no
+  authorization: that stays in layouts and RLS.
+- Stages, lead sources and contact merge are owner/manager only (AD-045): gate new
+  actions on them with `requireRole(ctx, CONFIG_ROLES)` (`src/lib/actions.ts`).
 
 ## Product scope
 

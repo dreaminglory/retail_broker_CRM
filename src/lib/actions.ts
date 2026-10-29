@@ -5,6 +5,12 @@
 
 import { createSupabaseServer } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ZodError } from 'zod';
+import { getTranslations } from 'next-intl/server';
+import { DomainError } from '@/lib/errors';
+import { CONFIG_ROLES, hasRole, type MemberRole } from '@/lib/roles';
+
+export { CONFIG_ROLES };
 
 export type ActionResult<T = void> =
   | { success: true; data: T }
@@ -42,9 +48,13 @@ export async function getAuthContext(): Promise<AuthContext> {
   };
 }
 
-import { DomainError } from '@/lib/errors';
-import { ZodError } from 'zod';
-import { getTranslations } from 'next-intl/server';
+/**
+ * Throws `DomainError('errors.forbidden')` unless the caller has one of `roles`.
+ * RLS enforces the same rule; this refuses the action before any write.
+ */
+export function requireRole(ctx: Pick<AuthContext, 'role'>, roles: readonly MemberRole[]): void {
+  if (!hasRole(ctx.role, roles)) throw new DomainError('errors.forbidden');
+}
 
 export async function toActionError(error: unknown, _t?: any): Promise<{ success: false, error: string, fieldErrors?: Record<string, string[]> }> {
   const t = await getTranslations();

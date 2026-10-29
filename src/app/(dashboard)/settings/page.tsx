@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { CONFIG_ROLES, hasRole } from "@/lib/roles";
+import { getCurrentMembership } from "@/lib/membership";
 import { Settings, Radio, ChevronRight, User, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -16,12 +18,16 @@ interface SettingSection {
   description: string;
   available: boolean;
   badge?: string;
+  /** Shown to owners and managers only (AD-045). */
+  configOnly?: boolean;
 }
 
 
 
 export default async function SettingsPage() {
   const t = await getTranslations("settings");
+  const membership = await getCurrentMembership();
+  const canConfigure = hasRole(membership?.role, CONFIG_ROLES);
 
   const settingSections: SettingSection[] = [
     {
@@ -44,6 +50,7 @@ export default async function SettingsPage() {
       title: t("leadSources"),
       description: t("leadSourcesDesc"),
       available: true,
+      configOnly: true,
     },
     {
       href: "/settings/stages",
@@ -51,6 +58,7 @@ export default async function SettingsPage() {
       title: t("pipelineStages"),
       description: t("pipelineStagesDesc"),
       available: true,
+      configOnly: true,
     },
   ];
   return (
@@ -61,7 +69,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="space-y-3">
-        {settingSections.map((section) => {
+        {settingSections.filter((section) => canConfigure || !section.configOnly).map((section) => {
           const Icon = section.icon;
           if (!section.available) {
             return (

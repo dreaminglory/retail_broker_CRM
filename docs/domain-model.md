@@ -404,6 +404,7 @@ The "Enforced by" column tells you which layer to change and test.
 | T3 | One active membership per user | partial unique index `uq_one_active_membership_per_user` |
 | T4 | Membership `user_id`/`agency_id` immutable | trigger `trg_membership_identity` |
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
+| T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
 | C2 | Phones E.164, emails lowercase | `normalizePhone()` / Zod |
 | C3 | Duplicate check (phone, email, trigram name) before creating a contact | `duplicate-detection.ts` (service) |
@@ -421,7 +422,7 @@ The "Enforced by" column tells you which layer to change and test.
 | K2 | Next task or stage change on completion | UI prompt only (AD-014, soft) |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
-| A1 | `audit_log` is append-only, written by triggers | no update/delete policy; triggers on opportunities, contacts |
+| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days | RPC `import_revert` |
 
@@ -438,7 +439,7 @@ Found while writing this doc. Each is a candidate for a fix or an ADR.
    trigger exists on `inquiries`.
 3. **Status transitions are unchecked.** Any status value can follow any other for
    inquiries, opportunities and tasks.
-4. **Session refresh.** AD-030 and G-010 describe `src/proxy.ts`, but it was never committed.
+4. ~~**Session refresh.**~~ Fixed in Sprint 6: `src/proxy.ts` refreshes the session per request.
 5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
 
 ---

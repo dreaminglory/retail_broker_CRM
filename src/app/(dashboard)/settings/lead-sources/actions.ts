@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { LeadSourceService } from '@/domain/lead-sources/service';
 import { createLeadSourceSchema, updateLeadSourceSchema } from '@/domain/lead-sources/validation';
-import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { CONFIG_ROLES, getAuthContext, requireRole, toActionError, type ActionResult } from '@/lib/actions';
 
 export type { ActionResult };
 
@@ -14,7 +14,9 @@ export async function createLeadSourceAction(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
 
     const raw = {
       name: formData.get('name'),
@@ -39,7 +41,9 @@ export async function updateLeadSourceAction(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
 
     const raw = {
       name: formData.get('name') ?? undefined,
@@ -61,7 +65,9 @@ export async function updateLeadSourceAction(
 
 export async function deactivateLeadSourceAction(id: string): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    const { supabase, agencyId } = ctx;
     const service = new LeadSourceService(supabase);
     await service.deactivate(id, agencyId);
     revalidatePath('/settings/lead-sources');

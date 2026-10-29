@@ -2,6 +2,9 @@
 -- Seed Data for Development
 -- Creates two Agencies (Alpha Imoti, Beta Estates), 3 Users each (Owner, Manager, Broker),
 -- Contacts, Opportunities, Inquiries, Tasks and Notes.
+-- Logins (password123): owner|manager|broker@alpha.bg and owner|manager|broker@beta.bg.
+-- Task due dates are relative to now(), so Today always has overdue, due-today and
+-- upcoming work after a `db reset` (Sprint 6, slice 6.1).
 -- ==============================================================================
 
 DO $$
@@ -43,6 +46,16 @@ DECLARE
 
   v_opp_2_1 UUID := '22222222-6666-6666-6666-666666666661';
   v_inq_2_1 UUID := '22222222-7777-7777-7777-777777777771';
+
+  -- Today in agency time (Europe/Sofia, src/lib/time/agency-day.ts): 23:00 local, or a few
+  -- minutes from now when the seed runs later than that, but never past local midnight.
+  v_due_today TIMESTAMPTZ := least(
+    greatest(
+      (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '23 hours') AT TIME ZONE 'Europe/Sofia',
+      now() + interval '5 minutes'
+    ),
+    (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '1 day' - interval '1 second') AT TIME ZONE 'Europe/Sofia'
+  );
 
 BEGIN
   -- 1. Create Users (Password for all: password123)
@@ -135,7 +148,18 @@ BEGIN
   -- 9. Create Tasks
   INSERT INTO public.tasks (agency_id, opportunity_id, assigned_to, title, task_type, due_at, status) VALUES
   (v_agency_1, v_opp_1_1, v_user_1_broker, 'Call Alpha lead', 'call', now() + interval '1 day', 'pending'),
-  (v_agency_2, v_opp_2_1, v_user_2_broker, 'Prepare Beta docs', 'other', now() - interval '2 days', 'pending');
+  (v_agency_2, v_opp_2_1, v_user_2_broker, 'Prepare Beta docs', 'other', now() - interval '2 days', 'pending'),
+  -- Alpha Today: one overdue, one due today, one upcoming, for the broker and the manager
+  (v_agency_1, v_opp_1_1, v_user_1_broker, 'Send Ivan the shortlist', 'email', now() - interval '1 day', 'pending'),
+  (v_agency_1, v_opp_1_1, v_user_1_broker, 'Confirm viewing with Ivan', 'call', v_due_today, 'pending'),
+  (v_agency_1, v_opp_1_1, v_user_1_manager, 'Review Ivan''s financing', 'other', now() + interval '3 days', 'pending');
+
+  -- 9b. New inquiries with BG mobile, Sofia landline and foreign phones (E.164)
+  INSERT INTO public.inquiries (agency_id, source_id, assigned_to, status, caller_name, caller_phone, caller_email, subject, received_at, raw_payload) VALUES
+  (v_agency_1, v_source_1_portal, v_user_1_broker, 'new', 'Georgi Dimitrov', '+359887654321', NULL, '2-bedroom in Lozenets', now() - interval '2 hours', '{"message": "Is the Lozenets flat still available?"}'::jsonb),
+  (v_agency_1, v_source_1_website, NULL, 'new', 'Elena Stoyanova', '+35929876543', 'elena.stoyanova@example.bg', 'Office space near the centre', now() - interval '30 minutes', '{"message": "Please call me at the office."}'::jsonb),
+  (v_agency_1, v_source_1_portal, v_user_1_broker, 'new', 'John Smith', '+447700900123', 'john.smith@example.co.uk', 'Holiday flat in Bansko', now() - interval '1 day', '{"message": "Buying from the UK."}'::jsonb),
+  (v_agency_2, v_source_2_portal, v_user_2_broker, 'new', 'Klaus Weber', '+4915123456789', NULL, 'Sea-view apartment in Varna', now() - interval '3 hours', '{"message": "Looking for a sea view."}'::jsonb);
 
   -- 10. Create Notes
   INSERT INTO public.notes (agency_id, opportunity_id, created_by, content) VALUES
