@@ -4,7 +4,7 @@
  */
 
 import type { AuthContext } from '@/lib/actions';
-import { hasRole, CONFIG_ROLES } from '@/lib/roles';
+import { hasRole, MANAGER_ROLES } from '@/lib/roles';
 import { TaskService } from "@/domain/tasks/service";
 import type { Task } from "@/domain/tasks/types";
 import type { AtRiskOpportunity } from "@/domain/tasks/repository";
@@ -26,7 +26,7 @@ export interface TodayScreenData {
 
 /** Owners and managers can switch Today to the whole agency (AD-044). */
 export function canSwitchTodayScope(role: string): boolean {
-  return hasRole(role, CONFIG_ROLES);
+  return hasRole(role, MANAGER_ROLES);
 }
 
 /**
