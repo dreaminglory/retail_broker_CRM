@@ -68,19 +68,19 @@
 
 ### Tasks
 #### Domain
-- [ ] `parseAgencyLocal()` in `src/lib/time/agency-day.ts`; used by `src/domain/tasks/validation.ts` (both schemas)
-- [ ] `TaskService.reschedule()` / `cancel()` (pending-only, `DomainError`)
-- [ ] Today repository: one bucket per task (no Overdue + Due today double-listing)
-- [ ] Vitest: `parseAgencyLocal` (DST), reschedule/cancel guards, bucket exclusivity
-- [ ] pgTAP `050-trigger-integrity`: `next_action_at` after reschedule and cancel
+- [x] `parseAgencyLocal()` in `src/lib/time/agency-day.ts`; used by `src/domain/tasks/validation.ts` (both schemas)
+- [x] `TaskService.reschedule()` / `cancel()` (pending-only, `DomainError`)
+- [x] Today repository: one bucket per task (no Overdue + Due today double-listing)
+- [x] Vitest: `parseAgencyLocal` (DST), reschedule/cancel guards, bucket exclusivity
+- [x] pgTAP `050-trigger-integrity`: `next_action_at` after reschedule and cancel
 #### Server Actions
-- [ ] Opportunity-page `completeTaskAction` uses `completeWithNext` (next task + stage)
-- [ ] `rescheduleTaskAction`, `cancelTaskAction` wired; `getTodayScreenData(scope)`
+- [x] Opportunity-page `completeTaskAction` uses `completeWithNext` (next task + stage)
+- [x] `rescheduleTaskAction`, `cancelTaskAction` wired; `getTodayScreenData(scope)`
 #### UI
-- [ ] `task-card.tsx`: fix the literal `t('dueTodayTime'…)`, `useFormatter`, `isToday` in agency time
-- [ ] Task menu: edit, reschedule presets (+1 h, tomorrow 09:00, +2 days, next Monday 09:00), cancel with an optional reason
-- [ ] Mine/Agency toggle on Today (owner/manager)
-- [ ] i18n keys in `messages/bg.json` + `messages/en.json`
+- [x] `task-card.tsx`: fix the literal `t('dueTodayTime'…)`, `useFormatter`, `isToday` in agency time
+- [x] Task menu: edit, reschedule presets (+1 h, tomorrow 09:00, +2 days, next Monday 09:00), cancel with an optional reason
+- [x] Mine/Agency toggle on Today (owner/manager)
+- [x] i18n keys in `messages/bg.json` + `messages/en.json`
 - [ ] Browser check: desktop + 390 px, BG and EN
 
 ### Acceptance criteria
