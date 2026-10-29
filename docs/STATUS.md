@@ -8,9 +8,12 @@
   (plan in `docs/archive/`; code done, prod deploy not done)
 - **Pilot status:** not started. Paid pilot gate = core-loop defects fixed + reminders + light
   property record + requirements + matching (AD-039). Target: end of Sprint 8 (`docs/roadmap.md`).
-- **Production:** Supabase project `emflwmivjachbnaqumnn` (eu-west-2). **Migrations in sync: NO.**
-  Prod is on the Sprint 4 schema (14 tables, no migration-history table); Sprint 5 migrations
-  `20261005000001`…`20261007000004` were never applied. App hosting: none confirmed. Development runs locally; domain, Resend and hosting are go-live prerequisites (founder, 2026-10-29).
+- **Production:** Supabase project `emflwmivjachbnaqumnn` (eu-west-2). **Migrations in sync: YES**
+  (2026-10-29, Sprint 6 slice 6.0, AD-040): history baselined at `20261003000003`, the Sprint 5 and 6
+  migrations applied through `20261102000003`; schema fingerprint equals the repo; exploit replay
+  denied; advisor shows no anon-executable SECURITY DEFINER function. Still open: leaked-password
+  protection (Auth setting, founder). From now on prod changes go through migrations only.
+  App hosting: none confirmed. Development runs locally; domain, Resend and hosting are go-live prerequisites (founder, 2026-10-29).
 - **Checks on 2026-10-28 (this session):** typecheck ✅ · lint ✅ (0 errors, 80 warnings) ·
   Vitest ✅ 19 passed / 2 todo (2 files) · pgTAP ✅ 93/93 locally (14 files).
 
@@ -31,7 +34,6 @@
 ## Carry-over / known gaps
 | Item | Source | Severity |
 |---|---|---|
-| Prod still has Sprint 5 F-01 (any user can insert an owner membership into any agency), F-02 (forged audit rows), F-03 (anon-executable SECURITY DEFINER functions), F-06 (cross-agency profile/email read) | Sprint 5 close not done; verified on prod 2026-10-28 | **Critical** |
 | `src/proxy.ts` session refresh never committed | AD-030, FR-AUT-03 | High |
 | `audit_log` `tenant_insert` RLS lets members insert audit rows (AD-020) | Inventory §4 #13 | High |
 | Brokers can edit stages, lead sources and merge contacts | Gap analysis §5.0 | Medium |
