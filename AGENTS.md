@@ -108,9 +108,10 @@ or `docs/decisions-log.md`.
 - An inquiry's `raw_payload` (original source data) is never modified. Caller fields,
   links, assignment and status are editable.
 - No synchronous `setState` inside `useEffect` (G-003).
-- **Known gap:** AD-030 and G-010 describe `src/proxy.ts` refreshing the Supabase
-  session, but that file has never been committed, and there is no middleware either.
-  Don't assume token refresh happens per request.
+- `src/proxy.ts` refreshes the Supabase session on every request (AD-030). It does no
+  authorization: that stays in layouts and RLS.
+- Stages, lead sources and contact merge are owner/manager only (AD-045): gate new
+  actions on them with `requireRole(ctx, CONFIG_ROLES)` (`src/lib/actions.ts`).
 
 ## Product scope
 
