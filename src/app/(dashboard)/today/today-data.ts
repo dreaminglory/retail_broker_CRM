@@ -14,7 +14,7 @@ import { getAgencySettings } from "@/domain/agencies/settings";
 
 export type TodayScope = "mine" | "agency";
 
-export interface TodayScreenData {
+export type TodayScreenData = {
   scope: TodayScope;
   /** The agency's timezone, for the UI's Intl formatting. */
   timeZone: string;
@@ -23,7 +23,7 @@ export interface TodayScreenData {
   upcoming: Task[];
   atRisk: AtRiskOpportunity[];
   newInquiries: Inquiry[];
-}
+};
 
 /** Owners and managers can switch Today to the whole agency (AD-044). */
 export function canSwitchTodayScope(role: string): boolean {

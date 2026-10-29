@@ -8,7 +8,7 @@ export type { MemberRole };
 /** Roles that may change agency configuration: stages, lead sources, contact merge (AD-045). */
 export const CONFIG_ROLES: readonly MemberRole[] = ['owner', 'manager'];
 
-/** Roles that may see the whole agency's work on Today (AD-044). */
+/** Roles that may see the whole agency's work (Today's agency scope, AD-044; Exceptions). */
 export const MANAGER_ROLES: readonly MemberRole[] = ['owner', 'manager'];
 
 /** True when `role` is one of `roles`. A missing role (no membership) is never allowed. */

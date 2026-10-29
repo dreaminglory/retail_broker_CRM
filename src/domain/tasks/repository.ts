@@ -32,6 +32,16 @@ export interface AtRiskOpportunity {
   created_at: string;
 }
 
+/**
+ * The row a write guarded by `status = 'pending'` returned. No row means someone
+ * completed or cancelled the task after the service checked it.
+ */
+function pendingWriteResult(data: unknown, error: { message: string } | null, verb: string): Task {
+  if (error) throw new Error(`Failed to ${verb} task: ${error.message}`);
+  if (!data) throw new DomainError('errors.task_not_pending');
+  return data as Task;
+}
+
 export class TaskRepository {
   constructor(private readonly db: SupabaseClient) {}
 
@@ -208,10 +218,7 @@ export class TaskRepository {
       .select()
       .maybeSingle();
 
-    if (error) throw new Error(`Failed to update task: ${error.message}`);
-    // No row: someone completed or cancelled it after the service checked.
-    if (!data) throw new DomainError('errors.task_not_pending');
-    return data as Task;
+    return pendingWriteResult(data, error, 'update');
   }
 
   /**
@@ -237,10 +244,7 @@ export class TaskRepository {
       .select()
       .maybeSingle();
 
-    if (error) throw new Error(`Failed to complete task: ${error.message}`);
-    // No row: someone completed or cancelled it after the service checked.
-    if (!data) throw new DomainError('errors.task_not_pending');
-    return data as Task;
+    return pendingWriteResult(data, error, 'complete');
   }
 
   /** Cancels a pending task. The optional reason is kept as its `outcome`. */
@@ -254,9 +258,6 @@ export class TaskRepository {
       .select()
       .maybeSingle();
 
-    if (error) throw new Error(`Failed to cancel task: ${error.message}`);
-    // No row: someone completed or cancelled it after the service checked.
-    if (!data) throw new DomainError('errors.task_not_pending');
-    return data as Task;
+    return pendingWriteResult(data, error, 'cancel');
   }
 }
