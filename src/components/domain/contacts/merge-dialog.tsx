@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Merge } from "lucide-react";
+import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { Contact } from "@/domain/contacts/types";
 import type { MergePreview } from "@/domain/contacts/merge-types";
@@ -49,8 +50,9 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
     const handler = setTimeout(async () => {
       setSearching(true);
       try {
-        const results = await searchContactsForMergeAction(search, currentContact.id);
-        setSearchResults(results);
+        const result = await searchContactsForMergeAction(search, currentContact.id);
+        if (result.success) setSearchResults(result.data);
+        else toast.error(result.error);
       } catch (err) {
         console.error(err);
       } finally {
@@ -65,8 +67,9 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
     setSelectedWinner(winner);
     setLoadingPreview(true);
     try {
-      const p = await getMergePreviewAction(winner.id, currentContact.id);
-      setPreview(p);
+      const result = await getMergePreviewAction(winner.id, currentContact.id);
+      if (result.success) setPreview(result.data);
+      else toast.error(result.error);
     } catch (err) {
       console.error(err);
     } finally {
@@ -79,7 +82,11 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
 
     setMerging(true);
     try {
-      await mergeContactsAction(selectedWinner.id, currentContact.id);
+      const result = await mergeContactsAction(selectedWinner.id, currentContact.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
       setOpen(false);
       router.push(`/contacts/${selectedWinner.id}`);
     } catch (err) {

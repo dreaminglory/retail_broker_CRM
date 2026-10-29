@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { CONFIG_ROLES } from "@/lib/actions";
 import { LeadSourceService } from "@/domain/lead-sources/service";
 import { LeadSourceListClient } from "./lead-source-list-client";
 import { ChevronLeft } from "lucide-react";
 
-async function getAgencyId(): Promise<string | null> {
+async function getMembership(): Promise<{ agency_id: string; role: string } | null> {
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -14,12 +16,12 @@ async function getAgencyId(): Promise<string | null> {
 
   const { data: membership } = await supabase
     .from("agency_memberships")
-    .select("agency_id")
+    .select("agency_id, role")
     .eq("user_id", user.id)
     .eq("status", "active")
     .single();
 
-  return membership?.agency_id ?? null;
+  return membership ?? null;
 }
 
 import { getTranslations } from "next-intl/server";
@@ -33,7 +35,10 @@ export async function generateMetadata() {
 export default async function LeadSourcesPage() {
   const t = await getTranslations("SettingsLeadSources");
   const supabase = await createSupabaseServer();
-  const agencyId = await getAgencyId();
+  const membership = await getMembership();
+  // Configuration is owner/manager only (AD-045).
+  if (!membership || !(CONFIG_ROLES as readonly string[]).includes(membership.role)) redirect("/settings");
+  const agencyId = membership.agency_id;
 
   const leadSources = agencyId
     ? await new LeadSourceService(supabase).listAll(agencyId)

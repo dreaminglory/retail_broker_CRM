@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { CONFIG_ROLES } from "@/lib/actions";
 import { Settings, Radio, ChevronRight, User, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -16,12 +18,33 @@ interface SettingSection {
   description: string;
   available: boolean;
   badge?: string;
+  /** Shown to owners and managers only (AD-045). */
+  configOnly?: boolean;
 }
 
 
 
+async function getRole(): Promise<string | null> {
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: membership } = await supabase
+    .from("agency_memberships")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
+  return membership?.role ?? null;
+}
+
 export default async function SettingsPage() {
   const t = await getTranslations("settings");
+  const role = await getRole();
+  const canConfigure = (CONFIG_ROLES as readonly string[]).includes(role ?? "");
 
   const settingSections: SettingSection[] = [
     {
@@ -44,6 +67,7 @@ export default async function SettingsPage() {
       title: t("leadSources"),
       description: t("leadSourcesDesc"),
       available: true,
+      configOnly: true,
     },
     {
       href: "/settings/stages",
@@ -51,6 +75,7 @@ export default async function SettingsPage() {
       title: t("pipelineStages"),
       description: t("pipelineStagesDesc"),
       available: true,
+      configOnly: true,
     },
   ];
   return (
@@ -61,7 +86,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="space-y-3">
-        {settingSections.map((section) => {
+        {settingSections.filter((section) => canConfigure || !section.configOnly).map((section) => {
           const Icon = section.icon;
           if (!section.available) {
             return (

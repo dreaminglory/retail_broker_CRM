@@ -25,19 +25,22 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
       href: "/settings/team",
       icon: Users,
     },
-    {
-      i18nKey: "leadSources",
-      href: "/settings/lead-sources",
-      icon: Radio,
-    },
-    {
-      i18nKey: "pipelineStages",
-      href: "/settings/stages",
-      icon: SettingsIcon,
-    },
   ];
 
+  // Configuration pages are owner/manager only (AD-045).
   if (userRole === "owner" || userRole === "manager") {
+    sidebarNavItems.push(
+      {
+        i18nKey: "leadSources",
+        href: "/settings/lead-sources",
+        icon: Radio,
+      },
+      {
+        i18nKey: "pipelineStages",
+        href: "/settings/stages",
+        icon: SettingsIcon,
+      },
+    );
     sidebarNavItems.push({
       i18nKey: "import",
       href: "/settings/import",

@@ -4,6 +4,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { ContactService } from "@/domain/contacts/service";
 import { ContactMethodList } from "@/components/domain/contacts/contact-method-list";
 import { ContactDetailClient } from "./contact-detail-client";
+import { CONFIG_ROLES } from "@/lib/actions";
 import {
   ChevronLeft,
   Building2,
@@ -31,7 +32,7 @@ export default async function ContactDetailPage({
 
   const { data: membership } = await supabase
     .from("agency_memberships")
-    .select("agency_id")
+    .select("agency_id, role")
     .eq("user_id", user!.id)
     .eq("status", "active")
     .single();
@@ -121,7 +122,11 @@ export default async function ContactDetailPage({
         </div>
 
         {/* Actions: edit + archive */}
-        <ContactDetailClient contact={contact} agencyId={agencyId} />
+        <ContactDetailClient
+          contact={contact}
+          agencyId={agencyId}
+          canMerge={(CONFIG_ROLES as readonly string[]).includes(membership?.role ?? "")}
+        />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

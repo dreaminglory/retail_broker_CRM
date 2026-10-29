@@ -43,6 +43,17 @@ export async function getAuthContext(): Promise<AuthContext> {
 }
 
 import { DomainError } from '@/lib/errors';
+
+/** Roles that may change agency configuration: stages, lead sources, contact merge (AD-045). */
+export const CONFIG_ROLES = ['owner', 'manager'] as const;
+
+/**
+ * Throws `DomainError('errors.forbidden')` unless the caller has one of `roles`.
+ * RLS enforces the same rule; this refuses the action before any write.
+ */
+export function requireRole(ctx: Pick<AuthContext, 'role'>, roles: readonly string[]): void {
+  if (!roles.includes(ctx.role)) throw new DomainError('errors.forbidden');
+}
 import { ZodError } from 'zod';
 import { getTranslations } from 'next-intl/server';
 

@@ -23,9 +23,11 @@ import { MergeDialog } from "@/components/domain/contacts/merge-dialog";
 interface ContactDetailClientProps {
   contact: Contact;
   agencyId: string;
+  /** Merge is owner/manager only (AD-045). */
+  canMerge: boolean;
 }
 
-export function ContactDetailClient({ contact }: ContactDetailClientProps) {
+export function ContactDetailClient({ contact, canMerge }: ContactDetailClientProps) {
   const t = useTranslations("ContactDetailClient");
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -47,7 +49,7 @@ export function ContactDetailClient({ contact }: ContactDetailClientProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <MergeDialog currentContact={contact} />
+      {canMerge && <MergeDialog currentContact={contact} />}
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogTrigger
