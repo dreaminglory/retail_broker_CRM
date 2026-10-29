@@ -34,9 +34,6 @@
 ## Carry-over / known gaps
 | Item | Source | Severity |
 |---|---|---|
-| `src/proxy.ts` session refresh never committed | AD-030, FR-AUT-03 | High |
-| `audit_log` `tenant_insert` RLS lets members insert audit rows (AD-020) | Inventory §4 #13 | High |
-| Brokers can edit stages, lead sources and merge contacts | Gap analysis §5.0 | Medium |
 | Nine core-loop defects (Today, task completion, tz, pagination, import revert…) | Gap analysis §5.0 | Medium |
 | Cloud session setup script fails (`npm ci` outside the repo); Docker not started | This session | Medium |
 | Vitest covers 2 files; no domain service tests (FR-TST-03 ⚠️) | Inventory §5 | Medium |

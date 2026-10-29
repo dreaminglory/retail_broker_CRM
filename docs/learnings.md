@@ -32,7 +32,7 @@
 **Learning:**
 - **Server Components / Server Actions**: Use `createSupabaseServer()` from `@/lib/supabase/server` — reads cookies via `next/headers`, runs on the server, and carries the user's auth context through RLS.
 - **Client Components**: Use `createSupabaseBrowser()` from `@/lib/supabase/client` — uses browser cookies, needed for interactive auth flows (signup, login).
-- **Middleware**: Uses a separate `updateSession()` helper from `@/lib/supabase/middleware` to refresh tokens on every request.
+- **Proxy** (Next 16's replacement for middleware): `src/proxy.ts` calls `updateSession()` from `@/lib/supabase/proxy` to refresh tokens on every request (AD-030).
 **Impact:** Always check whether you're in a server or client context before choosing the Supabase client. Server Actions should always use the server client.
 
 ### L-005: Signup Flow — Agency + Membership in One Transaction (Superseded by AD-027)

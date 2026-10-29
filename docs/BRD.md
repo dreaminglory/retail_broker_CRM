@@ -36,7 +36,7 @@ active opportunity has an owner, a next action and a complete history.
 |----|------------|
 | FR-AUT-01 | Email/password signup creates the agency and its owner membership atomically |
 | FR-AUT-02 | Email/password login |
-| FR-AUT-03 | ⚠️ Session management via Supabase Auth. The session-refresh proxy described in AD-030 was never committed |
+| FR-AUT-03 | ✅ Session management via Supabase Auth; `src/proxy.ts` refreshes the session on every request (AD-030, Sprint 6) |
 | FR-AUT-04 | Auth callback route for email confirmation |
 | FR-AUT-05 | Dashboard routes redirect unauthenticated users to login |
 | FR-AUT-07 | No user can read or write another agency's data |

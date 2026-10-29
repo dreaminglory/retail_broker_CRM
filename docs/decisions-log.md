@@ -447,4 +447,56 @@ proves strong follow-up discipline, so keeping it as the edge differentiates a f
 
 ---
 
+### AD-040: Baseline production migration history with `migration repair`
+**Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
+
+**Context:** Production (`emflwmivjachbnaqumnn`) was on the Sprint 4 schema with no migration
+history, so none of the Sprint 5 security migrations had reached it.
+**Options:** A) mark the migrations prod already had as applied, then push the rest; B) reset
+prod; C) a new project.
+**Decision:** A, which keeps the data. Every later prod change goes through migrations only.
+**How it was done (2026-10-29, Sprint 6 slice 6.0):** a parity check rebuilt the repo schema up
+to `20261003000003` and compared it with prod (columns, constraints, indexes, policies,
+functions, triggers, grants, RLS flags). The only drift was an untracked
+`profiles.system_can_insert_profiles` policy, dropped by `20261102000003`. The history table was
+created and versions up to `20261003000003` marked applied; the founder then ran the remaining
+migrations in one transaction in the SQL editor (the Supabase connector's confirmation prompts
+could not be answered from the session). Afterwards: history equals the repo, the schema
+fingerprint matches, the exploit replay is denied, and the advisor lists no anon-executable
+SECURITY DEFINER function. The founder waived the pre-push backup.
+**Revisit if:** a parity check finds unexplained drift again.
+
+---
+
+### AD-043: Cloud QA stack and E2E smoke test
+**Date:** 2026-10-29 | **Status:** Accepted
+
+**Context:** Cloud sessions could not run the app against a database (F-06), so the definition
+of done's browser check and `test:db` could not run there.
+**Options:** A) local Supabase in Docker for cloud sessions and CI; B) a Supabase branch per
+session (paid); C) mocked clients.
+**Decision:** A. `npm run stack:up` starts dockerd if needed, runs local Supabase without the
+services the app doesn't use, and writes `.env.local`. `npm run test:e2e` runs a Playwright
+core-loop smoke in bg and en at 1280 and 390 px against the seeded logins. `@playwright/test` is
+pinned to the version of the pre-installed browser. B stays the fallback. The CI E2E job comes
+in Sprint 8. Service integration tests against the same stack follow in slice 6.6.
+**Revisit if:** cloud containers lose Docker.
+
+---
+
+### AD-045: Configuration and contact merge are owner/manager only
+**Date:** 2026-10-29 | **Status:** Accepted (founder, 2026-10-28)
+
+**Decision:** creating, renaming, reordering and deleting stages and lead sources, and merging
+contacts, are owner/manager only. Visibility stays agency-wide (AD-001).
+**Enforced in:** the Server Actions (`requireRole(ctx, CONFIG_ROLES)`), the settings UI (pages
+redirect brokers; the nav and the Merge button are hidden), and RLS: INSERT/UPDATE on `stages`
+and `lead_sources` and INSERT on `merge_history` need owner or manager.
+**Open question (code review, 2026-10-29):** a merge is a sequence of ordinary edits (moving
+contact methods, opportunities, inquiries and tasks, archiving the loser) that brokers may make
+one by one under AD-001, so RLS blocks only the merge's history record. Whether to move the merge
+into a role-checked, atomic RPC is with the founder.
+
+---
+
 _New decisions will be added as they are made during development._
