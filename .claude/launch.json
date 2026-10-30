@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "$env:SWC_NATIVE_BINDING_CACHE='C:\\Users\\dimit\\.swc-native-cache'; npm run dev"
+      ],
+      "port": 3000
+    }
+  ]
+}
