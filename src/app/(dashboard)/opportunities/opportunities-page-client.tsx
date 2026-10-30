@@ -27,7 +27,6 @@ import type { Opportunity } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import type { LeadSource } from "@/domain/lead-sources/types";
-import type { Contact } from "@/domain/contacts/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -40,7 +39,6 @@ interface OpportunitiesPageClientProps {
   pageInfo: PageInfo;
   stages: Stage[];
   leadSources: LeadSource[];
-  contacts: Contact[];
   brokers: ActiveBroker[];
   initialSearch: string;
   initialStatus: string;
@@ -53,7 +51,6 @@ export function OpportunitiesPageClient({
   pageInfo,
   stages,
   leadSources,
-  contacts,
   brokers,
   initialSearch,
   initialStatus,
@@ -135,7 +132,6 @@ export function OpportunitiesPageClient({
               createAction={createOpportunityAction}
               stages={stages}
               leadSources={leadSources}
-              contacts={contacts}
               brokers={brokers}
               onSuccess={(id) => {
                 setCreateOpen(false);

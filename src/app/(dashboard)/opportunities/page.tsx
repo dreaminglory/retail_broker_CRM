@@ -3,7 +3,6 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { OpportunityService } from "@/domain/opportunities/service";
 import { StageRepository } from "@/domain/stages/repository";
 import { LeadSourceRepository } from "@/domain/lead-sources/repository";
-import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { OpportunitiesPageClient } from "./opportunities-page-client";
 import type { OpportunityType } from "@/domain/opportunities/types";
@@ -60,7 +59,7 @@ export default async function OpportunitiesPage({
   }
 
   // Fetch all required data in parallel
-  const [paged, stages, leadSources, contacts, brokers] = await Promise.all([
+  const [paged, stages, leadSources, brokers] = await Promise.all([
     loadPage(page, PAGE_SIZE, (offset, limit) =>
       new OpportunityService(supabase).listPage(agencyId, {
         search: search || undefined,
@@ -73,7 +72,6 @@ export default async function OpportunitiesPage({
     ),
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
-    new ContactService(supabase).list(agencyId, { status: "active", limit: 200 }),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
@@ -84,7 +82,6 @@ export default async function OpportunitiesPage({
         pageInfo={paged.info}
         stages={stages}
         leadSources={leadSources}
-        contacts={contacts}
         brokers={brokers}
         initialSearch={search}
         initialStatus={status}

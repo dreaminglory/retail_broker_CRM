@@ -131,10 +131,10 @@ stack (refuses to run against a non-local URL).
 `ContactCombobox` replace the 200-row selects in `opportunity-form` and `convert-inquiry-dialog`.
 
 **Acceptance criteria:**
-- [ ] With 2,000 contacts, contact #1,999 can be found and picked in the opportunity form (AC-5)
+- [x] With 2,000 contacts, contact #1,999 can be found and picked in the opportunity form (AC-5)
 
 **Verification:**
-- [ ] Browser check at 390 px; Vitest for the action's validation
+- [x] Browser check at 390 px; Vitest for the action's validation
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/components/domain/contacts/contact-combobox.tsx`, `opportunity-form.tsx`, `convert-inquiry-dialog.tsx`, the contacts actions

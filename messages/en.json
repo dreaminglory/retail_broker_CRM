@@ -796,6 +796,7 @@
     "companyName": "Company name",
     "companyNamePlaceholder": "e.g. ACME Real Estate Ltd.",
     "searchContactsPlaceholder": "Search contacts…",
+    "existingContactLabel": "Existing contact",
     "noContactsFound": "No contacts found",
     "opportunitySection": "Opportunity",
     "oppTitle": "Title",
@@ -1092,5 +1093,12 @@
     "prev": "Previous",
     "next": "Next",
     "pageOf": "Page {page} of {pages}"
+  },
+  "ContactCombobox": {
+    "placeholder": "Search contacts…",
+    "clear": "Clear contact",
+    "searching": "Searching…",
+    "noResults": "No contacts found",
+    "error": "Could not search contacts"
   }
 }

@@ -3,7 +3,6 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { InquiryService } from "@/domain/inquiries/service";
 import { LeadSourceRepository } from "@/domain/lead-sources/repository";
 import { StageRepository } from "@/domain/stages/repository";
-import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { ProfileRepository } from "@/domain/profiles/repository";
 import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
@@ -58,7 +57,7 @@ export default async function InquiriesPage({
   }
 
   // Fetch all required data in parallel
-  const [paged, leadSources, stages, contacts, brokers] = await Promise.all([
+  const [paged, leadSources, stages, brokers] = await Promise.all([
     loadPage(page, PAGE_SIZE, (offset, limit) =>
       new InquiryService(supabase).listPage(agencyId, {
         search: search || undefined,
@@ -69,7 +68,6 @@ export default async function InquiriesPage({
     ),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new StageRepository(supabase).findActive(agencyId),
-    new ContactService(supabase).list(agencyId, { status: "active", limit: 200 }),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
@@ -93,7 +91,6 @@ export default async function InquiriesPage({
         pageInfo={paged.info}
         leadSources={leadSources}
         stages={stages}
-        contacts={contacts}
         brokers={brokers}
         inactiveAssigneeNames={inactiveAssigneeNames}
         initialSearch={search}

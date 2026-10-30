@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
 import type { OpportunityParticipant } from "@/domain/opportunities/types";
 import type { Contact } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
@@ -127,20 +128,12 @@ export function ParticipantList({
                 <Label htmlFor="contact_id">
                   {t("contactLabel")} <span className="text-destructive">*</span>
                 </Label>
-                <Select name="contact_id" required>
-                  <SelectTrigger id="contact_id">
-                    <SelectValue placeholder={t("contactPlaceholder")}>
-                      {(val) => contacts.find((c) => c.id === val)?.display_name ?? t("contactPlaceholder")}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contacts.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.display_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ContactCombobox
+                  id="contact_id"
+                  name="contact_id"
+                  required
+                  invalid={!!fieldErrors?.contact_id}
+                />
                 {fieldErrors?.contact_id && (
                   <p className="text-xs text-destructive">
                     {fieldErrors.contact_id[0]}

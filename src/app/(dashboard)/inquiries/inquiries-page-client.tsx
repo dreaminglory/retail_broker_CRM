@@ -34,7 +34,6 @@ import {
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
 import type { Stage } from "@/domain/stages/types";
-import type { Contact } from "@/domain/contacts/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus, Inbox } from "lucide-react";
 import { useFormStatus } from "react-dom";
@@ -76,7 +75,6 @@ interface InquiriesPageClientProps {
   pageInfo: PageInfo;
   leadSources: LeadSource[];
   stages: Stage[];
-  contacts: Contact[];
   brokers: ActiveBroker[];
   inactiveAssigneeNames: Record<string, string>;
   initialSearch: string;
@@ -92,7 +90,6 @@ export function InquiriesPageClient({
   pageInfo,
   leadSources,
   stages,
-  contacts,
   brokers,
   inactiveAssigneeNames,
   initialSearch,
@@ -424,7 +421,6 @@ export function InquiriesPageClient({
           }}
           inquiry={convertTarget}
           stages={stages}
-          contacts={contacts}
           brokers={brokers}
           convertAction={convertInquiryAction}
           onSuccess={(opportunityId) => {

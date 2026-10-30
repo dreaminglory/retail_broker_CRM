@@ -780,6 +780,7 @@
     "companyName": "Име на компания",
     "companyNamePlaceholder": "напр. Алфа ООД",
     "searchContactsPlaceholder": "Търсене на контакти…",
+    "existingContactLabel": "Съществуващ контакт",
     "noContactsFound": "Няма намерени контакти",
     "opportunitySection": "Сделка",
     "oppTitle": "Заглавие",
@@ -1076,5 +1077,12 @@
     "prev": "Назад",
     "next": "Напред",
     "pageOf": "Страница {page} от {pages}"
+  },
+  "ContactCombobox": {
+    "placeholder": "Търсене на контакти…",
+    "clear": "Изчисти контакта",
+    "searching": "Търсене…",
+    "noResults": "Няма намерени контакти",
+    "error": "Търсенето на контакти не успя"
   }
 }

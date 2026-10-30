@@ -7,12 +7,13 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   Contact,
   ContactMethod,
+  ContactOption,
   ContactWithMethods,
   CreateContactInput,
   UpdateContactInput,
   AddContactMethodInput,
 } from './types';
-import { generateDisplayName, normalizeContactMethodValue } from './validation';
+import { escapeLikePattern, generateDisplayName, normalizeContactMethodValue } from './validation';
 
 export interface ContactListOptions {
   /** Filter by status. Defaults to 'active'. */
@@ -63,6 +64,38 @@ export class ContactRepository {
     }
     if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
     return { rows: (data ?? []) as Contact[], total: count ?? 0 };
+  }
+
+  /** Active contacts whose name matches `query`, for the async contact pickers. */
+  async searchForPicker(agencyId: string, query: string, limit: number): Promise<ContactOption[]> {
+    let request = this.db
+      .from('contacts')
+      .select('id, display_name, company_name, type')
+      .eq('agency_id', agencyId)
+      .eq('status', 'active')
+      .order('display_name', { ascending: true })
+      .order('id', { ascending: true })
+      .limit(limit);
+
+    if (query) {
+      request = request.ilike('display_name', `%${escapeLikePattern(query)}%`);
+    }
+
+    const { data, error } = await request;
+    if (error) throw new Error(`Failed to search contacts: ${error.message}`);
+    return (data ?? []) as ContactOption[];
+  }
+
+  /** Contacts by id (the ones an opportunity links to), scoped to the agency. */
+  async findByIds(ids: string[], agencyId: string): Promise<Contact[]> {
+    if (ids.length === 0) return [];
+    const { data, error } = await this.db
+      .from('contacts')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .in('id', ids);
+    if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
+    return (data ?? []) as Contact[];
   }
 
   async findById(id: string, agencyId: string): Promise<ContactWithMethods | null> {
