@@ -40,7 +40,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 - [x] Task 10: Broker and temperature filters on opportunities (FR-OPP-11)
 
 ### Checkpoint: volume
-- [ ] AC-5…AC-7 pass with the volume seed loaded
+- [x] AC-5…AC-7 pass with the volume seed loaded
 
 ### Phase 3: Import and i18n hygiene
 - [ ] Task 11: Safe import revert and the `db_recheck` status

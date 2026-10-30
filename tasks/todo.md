@@ -155,7 +155,7 @@ stack (refuses to run against a non-local URL).
 **Estimated scope:** S
 
 ## Checkpoint: volume
-- [ ] AC-5…AC-7 pass with the volume seed loaded
+- [x] AC-5…AC-7 pass with the volume seed loaded
 
 ## Task 11: Safe import revert and the `db_recheck` status
 **Description:** A migration fixes the revert guard (skip contacts that gained a note, task,
