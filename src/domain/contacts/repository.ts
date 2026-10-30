@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 /**
  * Contact repository.
  * Handles contacts and their contact_methods as a unit.
@@ -62,7 +63,7 @@ export class ContactRepository {
       const retry = await query.range(0, 0);
       if (!retry.error) return { rows: [], total: retry.count ?? 0 };
     }
-    if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch contacts: ${error.message}`);
     return { rows: (data ?? []) as Contact[], total: count ?? 0 };
   }
 
@@ -82,7 +83,7 @@ export class ContactRepository {
     }
 
     const { data, error } = await request;
-    if (error) throw new Error(`Failed to search contacts: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to search contacts: ${error.message}`);
     return (data ?? []) as ContactOption[];
   }
 
@@ -94,7 +95,7 @@ export class ContactRepository {
       .select('*')
       .eq('agency_id', agencyId)
       .in('id', ids);
-    if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch contacts: ${error.message}`);
     return (data ?? []) as Contact[];
   }
 
@@ -108,7 +109,7 @@ export class ContactRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch contact: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch contact: ${error.message}`);
     }
     return data as ContactWithMethods;
   }
@@ -140,7 +141,7 @@ export class ContactRepository {
       .select()
       .single();
 
-    if (contactError) throw new Error(`Failed to create contact: ${contactError.message}`);
+    if (contactError) throw new DomainError('errors.saveFailed', `Failed to create contact: ${contactError.message}`);
 
     // Insert contact methods if provided
     const methods: ContactMethod[] = [];
@@ -159,7 +160,7 @@ export class ContactRepository {
         .insert(methodRows)
         .select();
 
-      if (methodError) throw new Error(`Failed to save contact methods: ${methodError.message}`);
+      if (methodError) throw new DomainError('errors.saveFailed', `Failed to save contact methods: ${methodError.message}`);
       methods.push(...((inserted ?? []) as ContactMethod[]));
     }
 
@@ -173,7 +174,7 @@ export class ContactRepository {
   ): Promise<ContactWithMethods> {
     // Fetch current record to recompute display_name if names changed
     const current = await this.findById(id, agencyId);
-    if (!current) throw new Error('Contact not found');
+    if (!current) throw new DomainError('errors.not_found', 'Contact not found');
 
     const displayName = generateDisplayName(current.type, {
       first_name: input.first_name !== undefined ? input.first_name : current.first_name,
@@ -196,7 +197,7 @@ export class ContactRepository {
       .select('*, contact_methods(*)')
       .single();
 
-    if (error) throw new Error(`Failed to update contact: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update contact: ${error.message}`);
     return data as ContactWithMethods;
   }
 
@@ -209,7 +210,7 @@ export class ContactRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to archive contact: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to archive contact: ${error.message}`);
     return data as Contact;
   }
 
@@ -242,7 +243,7 @@ export class ContactRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to add contact method: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to add contact method: ${error.message}`);
     return data as ContactMethod;
   }
 
@@ -253,7 +254,7 @@ export class ContactRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to remove contact method: ${error.message}`);
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to remove contact method: ${error.message}`);
   }
 
   async setPrimaryContactMethod(id: string, contactId: string, agencyId: string): Promise<void> {
@@ -264,7 +265,7 @@ export class ContactRepository {
       .eq('contact_id', contactId)
       .eq('agency_id', agencyId);
 
-    if (clearError) throw new Error(`Failed to clear primary: ${clearError.message}`);
+    if (clearError) throw new DomainError('errors.saveFailed', `Failed to clear primary: ${clearError.message}`);
 
     const { error } = await this.db
       .from('contact_methods')
@@ -272,6 +273,6 @@ export class ContactRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to set primary contact method: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to set primary contact method: ${error.message}`);
   }
 }

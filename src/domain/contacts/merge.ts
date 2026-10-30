@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ContactRepository } from './repository';
 import type { MergePreview, MergeHistory } from './merge-types';
@@ -21,7 +22,7 @@ export class ContactMergeService {
     const loser = await repo.findById(loserId, agencyId);
 
     if (!winner || !loser) {
-      throw new Error('Winner or loser contact not found.');
+      throw new DomainError('errors.not_found', 'Winner or loser contact not found.');
     }
 
     // Count items to transfer
@@ -77,7 +78,7 @@ export class ContactMergeService {
     loserId: string
   ): Promise<void> {
     if (winnerId === loserId) {
-      throw new Error('Cannot merge a contact with itself.');
+      throw new DomainError('errors.merge_self', 'Cannot merge a contact with itself.');
     }
 
     const repo = new ContactRepository(this.db);
@@ -86,7 +87,7 @@ export class ContactMergeService {
     const loser = await repo.findById(loserId, agencyId);
 
     if (!winner || !loser) {
-      throw new Error('Winner or loser contact not found.');
+      throw new DomainError('errors.not_found', 'Winner or loser contact not found.');
     }
 
     // 1. Snapshot loser contact

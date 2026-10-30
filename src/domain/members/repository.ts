@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AgencyMember, AgencyMembership, MemberRole, MemberStatus } from "./types";
 import { ProfileRepository } from "../profiles/repository";
@@ -20,7 +21,7 @@ export class MemberRepository {
       .order("created_at", { ascending: true });
 
     if (error) {
-      throw new Error(`Failed to fetch agency members: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch agency members: ${error.message}`);
     }
 
     if (!memberships || memberships.length === 0) {
@@ -46,7 +47,7 @@ export class MemberRepository {
       .eq("id", membershipId);
 
     if (error) {
-      throw new Error(`Failed to update member role: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to update member role: ${error.message}`);
     }
   }
 
@@ -60,7 +61,7 @@ export class MemberRepository {
       .eq("id", membershipId);
 
     if (error) {
-      throw new Error(`Failed to update member status: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to update member status: ${error.message}`);
     }
   }
 
@@ -76,7 +77,7 @@ export class MemberRepository {
 
     if (error) {
       if (error.code === "PGRST116") return null;
-      throw new Error(`Failed to fetch membership: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch membership: ${error.message}`);
     }
 
     return data as AgencyMembership;
@@ -107,7 +108,7 @@ export class MemberRepository {
       .single();
 
     if (error) {
-      throw new Error(`Failed to create invitation: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to create invitation: ${error.message}`);
     }
 
     return data as AgencyMembership;
@@ -124,7 +125,7 @@ export class MemberRepository {
       .eq("status", "invited");
 
     if (error) {
-      throw new Error(`Failed to cancel invitation: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to cancel invitation: ${error.message}`);
     }
   }
 
@@ -138,7 +139,7 @@ export class MemberRepository {
       .maybeSingle();
 
     if (error) {
-      throw new Error(`Failed to check membership: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to check membership: ${error.message}`);
     }
 
     return data !== null;
@@ -156,7 +157,7 @@ export class MemberRepository {
       .eq("status", "active");
 
     if (error) {
-      throw new Error(`Failed to fetch active brokers: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch active brokers: ${error.message}`);
     }
 
     if (!memberships || memberships.length === 0) {

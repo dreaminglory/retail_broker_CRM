@@ -77,6 +77,7 @@ export async function toActionError(error: unknown, _t?: any): Promise<{ success
   }
 
   if (error instanceof DomainError) {
+    if (error.message !== error.code) console.error(error.message);
     try {
       const message = t(error.code as any, error.params);
       return { success: false, error: message || error.message };
@@ -89,7 +90,8 @@ export async function toActionError(error: unknown, _t?: any): Promise<{ success
     if (error.message === 'Unauthorized' || error.message === 'No active agency membership') {
       return { success: false, error: t('errors.unauthorized' as any) };
     }
-    return { success: false, error: error.message };
+    console.error(error);
+    return { success: false, error: t('errors.unexpected') };
   }
 
   return { success: false, error: t('errors.unexpected' as any) };

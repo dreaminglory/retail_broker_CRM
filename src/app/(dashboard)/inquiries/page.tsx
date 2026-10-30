@@ -48,10 +48,11 @@ export default async function InquiriesPage({
   const agencyId = membership?.agency_id ?? "";
 
   if (!agencyId) {
+    const tErrors = await getTranslations("errors");
     return (
       <div className="mx-auto max-w-4xl">
         <p className="text-sm text-muted-foreground">
-          No active agency membership found.
+          {tErrors("noMembership")}
         </p>
       </div>
     );

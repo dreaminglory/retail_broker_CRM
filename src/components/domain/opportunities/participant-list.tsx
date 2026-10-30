@@ -40,14 +40,14 @@ interface ParticipantListProps {
 }
 
 const ROLE_OPTIONS = [
-  { value: "buyer", label: "Buyer" },
-  { value: "seller", label: "Seller" },
-  { value: "landlord", label: "Landlord" },
-  { value: "tenant", label: "Tenant" },
-  { value: "co_owner", label: "Co-owner" },
-  { value: "representative", label: "Representative" },
-  { value: "broker", label: "Broker" },
-  { value: "other", label: "Other" },
+  { value: "buyer" },
+  { value: "seller" },
+  { value: "landlord" },
+  { value: "tenant" },
+  { value: "co_owner" },
+  { value: "representative" },
+  { value: "broker" },
+  { value: "other" },
 ];
 
 const initialState: ActionResult<{ id: string }> = { success: false, error: "" };
@@ -228,7 +228,7 @@ export function ParticipantList({
                   size="sm"
                   className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                   onClick={() => handleRemove(p.id)}
-                  title="Remove participant"
+                  title={t("removeTitle")}
                 >
                   <X className="h-4 w-4" />
                 </Button>

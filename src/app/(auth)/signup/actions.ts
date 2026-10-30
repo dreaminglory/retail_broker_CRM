@@ -3,8 +3,11 @@
 import { cookies } from "next/headers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { AgencyService } from "@/domain/agencies/service";
+import { toActionError } from "@/lib/actions";
+import { authErrorKey } from "@/lib/auth-errors";
+import { DomainError } from "@/lib/errors";
 
-export async function signupAction(formData: FormData) {
+export async function signupAction(formData: FormData): Promise<{ success?: boolean; requireConfirmation?: boolean; error?: string }> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const fullName = formData.get("fullName") as string;
@@ -24,7 +27,7 @@ export async function signupAction(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return toActionError(new DomainError(`auth.errors.${authErrorKey(error)}`, error.message));
   }
 
   // 2. If a session is established immediately (email confirmation disabled), create agency.
@@ -34,8 +37,8 @@ export async function signupAction(formData: FormData) {
       const locale = (cookieStore.get('NEXT_LOCALE')?.value === 'en' ? 'en' : 'bg');
       await AgencyService.createWithOwner(agencyName, locale);
       return { success: true };
-    } catch (err: any) {
-      return { error: err.message };
+    } catch (err) {
+      return toActionError(err);
     }
   }
 

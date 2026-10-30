@@ -5,10 +5,10 @@ import { MemberRepository } from "@/domain/members/repository";
 import { getExceptionDataAction } from "./actions";
 import { ExceptionsPageClient } from "./exceptions-page-client";
 
-export const metadata = {
-  title: "Exceptions Dashboard | BrokerCRM",
-  description: "Manager exception dashboard",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("exceptions") };
+}
 
 export default async function ExceptionsPage() {
   const supabase = await createSupabaseServer();
@@ -34,7 +34,8 @@ export default async function ExceptionsPage() {
   // Fetch all exception data for the dashboard
   const data = await getExceptionDataAction();
   if (!data) {
-    return <div className="p-6">Failed to load exception data.</div>;
+    const t = await getTranslations("ExceptionsPage");
+    return <div className="p-6">{t("loadFailed")}</div>;
   }
 
   const brokers = await new MemberRepository(supabase).getActiveBrokers(membership.agency_id);

@@ -7,6 +7,7 @@ import type { ContactOption } from '@/domain/contacts/types';
 import { findPotentialDuplicates, type PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { ContactRepository } from '@/domain/contacts/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { DomainError } from '@/lib/errors';
 
 export type { ActionResult };
 
@@ -26,7 +27,7 @@ export async function createContactAction(
       try {
         contact_methods = JSON.parse(methodsRaw);
       } catch {
-        return { success: false, error: 'Invalid contact methods format' };
+        return toActionError(new DomainError('validation.failed'));
       }
     }
 

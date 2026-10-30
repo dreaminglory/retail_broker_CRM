@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 /**
  * Stage repository.
  * Sprint 2 (AD-006): Full CRUD configurability added.
@@ -21,7 +22,7 @@ export class StageRepository {
       .eq('agency_id', agencyId)
       .order('sort_order', { ascending: true });
 
-    if (error) throw new Error(`Failed to fetch stages: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch stages: ${error.message}`);
     return (data ?? []) as Stage[];
   }
 
@@ -34,7 +35,7 @@ export class StageRepository {
       .eq('is_terminal', false)
       .order('sort_order', { ascending: true });
 
-    if (error) throw new Error(`Failed to fetch active stages: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch active stages: ${error.message}`);
     return (data ?? []) as Stage[];
   }
 
@@ -48,7 +49,7 @@ export class StageRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch stage: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch stage: ${error.message}`);
     }
     return data as Stage;
   }
@@ -64,7 +65,7 @@ export class StageRepository {
       .eq('agency_id', agencyId)
       .eq('terminal_type', terminalType);
 
-    if (error) throw new Error(`Failed to fetch stages by terminal type: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch stages by terminal type: ${error.message}`);
     return (data ?? []) as Stage[];
   }
 
@@ -80,7 +81,7 @@ export class StageRepository {
       .eq('agency_id', agencyId)
       .eq('status', 'active');
 
-    if (error) throw new Error(`Failed to count opportunities for stage: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to count opportunities for stage: ${error.message}`);
     return count ?? 0;
   }
 
@@ -94,7 +95,7 @@ export class StageRepository {
       .limit(1)
       .maybeSingle();
 
-    if (error) throw new Error(`Failed to get max sort_order: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to get max sort_order: ${error.message}`);
     return (data?.sort_order ?? -1) as number;
   }
 
@@ -117,7 +118,7 @@ export class StageRepository {
       .select('*')
       .single();
 
-    if (error) throw new Error(`Failed to create stage: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create stage: ${error.message}`);
     return data as Stage;
   }
 
@@ -136,7 +137,7 @@ export class StageRepository {
       .select('*')
       .single();
 
-    if (error) throw new Error(`Failed to update stage: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update stage: ${error.message}`);
     return data as Stage;
   }
 
@@ -157,7 +158,7 @@ export class StageRepository {
         .eq('id', id)
         .eq('agency_id', agencyId);
 
-      if (error) throw new Error(`Failed to reorder stage ${id}: ${error.message}`);
+      if (error) throw new DomainError('errors.saveFailed', `Failed to reorder stage ${id}: ${error.message}`);
     }
   }
 
@@ -168,6 +169,6 @@ export class StageRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to delete stage: ${error.message}`);
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to delete stage: ${error.message}`);
   }
 }

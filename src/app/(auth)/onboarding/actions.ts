@@ -4,18 +4,20 @@ import { cookies } from "next/headers";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { AgencyService } from "@/domain/agencies/service";
 import { redirect } from "next/navigation";
+import { toActionError } from "@/lib/actions";
+import { DomainError } from "@/lib/errors";
 
-export async function onboardingAction(formData: FormData) {
+export async function onboardingAction(formData: FormData): Promise<{ success?: boolean; error?: string }> {
   const agencyName = formData.get("agencyName") as string;
   if (!agencyName) {
-    return { error: "Agency name is required" };
+    return toActionError(new DomainError("validation.name_required"));
   }
 
   const supabase = await createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Not authenticated" };
+    return toActionError(new DomainError("errors.unauthorized"));
   }
 
   // Check if they already have an active membership
@@ -35,7 +37,7 @@ export async function onboardingAction(formData: FormData) {
     const locale = (cookieStore.get('NEXT_LOCALE')?.value === 'en' ? 'en' : 'bg');
     await AgencyService.createWithOwner(agencyName, locale);
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message };
+  } catch (err) {
+    return toActionError(err);
   }
 }

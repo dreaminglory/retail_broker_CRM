@@ -49,7 +49,7 @@ export async function GET(
       },
     });
   } catch (err: any) {
-    if (err.message === "import.errors.notFound") {
+    if (err.code === "import.errors.notFound") {
       return new NextResponse("Not Found", { status: 404 });
     }
     console.error("Error generating CSV report", err);

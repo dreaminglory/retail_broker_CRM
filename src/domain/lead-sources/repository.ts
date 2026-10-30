@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 /**
  * Lead Source repository.
  * All queries are automatically tenant-scoped via RLS.
@@ -17,7 +18,7 @@ export class LeadSourceRepository {
       .order('sort_order', { ascending: true })
       .order('name', { ascending: true });
 
-    if (error) throw new Error(`Failed to fetch lead sources: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch lead sources: ${error.message}`);
     return (data ?? []) as LeadSource[];
   }
 
@@ -30,7 +31,7 @@ export class LeadSourceRepository {
       .order('sort_order', { ascending: true })
       .order('name', { ascending: true });
 
-    if (error) throw new Error(`Failed to fetch active lead sources: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch active lead sources: ${error.message}`);
     return (data ?? []) as LeadSource[];
   }
 
@@ -44,7 +45,7 @@ export class LeadSourceRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // not found
-      throw new Error(`Failed to fetch lead source: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch lead source: ${error.message}`);
     }
     return data as LeadSource;
   }
@@ -61,7 +62,7 @@ export class LeadSourceRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create lead source: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create lead source: ${error.message}`);
     return data as LeadSource;
   }
 
@@ -79,7 +80,7 @@ export class LeadSourceRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update lead source: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update lead source: ${error.message}`);
     return data as LeadSource;
   }
 
@@ -90,6 +91,6 @@ export class LeadSourceRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to delete lead source: ${error.message}`);
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to delete lead source: ${error.message}`);
   }
 }

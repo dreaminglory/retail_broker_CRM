@@ -6,6 +6,7 @@ import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { authErrorKey } from "@/lib/auth-errors";
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const t = useTranslations("auth.updatePassword");
+  const tErrors = useTranslations("auth.errors");
 
   const [noSession, setNoSession] = useState(false);
 
@@ -34,7 +36,7 @@ export default function UpdatePasswordPage() {
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(tErrors("weak_password"));
       return;
     }
 
@@ -47,12 +49,12 @@ export default function UpdatePasswordPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(tErrors(authErrorKey(error)));
       setLoading(false);
       return;
     }
 
-    toast.success("Password updated successfully");
+    toast.success(t("updated"));
     
     // Check if there's a next path or just go to callback to activate pending invitations
     router.push("/auth/callback?next=/dashboard");

@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Note, CreateNoteInput, UpdateNoteInput } from './types';
 
@@ -13,7 +14,7 @@ export class NotesRepository {
       .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (error) throw new Error(`Failed to fetch contact notes: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch contact notes: ${error.message}`);
     return (data ?? []) as Note[];
   }
 
@@ -26,7 +27,7 @@ export class NotesRepository {
       .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (error) throw new Error(`Failed to fetch opportunity notes: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunity notes: ${error.message}`);
     return (data ?? []) as Note[];
   }
 
@@ -44,7 +45,7 @@ export class NotesRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create note: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create note: ${error.message}`);
     return data as Note;
   }
 
@@ -60,7 +61,7 @@ export class NotesRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update note: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update note: ${error.message}`);
     return data as Note;
   }
 
@@ -71,6 +72,6 @@ export class NotesRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to delete note: ${error.message}`);
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to delete note: ${error.message}`);
   }
 }

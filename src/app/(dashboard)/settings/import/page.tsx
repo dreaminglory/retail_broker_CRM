@@ -115,8 +115,8 @@ export default async function ImportHistoryPage() {
                 <TableCell className="font-medium">
                   {job.file_name}
                 </TableCell>
-                <TableCell className="capitalize text-muted-foreground">
-                  {job.entity_type}
+                <TableCell className="text-muted-foreground">
+                  {t(`entityType.${job.entity_type}`)}
                 </TableCell>
                 <TableCell>
                   {formatLoc.dateTime(new Date(job.created_at), { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -127,7 +127,7 @@ export default async function ImportHistoryPage() {
                     job.status === 'reverted' ? 'outline' :
                     job.status === 'failed' ? 'destructive' : 'secondary'
                   }>
-                    {job.status}
+                    {t(`jobStatus.${job.status}`)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">{job.total_rows}</TableCell>

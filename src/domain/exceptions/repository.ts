@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import type { Profile } from '@/domain/profiles/types';
@@ -72,7 +73,7 @@ export class ExceptionsRepository {
       .is('assigned_to', null)
       .order('received_at', { ascending: true });
     
-    if (err1) throw new Error(`Failed to fetch unassigned inquiries: ${err1.message}`);
+    if (err1) throw new DomainError('errors.loadFailed', `Failed to fetch unassigned inquiries: ${err1.message}`);
 
     // 2. Overdue Tasks (grouped by broker)
     const { data: overdueTasksData, error: err2 } = await this.db
@@ -84,7 +85,7 @@ export class ExceptionsRepository {
       .not('assigned_to', 'is', null)
       .order('due_at', { ascending: true });
       
-    if (err2) throw new Error(`Failed to fetch overdue tasks: ${err2.message}`);
+    if (err2) throw new DomainError('errors.loadFailed', `Failed to fetch overdue tasks: ${err2.message}`);
 
     const brokerTasksMap = new Map<string, OverdueTasksByBroker>();
     for (const task of (overdueTasksData || [])) {
@@ -114,7 +115,7 @@ export class ExceptionsRepository {
       .eq('status', 'active')
       .is('next_action_at', null);
 
-    if (err3) throw new Error(`Failed to fetch active opportunities without next actions: ${err3.message}`);
+    if (err3) throw new DomainError('errors.loadFailed', `Failed to fetch active opportunities without next actions: ${err3.message}`);
 
     const atRiskOpportunities: AtRiskOpportunity[] = [];
     const staleOpportunities: StaleOpportunity[] = [];
@@ -162,7 +163,7 @@ export class ExceptionsRepository {
       .eq('status', 'active')
       .not('assigned_to', 'is', null);
       
-    if (err4) throw new Error(`Failed to fetch active opps for workload: ${err4.message}`);
+    if (err4) throw new DomainError('errors.loadFailed', `Failed to fetch active opps for workload: ${err4.message}`);
     
     for (const opp of (allActiveOpps || [])) {
       const brokerId = opp.assigned_to!;
@@ -178,7 +179,7 @@ export class ExceptionsRepository {
       .eq('status', 'pending')
       .not('assigned_to', 'is', null);
       
-    if (err5) throw new Error(`Failed to fetch pending tasks for workload: ${err5.message}`);
+    if (err5) throw new DomainError('errors.loadFailed', `Failed to fetch pending tasks for workload: ${err5.message}`);
     
     for (const task of (allPendingTasks || [])) {
       const brokerId = task.assigned_to!;

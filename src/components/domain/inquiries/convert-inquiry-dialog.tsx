@@ -34,10 +34,10 @@ import { useTranslations } from "next-intl";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const OPPORTUNITY_TYPES = [
-  { value: "buyer", label: "Buyer" },
-  { value: "seller", label: "Seller" },
-  { value: "landlord", label: "Landlord" },
-  { value: "tenant", label: "Tenant" },
+  { value: "buyer" },
+  { value: "seller" },
+  { value: "landlord" },
+  { value: "tenant" },
 ] as const;
 
 type ConvertResult = ActionResult<{
@@ -156,7 +156,7 @@ export function ConvertInquiryDialog({
         <form onSubmit={handleSubmit} className="space-y-5 pt-1" ref={formRef}>
           {/* ── Contact section ───────────────────────────────────────────── */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Contact</Label>
+            <Label className="text-sm font-semibold">{t("contactSection")}</Label>
 
             {/* Manual tab switcher (no tabs component available) */}
             <div className="flex rounded-lg border p-0.5 bg-muted/40 gap-0.5">

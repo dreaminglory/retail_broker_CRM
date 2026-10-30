@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTranslations, useFormatter } from "next-intl";
 import Link from "next/link";
-import { format, formatDistanceToNow } from "date-fns";
+import { relativeTimeBase } from "@/lib/time/relative-time";
 import { 
   AlertCircle, 
   Clock, 
@@ -106,7 +106,7 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
                         {inq.caller_name || t('unassigned.unknownCaller')}
                       </Link>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(inq.received_at), { addSuffix: true })}
+                        {formatLoc.relativeTime(new Date(inq.received_at), relativeTimeBase(new Date(inq.received_at), new Date()))}
                       </span>
                     </div>
                     <p className="text-muted-foreground truncate">{inq.subject || inq.source_description || t('unassigned.noSubject')}</p>
@@ -140,7 +140,7 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
                     <div>
                       <p className="font-medium">{broker.broker_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: formatDistanceToNow(new Date(broker.most_overdue_task!.due_at as string), { addSuffix: true }) })}
+                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: formatLoc.relativeTime(new Date(broker.most_overdue_task!.due_at as string), relativeTimeBase(new Date(broker.most_overdue_task!.due_at as string), new Date())) })}
                       </p>
                     </div>
                     <Badge variant="outline">{t('overdue.overdueBadge', { count: broker.overdue_count })}</Badge>

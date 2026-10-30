@@ -189,7 +189,10 @@ in both `messages/bg.json` and `messages/en.json`.
 ### AD-032 / AD-033: Errors travel as i18n keys
 **Accepted.** Zod messages and `DomainError.code` are i18n keys; `toActionError()`
 (`src/lib/actions.ts`) translates them on the server. RPCs return keys too, since they can't see
-the request locale.
+the request locale. Repository failures throw `errors.loadFailed`, `saveFailed` or `deleteFailed`
+with the database message as the log-only detail; any other error becomes `errors.unexpected`
+and is logged, so raw English never reaches the UI. Supabase Auth messages go through
+`authErrorKey()`. `src/lib/i18n-keys.test.ts` fails on a key missing from the message files.
 
 ### AD-038: "Сделка" for opportunity
 **Accepted.** Bulgarian UI uses "Сделка", not "Възможност". Glossary: `crm-domain-model` skill.

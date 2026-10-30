@@ -106,7 +106,7 @@ export function ContactsPageClient({
         <div className="flex items-center gap-2">
           {(userRole === "owner" || userRole === "manager") && (
             <Button variant="outline" size="sm" onClick={() => router.push("/settings/import/new?type=contact")}>
-              Import
+              {t("importBtn")}
             </Button>
           )}
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>

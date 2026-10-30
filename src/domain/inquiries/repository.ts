@@ -57,7 +57,7 @@ export class InquiryRepository {
       const retry = await query.range(0, 0);
       if (!retry.error) return { rows: [], total: retry.count ?? 0 };
     }
-    if (error) throw new Error(`Failed to fetch inquiries: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch inquiries: ${error.message}`);
     return { rows: (data ?? []) as Inquiry[], total: count ?? 0 };
   }
 
@@ -71,7 +71,7 @@ export class InquiryRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch inquiry: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch inquiry: ${error.message}`);
     }
     return data as Inquiry;
   }
@@ -101,7 +101,7 @@ export class InquiryRepository {
       if (error.code === '23505') {
         throw new DomainError('errors.inquiries.external_ref_exists', 'External reference already exists');
       }
-      throw new Error(`Failed to create inquiry: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to create inquiry: ${error.message}`);
     }
     return data as Inquiry;
   }
@@ -133,7 +133,7 @@ export class InquiryRepository {
       if (error.code === '23505') {
         throw new DomainError('errors.inquiries.external_ref_exists', 'External reference already exists');
       }
-      throw new Error(`Failed to update inquiry: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to update inquiry: ${error.message}`);
     }
     return data as Inquiry;
   }

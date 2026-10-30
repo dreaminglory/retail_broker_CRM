@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   TimelineEntry,
@@ -78,7 +79,7 @@ export class TimelineService {
       .order('created_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (notesError) throw new Error(`Timeline notes fetch failed: ${notesError.message}`);
+    if (notesError) throw new DomainError('errors.loadFailed', `Timeline notes fetch failed: ${notesError.message}`);
 
     // 3. Fetch Tasks
     let tasksQuery = this.db
@@ -98,7 +99,7 @@ export class TimelineService {
       .order('created_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (tasksError) throw new Error(`Timeline tasks fetch failed: ${tasksError.message}`);
+    if (tasksError) throw new DomainError('errors.loadFailed', `Timeline tasks fetch failed: ${tasksError.message}`);
 
     // 4. Fetch Audit Log
     let auditQuery = this.db
@@ -118,7 +119,7 @@ export class TimelineService {
       .order('performed_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (auditError) throw new Error(`Timeline audit fetch failed: ${auditError.message}`);
+    if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
 
     // 5. Fetch Inquiries
     const { data: inquiriesData, error: inquiriesError } = await this.db
@@ -129,7 +130,7 @@ export class TimelineService {
       .order('received_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (inquiriesError) throw new Error(`Timeline inquiries fetch failed: ${inquiriesError.message}`);
+    if (inquiriesError) throw new DomainError('errors.loadFailed', `Timeline inquiries fetch failed: ${inquiriesError.message}`);
 
     // 6. Batch-resolve all author UUIDs from profiles in a single query
     const profilesMap = await this.resolveAuthors(
@@ -162,7 +163,7 @@ export class TimelineService {
       .order('created_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (notesError) throw new Error(`Timeline notes fetch failed: ${notesError.message}`);
+    if (notesError) throw new DomainError('errors.loadFailed', `Timeline notes fetch failed: ${notesError.message}`);
 
     const { data: tasksData, error: tasksError } = await this.db
       .from('tasks')
@@ -172,7 +173,7 @@ export class TimelineService {
       .order('created_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (tasksError) throw new Error(`Timeline tasks fetch failed: ${tasksError.message}`);
+    if (tasksError) throw new DomainError('errors.loadFailed', `Timeline tasks fetch failed: ${tasksError.message}`);
 
     const { data: auditData, error: auditError } = await this.db
       .from('audit_log')
@@ -183,7 +184,7 @@ export class TimelineService {
       .order('performed_at', { ascending: false })
       .range(0, offset + limit - 1);
 
-    if (auditError) throw new Error(`Timeline audit fetch failed: ${auditError.message}`);
+    if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
 
     // Batch-resolve all author UUIDs
     const profilesMap = await this.resolveAuthors(

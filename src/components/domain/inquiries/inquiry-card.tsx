@@ -24,49 +24,33 @@ import {
   CheckCheck,
   Pencil,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { relativeTimeBase } from "@/lib/time/relative-time";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<
   InquiryStatus,
-  { label: string; className: string }
+  { className: string }
 > = {
   new: {
-    label: "New",
     className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
   },
   contacted: {
-    label: "Contacted",
     className:
       "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
   },
   converted: {
-    label: "Converted",
     className:
       "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
   },
   dismissed: {
-    label: "Dismissed",
     className: "bg-muted text-muted-foreground",
   },
 };
 
 // ── Simple relative time ──────────────────────────────────────────────────────
 
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months}mo ago`;
-  return `${Math.floor(months / 12)}y ago`;
-}
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -95,6 +79,7 @@ export function InquiryCard({
   onDismiss,
 }: InquiryCardProps) {
   const t = useTranslations("InquiryCard");
+  const format = useFormatter();
 
   const statusCfg = STATUS_CONFIG[inquiry.status];
   const isTerminal =
@@ -104,7 +89,8 @@ export function InquiryCard({
     ? leadSources.find((s) => s.id === inquiry.source_id)
     : null;
 
-  const age = relativeTime(inquiry.received_at);
+  const receivedAt = new Date(inquiry.received_at);
+  const age = format.relativeTime(receivedAt, relativeTimeBase(receivedAt, new Date()));
 
   const assigneeName = inquiry.assigned_to
     ? brokers.find((b) => b.id === inquiry.assigned_to)?.display_name ??
@@ -147,7 +133,7 @@ export function InquiryCard({
             variant="secondary"
             className={`text-[11px] font-medium px-2 py-0.5 ${statusCfg.className}`}
           >
-            {statusCfg.label}
+            {t(`status.${inquiry.status}`)}
           </Badge>
 
           {/* Actions dropdown — non-terminal inquiries only */}

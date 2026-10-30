@@ -90,11 +90,11 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
       });
 
       if (!res.success) {
-        toast.error(res.error || "Failed to create import job");
+        toast.error(res.error || t("createFailed"));
         return;
       }
       if (!res.data) {
-        toast.error("Failed to create import job (no data returned)");
+        toast.error(t("createFailed"));
         return;
       }
 
@@ -102,7 +102,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
       setPreviousJobs(res.data.previousJobs);
       setStep(2);
     } catch (e: any) {
-      toast.error(e.message || "An error occurred");
+      toast.error(e.message || t("createFailed"));
     } finally {
       setIsProcessing(false);
     }
@@ -133,7 +133,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
                 for (let i = 0; i < rows.length; i += chunkSize) {
                   const chunk = rows.slice(i, i + chunkSize);
                   const stageRes = await stageImportRowsAction(jobId, { startRow: i + 1, rows: chunk });
-                  if (!stageRes.success) throw new Error(stageRes.error || "Failed to stage rows");
+                  if (!stageRes.success) throw new Error(stageRes.error || t("validateFailed"));
                 }
                 setIsStaged(true);
                 resolve(true);
@@ -149,11 +149,11 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
       // Validate
       const validateRes = await validateImportJobAction(jobId);
       if (!validateRes.success) {
-        toast.error(validateRes.error || "Failed to validate");
+        toast.error(validateRes.error || t("validateFailed"));
         return;
       }
       if (!validateRes.data) {
-        toast.error("Failed to validate (no data)");
+        toast.error(t("validateFailed"));
         return;
       }
 
@@ -162,7 +162,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
       setStep(3);
 
     } catch (e: any) {
-      toast.error(e.message || "An error occurred during mapping and validation");
+      toast.error(e.message || t("validateFailed"));
     } finally {
       setIsProcessing(false);
     }
@@ -182,7 +182,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
           break;
         }
         if (!res.data) {
-          toast.error("Commit failed (no data)");
+          toast.error(t("commitFailed"));
           break;
         }
         setProgress(prev => ({ processed: prev.processed + res.data!.processed, remaining: res.data!.remaining }));
@@ -191,7 +191,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
 
       setStep(5);
     } catch (e: any) {
-      toast.error(e.message || "An error occurred during commit");
+      toast.error(e.message || t("commitFailed"));
     } finally {
       setIsProcessing(false);
     }

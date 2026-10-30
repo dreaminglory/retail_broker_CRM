@@ -115,7 +115,7 @@ export function ContactDetailClient({ contact, canMerge }: ContactDetailClientPr
                 onClick={handleArchive}
                 disabled={archiving}
               >
-                {archiving ? "Archiving…" : "Archive"}
+                {archiving ? t("archivingBtn") : t("archiveBtn")}
               </Button>
             </div>
           </DialogContent>

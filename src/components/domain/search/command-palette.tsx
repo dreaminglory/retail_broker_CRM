@@ -91,7 +91,7 @@ export function CommandPalette() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} title={t("placeholder")} description={t("inputPlaceholder")}>
         <Command shouldFilter={false}>
           <CommandInput
         placeholder={t("inputPlaceholder")}

@@ -74,7 +74,7 @@ export async function inviteMember(formData: FormData): Promise<ActionResult> {
     const role = formData.get("role") as string;
 
     if (!email || !role) {
-      return { success: false, error: "Missing required fields" };
+      return toActionError(new DomainError("validation.required"));
     }
 
     const parsed = inviteMemberSchema.safeParse({ email, role });
@@ -93,7 +93,7 @@ export async function cancelInvitation(formData: FormData): Promise<ActionResult
 
     const membershipId = formData.get("membershipId") as string;
     if (!membershipId) {
-      return { success: false, error: "Missing membership ID" };
+      return toActionError(new DomainError("validation.required"));
     }
 
     const memberService = new MemberService(ctx.supabase);

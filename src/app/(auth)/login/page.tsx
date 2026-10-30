@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { authErrorKey } from "@/lib/auth-errors";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,11 +16,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const t = useTranslations("auth.login");
+  const tErrors = useTranslations("auth.errors");
 
   useEffect(() => {
     // Check for errors in URL
     const urlError = searchParams.get("error");
-    const details = searchParams.get("details");
     
     if (urlError === "auth_callback_failed_no_code") {
       // This might be an implicit flow redirect. Check the hash.
@@ -40,7 +41,7 @@ export default function LoginPage() {
           }).then(({ data, error: sessionError }) => {
             if (sessionError) {
               setLoading(false);
-              setError("Failed to establish session: " + sessionError.message);
+              setError(tErrors("link_invalid"));
             } else if (data.session) {
               // Clear the hash from the URL so it doesn't try again if they refresh
               window.history.replaceState(null, "", window.location.pathname);
@@ -48,25 +49,22 @@ export default function LoginPage() {
               router.refresh();
             } else {
               setLoading(false);
-              setError("Failed to process invitation token. It may have expired.");
+              setError(tErrors("link_invalid"));
             }
           });
         } else {
           setLoading(false);
-          setError("Invalid token format in URL.");
+          setError(tErrors("link_invalid"));
         }
       } else if (hash.includes("error_description")) {
-        // Parse error from hash
-        const params = new URLSearchParams(hash.substring(1));
-        const desc = params.get("error_description");
-        setError(desc ? desc.replace(/\+/g, " ") : "The link is invalid or expired.");
+        setError(tErrors("link_invalid"));
       } else {
-        setError("Authentication failed. Please try again or request a new link.");
+        setError(tErrors("link_invalid"));
       }
     } else if (urlError === "exchange_failed" || urlError === "otp_failed") {
-      setError(`Authentication failed: ${details || "Unknown error"}`);
+      setError(tErrors("link_invalid"));
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, tErrors]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -80,7 +78,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(tErrors(authErrorKey(error)));
       setLoading(false);
       return;
     }

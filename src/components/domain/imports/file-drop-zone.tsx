@@ -25,13 +25,13 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
 
     // Size check
     if (file.size > maxSizeMB * 1024 * 1024) {
-      setError(`File is too large. Maximum size is ${maxSizeMB}MB.`);
+      setError(t("tooLarge", { size: maxSizeMB }));
       return;
     }
 
     // Type check (basic)
     if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
-      setError("Please upload a valid CSV file.");
+      setError(t("invalidType"));
       return;
     }
 
@@ -44,12 +44,12 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
       encoding: currentEncoding,
       complete: (results) => {
         if (results.errors.length > 0 && results.errors[0].code === "UndetectableDelimiter") {
-          setError("Could not detect delimiter. Please ensure the file is a valid CSV.");
+          setError(t("noDelimiter"));
           return;
         }
 
         if (results.data.length === 0) {
-          setError("The file appears to be empty.");
+          setError(t("empty"));
           return;
         }
 
@@ -65,8 +65,8 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
 
         onFileAccepted(file, headers, currentEncoding, results.meta.delimiter || ',');
       },
-      error: (err) => {
-        setError(`Failed to parse file: ${err.message}`);
+      error: () => {
+        setError(t("parseFailed"));
       }
     });
   };

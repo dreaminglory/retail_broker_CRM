@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 /**
  * Opportunity repository.
  * Handles opportunities, participants, and stage transitions.
@@ -36,7 +37,7 @@ export class OpportunityRepository {
   ): Promise<Opportunity[]> {
     const { limit = 50, offset = 0 } = opts;
     const { data, error } = await this.filtered(agencyId, opts, false).range(offset, offset + limit - 1);
-    if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
     return (data ?? []) as Opportunity[];
   }
 
@@ -53,7 +54,7 @@ export class OpportunityRepository {
       const retry = await query.range(0, 0);
       if (!retry.error) return { rows: [], total: retry.count ?? 0 };
     }
-    if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
     return { rows: (data ?? []) as Opportunity[], total: count ?? 0 };
   }
 
@@ -99,7 +100,7 @@ export class OpportunityRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch opportunity: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch opportunity: ${error.message}`);
     }
     return data as OpportunityWithDetails;
   }
@@ -119,8 +120,8 @@ export class OpportunityRepository {
         .eq('agency_id', agencyId)
     ]);
 
-    if (primaryRes.error) throw new Error(`Failed to fetch primary opportunities: ${primaryRes.error.message}`);
-    if (participantRes.error) throw new Error(`Failed to fetch participant opportunities: ${participantRes.error.message}`);
+    if (primaryRes.error) throw new DomainError('errors.loadFailed', `Failed to fetch primary opportunities: ${primaryRes.error.message}`);
+    if (participantRes.error) throw new DomainError('errors.loadFailed', `Failed to fetch participant opportunities: ${participantRes.error.message}`);
 
     const oppsMap = new Map<string, Opportunity>();
     
@@ -179,7 +180,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -207,7 +208,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -238,7 +239,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to close opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to close opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -252,7 +253,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to reactivate opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to reactivate opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -276,7 +277,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to add participant: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to add participant: ${error.message}`);
     return data as OpportunityParticipant;
   }
 
@@ -287,6 +288,6 @@ export class OpportunityRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to remove participant: ${error.message}`);
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to remove participant: ${error.message}`);
   }
 }

@@ -6,6 +6,7 @@ import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { DomainError } from '@/lib/errors';
 
 export type { ActionResult };
 
@@ -138,7 +139,7 @@ export async function convertInquiryAction(
       try {
         create_contact = JSON.parse(createContactRaw);
       } catch {
-        return { success: false, error: 'Invalid create_contact format' };
+        return toActionError(new DomainError('validation.failed'));
       }
     }
 
