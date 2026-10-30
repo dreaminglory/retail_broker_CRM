@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 39th migration
-(`20261102000006_profile_name_fallback.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 40th migration
+(`20261102000007_revoke_import_rpcs_from_anon.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
