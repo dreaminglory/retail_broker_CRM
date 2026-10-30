@@ -5,6 +5,7 @@ import { LeadSourceRepository } from "@/domain/lead-sources/repository";
 import { StageRepository } from "@/domain/stages/repository";
 import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
+import { ProfileRepository } from "@/domain/profiles/repository";
 import { InquiriesPageClient } from "./inquiries-page-client";
 
 export async function generateMetadata() {
@@ -66,6 +67,18 @@ export default async function InquiriesPage({
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
+  // Assignees who were deactivated later aren't in the active list, but their inquiries still show them.
+  const activeIds = new Set(brokers.map((b) => b.id));
+  const inactiveIds = inquiries.flatMap((i) =>
+    i.assigned_to && !activeIds.has(i.assigned_to) ? [i.assigned_to] : []
+  );
+  const inactiveProfiles = await new ProfileRepository(supabase).getProfilesByIds(inactiveIds);
+  const inactiveAssigneeNames = Object.fromEntries(
+    [...inactiveProfiles].flatMap(([id, profile]) =>
+      profile.display_name ? [[id, profile.display_name]] : []
+    )
+  );
+
   return (
     <div className="mx-auto max-w-4xl">
       <InquiriesPageClient
@@ -74,6 +87,7 @@ export default async function InquiriesPage({
         stages={stages}
         contacts={contacts}
         brokers={brokers}
+        inactiveAssigneeNames={inactiveAssigneeNames}
         initialSearch={search}
         initialStatus={status}
         initialId={id}

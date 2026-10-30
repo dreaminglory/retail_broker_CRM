@@ -75,6 +75,7 @@ interface InquiriesPageClientProps {
   stages: Stage[];
   contacts: Contact[];
   brokers: ActiveBroker[];
+  inactiveAssigneeNames: Record<string, string>;
   initialSearch: string;
   initialStatus: string;
   initialId?: string;
@@ -89,6 +90,7 @@ export function InquiriesPageClient({
   stages,
   contacts,
   brokers,
+  inactiveAssigneeNames,
   initialSearch,
   initialStatus,
   initialId,
@@ -164,6 +166,13 @@ export function InquiriesPageClient({
   function handleOpenConvert(inquiry: Inquiry) {
     setConvertTarget(inquiry);
     setConvertOpen(true);
+  }
+
+  // A deactivated assignee stays selectable while editing their inquiry, so the select can name them.
+  function brokersWithAssignee(inquiry: Inquiry): ActiveBroker[] {
+    const name = inquiry.assigned_to ? inactiveAssigneeNames[inquiry.assigned_to] : undefined;
+    if (!inquiry.assigned_to || !name) return brokers;
+    return [...brokers, { id: inquiry.assigned_to, display_name: name, email: "", role: "broker" }];
   }
 
   const statusLabel =
@@ -312,6 +321,7 @@ export function InquiriesPageClient({
               inquiry={inquiry}
               leadSources={leadSources}
               brokers={brokers}
+              inactiveAssigneeNames={inactiveAssigneeNames}
               onEdit={setEditTarget}
               onMarkContacted={handleMarkContacted}
               onConvert={handleOpenConvert}
@@ -338,7 +348,7 @@ export function InquiriesPageClient({
               createAction={updateInquiryAction.bind(null, editTarget.id)}
               inquiry={editTarget}
               leadSources={leadSources}
-              brokers={brokers}
+              brokers={brokersWithAssignee(editTarget)}
               onSuccess={() => {
                 setEditTarget(null);
                 router.refresh();

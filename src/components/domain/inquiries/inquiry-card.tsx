@@ -74,6 +74,8 @@ interface InquiryCardProps {
   inquiry: Inquiry;
   leadSources: LeadSource[];
   brokers: ActiveBroker[];
+  /** Names of assignees who are no longer active, by user id. */
+  inactiveAssigneeNames: Record<string, string>;
   onEdit?: (inquiry: Inquiry) => void;
   onMarkContacted?: (id: string) => void;
   onConvert?: (inquiry: Inquiry) => void;
@@ -86,6 +88,7 @@ export function InquiryCard({
   inquiry,
   leadSources,
   brokers,
+  inactiveAssigneeNames,
   onEdit,
   onMarkContacted,
   onConvert,
@@ -103,8 +106,10 @@ export function InquiryCard({
 
   const age = relativeTime(inquiry.received_at);
 
-  // A deactivated assignee is no longer in the active list: fall back to the generic label.
-  const assigneeName = brokers.find((b) => b.id === inquiry.assigned_to)?.display_name;
+  const assigneeName = inquiry.assigned_to
+    ? brokers.find((b) => b.id === inquiry.assigned_to)?.display_name ??
+      inactiveAssigneeNames[inquiry.assigned_to]
+    : undefined;
 
   const callerDisplay =
     inquiry.caller_name ||

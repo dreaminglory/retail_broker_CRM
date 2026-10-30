@@ -821,6 +821,7 @@
     "externalRefPlaceholder": "ID в портал или номер",
     "saving": "Запазване…",
     "submit": "Въведи запитване",
+    "assignedToPlaceholder": "Изберете брокер…",
     "saveChanges": "Запази промените"
   },
   "CloseOpportunityDialog": {

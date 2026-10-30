@@ -116,6 +116,7 @@ export function InquiryForm({
           name="assigned_to"
           brokers={brokers}
           defaultValue={inquiry?.assigned_to ?? null}
+          placeholder={t("assignedToPlaceholder")}
         />
         {!state.success && state.fieldErrors?.assigned_to && (
           <p className="text-xs text-destructive">

@@ -837,6 +837,7 @@
     "externalRefPlaceholder": "Portal ID or tracking number",
     "saving": "Saving…",
     "submit": "Log inquiry",
+    "assignedToPlaceholder": "Select a broker…",
     "saveChanges": "Save changes"
   },
   "CloseOpportunityDialog": {

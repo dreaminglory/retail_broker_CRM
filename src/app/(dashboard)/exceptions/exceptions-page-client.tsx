@@ -43,17 +43,23 @@ interface ExceptionsPageClientProps {
 function AssignInquirySelect({ inquiryId, brokers }: { inquiryId: string; brokers: ActiveBroker[] }) {
   const t = useTranslations("ExceptionsPage");
   const [isPending, startTransition] = useTransition();
+  const [selectedId, setSelectedId] = useState("");
 
   function handleAssign(brokerId: string) {
+    setSelectedId(brokerId);
     startTransition(async () => {
       const result = await reassignInquiryAction(inquiryId, brokerId);
-      if (!result.success) toast.error(result.error);
+      if (!result.success) {
+        toast.error(result.error);
+        setSelectedId("");
+      }
     });
   }
 
   return (
     <BrokerSelect
       brokers={brokers}
+      value={selectedId}
       allowUnassigned={false}
       placeholder={t('unassigned.assignPlaceholder')}
       ariaLabel={t('unassigned.assignPlaceholder')}
