@@ -257,7 +257,8 @@
       "completed": "Завършен",
       "failed": "Неуспешен",
       "reverted": "Отменен"
-    }
+    },
+    "errorReportReason": "Причина за грешката"
   },
   "SettingsStages": {
     "settings": "Настройки",
@@ -1107,7 +1108,8 @@
       "opportunitiesDesc": "Проследяване на пайплайн и сделки",
       "contactsTitle": "Контакти",
       "contactsDesc": "Хора и организации"
-    }
+    },
+    "yourAgency": "Вашата агенция"
   },
   "ExceptionsPage": {
     "title": "Табло с изключения",
@@ -1203,7 +1205,8 @@
       "missingIdentifierMapping": "Изберете колона за телефон, имейл или външен ID.",
       "missingInquiryMapping": "Изберете колона за обаждащия се или темата.",
       "unknownSource": "Този ред е с непознат източник на лийдове.",
-      "unknownAssignee": "Този ред е възложен на човек извън агенцията ви."
+      "unknownAssignee": "Този ред е възложен на човек извън агенцията ви.",
+      "dbWrite": "Този ред не можа да се запази."
     }
   },
   "ui": {

@@ -257,7 +257,8 @@
       "completed": "Completed",
       "failed": "Failed",
       "reverted": "Reverted"
-    }
+    },
+    "errorReportReason": "Error reason"
   },
   "SettingsStages": {
     "settings": "Settings",
@@ -1107,7 +1108,8 @@
       "opportunitiesDesc": "Pipeline and deal tracking",
       "contactsTitle": "Contacts",
       "contactsDesc": "People and organizations"
-    }
+    },
+    "yourAgency": "Your agency"
   },
   "ExceptionsPage": {
     "title": "Exceptions Dashboard",
@@ -1203,7 +1205,8 @@
       "missingIdentifierMapping": "Map a column to a phone, email or external ID.",
       "missingInquiryMapping": "Map a column to the caller or the subject.",
       "unknownSource": "This row has an unknown lead source.",
-      "unknownAssignee": "This row is assigned to someone who is not in your agency."
+      "unknownAssignee": "This row is assigned to someone who is not in your agency.",
+      "dbWrite": "This row couldn't be saved."
     }
   },
   "ui": {

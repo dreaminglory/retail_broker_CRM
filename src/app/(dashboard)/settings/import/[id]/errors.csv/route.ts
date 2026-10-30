@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ImportService } from "@/domain/imports/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { getTranslations } from "next-intl/server";
 
 export async function GET(
   request: NextRequest,
@@ -20,10 +21,6 @@ export async function GET(
     // and only owners/managers have SELECT access to import_jobs via RLS,
     // if a broker tries to access this, getJob will return null.
 
-    const service = new ImportService(supabase);
-    const csvContent = await service.buildErrorReportCsv("", id); // agencyId is technically not needed here if RLS protects it, but we can pass user's agency.
-    // Actually our repository uses .eq("agency_id", agencyId). We need the agencyId.
-    // Let's fetch it.
     const { data: membership } = await supabase
       .from("agency_memberships")
       .select("agency_id, role")
@@ -39,7 +36,12 @@ export async function GET(
       return new NextResponse("Forbidden", { status: 403 });
     }
 
-    const finalCsv = await service.buildErrorReportCsv(membership.agency_id, id);
+    const t = await getTranslations();
+    const service = new ImportService(supabase);
+    const finalCsv = await service.buildErrorReportCsv(membership.agency_id, id, {
+      reasonHeader: t("SettingsImport.errorReportReason"),
+      reason: (code) => (t.has(code as never) ? t(code as never) : t("errors.unexpected")),
+    });
 
     return new NextResponse(finalCsv, {
       status: 200,
