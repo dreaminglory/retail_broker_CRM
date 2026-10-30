@@ -1,6 +1,6 @@
 # Tasks: trustworthy-loop
 
-> **Plan:** `tasks/plan.md` · **Spec:** `spec/trustworthy-loop.md`
+> **Plan:** `docs/archive/trustworthy-loop-plan.md` · **Spec:** `spec/trustworthy-loop.md`
 > Every task also clears the Definition of Done in `AGENTS.md`. Tick a task only after that.
 
 ## Task 1: International and landline phones
@@ -226,11 +226,11 @@ prints coverage (not gated).
 
 **Acceptance criteria:**
 - [x] A sample integration test runs locally against `npm run stack:up`
-- [ ] ...and in CI
+- [x] ...and in CI
 
 **Verification:**
 - [x] `npm run test` (skips) and `npm run test:services` (runs)
-- [ ] CI green
+- [x] CI green
 
 **Dependencies:** None
 **Files likely touched:** `src/test/supabase-test-client.ts`, `.github/workflows/ci.yml`, `vitest.config.*`
@@ -245,7 +245,7 @@ tasks, inquiries and contacts where missing.
 
 **Verification:**
 - [x] `npm run test:services`
-- [ ] CI green
+- [x] CI green
 
 **Dependencies:** Task 15
 **Files likely touched:** `src/domain/inquiries/service.test.ts`, `src/domain/contacts/validation.test.ts`
@@ -257,7 +257,7 @@ children, archives the loser). Required by AC-11, so no longer cuttable.
 
 **Acceptance criteria:**
 - [x] Suites green locally
-- [ ] ...and in CI
+- [x] ...and in CI
 
 **Verification:**
 - [x] `npm run test:services`
@@ -273,7 +273,7 @@ what the module changed in them.
 **Acceptance criteria:**
 - [x] Every service file changed in this module has a test file (AC-11)
 - [x] FR-TST-03 says what's covered; it stays ⚠️ because five services have no tests
-- [ ] CI green
+- [x] CI green
 
 **Verification:**
 - [x] `npm run test:services`
@@ -283,5 +283,5 @@ what the module changed in them.
 **Estimated scope:** M
 
 ## Checkpoint: module done
-- [ ] All spec acceptance criteria met
-- [ ] Close the module (AGENTS.md *Workflow* step 6)
+- [x] All spec acceptance criteria met
+- [x] Close the module (AGENTS.md *Workflow* step 6)
