@@ -23,17 +23,17 @@ test('a broker takes an inquiry through to a scheduled next action', async ({ pa
   await inquiryDialog.getByRole('combobox').nth(1).click();
   await page.getByRole('option', { name: 'broker', exact: true }).click(); // seeded display name
   await inquiryDialog.getByLabel(m.InquiryForm.callerName).fill(caller);
-  await inquiryDialog.getByLabel(m.InquiryForm.phone).fill('+359888123456');
+  // Unique per run: a phone already on a contact opens the duplicate warning at conversion.
+  await inquiryDialog.getByLabel(m.InquiryForm.phone).fill(`+359888${String(Date.now()).slice(-6)}`);
   await inquiryDialog.getByLabel(m.InquiryForm.subject).fill('2-bedroom in Lozenets');
   await inquiryDialog.getByRole('button', { name: m.InquiryForm.submit }).click();
   await expect(inquiryDialog).toBeHidden();
 
   // 2. Convert it into an opportunity with a new contact.
   // The innermost element holding both the caller and the actions button is the card.
-  // ("Inquiry actions" is a hard-coded English aria-label; i18n fix is slice 6.5.)
   const card = page.locator('div').filter({ has: page.getByText(caller, { exact: true }) })
-    .filter({ has: page.getByRole('button', { name: 'Inquiry actions' }) }).last();
-  await card.getByRole('button', { name: 'Inquiry actions' }).click();
+    .filter({ has: page.getByRole('button', { name: m.InquiryCard.actions }) }).last();
+  await card.getByRole('button', { name: m.InquiryCard.actions }).click();
   await page.getByRole('menuitem', { name: m.InquiryCard.convertToOpportunity }).click();
   const convertDialog = page.getByRole('dialog');
   await convertDialog.getByLabel(m.ConvertInquiryDialog.oppTitle).fill(`E2E opportunity ${run}`);

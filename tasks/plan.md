@@ -30,7 +30,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 - [x] Task 5: Edit and reassign an inquiry (FR-INQ-13)
 
 ### Checkpoint: intake
-- [ ] AC-1…AC-4 of the spec pass; Definition of Done for each task
+- [x] AC-1…AC-4 of the spec pass; Definition of Done for each task
 
 ### Phase 2: Lists at volume
 - [ ] Task 6: Volume seed script
