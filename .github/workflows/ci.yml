@@ -38,22 +38,33 @@ jobs:
         run: npm run test
 
   database:
-    name: Database tests (pgTAP)
+    name: Database and service tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
       - uses: supabase/setup-cli@v1
         with:
           version: 2.122.0
 
-      # Postgres + Auth only (tests insert into auth.users). Applies every
-      # migration and supabase/seed.sql, same as `npx supabase start` locally.
+      # Postgres, Auth and the API gateway (the service suites sign in over HTTP). Applies
+      # every migration and supabase/seed.sql, same as `npx supabase start` locally.
       - name: Start local Supabase
         run: >-
           supabase start -x
-          realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+          realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
 
       - name: pgTAP
         run: supabase test db
+
+      # Coverage is printed, not gated (AD-043).
+      - name: Service suites (Vitest)
+        run: npm run test:services

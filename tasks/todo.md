@@ -225,10 +225,12 @@ Sprint 5 carry-over.
 prints coverage (not gated).
 
 **Acceptance criteria:**
-- [ ] A sample integration test runs locally against `npm run stack:up` and in CI
+- [x] A sample integration test runs locally against `npm run stack:up`
+- [ ] ...and in CI
 
 **Verification:**
-- [ ] `npm run test` with and without `SUPABASE_TEST_URL`; CI green
+- [x] `npm run test` (skips) and `npm run test:services` (runs)
+- [ ] CI green
 
 **Dependencies:** None
 **Files likely touched:** `src/test/supabase-test-client.ts`, `.github/workflows/ci.yml`, `vitest.config.*`
