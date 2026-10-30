@@ -33,7 +33,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 - [x] AC-1…AC-4 of the spec pass; Definition of Done for each task
 
 ### Phase 2: Lists at volume
-- [ ] Task 6: Volume seed script
+- [x] Task 6: Volume seed script
 - [ ] Task 7: Paginated opportunity list with a shared pager
 - [ ] Task 8: Pager on contacts and inquiries (FR-CON-10)
 - [ ] Task 9: Agency-wide contact picker (FR-OPP-16)

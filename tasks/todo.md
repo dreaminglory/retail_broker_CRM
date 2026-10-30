@@ -89,10 +89,10 @@ reuses `inquiry-form.tsx` and wires `updateInquiryAction`. Show the assignee's n
 stack (refuses to run against a non-local URL).
 
 **Acceptance criteria:**
-- [ ] Running it twice doesn't duplicate data; it never runs against prod
+- [x] Running it twice doesn't duplicate data; it never runs against prod
 
 **Verification:**
-- [ ] Run after `npx supabase db reset`; counts match
+- [x] Run after `npx supabase db reset`; counts match
 
 **Dependencies:** None
 **Files likely touched:** `scripts/seed-volume.ts`, `package.json`

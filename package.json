@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:db": "npx supabase test db",
     "stack:up": "bash scripts/stack-up.sh",
+    "seed:volume": "node --no-warnings --env-file=.env.local scripts/seed-volume.ts",
     "test:e2e": "playwright test",
     "typecheck": "next typegen && tsc --noEmit"
   },
