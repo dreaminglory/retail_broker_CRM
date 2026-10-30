@@ -76,7 +76,9 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
           onValueChange={(val: any) => onChange({ ...options, default_status: val })}
         >
           <SelectTrigger>
-            <SelectValue />
+            <SelectValue>
+              {(value) => t(`defaultStatus.${value}` as never)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="new">{t("defaultStatus.new")}</SelectItem>

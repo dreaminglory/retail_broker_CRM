@@ -43,7 +43,9 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
         disabled={isPending}
       >
         <SelectTrigger id="locale">
-          <SelectValue placeholder={t("selectLanguage")} />
+          <SelectValue placeholder={t("selectLanguage")}>
+            {(value) => (value === "en" ? "English" : value === "bg" ? "Български" : t("selectLanguage"))}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="en">English</SelectItem>

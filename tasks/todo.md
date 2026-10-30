@@ -192,11 +192,11 @@ last name, then the email prefix.
 `DomainError` keys. Signup, onboarding and profile actions use `toActionError()`.
 
 **Acceptance criteria:**
-- [ ] No new `i18next/no-literal-string` warnings; the suppressed ones in touched files are gone
-- [ ] Every new key exists in `messages/bg.json` and `messages/en.json`
+- [x] No new `i18next/no-literal-string` warnings; the suppressed ones in touched files are gone
+- [x] Every new key exists in `messages/bg.json` and `messages/en.json`
 
 **Verification:**
-- [ ] `npm run lint`; `npx eslint . --prune-suppressions` if suppressions shrank
+- [x] `npm run lint`; `npx eslint . --prune-suppressions` if suppressions shrank
 
 **Dependencies:** None
 **Files likely touched:** repositories under `src/domain/`, signup/onboarding/profile actions, `messages/{bg,en}.json`
@@ -207,17 +207,17 @@ last name, then the email prefix.
 Sprint 5 carry-over.
 
 **Acceptance criteria:**
-- [ ] No English visible anywhere (AC-9, FR-LOC-01)
+- [x] No English visible anywhere (AC-9, FR-LOC-01)
 
 **Verification:**
-- [ ] Manual, as an owner and as a broker
+- [x] Manual, as an owner and as a broker
 
 **Dependencies:** Task 13
 **Files likely touched:** whatever the walk finds
 **Estimated scope:** S
 
 ## Checkpoint: hygiene
-- [ ] AC-8…AC-10 pass
+- [x] AC-8…AC-10 pass
 
 ## Task 15: Supabase test client and the CI job
 **Description:** `src/test/supabase-test-client.ts` signs in as the seeded users and skips when

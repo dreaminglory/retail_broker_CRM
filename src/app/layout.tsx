@@ -27,6 +27,7 @@ import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const t = await getTranslations("ui");
 
   return (
     <html
@@ -36,7 +37,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>
           {children}
-          <Toaster position="bottom-right" />
+          <Toaster position="bottom-right" containerAriaLabel={t("notifications")} />
         </NextIntlClientProvider>
       </body>
     </html>
