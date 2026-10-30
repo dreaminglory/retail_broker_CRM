@@ -4,7 +4,7 @@ import {
   canAssignTo,
   convertInquirySchema,
   createInquirySchema,
-  editInquirySchema,
+  editInquirySchemaFor,
   updateInquirySchema,
 } from './validation';
 
@@ -77,6 +77,11 @@ describe('inquiry schemas: caller normalisation', () => {
     expect(result.error?.flatten().fieldErrors.caller_phone).toEqual(['validation.invalid_phone']);
   });
 
+  it('reports only the phone when a mistyped phone is the sole detail', () => {
+    const result = createInquirySchema.safeParse({ caller_phone: '12' });
+    expect(result.error?.flatten().fieldErrors).toEqual({ caller_phone: ['validation.invalid_phone'] });
+  });
+
   it('updateInquirySchema clears empty caller fields to null', () => {
     const parsed = updateInquirySchema.parse({ caller_phone: '', caller_email: '' });
     expect(parsed.caller_phone).toBeNull();
@@ -113,9 +118,23 @@ describe('inquiry schemas: immutable fields', () => {
   });
 });
 
-describe('editInquirySchema', () => {
+describe('editInquirySchemaFor', () => {
+  it('keeps a stored phone it cannot parse when the edit leaves it alone', () => {
+    const parsed = editInquirySchemaFor('call after 5').parse({ caller_phone: 'call after 5' });
+    expect(parsed.caller_phone).toBe('call after 5');
+  });
+
+  it('counts an unparseable stored phone as a caller detail', () => {
+    expect(editInquirySchemaFor('call after 5').safeParse({ caller_phone: 'call after 5' }).success).toBe(true);
+  });
+
+  it('rejects an unparseable phone that differs from the stored one', () => {
+    const result = editInquirySchemaFor('call after 5').safeParse({ caller_phone: 'call after 6' });
+    expect(result.error?.flatten().fieldErrors.caller_phone).toEqual(['validation.invalid_phone']);
+  });
+
   it('accepts every editable field and normalises the caller', () => {
-    const parsed = editInquirySchema.parse({
+    const parsed = editInquirySchemaFor(null).parse({
       source_id: null,
       assigned_to: BROKER_ID,
       caller_name: 'Ivan',
@@ -138,7 +157,7 @@ describe('editInquirySchema', () => {
   });
 
   it('strips everything that may not be edited', () => {
-    const parsed = editInquirySchema.parse({
+    const parsed = editInquirySchemaFor(null).parse({
       caller_name: 'Ivan',
       raw_payload: { tampered: true },
       received_at: '2020-01-01T00:00:00Z',
@@ -150,7 +169,7 @@ describe('editInquirySchema', () => {
   });
 
   it('refuses an edit that leaves no caller details and no content', () => {
-    const result = editInquirySchema.safeParse({
+    const result = editInquirySchemaFor(null).safeParse({
       caller_name: null,
       caller_phone: null,
       caller_email: null,

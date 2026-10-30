@@ -105,9 +105,10 @@ the database doesn't enforce the format. Viber and WhatsApp use the same normali
 ### AD-041: International phone parsing with libphonenumber-js
 **Accepted.** `libphonenumber-js` (min
 metadata), BG default region, behind the same `normalizePhone()` signature. Landlines and foreign
-numbers become valid; unparseable numbers are still rejected. BG numbers must pass `isValid()`;
-foreign ones only `isPossible()`, because min metadata lags new ranges abroad and rejecting a real
-caller costs more than storing a typo.
+numbers become valid; unparseable numbers are still rejected. BG numbers must pass `isValid()` or
+have 9 national digits, which AD-012 accepted and stored data holds; foreign ones only
+`isPossible()`, because min metadata lags new ranges abroad and rejecting a real caller costs more
+than storing a typo.
 **Revisit if:** bundle size hurts mobile.
 
 ### AD-049: A new inquiry assignee must be an active agency member

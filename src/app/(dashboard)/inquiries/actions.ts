@@ -2,12 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { InquiryService } from '@/domain/inquiries/service';
-import {
-  createInquirySchema,
-  editInquirySchema,
-  updateInquirySchema,
-  convertInquirySchema,
-} from '@/domain/inquiries/validation';
+import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
@@ -65,11 +60,8 @@ export async function updateInquiryAction(
       external_ref: formData.get('external_ref') || null,
     };
 
-    const parsed = editInquirySchema.safeParse(raw);
-    if (!parsed.success) return toActionError(parsed.error);
-
     const service = new InquiryService(supabase);
-    await service.update(id, agencyId, parsed.data);
+    await service.edit(id, agencyId, raw);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');

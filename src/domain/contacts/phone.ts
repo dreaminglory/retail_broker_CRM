@@ -24,8 +24,12 @@ export function normalizePhone(raw: string): string | null {
   if (!parsed) return null;
 
   // Foreign numbers only need a possible length: min metadata lags new ranges abroad,
-  // and rejecting a real caller costs more than storing a typo. BG numbers are checked fully.
-  const accepted = parsed.countryCallingCode === '359' ? parsed.isValid() : parsed.isPossible();
+  // and rejecting a real caller costs more than storing a typo. BG numbers are checked fully,
+  // except that any 9 national digits stay accepted: AD-012 did, so stored data holds them.
+  const accepted =
+    parsed.countryCallingCode === '359'
+      ? parsed.isValid() || parsed.nationalNumber.length === 9
+      : parsed.isPossible();
 
   return accepted ? parsed.number : null;
 }

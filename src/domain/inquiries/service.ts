@@ -12,6 +12,7 @@ import {
   updateInquirySchema,
   dismissInquirySchema,
   convertInquirySchema,
+  editInquirySchemaFor,
   callerContactMethods,
   canAssignTo,
   INQUIRY_STATUS_TRANSITIONS,
@@ -81,6 +82,18 @@ export class InquiryService {
     }
 
     return this.repo.update(id, agencyId, parsed as UpdateInquiryInput);
+  }
+
+  /** Applies a person's edit. A stored phone the edit leaves unchanged isn't validated or rewritten. */
+  async edit(id: string, agencyId: string, input: unknown): Promise<Inquiry> {
+    const current = await this.repo.findById(id, agencyId);
+    if (!current) throw new DomainError('errors.not_found');
+
+    const { caller_phone: callerPhone, ...rest } = editInquirySchemaFor(current.caller_phone).parse(input);
+    return this.update(id, agencyId, {
+      ...rest,
+      ...(callerPhone !== current.caller_phone && { caller_phone: callerPhone }),
+    });
   }
 
   /** Marks the inquiry as 'contacted'. */

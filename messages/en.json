@@ -10,6 +10,7 @@
   "validation": {
     "invalid_phone": "Enter a valid phone number, with the country code if it is not Bulgarian.",
     "invalid_email": "Enter a valid email address.",
+    "inquiry_needs_info": "Add a caller detail, a subject or a description.",
     "failed": "Please check the highlighted fields.",
     "invalid_date": "Enter a valid date and time.",
     "title_required": "Enter a title.",

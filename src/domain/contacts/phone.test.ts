@@ -30,6 +30,14 @@ describe('normalizePhone', () => {
     expect(normalizePhone(input)).toBe(expected);
   });
 
+  // The old parser and the caller backfill accept these, so they exist in stored data.
+  it.each([
+    ['0123456789', '+359123456789'],
+    ['+359123456789', '+359123456789'],
+  ])('still accepts %s, 9 national digits outside the known BG ranges', (input, expected) => {
+    expect(normalizePhone(input)).toBe(expected);
+  });
+
   it.each([
     [''],
     ['12'],
