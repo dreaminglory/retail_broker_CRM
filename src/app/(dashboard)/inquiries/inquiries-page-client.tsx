@@ -25,6 +25,7 @@ import { InquiryForm } from "@/components/domain/inquiries/inquiry-form";
 import { ConvertInquiryDialog } from "@/components/domain/inquiries/convert-inquiry-dialog";
 import {
   createInquiryAction,
+  updateInquiryAction,
   markInquiryContactedAction,
   dismissInquiryAction,
   convertInquiryAction,
@@ -101,6 +102,7 @@ export function InquiriesPageClient({
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState(initialSearch);
 
+  const [editTarget, setEditTarget] = useState<Inquiry | null>(null);
   const [dismissTarget, setDismissTarget] = useState<Inquiry | null>(null);
   const [convertTarget, setConvertTarget] = useState<Inquiry | null>(null);
   const [convertOpen, setConvertOpen] = useState(false);
@@ -309,6 +311,8 @@ export function InquiriesPageClient({
               key={inquiry.id}
               inquiry={inquiry}
               leadSources={leadSources}
+              brokers={brokers}
+              onEdit={setEditTarget}
               onMarkContacted={handleMarkContacted}
               onConvert={handleOpenConvert}
               onDismiss={handleOpenDismiss}
@@ -316,6 +320,33 @@ export function InquiriesPageClient({
           ))
         )}
       </div>
+
+      {/* ── Edit dialog ──────────────────────────────────────────────────────── */}
+      <Dialog
+        open={!!editTarget}
+        onOpenChange={(open: boolean) => {
+          if (!open) setEditTarget(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("editInquiryTitle")}</DialogTitle>
+          </DialogHeader>
+          {editTarget && (
+            <InquiryForm
+              key={editTarget.id}
+              createAction={updateInquiryAction.bind(null, editTarget.id)}
+              inquiry={editTarget}
+              leadSources={leadSources}
+              brokers={brokers}
+              onSuccess={() => {
+                setEditTarget(null);
+                router.refresh();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Dismiss dialog ───────────────────────────────────────────────────── */}
       <Dialog

@@ -13,12 +13,14 @@ import {
   dismissInquirySchema,
   convertInquirySchema,
   callerContactMethods,
+  canAssignTo,
   INQUIRY_STATUS_TRANSITIONS,
 } from './validation';
 import type { ConvertInquirySchema } from './validation';
 import { OpportunityRepository } from '../opportunities/repository';
 import { generateDisplayName } from '../contacts/validation';
 import { findPotentialDuplicates, type PotentialDuplicate } from '../contacts/duplicate-detection';
+import { MemberRepository } from '../members/repository';
 import type { InquiryListOptions } from './repository';
 
 export class InquiryService {
@@ -62,11 +64,20 @@ export class InquiryService {
   ): Promise<Inquiry> {
     const parsed = updateInquirySchema.parse(input);
 
-    // Enforce status transition rules if status is being changed
-    if (parsed.status) {
+    if (parsed.status || parsed.assigned_to) {
       const current = await this.repo.findById(id, agencyId);
       if (!current) throw new DomainError('errors.not_found');
-      this.assertValidTransition(current.status, parsed.status);
+
+      // Enforce status transition rules if status is being changed
+      if (parsed.status) this.assertValidTransition(current.status, parsed.status);
+
+      if (parsed.assigned_to) {
+        const members = await new MemberRepository(this.db).getActiveBrokers(agencyId);
+        const memberIds = members.map((member) => member.id);
+        if (!canAssignTo(parsed.assigned_to, current.assigned_to, memberIds)) {
+          throw new DomainError('errors.inquiries.assignee_not_member');
+        }
+      }
     }
 
     return this.repo.update(id, agencyId, parsed as UpdateInquiryInput);

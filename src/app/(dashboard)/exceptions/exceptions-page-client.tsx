@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { useTranslations, useFormatter } from "next-intl";
 import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
@@ -29,13 +30,40 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { ExceptionData } from "@/domain/exceptions/repository";
+import type { ActiveBroker } from "@/domain/members/types";
+import { reassignInquiryAction } from "../inquiries/actions";
 
 interface ExceptionsPageClientProps {
   data: ExceptionData;
+  brokers: ActiveBroker[];
 }
 
-export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
+function AssignInquirySelect({ inquiryId, brokers }: { inquiryId: string; brokers: ActiveBroker[] }) {
+  const t = useTranslations("ExceptionsPage");
+  const [isPending, startTransition] = useTransition();
+
+  function handleAssign(brokerId: string) {
+    startTransition(async () => {
+      const result = await reassignInquiryAction(inquiryId, brokerId);
+      if (!result.success) toast.error(result.error);
+    });
+  }
+
+  return (
+    <BrokerSelect
+      brokers={brokers}
+      allowUnassigned={false}
+      placeholder={t('unassigned.assignPlaceholder')}
+      ariaLabel={t('unassigned.assignPlaceholder')}
+      onValueChange={handleAssign}
+      disabled={isPending}
+    />
+  );
+}
+
+export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProps) {
   const t = useTranslations("ExceptionsPage");
   const formatLoc = useFormatter();
   return (
@@ -76,6 +104,7 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
                       </span>
                     </div>
                     <p className="text-muted-foreground truncate">{inq.subject || inq.source_description || t('unassigned.noSubject')}</p>
+                    <AssignInquirySelect inquiryId={inq.id} brokers={brokers} />
                   </div>
                 ))}
               </div>

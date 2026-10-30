@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Inquiry, InquiryStatus } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
+import type { ActiveBroker } from "@/domain/members/types";
 import Link from "next/link";
 import {
   Phone,
@@ -21,6 +22,7 @@ import {
   ArrowUpRight,
   MessageSquareOff,
   CheckCheck,
+  Pencil,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -71,6 +73,8 @@ function relativeTime(dateStr: string): string {
 interface InquiryCardProps {
   inquiry: Inquiry;
   leadSources: LeadSource[];
+  brokers: ActiveBroker[];
+  onEdit?: (inquiry: Inquiry) => void;
   onMarkContacted?: (id: string) => void;
   onConvert?: (inquiry: Inquiry) => void;
   onDismiss?: (inquiry: Inquiry) => void;
@@ -81,6 +85,8 @@ interface InquiryCardProps {
 export function InquiryCard({
   inquiry,
   leadSources,
+  brokers,
+  onEdit,
   onMarkContacted,
   onConvert,
   onDismiss,
@@ -96,6 +102,9 @@ export function InquiryCard({
     : null;
 
   const age = relativeTime(inquiry.received_at);
+
+  // A deactivated assignee is no longer in the active list: fall back to the generic label.
+  const assigneeName = brokers.find((b) => b.id === inquiry.assigned_to)?.display_name;
 
   const callerDisplay =
     inquiry.caller_name ||
@@ -144,8 +153,8 @@ export function InquiryCard({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Inquiry actions"
+                    className="h-7 w-7 p-0 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                    aria-label={t("actions")}
                     id={`inquiry-actions-${inquiry.id}`}
                   >
                     <MoreHorizontal className="h-4 w-4" />
@@ -153,6 +162,15 @@ export function InquiryCard({
                 }
               />
               <DropdownMenuContent align="end" className="w-48">
+                {onEdit && (
+                  <DropdownMenuItem
+                    onClick={() => onEdit(inquiry)}
+                    id={`inquiry-edit-${inquiry.id}`}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    {t("edit")}
+                  </DropdownMenuItem>
+                )}
                 {inquiry.status === "new" && onMarkContacted && (
                   <DropdownMenuItem
                     onClick={() => onMarkContacted(inquiry.id)}
@@ -215,7 +233,7 @@ export function InquiryCard({
           {inquiry.assigned_to && (
             <span className="flex items-center gap-1">
               <User className="h-3 w-3" />
-              {t("assigned")}
+              {assigneeName ?? t("assigned")}
             </span>
           )}
           {inquiry.dismissed_reason && (

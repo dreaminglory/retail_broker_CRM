@@ -73,4 +73,5 @@ export interface UpdateInquiryInput {
   caller_email?: string | null;
   subject?: string | null;
   description?: string | null;
+  external_ref?: string | null;
 }

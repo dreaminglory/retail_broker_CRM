@@ -84,7 +84,7 @@ export class InquiryRepository {
 
     if (error) {
       if (error.code === '23505') {
-        throw new DomainError('inquiries.externalRefExists', 'External reference already exists');
+        throw new DomainError('errors.inquiries.external_ref_exists', 'External reference already exists');
       }
       throw new Error(`Failed to create inquiry: ${error.message}`);
     }
@@ -107,13 +107,19 @@ export class InquiryRepository {
         ...(input.caller_email !== undefined && { caller_email: input.caller_email }),
         ...(input.subject !== undefined && { subject: input.subject }),
         ...(input.description !== undefined && { description: input.description }),
+        ...(input.external_ref !== undefined && { external_ref: input.external_ref }),
       })
       .eq('id', id)
       .eq('agency_id', agencyId)
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update inquiry: ${error.message}`);
+    if (error) {
+      if (error.code === '23505') {
+        throw new DomainError('errors.inquiries.external_ref_exists', 'External reference already exists');
+      }
+      throw new Error(`Failed to update inquiry: ${error.message}`);
+    }
     return data as Inquiry;
   }
 }

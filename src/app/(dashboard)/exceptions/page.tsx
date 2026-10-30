@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { MemberRepository } from "@/domain/members/repository";
 import { getExceptionDataAction } from "./actions";
 import { ExceptionsPageClient } from "./exceptions-page-client";
 
@@ -36,5 +37,7 @@ export default async function ExceptionsPage() {
     return <div className="p-6">Failed to load exception data.</div>;
   }
 
-  return <ExceptionsPageClient data={data} />;
+  const brokers = await new MemberRepository(supabase).getActiveBrokers(membership.agency_id);
+
+  return <ExceptionsPageClient data={data} brokers={brokers} />;
 }

@@ -60,7 +60,42 @@ export function callerContactMethods(
   return methods;
 }
 
+/**
+ * Whether an inquiry may be assigned to this user. Keeping a deactivated assignee is allowed, so
+ * editing other fields doesn't force a reassign. `assigned_to` only references auth.users, so
+ * nothing below this check stops a user from another agency being set.
+ */
+export function canAssignTo(
+  assignedTo: string | null,
+  currentAssignee: string | null,
+  activeMemberIds: string[]
+): boolean {
+  return !assignedTo || assignedTo === currentAssignee || activeMemberIds.includes(assignedTo);
+}
+
 // ── Schemas ────────────────────────────────────────────────────────────────
+
+function requireCallerOrContent(
+  data: {
+    caller_name?: string | null;
+    caller_phone?: string | null;
+    caller_email?: string | null;
+    subject?: string | null;
+    description?: string | null;
+  },
+  ctx: z.RefinementCtx
+) {
+  // Must have at least some identifying information about the caller
+  const hasCallerInfo = data.caller_name || data.caller_phone || data.caller_email;
+  const hasContent = data.subject || data.description;
+  if (!hasCallerInfo && !hasContent) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'validation.inquiry_needs_info',
+      path: ['caller_name'],
+    });
+  }
+}
 
 export const createInquirySchema = z
   .object({
@@ -75,20 +110,21 @@ export const createInquirySchema = z
     assigned_to: nullableUuid(),
     raw_payload: z.record(z.unknown()).optional().default({}),
   })
-  .superRefine((data, ctx) => {
-    // Must have at least some identifying information about the caller
-    const hasCallerInfo =
-      data.caller_name || data.caller_phone || data.caller_email;
-    const hasContent = data.subject || data.description;
-    if (!hasCallerInfo && !hasContent) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          'validation.inquiry_needs_info',
-        path: ['caller_name'],
-      });
-    }
-  });
+  .superRefine(requireCallerOrContent);
+
+/** What a person may change on an existing inquiry. raw_payload and received_at are never here. */
+export const editInquirySchema = z
+  .object({
+    source_id: nullableUuid(),
+    assigned_to: nullableUuid(),
+    caller_name: z.string().max(200).nullable().optional(),
+    caller_phone: callerPhoneSchema,
+    caller_email: callerEmailSchema,
+    subject: z.string().max(500).nullable().optional(),
+    description: z.string().max(5000).nullable().optional(),
+    external_ref: z.string().max(200).nullable().optional(),
+  })
+  .superRefine(requireCallerOrContent);
 
 export const updateInquirySchema = z.object({
   source_id: nullableUuid(),
@@ -103,6 +139,7 @@ export const updateInquirySchema = z.object({
   caller_email: callerEmailSchema,
   subject: z.string().max(500).nullable().optional(),
   description: z.string().max(5000).nullable().optional(),
+  external_ref: z.string().max(200).nullable().optional(),
 });
 
 export const dismissInquirySchema = z.object({

@@ -27,7 +27,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 - [x] Task 2: Normalise inquiry callers in validation and conversion (FR-INQ-14)
 - [x] Task 3: Backfill stored inquiry callers
 - [x] Task 4: Phone-aware global search
-- [ ] Task 5: Edit and reassign an inquiry (FR-INQ-13)
+- [x] Task 5: Edit and reassign an inquiry (FR-INQ-13)
 
 ### Checkpoint: intake
 - [ ] AC-1…AC-4 of the spec pass; Definition of Done for each task

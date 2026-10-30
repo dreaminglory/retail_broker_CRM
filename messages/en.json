@@ -4,7 +4,8 @@
     "forbidden": "Only owners and managers can do this.",
     "unexpected": "Something went wrong. Please try again.",
     "task_not_found": "This task no longer exists.",
-    "task_not_pending": "This task is already completed or cancelled."
+    "task_not_pending": "This task is already completed or cancelled.",
+    "inquiries": { "external_ref_exists": "Another inquiry from this source already has this external ref.", "assignee_not_member": "This person is not an active member of your agency.", "contact_creation_failed": "The contact could not be created. Please try again." }
   },
   "validation": {
     "invalid_phone": "Enter a valid phone number, with the country code if it is not Bulgarian.",
@@ -747,6 +748,7 @@
     "importBtn": "Import",
     "logInquiryBtn": "Log inquiry",
     "logInquiryTitle": "Log new inquiry",
+    "editInquiryTitle": "Edit inquiry",
     "searchPlaceholder": "Search by caller name, phone, subject...",
     "unknownCaller": "Unknown Caller",
     "searchBtn": "Search",
@@ -809,7 +811,9 @@
     "markContacted": "Mark contacted",
     "convertToOpportunity": "Convert to opportunity",
     "dismiss": "Dismiss",
-    "assigned": "Assigned"
+    "assigned": "Assigned",
+    "edit": "Edit",
+    "actions": "Inquiry actions"
   },
   "InquiryForm": {
     "source": "Lead source",
@@ -828,7 +832,8 @@
     "externalRef": "External ref (optional)",
     "externalRefPlaceholder": "Portal ID or tracking number",
     "saving": "Saving…",
-    "submit": "Log inquiry"
+    "submit": "Log inquiry",
+    "saveChanges": "Save changes"
   },
   "CloseOpportunityDialog": {
     "title": "Close Opportunity",
@@ -1035,7 +1040,8 @@
       "description": "New inquiries without a broker assigned",
       "empty": "No unassigned inquiries.",
       "unknownCaller": "Unknown Caller",
-      "noSubject": "No subject"
+      "noSubject": "No subject",
+      "assignPlaceholder": "Assign to…"
     },
     "overdue": {
       "title": "Overdue Tasks",

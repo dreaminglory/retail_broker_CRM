@@ -2,7 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { InquiryService } from '@/domain/inquiries/service';
-import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
+import {
+  createInquirySchema,
+  editInquirySchema,
+  updateInquirySchema,
+  convertInquirySchema,
+} from '@/domain/inquiries/validation';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
@@ -45,29 +50,49 @@ export async function updateInquiryAction(
   id: string,
   _prevState: ActionResult,
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResult<{ id: string }>> {
   try {
     const { supabase, agencyId } = await getAuthContext();
 
     const raw = {
-      source_id: formData.get('source_id') ?? undefined,
-      source_description: formData.get('source_description') ?? undefined,
+      source_id: formData.get('source_id') || null,
       assigned_to: formData.get('assigned_to') || null,
-      caller_name: formData.get('caller_name') ?? undefined,
-      caller_phone: formData.get('caller_phone') ?? undefined,
-      caller_email: formData.get('caller_email') ?? undefined,
-      subject: formData.get('subject') ?? undefined,
-      description: formData.get('description') ?? undefined,
+      caller_name: formData.get('caller_name') || null,
+      caller_phone: formData.get('caller_phone') || null,
+      caller_email: formData.get('caller_email') || null,
+      subject: formData.get('subject') || null,
+      description: formData.get('description') || null,
+      external_ref: formData.get('external_ref') || null,
     };
 
-    const parsed = updateInquirySchema.safeParse(raw);
+    const parsed = editInquirySchema.safeParse(raw);
     if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
     await service.update(id, agencyId, parsed.data);
 
     revalidatePath('/inquiries');
-    revalidatePath(`/inquiries/${id}`);
+    revalidatePath('/exceptions');
+    return { success: true, data: { id } };
+  } catch (error) { return toActionError(error); }
+}
+
+/** Any member may assign an inquiry (AD-001). `assignedTo` null unassigns it. */
+export async function reassignInquiryAction(
+  id: string,
+  assignedTo: string | null
+): Promise<ActionResult> {
+  try {
+    const { supabase, agencyId } = await getAuthContext();
+
+    const parsed = updateInquirySchema.safeParse({ assigned_to: assignedTo });
+    if (!parsed.success) return toActionError(parsed.error);
+
+    const service = new InquiryService(supabase);
+    await service.update(id, agencyId, parsed.data);
+
+    revalidatePath('/inquiries');
+    revalidatePath('/exceptions');
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }

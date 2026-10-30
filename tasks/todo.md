@@ -71,11 +71,11 @@ reuses `inquiry-form.tsx` and wires `updateInquiryAction`. Show the assignee's n
 `inquiry-card.tsx`. Add an assign select to the Exceptions unassigned list. i18n keys in both files.
 
 **Acceptance criteria:**
-- [ ] The assignee can be changed from the inbox and Exceptions, and the card shows the name (AC-3)
-- [ ] `raw_payload` and `received_at` can't be edited (AC-4)
+- [x] The assignee can be changed from the inbox and Exceptions, and the card shows the name (AC-3)
+- [x] `raw_payload` and `received_at` can't be edited (AC-4)
 
 **Verification:**
-- [ ] `npm run test`; browser check in `bg` and `en` at 1280 and 390 px
+- [x] `npm run test`; browser check in `bg` and `en` at 1280 and 390 px
 
 **Dependencies:** Task 2
 **Files likely touched:** `src/app/(dashboard)/inquiries/actions.ts`, `src/app/(dashboard)/exceptions/actions.ts`, `src/components/domain/inquiries/*`, the Exceptions page, `messages/{bg,en}.json`

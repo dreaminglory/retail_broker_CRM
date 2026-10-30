@@ -110,6 +110,12 @@ foreign ones only `isPossible()`, because min metadata lags new ranges abroad an
 caller costs more than storing a typo.
 **Revisit if:** bundle size hurts mobile.
 
+### AD-049: A new inquiry assignee must be an active agency member
+**Accepted.** Any member may assign (AD-001), and `assigned_to` only references `auth.users`, so
+`InquiryService.update` checks the new assignee against the agency's active members. Leaving a
+deactivated assignee in place is allowed, so an edit doesn't force a reassign.
+**Revisit if:** a database check covers every assignable table.
+
 ### AD-018: Contacts may share a phone or email
 **Accepted.** No unique constraint on `contact_methods`; the duplicate warning ("create anyway")
 is the defence. Spouses and colleagues share numbers.

@@ -231,7 +231,7 @@ export function InquiryForm({
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? t("saving") : t("submit")}
+        {pending ? t("saving") : inquiry ? t("saveChanges") : t("submit")}
       </Button>
     </form>
   );

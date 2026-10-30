@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   callerContactMethods,
+  canAssignTo,
   convertInquirySchema,
   createInquirySchema,
+  editInquirySchema,
   updateInquirySchema,
 } from './validation';
 
@@ -108,6 +110,79 @@ describe('inquiry schemas: immutable fields', () => {
     });
     expect(parsed).not.toHaveProperty('raw_payload');
     expect(parsed).not.toHaveProperty('received_at');
+  });
+});
+
+describe('editInquirySchema', () => {
+  it('accepts every editable field and normalises the caller', () => {
+    const parsed = editInquirySchema.parse({
+      source_id: null,
+      assigned_to: BROKER_ID,
+      caller_name: 'Ivan',
+      caller_phone: '0888 123 456',
+      caller_email: 'Ivan@Example.BG',
+      subject: 'Flat',
+      description: 'Near the park',
+      external_ref: 'IMOT-1',
+    });
+    expect(parsed).toEqual({
+      source_id: null,
+      assigned_to: BROKER_ID,
+      caller_name: 'Ivan',
+      caller_phone: '+359888123456',
+      caller_email: 'ivan@example.bg',
+      subject: 'Flat',
+      description: 'Near the park',
+      external_ref: 'IMOT-1',
+    });
+  });
+
+  it('strips everything that may not be edited', () => {
+    const parsed = editInquirySchema.parse({
+      caller_name: 'Ivan',
+      raw_payload: { tampered: true },
+      received_at: '2020-01-01T00:00:00Z',
+      status: 'converted',
+      contact_id: BROKER_ID,
+      opportunity_id: BROKER_ID,
+    });
+    expect(parsed).toEqual({ caller_name: 'Ivan' });
+  });
+
+  it('refuses an edit that leaves no caller details and no content', () => {
+    const result = editInquirySchema.safeParse({
+      caller_name: null,
+      caller_phone: null,
+      caller_email: null,
+      subject: null,
+      description: null,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.flatten().fieldErrors.caller_name).toEqual(['validation.inquiry_needs_info']);
+  });
+
+  it('updateInquirySchema carries external_ref through to the service', () => {
+    expect(updateInquirySchema.parse({ external_ref: 'IMOT-1' }).external_ref).toBe('IMOT-1');
+  });
+});
+
+describe('canAssignTo', () => {
+  const OTHER_ID = '33333333-3333-4333-8333-333333333333';
+
+  it('allows an active member of the agency', () => {
+    expect(canAssignTo(BROKER_ID, null, [BROKER_ID])).toBe(true);
+  });
+
+  it('refuses someone who is not an active member', () => {
+    expect(canAssignTo(OTHER_ID, BROKER_ID, [BROKER_ID])).toBe(false);
+  });
+
+  it('keeps a deactivated assignee when the edit leaves them in place', () => {
+    expect(canAssignTo(OTHER_ID, OTHER_ID, [BROKER_ID])).toBe(true);
+  });
+
+  it('always allows unassigning', () => {
+    expect(canAssignTo(null, BROKER_ID, [BROKER_ID])).toBe(true);
   });
 });
 
