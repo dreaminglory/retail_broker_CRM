@@ -129,6 +129,12 @@ describe('buildDigest', () => {
       }
     });
 
+    it('does not count a task due exactly now as overdue, the same as Exceptions', () => {
+      const digest = build([task('now', NOW.toISOString(), OTHER)], [inquiry('u', undefined, null)], 'owner');
+
+      expect(digest!.agency).toEqual({ unassignedInquiries: 1, overdueTasks: 0 });
+    });
+
     it('never gives them to a broker', () => {
       const digest = build([task('mine', OVERDUE), task('theirs', OVERDUE, OTHER)], [inquiry('u', undefined, null)], 'broker');
 

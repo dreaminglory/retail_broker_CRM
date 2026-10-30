@@ -113,6 +113,16 @@ describe('renderDailyDigest', () => {
 
       expect(html).not.toContain('Unassigned inquiries');
       expect(html).toContain('Overdue tasks: 5');
+
+      const noOverdue = renderDailyDigest({
+        ...base,
+        digest: { ...digest, agency: { unassignedInquiries: 2, overdueTasks: 0 } },
+        locale: 'en',
+      });
+
+      expect(noOverdue.html).toContain('Unassigned inquiries: 2');
+      expect(noOverdue.html).not.toContain('Overdue tasks: 0');
+      expect(noOverdue.text).not.toContain('Overdue tasks: 0');
     });
 
     it('shows no agency block and no Exceptions link without counts', () => {
