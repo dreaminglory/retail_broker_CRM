@@ -9,12 +9,12 @@ metadata, BG default region), keeping its signature. Turn the landline `it.todo`
 tests and add foreign numbers. Mark AD-041 Accepted in `docs/decisions-log.md`.
 
 **Acceptance criteria:**
-- [ ] `+44 7700 900123`, `+49 30 123456`, `02 987 6543` and `0888 123 456` normalise to E.164
-- [ ] An unparseable number is still rejected
+- [x] `+44 7700 900123`, `+49 30 123456`, `02 987 6543` and `0888 123 456` normalise to E.164
+- [x] An unparseable number is still rejected
 
 **Verification:**
-- [ ] `npx vitest run src/domain/contacts/phone.test.ts`
-- [ ] Creating a contact with a UK number in the browser saves `+447700900123`
+- [x] `npx vitest run src/domain/contacts/phone.test.ts`
+- [x] Creating a contact with a UK number in the browser saves `+447700900123`
 
 **Dependencies:** None
 **Files likely touched:** `package.json`, `src/domain/contacts/phone.ts`, `src/domain/contacts/phone.test.ts`

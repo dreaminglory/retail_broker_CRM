@@ -87,8 +87,7 @@ English leaks; resend invitation (`conversion-join`). BRD rows marked ⚠️ say
 **Go-live prerequisites (founder):** a domain verified in Resend, hosting that allows two daily
 crons (or the pg_cron fallback, AD-042), production env vars.
 
-**Open decisions:** AD-041 is Proposed (accepted when `trustworthy-loop` Task 1 lands). Smart
-Lists are in the gate, though AD-039 named only properties, requirements and matching (founder
+**Open decisions:** Smart Lists are in the gate, though AD-039 named only properties, requirements and matching (founder
 to confirm).
 
 ## 6. Pilot evidence

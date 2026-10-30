@@ -15,12 +15,28 @@ describe('normalizePhone', () => {
   });
 
   it.each([
+    ['+44 7700 900123', '+447700900123'],
+    ['+49 30 123456', '+4930123456'],
+    ['00447700900123', '+447700900123'],
+  ])('normalizes foreign number %s to E.164', (input, expected) => {
+    expect(normalizePhone(input)).toBe(expected);
+  });
+
+  it.each([
+    ['02 987 6543', '+35929876543'],
+    ['02 123 4567', '+35921234567'],
+    ['032 123 456', '+35932123456'],
+  ])('normalizes landline %s to E.164', (input, expected) => {
+    expect(normalizePhone(input)).toBe(expected);
+  });
+
+  it.each([
     [''],
-    ['888123456'],
-    ['+44 20 7946 0958'],
-    ['08881234'],
+    ['12'],
     ['088812345678'],
+    ['+44 12'],
     ['phone'],
+    ['call me on 0888 123 456'],
   ])('rejects %s', (input) => {
     expect(normalizePhone(input)).toBeNull();
   });
@@ -29,9 +45,4 @@ describe('normalizePhone', () => {
     const variants = ['0888123456', '+359 888 123 456', '359-888-123-456'];
     expect(new Set(variants.map(normalizePhone))).toEqual(new Set(['+359888123456']));
   });
-
-  // Landlines have 8 digits after +359 (02 + 7 for Sofia, 032 + 6 for Plovdiv),
-  // but normalizePhone only accepts 9, so these are currently rejected.
-  it.todo('accepts Sofia landlines: 02 123 4567 → +35921234567');
-  it.todo('accepts Plovdiv landlines: 032 123 456 → +35932123456');
 });

@@ -23,7 +23,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 ## Task list
 
 ### Phase 1: Inquiry intake integrity
-- [ ] Task 1: International and landline phones (FR-CON-15)
+- [x] Task 1: International and landline phones (FR-CON-15)
 - [ ] Task 2: Normalise inquiry callers in validation and conversion (FR-INQ-14)
 - [ ] Task 3: Backfill stored inquiry callers
 - [ ] Task 4: Phone-aware global search

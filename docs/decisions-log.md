@@ -103,9 +103,11 @@ role-checked merge RPC is in the `SPEC.md` ideas backlog.
 the database doesn't enforce the format. Viber and WhatsApp use the same normalization.
 
 ### AD-041: International phone parsing with libphonenumber-js
-**Proposed** (accepted when `trustworthy-loop` Task 1 lands). `libphonenumber-js` (min
+**Accepted.** `libphonenumber-js` (min
 metadata), BG default region, behind the same `normalizePhone()` signature. Landlines and foreign
-numbers become valid; unparseable numbers are still rejected.
+numbers become valid; unparseable numbers are still rejected. BG numbers must pass `isValid()`;
+foreign ones only `isPossible()`, because min metadata lags new ranges abroad and rejecting a real
+caller costs more than storing a typo.
 **Revisit if:** bundle size hurts mobile.
 
 ### AD-018: Contacts may share a phone or email

@@ -1,53 +1,33 @@
 /**
  * Phone number normalization utilities.
  * AD-012: E.164 enforcement adopted in Sprint 1 (reverses AD-010).
+ * AD-041: parsing by libphonenumber-js (min metadata) with BG as the default region.
  *
- * Accepts any common Bulgarian format and normalizes to E.164 (+359XXXXXXXXX).
- *
- * Accepted inputs (spaces, dashes, dots, parens all stripped first):
- *   0888123456      → +359888123456   (10-digit local, leading 0)
- *   0888 123 456    → +359888123456
- *   088-812-3456    → +359888123456
- *   +359888123456   → +359888123456   (already E.164)
- *   359888123456    → +359888123456   (missing the +)
- *
- * Bulgarian numbers:
- *   - Mobile: 087/088/089 (A1), 098/099 (Vivacom), 085/086 (Yettel)
- *   - Fixed:  02 (Sofia), 032 (Plovdiv), 052 (Varna), etc.
- *   - After country code, always 9 digits → +359 + 9 digits = 13 chars total.
+ * Accepted inputs:
+ *   0888 123 456      → +359888123456   (BG mobile, local format)
+ *   02 987 6543       → +35929876543    (BG landline)
+ *   359888123456      → +359888123456   (missing the +)
+ *   +44 7700 900123   → +447700900123   (foreign, with country code)
+ *   00447700900123    → +447700900123   (foreign, international prefix)
  */
 
-/** Strip all whitespace, dashes, dots, and parentheses. */
-function stripFormatting(raw: string): string {
-  return raw.replace(/[\s\-.()\u00A0]/g, '');
-}
+import { parsePhoneNumberFromString } from 'libphonenumber-js/min';
 
 /**
- * Normalizes a raw phone string to E.164 (+359XXXXXXXXX).
+ * Normalizes a raw phone string to E.164.
  * Returns null if the input cannot be normalized.
  */
 export function normalizePhone(raw: string): string | null {
-  const stripped = stripFormatting(raw);
+  // extract: false rejects a number buried in other text instead of pulling it out.
+  const parsed = parsePhoneNumberFromString(raw, { defaultCountry: 'BG', extract: false });
 
-  let digits: string;
+  if (!parsed) return null;
 
-  if (stripped.startsWith('+359')) {
-    digits = stripped.slice(1); // drop the '+', keep '359...'
-  } else if (stripped.startsWith('359')) {
-    digits = stripped;
-  } else if (stripped.startsWith('0')) {
-    // Local format: replace leading 0 with 359
-    digits = '359' + stripped.slice(1);
-  } else {
-    return null; // unrecognizable prefix
-  }
+  // Foreign numbers only need a possible length: min metadata lags new ranges abroad,
+  // and rejecting a real caller costs more than storing a typo. BG numbers are checked fully.
+  const accepted = parsed.countryCallingCode === '359' ? parsed.isValid() : parsed.isPossible();
 
-  // After normalization digits should be '359' + 9 digits = 12 digits
-  if (!/^359\d{9}$/.test(digits)) {
-    return null;
-  }
-
-  return '+' + digits;
+  return accepted ? parsed.number : null;
 }
 
 /**

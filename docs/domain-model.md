@@ -424,7 +424,7 @@ The "Enforced by" column tells you which layer to change and test.
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
 | T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
-| C2 | Phones E.164, emails lowercase | `normalizePhone()` / Zod on contact methods (inquiry callers: not yet, see Known gaps) |
+| C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods (inquiry callers: not yet, see Known gaps) |
 | C3 | Duplicate check (phone, email, trigram name) before creating a contact | `duplicate-detection.ts` (service) |
 | C4 | Merge archives the loser and snapshots it | `merge.ts` + `merge_history` |
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
