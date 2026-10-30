@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { adminClient, createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
 import type { MailMessage, MailResult, Mailer } from './mailer';
@@ -25,49 +26,62 @@ function fakeMailer(failFor?: string) {
 }
 
 describeServices('NotificationService daily digest against the local stack', () => {
-  const admin = adminClient();
   const cleanup = createRowCleanup();
-  const repo = new NotificationRepository(admin);
+  const tempUserIds: string[] = [];
+  let admin: SupabaseClient;
+  let repo: NotificationRepository;
   let broker: TestSession;
   let manager: TestSession;
   let betaBroker: TestSession;
 
+  async function clearDeliveries() {
+    await admin.from('notification_deliveries').delete().eq('period_key', PERIOD_KEY);
+  }
+
   beforeAll(async () => {
-    [broker, manager, betaBroker] = await Promise.all([
-      signInAs('broker@alpha.bg'),
-      signInAs('manager@alpha.bg'),
-      signInAs('broker@beta.bg'),
-    ]);
+    admin = adminClient();
+    repo = new NotificationRepository(admin);
+    broker = await signInAs('broker@alpha.bg');
+    manager = await signInAs('manager@alpha.bg');
+    betaBroker = await signInAs('broker@beta.bg');
   });
 
-  beforeEach(async () => {
-    await admin.from('notification_deliveries').delete().eq('period_key', PERIOD_KEY);
-  });
+  beforeEach(clearDeliveries);
 
   afterAll(async () => {
-    await admin.from('notification_deliveries').delete().eq('period_key', PERIOD_KEY);
+    if (!admin) return;
+    await clearDeliveries();
     await cleanup.run();
+    for (const id of tempUserIds) await admin.auth.admin.deleteUser(id);
   });
 
-  async function createOverdueTask(session: TestSession, title: string) {
+  async function createOverdueTask(userId: string, agencyId: string, title: string) {
     const { data, error } = await admin
       .from('tasks')
-      .insert({
-        agency_id: session.agencyId,
-        title,
-        due_at: '2031-03-09T09:00:00Z',
-        assigned_to: session.userId,
-        status: 'pending',
-      })
+      .insert({ agency_id: agencyId, title, due_at: '2031-03-09T09:00:00Z', assigned_to: userId, status: 'pending' })
       .select('id')
       .single();
     if (error) throw new Error(error.message);
     cleanup.track('tasks', data.id);
   }
 
-  function service(mailer: Mailer) {
-    return new NotificationService(repo, mailer, APP_URL);
+  /**
+   * A member of Alpha made for one test, so the seeded users other suites sign in as are never
+   * touched while those suites run in parallel. Removing the user removes the membership.
+   */
+  async function createTempMember(label: string, status: 'active' | 'deactivated' = 'active') {
+    const email = `digest-${label}-${Date.now()}@alpha.bg`;
+    const { data, error } = await admin.auth.admin.createUser({ email, password: 'password123', email_confirm: true });
+    if (error) throw new Error(error.message);
+    tempUserIds.push(data.user.id);
+    const { error: membershipError } = await admin
+      .from('agency_memberships')
+      .insert({ agency_id: broker.agencyId, user_id: data.user.id, role: 'broker', status });
+    if (membershipError) throw new Error(membershipError.message);
+    return { userId: data.user.id, email };
   }
+
+  const service = (mailer: Mailer) => new NotificationService(repo, mailer, APP_URL);
 
   const run = (mailer: Mailer, agencyId = broker.agencyId) =>
     service(mailer).runDailyDigest({ agencyId, timezone: TIMEZONE, now: NOW });
@@ -77,17 +91,18 @@ describeServices('NotificationService daily digest against the local stack', () 
     return data!.email;
   }
 
-  async function deliveryStatuses(agencyId: string): Promise<string[]> {
+  async function deliveryFor(userId: string) {
     const { data } = await admin
       .from('notification_deliveries')
-      .select('status')
-      .eq('agency_id', agencyId)
-      .eq('period_key', PERIOD_KEY);
-    return (data ?? []).map((row) => row.status).sort();
+      .select('status, error')
+      .eq('user_id', userId)
+      .eq('period_key', PERIOD_KEY)
+      .maybeSingle();
+    return data;
   }
 
   it('sends one digest per user however many times it runs', async () => {
-    await createOverdueTask(broker, 'Digest task for the broker');
+    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
     const { mailer, sent } = fakeMailer();
 
     const first = await run(mailer);
@@ -103,7 +118,7 @@ describeServices('NotificationService daily digest against the local stack', () 
   });
 
   it('sends one digest per user when runs overlap', async () => {
-    await createOverdueTask(broker, 'Digest task for the broker');
+    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
     const { mailer, sent } = fakeMailer();
 
     await Promise.all([run(mailer), run(mailer), run(mailer)]);
@@ -114,8 +129,8 @@ describeServices('NotificationService daily digest against the local stack', () 
   });
 
   it('records a failed send, carries on with the others, and retries it next run', async () => {
-    await createOverdueTask(broker, 'Digest task for the broker');
-    await createOverdueTask(manager, 'Digest task for the manager');
+    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
+    await createOverdueTask(manager.userId, manager.agencyId, 'Digest task for the manager');
     const brokerEmail = await emailFor(broker.userId);
 
     const failing = fakeMailer(brokerEmail);
@@ -124,30 +139,18 @@ describeServices('NotificationService daily digest against the local stack', () 
     expect(first.failed).toBe(1);
     expect(failing.sent.map((m) => m.to)).toContain(await emailFor(manager.userId));
     expect(failing.sent.map((m) => m.to)).not.toContain(brokerEmail);
-    const { data: failedRow } = await admin
-      .from('notification_deliveries')
-      .select('status, error')
-      .eq('user_id', broker.userId)
-      .eq('period_key', PERIOD_KEY)
-      .single();
-    expect(failedRow).toEqual({ status: 'failed', error: 'Mailbox unavailable' });
+    expect(await deliveryFor(broker.userId)).toEqual({ status: 'failed', error: 'Mailbox unavailable' });
 
     const working = fakeMailer();
     const second = await run(working.mailer);
 
     expect(second.sent).toBe(1);
     expect(working.sent.map((m) => m.to)).toEqual([brokerEmail]);
-    const { data: retried } = await admin
-      .from('notification_deliveries')
-      .select('status, error')
-      .eq('user_id', broker.userId)
-      .eq('period_key', PERIOD_KEY)
-      .single();
-    expect(retried).toEqual({ status: 'sent', error: null });
+    expect(await deliveryFor(broker.userId)).toEqual({ status: 'sent', error: null });
   });
 
-  it('writes the recipient\'s own language and links to Today', async () => {
-    await createOverdueTask(broker, 'Digest task for the broker');
+  it("writes the recipient's own language and links to Today", async () => {
+    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
     const { mailer, sent } = fakeMailer();
 
     await run(mailer);
@@ -158,56 +161,54 @@ describeServices('NotificationService daily digest against the local stack', () 
     expect(message.html).toContain(`href="${APP_URL}/today"`);
   });
 
-  it('records an empty digest as skipped and sends nothing', async () => {
+  it('records an empty digest as skipped and sends nothing for it', async () => {
+    const temp = await createTempMember('empty');
     const { mailer, sent } = fakeMailer();
 
-    // Whoever has nothing for the day is recorded as skipped, and gets no mail.
-    const result = await run(mailer, betaBroker.agencyId);
+    const result = await run(mailer);
 
-    expect(sent).toHaveLength(result.sent);
-    const statuses = await deliveryStatuses(betaBroker.agencyId);
-    expect(statuses.filter((status) => status === 'skipped')).toHaveLength(result.skipped);
-    for (const message of sent) expect(message.html).not.toContain('Digest task for the broker');
+    expect(result.skipped).toBeGreaterThanOrEqual(1);
+    expect(sent.map((m) => m.to)).not.toContain(temp.email);
+    expect(await deliveryFor(temp.userId)).toEqual({ status: 'skipped', error: null });
   });
 
   it('sends nothing to a member who turned the digest off or was deactivated', async () => {
-    await createOverdueTask(broker, 'Digest task for the broker');
-    await createOverdueTask(manager, 'Digest task for the manager');
-    const brokerEmail = await emailFor(broker.userId);
-    const managerEmail = await emailFor(manager.userId);
+    const off = await createTempMember('off');
+    const gone = await createTempMember('gone', 'deactivated');
+    const on = await createTempMember('on');
+    await admin.from('profiles').update({ digest_enabled: false }).eq('id', off.userId);
+    for (const member of [off, gone, on]) await createOverdueTask(member.userId, broker.agencyId, 'Temp member task');
+    const { mailer, sent } = fakeMailer();
 
-    await admin.from('profiles').update({ digest_enabled: false }).eq('id', broker.userId);
-    await admin
-      .from('agency_memberships')
-      .update({ status: 'deactivated' })
-      .eq('user_id', manager.userId)
-      .eq('agency_id', manager.agencyId);
-    try {
-      const { mailer, sent } = fakeMailer();
-      await run(mailer);
+    await run(mailer);
 
-      const recipients = sent.map((message) => message.to);
-      expect(recipients).not.toContain(brokerEmail);
-      expect(recipients).not.toContain(managerEmail);
-      const { data: rows } = await admin
-        .from('notification_deliveries')
-        .select('user_id')
-        .eq('period_key', PERIOD_KEY)
-        .in('user_id', [broker.userId, manager.userId]);
-      expect(rows).toEqual([]);
-    } finally {
-      await admin.from('profiles').update({ digest_enabled: true }).eq('id', broker.userId);
-      await admin
-        .from('agency_memberships')
-        .update({ status: 'active' })
-        .eq('user_id', manager.userId)
-        .eq('agency_id', manager.agencyId);
-    }
+    const recipients = sent.map((message) => message.to);
+    expect(recipients).toContain(on.email);
+    expect(recipients).not.toContain(off.email);
+    expect(recipients).not.toContain(gone.email);
+    expect(await deliveryFor(off.userId)).toBeNull();
+    expect(await deliveryFor(gone.userId)).toBeNull();
   });
 
-  it('never puts another agency\'s data in a digest', async () => {
-    await createOverdueTask(broker, 'Alpha only task');
-    await createOverdueTask(betaBroker, 'Beta only task');
+  it('runs only the agencies whose local time is 08:xx on a weekday', async () => {
+    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
+    const { mailer, sent } = fakeMailer();
+
+    const saturday = await service(mailer).runDueAgencies(new Date('2031-03-08T06:10:00Z'));
+    const tooEarly = await service(mailer).runDueAgencies(new Date('2031-03-10T04:10:00Z'));
+    expect(saturday.due).toBe(0);
+    expect(tooEarly.due).toBe(0);
+    expect(sent).toEqual([]);
+
+    const monday = await service(mailer).runDueAgencies(NOW);
+    expect(monday.due).toBeGreaterThanOrEqual(2);
+    expect(monday.agenciesFailed).toBe(0);
+    expect(sent.map((message) => message.to)).toContain(await emailFor(broker.userId));
+  });
+
+  it("never puts another agency's data in a digest", async () => {
+    await createOverdueTask(broker.userId, broker.agencyId, 'Alpha only task');
+    await createOverdueTask(betaBroker.userId, betaBroker.agencyId, 'Beta only task');
     const { mailer, sent } = fakeMailer();
 
     await run(mailer, broker.agencyId);

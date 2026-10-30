@@ -1,4 +1,4 @@
-import { agencyDateKey, getTodayWindows } from '@/lib/time/agency-day';
+import { agencyDateKey, getTodayWindows, isDigestTime } from '@/lib/time/agency-day';
 import { buildDigest } from './digest-builder';
 import type { Mailer } from './mailer';
 import type { NotificationRepository } from './repository';
@@ -18,6 +18,9 @@ export function addRunResults(a: DigestRunResult, b: DigestRunResult): DigestRun
     alreadyDone: a.alreadyDone + b.alreadyDone,
   };
 }
+
+/** What a cron call did: the agencies it looked at, the ones whose 08:xx it was, and the sends. */
+export type CronRunResult = DigestRunResult & { agencies: number; due: number; agenciesFailed: number };
 
 type RunDigestInput = { agencyId: string; timezone: string; now: Date };
 
@@ -50,6 +53,25 @@ export class NotificationService {
       result[outcome]++;
     }
     return result;
+  }
+
+  /** Runs the digest for every agency whose local time is 08:xx on a weekday. One agency failing doesn't stop the rest. */
+  async runDueAgencies(now: Date): Promise<CronRunResult> {
+    const agencies = await this.repo.listAgencies();
+    let total = emptyRunResult();
+    let due = 0;
+    let agenciesFailed = 0;
+    for (const agency of agencies) {
+      if (!isDigestTime(agency.timezone, now)) continue;
+      due++;
+      try {
+        total = addRunResults(total, await this.runDailyDigest({ agencyId: agency.id, timezone: agency.timezone, now }));
+      } catch (error) {
+        agenciesFailed++;
+        console.error(`Daily digest failed for agency ${agency.id}:`, error);
+      }
+    }
+    return { ...total, agencies: agencies.length, due, agenciesFailed };
   }
 
   private async sendDigest(

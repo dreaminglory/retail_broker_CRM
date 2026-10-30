@@ -12,6 +12,7 @@
     "test:db": "npx supabase test db",
     "test:services": "bash scripts/test-services.sh",
     "stack:up": "bash scripts/stack-up.sh",
+    "digest:run": "bash scripts/digest-run.sh",
     "seed:volume": "node --no-warnings --env-file=.env.local scripts/seed-volume.ts",
     "test:e2e": "playwright test",
     "typecheck": "next typegen && tsc --noEmit"
