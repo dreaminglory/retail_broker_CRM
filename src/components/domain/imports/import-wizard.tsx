@@ -115,7 +115,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
       setIsProcessing(true);
       const res = await saveImportMappingAction(jobId, mapping, options);
       if (!res.success) {
-        toast.error(res.error || "Failed to save mapping");
+        toast.error(res.error || t("validateFailed"));
         return;
       }
 
@@ -178,7 +178,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
       while (currentRemaining > 0) {
         const res = await commitImportBatchAction(jobId);
         if (!res.success) {
-          toast.error(res.error || "Commit failed");
+          toast.error(res.error || t("commitFailed"));
           break;
         }
         if (!res.data) {

@@ -122,7 +122,7 @@
   },
   "src/lib/actions.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 7
+      "count": 5
     }
   },
   "src/lib/i18n/use-stage-translation.ts": {

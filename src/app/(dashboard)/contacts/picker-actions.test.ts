@@ -7,7 +7,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServer: async () => fake.client,
 }));
 vi.mock('next-intl/server', () => ({
-  getTranslations: async () => (key: string) => key,
+  getTranslations: async () => Object.assign((key: string) => key, { has: () => true }),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
 

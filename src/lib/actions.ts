@@ -60,14 +60,17 @@ export async function toActionError(error: unknown, _t?: any): Promise<{ success
   const t = await getTranslations();
   
   if (error instanceof ZodError) {
+    // A validator without an i18n key carries Zod's default English message.
+    const translate = (message: string) =>
+      t.has(message as never) ? t(message as never) : t('validation.failed');
     const fieldErrors: Record<string, string[]> = {};
     for (const [path, messages] of Object.entries(error.flatten().fieldErrors)) {
       if (messages) {
-        fieldErrors[path] = messages.map((m) => t(m as any));
+        fieldErrors[path] = messages.map(translate);
       }
     }
     const formErrors = error.flatten().formErrors;
-    const translatedFormErrors = formErrors.map((m) => t(m as any));
+    const translatedFormErrors = formErrors.map(translate);
 
     return {
       success: false,
