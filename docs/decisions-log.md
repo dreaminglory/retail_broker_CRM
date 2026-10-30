@@ -49,6 +49,8 @@ Authorization lives in Server Component layouts and RLS.
 **Accepted.** `npm run stack:up` runs local Supabase and writes `.env.local`; `npm run test:e2e`
 runs the Playwright core loop in bg and en at 1280 and 390 px. Service integration tests run
 against the same stack as the seeded users. (Its cloud-session part is superseded by AD-048.)
+`npm run test:services` switches them on and prints coverage, not gated; plain `npm run test` skips
+them. They refuse a non-local URL, and each suite deletes its own rows with the service role.
 
 ## Tenancy, security and roles
 

@@ -241,10 +241,11 @@ prints coverage (not gated).
 tasks, inquiries and contacts where missing.
 
 **Acceptance criteria:**
-- [ ] Every service file changed in this module has a test file (AC-11)
+- [x] Inquiry transitions, convert and raw_payload are covered against the local stack
 
 **Verification:**
-- [ ] `npm run test` against the local stack; CI green
+- [x] `npm run test:services`
+- [ ] CI green
 
 **Dependencies:** Task 15
 **Files likely touched:** `src/domain/inquiries/service.test.ts`, `src/domain/contacts/validation.test.ts`
@@ -255,10 +256,11 @@ tasks, inquiries and contacts where missing.
 children, archives the loser). Required by AC-11, so no longer cuttable.
 
 **Acceptance criteria:**
-- [ ] Suites green locally and in CI
+- [x] Suites green locally
+- [ ] ...and in CI
 
 **Verification:**
-- [ ] `npm run test` against the local stack
+- [x] `npm run test:services`
 
 **Dependencies:** Task 15
 **Files likely touched:** `src/domain/opportunities/service.integration.test.ts`, `src/domain/contacts/merge.integration.test.ts`
@@ -269,10 +271,11 @@ children, archives the loser). Required by AC-11, so no longer cuttable.
 what the module changed in them.
 
 **Acceptance criteria:**
-- [ ] Every service file changed in this module has a test file (AC-11); FR-TST-03 becomes ✅
+- [x] Every service file changed in this module has a test file (AC-11)
+- [ ] CI green, then FR-TST-03 becomes ✅ when the module closes
 
 **Verification:**
-- [ ] `npm run test` against the local stack
+- [x] `npm run test:services`
 
 **Dependencies:** Task 15
 **Files likely touched:** `src/domain/{contacts,imports,search,timeline}/service*.test.ts`
