@@ -74,7 +74,8 @@ describe('GET /api/cron/daily-digest', () => {
     vi.stubEnv('NODE_ENV', 'production');
     const before = Date.now();
 
-    await call('?now=2026-11-02T06:10:00Z');
+    // A past instant, so honouring it would put the clock before `before`.
+    await call('?now=2026-01-05T06:10:00Z');
 
     const used = runDueAgencies.mock.calls[0][0] as Date;
     expect(used.getTime()).toBeGreaterThanOrEqual(before);

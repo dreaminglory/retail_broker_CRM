@@ -101,6 +101,26 @@ describeServices('NotificationService daily digest against the local stack', () 
     return data;
   }
 
+  it('lets one caller hold a claim: pending and sent block a repeat, failed and skipped do not (AD-051)', async () => {
+    const claim = () => repo.claim(broker.agencyId, broker.userId, { kind: 'daily_digest', periodKey: PERIOD_KEY });
+
+    const first = await claim();
+    expect(first).toBeTruthy();
+    expect(await claim()).toBeNull(); // in flight
+
+    await repo.settle(broker.agencyId, first!, { status: 'failed', error: 'boom' });
+    const second = await claim(); // a failed send is retried
+    expect(second).toBe(first);
+    expect(await deliveryFor(broker.userId)).toEqual({ status: 'pending', error: null });
+
+    await repo.settle(broker.agencyId, second!, { status: 'skipped' });
+    expect(await claim()).toBe(first); // an empty digest is looked at again
+
+    await repo.settle(broker.agencyId, first!, { status: 'sent', providerId: 'p1' });
+    expect(await claim()).toBeNull(); // sent is final
+    expect(await deliveryFor(broker.userId)).toEqual({ status: 'sent', error: null });
+  });
+
   it('sends one digest per user however many times it runs', async () => {
     await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
     const { mailer, sent } = fakeMailer();

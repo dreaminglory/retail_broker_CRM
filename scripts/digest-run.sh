@@ -19,12 +19,14 @@ if [ -z "$SECRET" ]; then
   exit 1
 fi
 
-QUERY=""
+ARGS=()
 if [ $# -gt 0 ]; then
-  QUERY="?now=$1"
+  # Encoded, so a "+02:00" offset isn't read as a space.
+  ARGS=(--get --data-urlencode "now=$1")
 fi
 
 curl --silent --show-error --fail-with-body \
   --header "Authorization: Bearer $SECRET" \
-  "${BASE_URL:-http://localhost:3000}/api/cron/daily-digest$QUERY"
+  ${ARGS[@]+"${ARGS[@]}"} \
+  "${BASE_URL:-http://localhost:3000}/api/cron/daily-digest"
 echo
