@@ -145,10 +145,10 @@ stack (refuses to run against a non-local URL).
 `assignedTo`). Cuttable part: owner and primary-contact columns on the rows.
 
 **Acceptance criteria:**
-- [ ] Filtering by broker and temperature works and combines with the other filters (AC-7)
+- [x] Filtering by broker and temperature works and combines with the other filters (AC-7)
 
 **Verification:**
-- [ ] Browser check in both locales
+- [x] Browser check in both locales
 
 **Dependencies:** Task 7
 **Files likely touched:** `opportunities-page-client.tsx`, `src/domain/opportunities/repository.ts`, `messages/{bg,en}.json`

@@ -106,3 +106,18 @@ export type CreateOpportunitySchema = z.infer<typeof createOpportunitySchema>;
 export type UpdateOpportunitySchema = z.infer<typeof updateOpportunitySchema>;
 export type CloseOpportunitySchema = z.infer<typeof closeOpportunitySchema>;
 export type AddParticipantSchema = z.infer<typeof addParticipantSchema>;
+
+// ── List filters ───────────────────────────────────────────────────────────
+
+/**
+ * `?broker=` and `?temperature=` on the opportunity list. A value that isn't a broker id or a
+ * temperature (a stale link, a typo) means "no filter" rather than an error or an empty list.
+ */
+export function parseOpportunityListFilters(params: { broker?: string; temperature?: string }) {
+  const broker = z.string().uuid().safeParse(params.broker);
+  const temperature = temperatureSchema.safeParse(params.temperature);
+  return {
+    assignedTo: broker.success ? broker.data : undefined,
+    temperature: temperature.success ? temperature.data : undefined,
+  };
+}

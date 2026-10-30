@@ -7,6 +7,7 @@ import { MemberRepository } from "@/domain/members/repository";
 import { OpportunitiesPageClient } from "./opportunities-page-client";
 import type { OpportunityType } from "@/domain/opportunities/types";
 import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
+import { parseOpportunityListFilters } from "@/domain/opportunities/validation";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -19,6 +20,8 @@ interface SearchParams {
   status?: "active" | "won" | "lost" | "nurture" | "archived" | "all";
   stage?: string;
   type?: OpportunityType | "all";
+  broker?: string;
+  temperature?: string;
   page?: string;
 }
 
@@ -33,6 +36,7 @@ export default async function OpportunitiesPage({
   const stage = params.stage ?? "all";
   const type = params.type ?? "all";
   const page = parsePage(params.page);
+  const { assignedTo, temperature } = parseOpportunityListFilters(params);
 
   const supabase = await createSupabaseServer();
   const {
@@ -66,6 +70,8 @@ export default async function OpportunitiesPage({
         status: status === "all" ? "all" : status,
         stageId: stage === "all" ? undefined : stage,
         type: type === "all" ? "all" : type,
+        assignedTo,
+        temperature,
         limit,
         offset,
       })
@@ -87,6 +93,8 @@ export default async function OpportunitiesPage({
         initialStatus={status}
         initialStage={stage}
         initialType={type}
+        initialBroker={assignedTo ?? "all"}
+        initialTemperature={temperature ?? "all"}
       />
     </div>
   );

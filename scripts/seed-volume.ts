@@ -115,7 +115,8 @@ async function main() {
       stage_id: stageFor(status, i).id,
       primary_contact_id: contactId(n),
       assigned_to: BROKERS[i % BROKERS.length],
-      temperature: TEMPERATURES[i % TEMPERATURES.length],
+      // not i % 3 like the broker, so every broker has hot, warm and cold opportunities
+      temperature: TEMPERATURES[Math.floor(i / BROKERS.length) % TEMPERATURES.length],
       status,
       expected_value: 50000 + (i % 40) * 5000,
     };

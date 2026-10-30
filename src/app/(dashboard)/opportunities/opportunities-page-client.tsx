@@ -32,6 +32,7 @@ import { Search, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const STATUS_FILTER_KEYS = ["allStatuses", "active", "won", "lost", "nurture", "archived"];
+const TEMPERATURE_FILTER_KEYS = ["allTemperatures", "hot", "warm", "cold"] as const;
 const TYPE_FILTER_KEYS = ["allTypes", "buyer", "seller", "tenant", "landlord"];
 
 interface OpportunitiesPageClientProps {
@@ -44,6 +45,8 @@ interface OpportunitiesPageClientProps {
   initialStatus: string;
   initialStage: string;
   initialType: string;
+  initialBroker: string;
+  initialTemperature: string;
 }
 
 export function OpportunitiesPageClient({
@@ -56,6 +59,8 @@ export function OpportunitiesPageClient({
   initialStatus,
   initialStage,
   initialType,
+  initialBroker,
+  initialTemperature,
 }: OpportunitiesPageClientProps) {
   const t = useTranslations("OpportunitiesPage");
   const getStageName = useStageTranslation();
@@ -210,6 +215,41 @@ export function OpportunitiesPageClient({
           <SelectContent>
             {TYPE_FILTER_KEYS.map((k) => (
               <SelectItem key={k} value={k === "allTypes" ? "all" : k}>
+                {t(`filters.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialBroker} onValueChange={(v) => updateParams({ broker: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-44">
+            <SelectValue>
+              {(val: string) =>
+                val && val !== "all"
+                  ? (brokers.find((b) => b.id === val)?.display_name ?? t("filters.unknownBroker"))
+                  : t("filters.allBrokers")
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("filters.allBrokers")}</SelectItem>
+            {brokers.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.display_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialTemperature} onValueChange={(v) => updateParams({ temperature: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-40">
+            <SelectValue>
+              {(val: string) => t(`filters.${TEMPERATURE_FILTER_KEYS.find((k) => k === val) ?? "allTemperatures"}`)}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {TEMPERATURE_FILTER_KEYS.map((k) => (
+              <SelectItem key={k} value={k === "allTemperatures" ? "all" : k}>
                 {t(`filters.${k}`)}
               </SelectItem>
             ))}

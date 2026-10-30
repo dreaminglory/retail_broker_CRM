@@ -17,6 +17,7 @@ import type {
 export interface OpportunityListOptions {
   status?: 'active' | 'won' | 'lost' | 'nurture' | 'archived' | 'all';
   assignedTo?: string;
+  temperature?: 'hot' | 'warm' | 'cold';
   stageId?: string;
   type?: 'buyer' | 'seller' | 'landlord' | 'tenant' | 'all';
   search?: string;
@@ -72,6 +73,9 @@ export class OpportunityRepository {
     }
     if (assignedTo) {
       query = query.eq('assigned_to', assignedTo);
+    }
+    if (opts.temperature) {
+      query = query.eq('temperature', opts.temperature);
     }
     if (stageId && stageId !== 'all') {
       query = query.eq('stage_id', stageId);

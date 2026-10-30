@@ -926,7 +926,13 @@
       "tenant": "Наемател",
       "landlord": "Наемодател",
       "allStages": "Всички етапи",
-      "unknownStage": "Неизвестен етап"
+      "unknownStage": "Неизвестен етап",
+      "allBrokers": "Всички брокери",
+      "unknownBroker": "Неизвестен брокер",
+      "allTemperatures": "Всички температури",
+      "hot": "🔥 Горещо",
+      "warm": "⚡ Топло",
+      "cold": "❄️ Студено"
     }
   },
   "OpportunityDetail": {

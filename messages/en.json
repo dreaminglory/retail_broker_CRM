@@ -942,7 +942,13 @@
       "tenant": "Tenant",
       "landlord": "Landlord",
       "allStages": "All stages",
-      "unknownStage": "Unknown stage"
+      "unknownStage": "Unknown stage",
+      "allBrokers": "All brokers",
+      "unknownBroker": "Unknown broker",
+      "allTemperatures": "All temperatures",
+      "hot": "🔥 Hot",
+      "warm": "⚡ Warm",
+      "cold": "❄️ Cold"
     }
   },
   "OpportunityDetail": {
