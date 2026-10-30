@@ -1235,5 +1235,19 @@
     "activityHistory": "История на дейността",
     "typePerson": "Лице",
     "typeOrganization": "Организация"
+  },
+  "notifications": {
+    "unknownCaller": "Неизвестен обаждащ се",
+    "digest": {
+      "subject": "{count, plural, one {# нещо за внимание днес} other {# неща за внимание днес}}",
+      "greeting": "Добро утро, {name}!",
+      "intro": "Ето какво чака вашето внимание днес.",
+      "overdue": "Просрочени задачи ({count})",
+      "dueToday": "За днес ({count})",
+      "newInquiries": "Нови запитвания ({count})",
+      "more": "+{count} още",
+      "open": "Отвори „Днес“",
+      "footer": "Получавате този преглед всеки работен ден. Можете да го изключите от Настройки → Профил."
+    }
   }
 }

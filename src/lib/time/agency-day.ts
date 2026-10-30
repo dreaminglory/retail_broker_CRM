@@ -71,3 +71,17 @@ export function todayBucket(dueAt: string, timezone: string, now: Date = new Dat
 export function toAgencyLocalInput(iso: string, timezone: string): string {
   return format(new TZDate(new Date(iso), timezone), "yyyy-MM-dd'T'HH:mm");
 }
+
+/** The agency-local calendar date as `YYYY-MM-DD`: the idempotency key of a daily send (AD-051). */
+export function agencyDateKey(timezone: string, now: Date = new Date()): string {
+  return format(new TZDate(now, timezone), 'yyyy-MM-dd');
+}
+
+const DIGEST_HOUR = 8;
+
+/** Whether `now` is 08:xx on a Monday to Friday in the agency's timezone: when its digest goes out. */
+export function isDigestTime(timezone: string, now: Date = new Date()): boolean {
+  const local = new TZDate(now, timezone);
+  const weekday = local.getDay();
+  return weekday >= 1 && weekday <= 5 && local.getHours() === DIGEST_HOUR;
+}

@@ -1235,5 +1235,19 @@
     "activityHistory": "Activity history",
     "typePerson": "Person",
     "typeOrganization": "Organization"
+  },
+  "notifications": {
+    "unknownCaller": "Unknown caller",
+    "digest": {
+      "subject": "{count, plural, one {# thing needs your attention today} other {# things need your attention today}}",
+      "greeting": "Good morning, {name}!",
+      "intro": "Here is what is waiting for you today.",
+      "overdue": "Overdue tasks ({count})",
+      "dueToday": "Due today ({count})",
+      "newInquiries": "New inquiries ({count})",
+      "more": "+{count} more",
+      "open": "Open Today",
+      "footer": "You get this digest every working day. You can turn it off in Settings → Profile."
+    }
   }
 }
