@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 42nd migration
-(`20261102000009_merge_moves_notes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 43rd migration
+(`20261102000010_notifications.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -48,8 +48,11 @@ flowchart LR
   subgraph M[Data import]
     import_jobs --- import_rows
   end
+  subgraph N[Notifications]
+    notification_deliveries
+  end
 
-  T -->|agency_id on every row| I & P & H & M
+  T -->|agency_id on every row| I & P & H & M & N
   inquiries -->|converts to| opportunities
   inquiries -->|matched to| contacts
   contacts -->|primary contact| opportunities
@@ -98,6 +101,7 @@ erDiagram
     text email
     text display_name
     text locale "bg | en"
+    boolean digest_enabled "default true; daily digest on/off"
   }
 ```
 
@@ -269,6 +273,29 @@ erDiagram
     uuid entity_id
   }
 ```
+
+### 2.6 Notifications
+
+```mermaid
+erDiagram
+  agencies ||--o{ notification_deliveries : "has"
+  AUTH_USERS ||--o{ notification_deliveries : "recipient"
+
+  notification_deliveries {
+    uuid agency_id FK
+    uuid user_id FK "recipient"
+    text kind "daily_digest | inquiry_assigned"
+    text period_key "UK with user_id and kind (AD-051)"
+    uuid entity_id "inquiry, when the email is about one"
+    text status "pending | sent | failed | skipped"
+    text provider_id
+    text error "provider message only"
+  }
+```
+
+Written only by the service role (the digest route and `after()` work); a member reads their
+own rows, an owner or manager the agency's. `pending` is a claim in flight; `sent` and
+`pending` block a repeat, `failed` and `skipped` (an empty digest) can be claimed again.
 
 ---
 
@@ -454,6 +481,8 @@ The "Enforced by" column tells you which layer to change and test.
 | N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
+| E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |
+| E2 | Clients never write `notification_deliveries`; members read their own rows, owners and managers the agency's | RLS (no write policy, writes revoked) + `071-notification-deliveries.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
 

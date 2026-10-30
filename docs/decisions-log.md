@@ -218,6 +218,27 @@ query still filters by `agency_id`. Local development uses Mailpit and manual tr
 `spec/reminders.md`.
 **Revisit if:** push notifications arrive with the PWA.
 
+### AD-051: How reminder emails are claimed, keyed and sent
+**Accepted** (founder, 2026-10-30, with the reminders plan). Refines AD-042; scope stays in
+`spec/reminders.md`.
+- **Claim, then send.** A send first inserts a `pending` row in `notification_deliveries`
+  (`ON CONFLICT DO NOTHING`); only the run that inserted it sends, then sets `sent` or `failed`.
+  `sent` and `pending` block a repeat, `failed` and `skipped` can be claimed again. A crash
+  mid-send leaves `pending`: that user misses one email rather than getting two.
+- **Key per email.** `(user_id, kind, period_key)` is unique. `daily_digest` → `YYYY-MM-DD`
+  (agency-local date); `inquiry_assigned` → `<inquiry_id>:YYYY-MM-DD`; an import summary →
+  `import:<job_id>`. A single date key would stop a broker's second inquiry email of the day.
+- **`skipped` means an empty digest**, so "why didn't X get an email?" has an answer. A user who
+  turned the digest off, or a deactivated member, gets no row at all.
+- **Only the service role writes** the table (the digest route, and `after()` work in the
+  inquiry actions). Members read their own rows, owners and managers the agency's.
+- **The route stays off until `go-live`.** With no `CRON_SECRET` it refuses every call;
+  `?now=` is ignored when `NODE_ENV=production`.
+- **Mail transport:** `MAIL_TRANSPORT=smtp` (Mailpit) or `resend` (plain `fetch`, paced).
+**Why:** a double email costs trust and a missed one costs one digest; an inquiry email must
+not be suppressed by the day's earlier one.
+**Revisit if:** the pilot needs retries beyond the next day's run, or volume outgrows one request.
+
 ---
 
 ## Retired
