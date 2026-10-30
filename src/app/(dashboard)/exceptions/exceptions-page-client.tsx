@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { useTranslations, useFormatter } from "next-intl";
 import Link from "next/link";
-import { format, formatDistanceToNow } from "date-fns";
+import { relativeTimeBase } from "@/lib/time/relative-time";
 import { 
   AlertCircle, 
   Clock, 
@@ -29,13 +30,46 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { ExceptionData } from "@/domain/exceptions/repository";
+import type { ActiveBroker } from "@/domain/members/types";
+import { reassignInquiryAction } from "../inquiries/actions";
 
 interface ExceptionsPageClientProps {
   data: ExceptionData;
+  brokers: ActiveBroker[];
 }
 
-export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
+function AssignInquirySelect({ inquiryId, brokers }: { inquiryId: string; brokers: ActiveBroker[] }) {
+  const t = useTranslations("ExceptionsPage");
+  const [isPending, startTransition] = useTransition();
+  const [selectedId, setSelectedId] = useState("");
+
+  function handleAssign(brokerId: string) {
+    setSelectedId(brokerId);
+    startTransition(async () => {
+      const result = await reassignInquiryAction(inquiryId, brokerId);
+      if (!result.success) {
+        toast.error(result.error);
+        setSelectedId("");
+      }
+    });
+  }
+
+  return (
+    <BrokerSelect
+      brokers={brokers}
+      value={selectedId}
+      allowUnassigned={false}
+      placeholder={t('unassigned.assignPlaceholder')}
+      ariaLabel={t('unassigned.assignPlaceholder')}
+      onValueChange={handleAssign}
+      disabled={isPending}
+    />
+  );
+}
+
+export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProps) {
   const t = useTranslations("ExceptionsPage");
   const formatLoc = useFormatter();
   return (
@@ -72,10 +106,11 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
                         {inq.caller_name || t('unassigned.unknownCaller')}
                       </Link>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(inq.received_at), { addSuffix: true })}
+                        {formatLoc.relativeTime(new Date(inq.received_at), relativeTimeBase(new Date(inq.received_at), new Date()))}
                       </span>
                     </div>
                     <p className="text-muted-foreground truncate">{inq.subject || inq.source_description || t('unassigned.noSubject')}</p>
+                    <AssignInquirySelect inquiryId={inq.id} brokers={brokers} />
                   </div>
                 ))}
               </div>
@@ -105,7 +140,7 @@ export function ExceptionsPageClient({ data }: ExceptionsPageClientProps) {
                     <div>
                       <p className="font-medium">{broker.broker_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: formatDistanceToNow(new Date(broker.most_overdue_task!.due_at as string), { addSuffix: true }) })}
+                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: formatLoc.relativeTime(new Date(broker.most_overdue_task!.due_at as string), relativeTimeBase(new Date(broker.most_overdue_task!.due_at as string), new Date())) })}
                       </p>
                     </div>
                     <Badge variant="outline">{t('overdue.overdueBadge', { count: broker.overdue_count })}</Badge>

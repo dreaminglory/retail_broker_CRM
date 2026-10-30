@@ -189,7 +189,9 @@ export function TaskCompleteDialog({
                     <Label htmlFor="next-type" className="text-xs">{t("fields.nextTask.type")}</Label>
                     <Select value={nextType} onValueChange={(v) => setNextType(v as TaskType)}>
                       <SelectTrigger id="next-type">
-                        <SelectValue placeholder={t("fields.nextTask.typePlaceholder")} />
+                        <SelectValue placeholder={t("fields.nextTask.typePlaceholder")}>
+                          {(value) => (value ? t(`types.${value}` as never) : t("fields.nextTask.typePlaceholder"))}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {TASK_TYPES.map((taskType) => {

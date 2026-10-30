@@ -20,10 +20,11 @@ import {
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
-import type { Contact } from "@/domain/contacts/types";
+import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
+import type { ContactOption } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
 import type { ActiveBroker } from "@/domain/members/types";
-import { Search, UserPlus, Users } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { PotentialDuplicate } from "@/domain/contacts/duplicate-detection";
@@ -33,10 +34,10 @@ import { useTranslations } from "next-intl";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const OPPORTUNITY_TYPES = [
-  { value: "buyer", label: "Buyer" },
-  { value: "seller", label: "Seller" },
-  { value: "landlord", label: "Landlord" },
-  { value: "tenant", label: "Tenant" },
+  { value: "buyer" },
+  { value: "seller" },
+  { value: "landlord" },
+  { value: "tenant" },
 ] as const;
 
 type ConvertResult = ActionResult<{
@@ -53,7 +54,6 @@ interface ConvertInquiryDialogProps {
   onOpenChange: (open: boolean) => void;
   inquiry: Inquiry;
   stages: Stage[];
-  contacts: Contact[];
   brokers: ActiveBroker[];
   convertAction: (
     id: string,
@@ -70,7 +70,6 @@ export function ConvertInquiryDialog({
   onOpenChange,
   inquiry,
   stages,
-  contacts,
   brokers,
   convertAction,
   onSuccess,
@@ -95,8 +94,8 @@ export function ConvertInquiryDialog({
 
   // Contact tab: "new" | "existing"
   const [contactTab, setContactTab] = useState<"new" | "existing">("new");
-  const [contactSearch, setContactSearch] = useState("");
-  const [selectedContactId, setSelectedContactId] = useState<string>("");
+  // Kept here so the pick survives switching to "Create new" and back.
+  const [existingContact, setExistingContact] = useState<ContactOption | null>(null);
 
   // New contact fields
   const [newContactType, setNewContactType] = useState<"person" | "organization">("person");
@@ -121,11 +120,6 @@ export function ConvertInquiryDialog({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
-
-  // Filtered contacts for search
-  const filteredContacts = contacts.filter((c) =>
-    c.display_name.toLowerCase().includes(contactSearch.toLowerCase())
-  );
 
   // JSON payload for the hidden create_contact field
   const createContactJson =
@@ -162,7 +156,7 @@ export function ConvertInquiryDialog({
         <form onSubmit={handleSubmit} className="space-y-5 pt-1" ref={formRef}>
           {/* ── Contact section ───────────────────────────────────────────── */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Contact</Label>
+            <Label className="text-sm font-semibold">{t("contactSection")}</Label>
 
             {/* Manual tab switcher (no tabs component available) */}
             <div className="flex rounded-lg border p-0.5 bg-muted/40 gap-0.5">
@@ -267,45 +261,16 @@ export function ConvertInquiryDialog({
             {/* Existing contact picker */}
             {contactTab === "existing" && (
               <div className="space-y-2 pt-1">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="pl-8"
-                    placeholder={t("searchContactsPlaceholder")}
-                    value={contactSearch}
-                    onChange={(e) => setContactSearch(e.target.value)}
-                    id="convert-contact-search"
-                  />
-                </div>
-
-                <div className="max-h-40 overflow-y-auto rounded-md border divide-y">
-                  {filteredContacts.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-muted-foreground">
-                      {t("noContactsFound")}
-                    </p>
-                  ) : (
-                    filteredContacts.slice(0, 20).map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setSelectedContactId(c.id)}
-                        className={cn(
-                          "w-full text-left px-3 py-2 text-sm transition-colors hover:bg-muted/50",
-                          selectedContactId === c.id &&
-                            "bg-primary/10 font-medium"
-                        )}
-                        id={`contact-option-${c.id}`}
-                      >
-                        {c.display_name}
-                      </button>
-                    ))
-                  )}
-                </div>
-
-                <input
-                  type="hidden"
+                <Label htmlFor="convert-contact-search" className="sr-only">
+                  {t("existingContactLabel")}
+                </Label>
+                <ContactCombobox
+                  id="convert-contact-search"
                   name="contact_id"
-                  value={selectedContactId}
+                  defaultValue={existingContact}
+                  onChange={setExistingContact}
+                  required
+                  invalid={!state.success && !!state.fieldErrors?.contact_id}
                 />
 
                 {!state.success && state.fieldErrors?.contact_id && (

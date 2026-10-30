@@ -21,6 +21,7 @@ export interface BrokerSelectProps {
   required?: boolean;
   disabled?: boolean;
   allowUnassigned?: boolean;
+  ariaLabel?: string;
 }
 
 export function BrokerSelect({
@@ -33,6 +34,7 @@ export function BrokerSelect({
   required,
   disabled,
   allowUnassigned = true,
+  ariaLabel,
 }: BrokerSelectProps) {
   const enums = useTranslations("Enums");
   // null means unassigned. The sentinel is submitted as-is and mapped back to
@@ -48,7 +50,7 @@ export function BrokerSelect({
       required={required}
       disabled={disabled}
     >
-      <SelectTrigger>
+      <SelectTrigger aria-label={ariaLabel}>
         <SelectValue placeholder={placeholder}>
           {(val: string | null) => {
             if (val === NONE_SELECT_VALUE) return enums("unassigned");

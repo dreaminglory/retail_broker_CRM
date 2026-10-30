@@ -3,10 +3,11 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { OpportunityService } from "@/domain/opportunities/service";
 import { StageRepository } from "@/domain/stages/repository";
 import { LeadSourceRepository } from "@/domain/lead-sources/repository";
-import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { OpportunitiesPageClient } from "./opportunities-page-client";
 import type { OpportunityType } from "@/domain/opportunities/types";
+import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
+import { parseOpportunityListFilters } from "@/domain/opportunities/validation";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -19,6 +20,8 @@ interface SearchParams {
   status?: "active" | "won" | "lost" | "nurture" | "archived" | "all";
   stage?: string;
   type?: OpportunityType | "all";
+  broker?: string;
+  temperature?: string;
   page?: string;
 }
 
@@ -32,6 +35,8 @@ export default async function OpportunitiesPage({
   const status = params.status ?? "active";
   const stage = params.stage ?? "all";
   const type = params.type ?? "all";
+  const page = parsePage(params.page);
+  const { assignedTo, temperature } = parseOpportunityListFilters(params);
 
   const supabase = await createSupabaseServer();
   const {
@@ -48,42 +53,49 @@ export default async function OpportunitiesPage({
   const agencyId = membership?.agency_id ?? "";
 
   if (!agencyId) {
+    const tErrors = await getTranslations("errors");
     return (
       <div className="mx-auto max-w-5xl">
         <p className="text-sm text-muted-foreground">
-          No active agency membership found.
+          {tErrors("noMembership")}
         </p>
       </div>
     );
   }
 
   // Fetch all required data in parallel
-  const [opportunities, stages, leadSources, contacts, brokers] = await Promise.all([
-    new OpportunityService(supabase).list(agencyId, {
-      search: search || undefined,
-      status: status === "all" ? "all" : status,
-      stageId: stage === "all" ? undefined : stage,
-      type: type === "all" ? "all" : type,
-      limit: 200,
-    }),
+  const [paged, stages, leadSources, brokers] = await Promise.all([
+    loadPage(page, PAGE_SIZE, (offset, limit) =>
+      new OpportunityService(supabase).listPage(agencyId, {
+        search: search || undefined,
+        status: status === "all" ? "all" : status,
+        stageId: stage === "all" ? undefined : stage,
+        type: type === "all" ? "all" : type,
+        assignedTo,
+        temperature,
+        limit,
+        offset,
+      })
+    ),
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
-    new ContactService(supabase).list(agencyId, { status: "active", limit: 200 }),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
   return (
     <div className="mx-auto max-w-5xl">
       <OpportunitiesPageClient
-        opportunities={opportunities}
+        opportunities={paged.rows}
+        pageInfo={paged.info}
         stages={stages}
         leadSources={leadSources}
-        contacts={contacts}
         brokers={brokers}
         initialSearch={search}
         initialStatus={status}
         initialStage={stage}
         initialType={type}
+        initialBroker={assignedTo ?? "all"}
+        initialTemperature={temperature ?? "all"}
       />
     </div>
   );

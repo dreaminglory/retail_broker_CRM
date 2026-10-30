@@ -16,5 +16,6 @@ export interface MergePreview {
   opportunitiesToTransfer: number;
   inquiriesToTransfer: number;
   tasksToTransfer: number;
+  notesToTransfer: number;
   contactMethodsToTransfer: number;
 }

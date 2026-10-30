@@ -287,7 +287,7 @@ export function OpportunityDetailClient({
             opportunity={opportunity}
             stages={stages}
             leadSources={leadSources}
-            contacts={contacts}
+            primaryContact={contacts.find((c) => c.id === opportunity.primary_contact_id) ?? null}
             brokers={brokers}
             createAction={async () => ({ success: false, error: "Not used" })}
             updateAction={updateOpportunityAction.bind(null, opportunity.id)}

@@ -12,10 +12,12 @@ import {
   stageRowsSchema 
 } from "@/domain/imports/validation";
 import { ImportRepository } from "@/domain/imports/repository";
+import { DomainError } from "@/lib/errors";
+import type { RevertResult } from "@/domain/imports/types";
 
 function assertManagerOrOwner(role: string) {
   if (role !== "owner" && role !== "manager") {
-    throw new Error("import.errors.forbidden");
+    throw new DomainError("errors.forbidden");
   }
 }
 
@@ -48,7 +50,7 @@ export async function saveImportMappingAction(
     const repo = new ImportRepository(ctx.supabase);
     const job = await repo.getJob(ctx.agencyId, jobId);
     if (!job) {
-      return { success: false, error: "import.errors.notFound" };
+      return toActionError(new DomainError("import.errors.notFound"));
     }
 
     let parsedMapping;
@@ -64,11 +66,11 @@ export async function saveImportMappingAction(
 
     if (!parsedMapping.success) {
       console.error("Mapping Zod Error:", parsedMapping.error);
-      return { success: false, error: "import.errors.invalidMapping" };
+      return toActionError(new DomainError("import.errors.invalidMapping"));
     }
     if (!parsedOptions.success) {
       console.error("Options Zod Error:", parsedOptions.error);
-      return { success: false, error: "import.errors.invalidOptions" };
+      return toActionError(new DomainError("import.errors.invalidOptions"));
     }
 
     const service = new ImportService(ctx.supabase);
@@ -132,7 +134,7 @@ export async function commitImportBatchAction(
 
 export async function revertImportJobAction(
   jobId: string
-): Promise<ActionResult<{ deleted: number; retained: number }>> {
+): Promise<ActionResult<RevertResult>> {
   try {
     const ctx = await getAuthContext();
     assertManagerOrOwner(ctx.role);

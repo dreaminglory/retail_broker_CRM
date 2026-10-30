@@ -18,9 +18,15 @@ export type ImportRowStatus =
   | 'updated'
   | 'skipped'
   | 'error'
-  | 'reverted';
+  | 'reverted'
+  | 'revert_skipped';
 
-export type DuplicateStrategy = 'skip' | 'update' | 'create';
+export type DuplicateStrategy = 'skip' | 'create';
+
+export type RevertResult = {
+  deleted: { contacts: number; inquiries: number };
+  kept: { contacts: number; inquiries: number };
+};
 
 export interface ImportJob {
   id: string;
@@ -67,7 +73,7 @@ export interface ImportError {
   detail?: string;
 }
 
-export type MatchReason = 'phone' | 'email' | 'external_ref' | 'in_file' | 'name_similar';
+export type MatchReason = 'phone' | 'email' | 'external_ref' | 'in_file' | 'name_similar' | 'db_recheck';
 
 export interface ImportRow {
   id: string;

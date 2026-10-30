@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { normalizeSearchQuery } from './query';
 import { SearchRepository } from './repository';
 import type { SearchResult } from './types';
 
@@ -14,7 +15,7 @@ export class SearchService {
       return [];
     }
 
-    const trimmedQuery = query.trim();
+    const trimmedQuery = normalizeSearchQuery(query.trim());
 
     // Execute searches in parallel
     const [contacts, opportunities, inquiries] = await Promise.all([

@@ -62,7 +62,7 @@ export const contactMappingSchema = z
 export type ContactMappingInput = z.infer<typeof contactMappingSchema>;
 
 export const contactImportOptionsSchema = z.object({
-  duplicate_strategy: z.enum(["skip", "update", "create"]).default("skip"),
+  duplicate_strategy: z.enum(["skip", "create"]).default("skip"),
   default_contact_type: z.enum(["person", "organization"]).default("person"),
 });
 

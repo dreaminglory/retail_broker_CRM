@@ -1,13 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Opportunity } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
 import { StageBadge } from "@/components/domain/opportunities/stage-badge";
 import { ChevronRight, Briefcase, Calendar } from "lucide-react";
-import { format } from "date-fns";
 
 interface LinkedOpportunitiesProps {
   opportunities: Opportunity[];
@@ -41,6 +40,7 @@ export function LinkedOpportunities({ opportunities, stages }: LinkedOpportuniti
 
 function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stage?: Stage }) {
   const tEnum = useTranslations("Enums");
+  const formatLoc = useFormatter();
   const formatter = new Intl.NumberFormat("bg-BG", {
     style: "currency",
     currency: opportunity.currency || "EUR",
@@ -70,7 +70,7 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
         </div>
         
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="capitalize">{opportunity.type}</span>
+          <span>{tEnum(`opportunityType.${opportunity.type as "buyer" | "seller" | "tenant" | "landlord"}`)}</span>
           
           {opportunity.expected_value && (
             <>
@@ -86,7 +86,7 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
               <span>•</span>
               <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
                 <Calendar className="h-3 w-3" />
-                {format(new Date(opportunity.next_action_at), "MMM d")}
+                {formatLoc.dateTime(new Date(opportunity.next_action_at), { month: "short", day: "numeric" })}
               </span>
             </>
           )}

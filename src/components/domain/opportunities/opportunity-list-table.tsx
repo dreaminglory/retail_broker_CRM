@@ -55,9 +55,9 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
         <div className="flex items-center gap-2 mb-1">
           <p className="truncate text-sm font-semibold">{opportunity.title}</p>
           {stage && <StageBadge stage={stage} />}
-          {opportunity.temperature === "hot" && <span title="Hot">🔥</span>}
-          {opportunity.temperature === "warm" && <span title="Warm">⚡</span>}
-          {opportunity.temperature === "cold" && <span title="Cold">❄️</span>}
+          {opportunity.temperature === "hot" && <span title={enums("opportunityTemperature.hot")}>🔥</span>}
+          {opportunity.temperature === "warm" && <span title={enums("opportunityTemperature.warm")}>⚡</span>}
+          {opportunity.temperature === "cold" && <span title={enums("opportunityTemperature.cold")}>❄️</span>}
         </div>
         
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

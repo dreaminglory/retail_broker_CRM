@@ -215,7 +215,9 @@ function AddMethodForm({
         <Label htmlFor="method-type">{t("fields.type.label")}</Label>
         <Select name="type" value={selectedType} onValueChange={(val) => val && setSelectedType(val as string)}>
           <SelectTrigger id="method-type">
-            <SelectValue />
+            <SelectValue>
+              {(value) => tEnum(`contactMethod.${value}` as never)}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {["phone", "email", "viber", "whatsapp", "other"].map((val) => (

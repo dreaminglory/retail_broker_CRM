@@ -6,6 +6,7 @@ import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { authErrorKey } from "@/lib/auth-errors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const t = useTranslations("auth.forgotPassword");
+  const tErrors = useTranslations("auth.errors");
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
@@ -25,14 +27,14 @@ export default function ForgotPasswordPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(tErrors(authErrorKey(error)));
       setLoading(false);
       return;
     }
 
     setSuccess(true);
     setLoading(false);
-    toast.success("Password reset email sent");
+    toast.success(t("sent"));
   }
 
   if (success) {

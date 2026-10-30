@@ -49,6 +49,8 @@ Authorization lives in Server Component layouts and RLS.
 **Accepted.** `npm run stack:up` runs local Supabase and writes `.env.local`; `npm run test:e2e`
 runs the Playwright core loop in bg and en at 1280 and 390 px. Service integration tests run
 against the same stack as the seeded users. (Its cloud-session part is superseded by AD-048.)
+`npm run test:services` switches them on and prints coverage, not gated; plain `npm run test` skips
+them. They refuse a non-local URL, and each suite deletes its own rows with the service role.
 
 ## Tenancy, security and roles
 
@@ -84,7 +86,16 @@ user immediately, so the membership is written after the call.
 `requireRole(ctx, CONFIG_ROLES)` in actions, hidden in the UI, and RLS on `stages`,
 `lead_sources` and `merge_history` writes.
 **Open:** a merge is a series of ordinary edits, so RLS blocks only its history row. An atomic,
-role-checked merge RPC is in the `SPEC.md` ideas backlog.
+role-checked merge RPC is in the `SPEC.md` ideas backlog. Answered by AD-050.
+
+### AD-050: Conversion and merge are atomic RPCs
+**Accepted** (2026-10-30). `convert_inquiry` and `merge_contacts` do all their writes in one
+transaction, as SECURITY INVOKER so RLS and audit triggers still apply. `merge_contacts` checks the
+role itself, and both refuse another agency's rows. Validation that needs TypeScript (phone
+normalising, assignee check) stays in the service. Failures surface through `rpcFailure()`.
+**Why:** checking each write's error would report a failure but leave a half-done merge or a
+stranded contact and opportunity, and a retry would then duplicate them.
+**Revisit if:** either flow needs work outside the database in the same step.
 
 ## Domain
 
@@ -103,10 +114,19 @@ role-checked merge RPC is in the `SPEC.md` ideas backlog.
 the database doesn't enforce the format. Viber and WhatsApp use the same normalization.
 
 ### AD-041: International phone parsing with libphonenumber-js
-**Proposed** (accepted when `trustworthy-loop` Task 1 lands). `libphonenumber-js` (min
+**Accepted.** `libphonenumber-js` (min
 metadata), BG default region, behind the same `normalizePhone()` signature. Landlines and foreign
-numbers become valid; unparseable numbers are still rejected.
+numbers become valid; unparseable numbers are still rejected. BG numbers must pass `isValid()` or
+have 9 national digits, which AD-012 accepted and stored data holds; foreign ones only
+`isPossible()`, because min metadata lags new ranges abroad and rejecting a real caller costs more
+than storing a typo.
 **Revisit if:** bundle size hurts mobile.
+
+### AD-049: A new inquiry assignee must be an active agency member
+**Accepted.** Any member may assign (AD-001), and `assigned_to` only references `auth.users`, so
+`InquiryService` checks a new assignee against the agency's active members on create, update and
+convert. Leaving a deactivated assignee in place is allowed, so an edit doesn't force a reassign.
+**Revisit if:** a database check covers every assignable table.
 
 ### AD-018: Contacts may share a phone or email
 **Accepted.** No unique constraint on `contact_methods`; the duplicate warning ("create anyway")
@@ -165,8 +185,11 @@ Action bodies max 1 MB), the server validates, and the client loops batch-commit
 portal feeds skip exact duplicates.
 
 ### AD-036: Import revert within 7 days, untouched records only
-**Accepted.** The revert deletes only imported records with no notes, tasks, inquiries or stage
-changes since import, and marks the rest of the rows reverted.
+**Accepted.** The revert deletes only imported records nobody has worked on: a contact with no
+edit, note, task, opportunity, participant, inquiry or merge since the import, an inquiry with
+no edit or conversion. The note an import row brought in isn't work unless edited. Rows that
+created a record become `reverted` or `revert_skipped`. The edit guard on contacts goes beyond
+`spec/trustworthy-loop.md` rule 10 because the confirmation dialog promises it.
 
 ## i18n
 
@@ -177,7 +200,10 @@ in both `messages/bg.json` and `messages/en.json`.
 ### AD-032 / AD-033: Errors travel as i18n keys
 **Accepted.** Zod messages and `DomainError.code` are i18n keys; `toActionError()`
 (`src/lib/actions.ts`) translates them on the server. RPCs return keys too, since they can't see
-the request locale.
+the request locale. Repository failures throw `errors.loadFailed`, `saveFailed` or `deleteFailed`
+with the database message as the log-only detail; any other error becomes `errors.unexpected`
+and is logged, so raw English never reaches the UI. Supabase Auth messages go through
+`authErrorKey()`. `src/lib/i18n-keys.test.ts` fails on a key missing from the message files.
 
 ### AD-038: "Сделка" for opportunity
 **Accepted.** Bulgarian UI uses "Сделка", not "Възможност". Glossary: `crm-domain-model` skill.

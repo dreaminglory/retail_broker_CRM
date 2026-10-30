@@ -3,16 +3,61 @@
     "unauthorized": "Your session has expired. Please sign in again.",
     "forbidden": "Only owners and managers can do this.",
     "unexpected": "Something went wrong. Please try again.",
+    "not_found": "This record no longer exists.",
     "task_not_found": "This task no longer exists.",
-    "task_not_pending": "This task is already completed or cancelled."
+    "task_not_pending": "This task is already completed or cancelled.",
+    "inquiries": {
+      "external_ref_exists": "Another inquiry from this source already has this external ref.",
+      "assignee_not_member": "This person is not an active member of your agency.",
+      "contact_creation_failed": "The contact could not be created. Please try again.",
+      "final_state": "This inquiry is already converted or dismissed and can't be changed.",
+      "invalid_transition": "This inquiry has already moved on. Refresh the page and try again."
+    },
+    "loadFailed": "This data couldn't be loaded. Please try again.",
+    "saveFailed": "Your changes couldn't be saved. Please try again.",
+    "deleteFailed": "This couldn't be deleted. Please try again.",
+    "noMembership": "No active agency membership found.",
+    "merge_self": "A contact can't be merged with itself.",
+    "members": {
+      "already_member": "This person is already a member of your agency.",
+      "deactivate_self": "You can't deactivate your own account.",
+      "invite_failed": "The invitation couldn't be sent. Please try again.",
+      "invite_failed_no_user": "The invitation couldn't be sent. Please try again.",
+      "last_owner": "An agency must keep at least one active owner.",
+      "only_pending_cancel": "Only pending invitations can be cancelled."
+    },
+    "stages": {
+      "delete_has_opportunities": "This stage has {count} opportunities. Move them to another stage first.",
+      "last_lost_stage": "Your pipeline needs at least one Lost stage.",
+      "last_won_stage": "Your pipeline needs at least one Won stage."
+    }
   },
   "validation": {
+    "invalid_phone": "Enter a valid phone number, with the country code if it is not Bulgarian.",
+    "invalid_email": "Enter a valid email address.",
+    "inquiry_needs_info": "Add a caller detail, a subject or a description.",
     "failed": "Please check the highlighted fields.",
     "invalid_date": "Enter a valid date and time.",
     "title_required": "Enter a title.",
     "title_too_long": "The title is too long (300 characters at most).",
     "outcome_required": "Describe what happened.",
-    "outcome_too_long": "This text is too long (5,000 characters at most)."
+    "outcome_too_long": "This text is too long (5,000 characters at most).",
+    "required": "This field is required.",
+    "name_required": "Enter a name.",
+    "name_too_short": "The name is too short.",
+    "name_too_long": "The name is too long.",
+    "person_name_required": "Enter a first or last name.",
+    "org_name_required": "Enter the company name.",
+    "opp_title_required": "Enter a title for the opportunity.",
+    "stage_required": "Choose a stage.",
+    "stages_required": "Choose at least one stage.",
+    "invalid_currency": "Choose a valid currency.",
+    "invalid_locale": "Choose a supported language.",
+    "invalid_terminal_type": "Choose Won, Lost or Nurture.",
+    "lost_reason_required": "Enter the reason it was lost.",
+    "participant_required": "Choose a contact or a team member.",
+    "content_required": "Write something first.",
+    "linked_entity_required": "A note must belong to a contact or an opportunity."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -26,7 +71,12 @@
     "opportunities": "Opportunities",
     "inquiries": "Inquiries",
     "settings": "Settings",
-    "exceptions": "Exceptions"
+    "exceptions": "Exceptions",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "toggleMenu": "Toggle menu",
+    "menuTitle": "Navigation menu",
+    "menuDescription": "Go to the different sections of BrokerCRM."
   },
   "header": {
     "loading": "Loading...",
@@ -34,7 +84,7 @@
     "settings": "Settings",
     "signOut": "Sign out"
   },
-              "Metadata": {
+  "Metadata": {
     "root": {
       "title": "BrokerCRM — Real Estate Agency CRM",
       "description": "A Bulgarian-first CRM for residential real estate agencies. Ensure every opportunity has an owner, a next action, and a complete history."
@@ -71,7 +121,9 @@
     "reverting": "Reverting...",
     "revertImport": "Revert Import",
     "revertConfirm": "Are you sure you want to revert the import of {fileName}?",
-    "revertDesc": "This will permanently delete all newly created records from this job that haven't been modified or referenced by other records since import.",
+    "revertDesc": "This will permanently delete all records created by this import that haven't been worked on since. Anything with a new note, task, opportunity or merge is kept.",
+    "revertSuccess": "Import reverted: {deleted} deleted, {kept} kept because they were worked on.",
+    "revertFailed": "The import could not be reverted.",
     "cancel": "Cancel",
     "wizard": {
       "title": "Import {type}",
@@ -114,13 +166,21 @@
       "starting": "Starting...",
       "startImport": "Start Import",
       "inquiriesType": "Inquiries",
-      "contactsType": "Contacts"
+      "contactsType": "Contacts",
+      "createFailed": "The import couldn't be started.",
+      "validateFailed": "The file couldn't be validated.",
+      "commitFailed": "The import didn't finish. Check the import history."
     },
     "dropzone": {
       "title": "Drag & drop your CSV file here",
       "subtitle": "or click to browse from your computer",
       "selectFile": "Select File",
-      "supported": "Supported encodings: UTF-8, Windows-1251. Max size: {size}MB."
+      "supported": "Supported encodings: UTF-8, Windows-1251. Max size: {size}MB.",
+      "tooLarge": "The file is too large. Maximum size is {size} MB.",
+      "invalidType": "Upload a CSV file.",
+      "noDelimiter": "The column separator couldn't be detected. Check that this is a valid CSV file.",
+      "empty": "The file looks empty.",
+      "parseFailed": "The file couldn't be read."
     },
     "mapping": {
       "crmField": "CRM Field",
@@ -156,7 +216,6 @@
         "title": "Duplicate Strategy",
         "desc": "What should happen if a contact in the file already exists in the CRM (matched by phone, email, or external ID)?",
         "skip": "Skip duplicates (Recommended)",
-        "update": "Add missing details to existing contacts",
         "create": "Create anyway (Allow duplicates)"
       },
       "defaultContactType": {
@@ -185,7 +244,21 @@
         "converted": "Converted",
         "dismissed": "Dismissed"
       }
-    }
+    },
+    "entityType": {
+      "contact": "Contacts",
+      "inquiry": "Inquiries"
+    },
+    "jobStatus": {
+      "draft": "Draft",
+      "staged": "Uploaded",
+      "validated": "Validated",
+      "committing": "Importing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "reverted": "Reverted"
+    },
+    "errorReportReason": "Error reason"
   },
   "SettingsStages": {
     "settings": "Settings",
@@ -226,7 +299,14 @@
     "dragToReorder": "Drag to reorder",
     "moveDown": "Move stage down",
     "editName": "Edit {name}",
-    "deleteName": "Delete {name}"
+    "deleteName": "Delete {name}",
+    "dnd": {
+      "instructions": "To pick up a stage, press space or enter. Use the arrow keys to move it, space or enter to drop it, and escape to cancel.",
+      "started": "Stage picked up.",
+      "moved": "Stage moved.",
+      "dropped": "Stage dropped.",
+      "cancelled": "Move cancelled."
+    }
   },
   "SettingsLeadSources": {
     "settings": "Settings",
@@ -334,20 +414,36 @@
   },
   "settings": {
     "title": "Settings",
-    "description": "Manage your account and agency preferences.",
+    "description": "Manage your agency and preferences.",
     "overview": "Overview",
+    "overviewDesc": "Quickly access your account and agency configuration.",
     "profile": "Profile",
+    "profileDesc": "Manage your display name and personal information.",
     "team": "Team",
+    "teamDesc": "View team members, manage roles, and invite new brokers to your agency.",
     "leadSources": "Lead Sources",
+    "leadSourcesDesc": "Manage the channels through which inquiries arrive (portals, referrals, website, etc.)",
     "pipelineStages": "Pipeline Stages",
-    "import": "Data Import"
+    "pipelineStagesDesc": "Configure your opportunity pipeline stages and their ordering.",
+    "import": "Import",
+    "importDesc": "Import data into your agency workspace."
   },
   "search": {
     "placeholder": "Search...",
     "inputPlaceholder": "Search contacts, opportunities, and inquiries...",
     "searching": "Searching...",
     "noResults": "No results found.",
-    "results": "Results"
+    "results": "Results",
+    "unnamedContact": "Unnamed contact",
+    "unknownCaller": "Unknown caller",
+    "kinds": {
+      "person": "Person",
+      "organization": "Organization",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "landlord": "Landlord",
+      "tenant": "Tenant"
+    }
   },
   "auth": {
     "login": {
@@ -390,7 +486,8 @@
       "emailPlaceholder": "you@agency.com",
       "submit": "Send reset link",
       "loading": "Sending link...",
-      "backToLogin": "Back to login"
+      "backToLogin": "Back to login",
+      "sent": "Password reset email sent"
     },
     "updatePassword": {
       "verifying": "Verifying access...",
@@ -402,7 +499,8 @@
       "password": "New Password",
       "passwordPlaceholder": "••••••••",
       "submit": "Save password",
-      "loading": "Saving..."
+      "loading": "Saving...",
+      "updated": "Password updated"
     },
     "onboarding": {
       "title": "Welcome to BrokerCRM!",
@@ -411,6 +509,17 @@
       "agencyNamePlaceholder": "Sofia Properties",
       "submit": "Complete setup",
       "loading": "Creating agency..."
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "invalid_credentials": "Wrong email or password.",
+      "email_not_confirmed": "Confirm your email first. Check your inbox.",
+      "user_already_exists": "An account with this email already exists.",
+      "weak_password": "The password must be at least 6 characters.",
+      "same_password": "The new password must be different from the old one.",
+      "rate_limited": "Too many attempts. Wait a moment and try again.",
+      "signup_disabled": "New sign-ups are turned off.",
+      "link_invalid": "This link is invalid or has expired. Please request a new one."
     }
   },
   "Today": {
@@ -563,7 +672,7 @@
       "archived": "Archived",
       "active": "Active"
     },
-        "opportunityType": {
+    "opportunityType": {
       "buyer": "Buyer",
       "seller": "Seller",
       "tenant": "Tenant",
@@ -572,11 +681,11 @@
     "participantRole": {
       "buyer": "Buyer",
       "seller": "Seller",
-      "tenant": "Tenant",
       "landlord": "Landlord",
-      "broker": "Broker",
+      "tenant": "Tenant",
       "co_owner": "Co-owner",
       "representative": "Representative",
+      "broker": "Broker",
       "other": "Other"
     },
     "Stages": {
@@ -596,22 +705,6 @@
       "hot": "Hot",
       "warm": "Warm",
       "cold": "Cold"
-    },
-    "opportunityType": {
-      "buyer": "Buyer",
-      "seller": "Seller",
-      "tenant": "Tenant",
-      "landlord": "Landlord"
-    },
-    "participantRole": {
-      "buyer": "Buyer",
-      "seller": "Seller",
-      "landlord": "Landlord",
-      "tenant": "Tenant",
-      "co_owner": "Co-owner",
-      "representative": "Representative",
-      "broker": "Broker",
-      "other": "Other"
     },
     "contactMethod": {
       "phone": "Phone",
@@ -647,7 +740,7 @@
   "MergeDialog": {
     "trigger": "Merge",
     "title": "Merge Contact",
-    "description": "Merge <name>{name}</name> into another contact. This contact will be archived.",
+    "description": "Merge <strong>{name}</strong> into another contact. This contact will be archived.",
     "searchLabel": "Search contacts",
     "searchPlaceholder": "Type a name to search (e.g. Dimitar Dimitrov)...",
     "select": "Select",
@@ -658,6 +751,7 @@
       "opportunities": "{count} opportunities will be transferred",
       "inquiries": "{count} inquiries will be transferred",
       "tasks": "{count} tasks will be transferred",
+      "notes": "{count} notes will be transferred",
       "methods": "{count} unique contact methods will be transferred"
     },
     "back": "Back",
@@ -722,7 +816,7 @@
     "editTitle": "Edit contact",
     "archiveBtn": "Archive",
     "archiveTitle": "Archive contact?",
-    "archiveDescription": "<name>{name}</name> will be archived and hidden from the active contacts list. Linked opportunities are preserved. You can restore the contact later.",
+    "archiveDescription": "<strong>{name}</strong> will be archived and hidden from the active contacts list. Linked opportunities are preserved. You can restore the contact later.",
     "cancelBtn": "Cancel",
     "archivingBtn": "Archiving..."
   },
@@ -745,6 +839,7 @@
     "importBtn": "Import",
     "logInquiryBtn": "Log inquiry",
     "logInquiryTitle": "Log new inquiry",
+    "editInquiryTitle": "Edit inquiry",
     "searchPlaceholder": "Search by caller name, phone, subject...",
     "unknownCaller": "Unknown Caller",
     "searchBtn": "Search",
@@ -788,6 +883,7 @@
     "companyName": "Company name",
     "companyNamePlaceholder": "e.g. ACME Real Estate Ltd.",
     "searchContactsPlaceholder": "Search contacts…",
+    "existingContactLabel": "Existing contact",
     "noContactsFound": "No contacts found",
     "opportunitySection": "Opportunity",
     "oppTitle": "Title",
@@ -807,7 +903,15 @@
     "markContacted": "Mark contacted",
     "convertToOpportunity": "Convert to opportunity",
     "dismiss": "Dismiss",
-    "assigned": "Assigned"
+    "assigned": "Assigned",
+    "edit": "Edit",
+    "actions": "Inquiry actions",
+    "status": {
+      "new": "New",
+      "contacted": "Contacted",
+      "converted": "Converted",
+      "dismissed": "Dismissed"
+    }
   },
   "InquiryForm": {
     "source": "Lead source",
@@ -826,7 +930,9 @@
     "externalRef": "External ref (optional)",
     "externalRefPlaceholder": "Portal ID or tracking number",
     "saving": "Saving…",
-    "submit": "Log inquiry"
+    "submit": "Log inquiry",
+    "assignedToPlaceholder": "Select a broker…",
+    "saveChanges": "Save changes"
   },
   "CloseOpportunityDialog": {
     "title": "Close Opportunity",
@@ -929,7 +1035,13 @@
       "tenant": "Tenant",
       "landlord": "Landlord",
       "allStages": "All stages",
-      "unknownStage": "Unknown stage"
+      "unknownStage": "Unknown stage",
+      "allBrokers": "All brokers",
+      "unknownBroker": "Unknown broker",
+      "allTemperatures": "All temperatures",
+      "hot": "🔥 Hot",
+      "warm": "⚡ Warm",
+      "cold": "❄️ Cold"
     }
   },
   "OpportunityDetail": {
@@ -987,22 +1099,6 @@
     "deleteBtn": "Delete",
     "openMenu": "Open menu"
   },
-    "settings": {
-    "title": "Settings",
-    "description": "Manage your agency and preferences.",
-    "overview": "Overview",
-    "overviewDesc": "Quickly access your account and agency configuration.",
-    "profile": "Profile",
-    "profileDesc": "Manage your display name and personal information.",
-    "team": "Team",
-    "teamDesc": "View team members, manage roles, and invite new brokers to your agency.",
-    "leadSources": "Lead Sources",
-    "leadSourcesDesc": "Manage the channels through which inquiries arrive (portals, referrals, website, etc.)",
-    "pipelineStages": "Pipeline Stages",
-    "pipelineStagesDesc": "Configure your opportunity pipeline stages and their ordering.",
-    "import": "Import",
-    "importDesc": "Import data into your agency workspace."
-  },
   "Dashboard": {
     "welcome": "Welcome, {name}!",
     "workspaceReady": "{agency} workspace is ready.",
@@ -1023,7 +1119,8 @@
       "opportunitiesDesc": "Pipeline and deal tracking",
       "contactsTitle": "Contacts",
       "contactsDesc": "People and organizations"
-    }
+    },
+    "yourAgency": "Your agency"
   },
   "ExceptionsPage": {
     "title": "Exceptions Dashboard",
@@ -1033,7 +1130,8 @@
       "description": "New inquiries without a broker assigned",
       "empty": "No unassigned inquiries.",
       "unknownCaller": "Unknown Caller",
-      "noSubject": "No subject"
+      "noSubject": "No subject",
+      "assignPlaceholder": "Assign to…"
     },
     "overdue": {
       "title": "Overdue Tasks",
@@ -1071,6 +1169,71 @@
         "activeOpps": "Active Opps",
         "pendingTasks": "Pending Tasks"
       }
+    },
+    "loadFailed": "The exception data couldn't be loaded."
+  },
+  "ListPager": {
+    "label": "Pagination",
+    "range": "{from}–{to} of {total}",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}"
+  },
+  "ContactCombobox": {
+    "placeholder": "Search contacts…",
+    "clear": "Clear contact",
+    "searching": "Searching…",
+    "noResults": "No contacts found",
+    "resultsCount": "{count, plural, one {# contact found} other {# contacts found}}",
+    "error": "Could not search contacts"
+  },
+  "agencies": {
+    "alreadyMember": "You are already a member of an agency.",
+    "invalidName": "The agency name must be 2 to 120 characters.",
+    "notAuthenticated": "Sign in to create an agency."
+  },
+  "members": {
+    "inviteForbidden": "Managers can only invite brokers."
+  },
+  "import": {
+    "errors": {
+      "notFound": "This import no longer exists.",
+      "invalidStatus": "This import can't continue from its current state. Start a new one.",
+      "revertExpired": "This import can no longer be reverted: the 7-day window has passed.",
+      "fileNameRequired": "The file has no name.",
+      "invalidHash": "The file couldn't be read. Try uploading it again.",
+      "emptyFile": "The file is empty.",
+      "fileTooLarge": "The file is too large (5 MB at most).",
+      "invalidEncoding": "Use a UTF-8 or Windows-1251 file.",
+      "invalidDelimiter": "The file's column separator isn't supported.",
+      "tooManyHeaders": "The file has too many columns.",
+      "tooManyRows": "The file has too many rows.",
+      "chunkTooLarge": "The file was sent in too large a part. Try again.",
+      "invalidMapping": "Check the column mapping.",
+      "invalidOptions": "Check the import options.",
+      "mappingFailed": "This row couldn't be read with the chosen columns.",
+      "missingName": "This row has no name.",
+      "missingNameMapping": "Map a column to a name.",
+      "missingIdentifierMapping": "Map a column to a phone, email or external ID.",
+      "missingInquiryMapping": "Map a column to the caller or the subject.",
+      "unknownSource": "This row has an unknown lead source.",
+      "unknownAssignee": "This row is assigned to someone who is not in your agency.",
+      "dbWrite": "This row couldn't be saved."
     }
+  },
+  "ui": {
+    "close": "Close",
+    "notifications": "Notifications"
+  },
+  "ContactDetailPage": {
+    "back": "Contacts",
+    "archived": "Archived",
+    "importedFrom": "Imported from {fileName}",
+    "contactMethods": "Contact methods",
+    "linkedOpportunities": "Linked opportunities",
+    "notes": "Notes",
+    "activityHistory": "Activity history",
+    "typePerson": "Person",
+    "typeOrganization": "Organization"
   }
 }

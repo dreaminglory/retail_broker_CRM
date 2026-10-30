@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
 import type { OpportunityParticipant } from "@/domain/opportunities/types";
 import type { Contact } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
@@ -39,14 +40,14 @@ interface ParticipantListProps {
 }
 
 const ROLE_OPTIONS = [
-  { value: "buyer", label: "Buyer" },
-  { value: "seller", label: "Seller" },
-  { value: "landlord", label: "Landlord" },
-  { value: "tenant", label: "Tenant" },
-  { value: "co_owner", label: "Co-owner" },
-  { value: "representative", label: "Representative" },
-  { value: "broker", label: "Broker" },
-  { value: "other", label: "Other" },
+  { value: "buyer" },
+  { value: "seller" },
+  { value: "landlord" },
+  { value: "tenant" },
+  { value: "co_owner" },
+  { value: "representative" },
+  { value: "broker" },
+  { value: "other" },
 ];
 
 const initialState: ActionResult<{ id: string }> = { success: false, error: "" };
@@ -127,20 +128,12 @@ export function ParticipantList({
                 <Label htmlFor="contact_id">
                   {t("contactLabel")} <span className="text-destructive">*</span>
                 </Label>
-                <Select name="contact_id" required>
-                  <SelectTrigger id="contact_id">
-                    <SelectValue placeholder={t("contactPlaceholder")}>
-                      {(val) => contacts.find((c) => c.id === val)?.display_name ?? t("contactPlaceholder")}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contacts.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.display_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ContactCombobox
+                  id="contact_id"
+                  name="contact_id"
+                  required
+                  invalid={!!fieldErrors?.contact_id}
+                />
                 {fieldErrors?.contact_id && (
                   <p className="text-xs text-destructive">
                     {fieldErrors.contact_id[0]}
@@ -235,7 +228,7 @@ export function ParticipantList({
                   size="sm"
                   className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                   onClick={() => handleRemove(p.id)}
-                  title="Remove participant"
+                  title={t("removeTitle")}
                 >
                   <X className="h-4 w-4" />
                 </Button>

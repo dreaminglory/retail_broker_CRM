@@ -45,6 +45,9 @@ export interface Contact {
   updated_at: string;
 }
 
+/** What a contact picker needs to show and submit one contact. */
+export type ContactOption = Pick<Contact, 'id' | 'display_name' | 'company_name' | 'type'>;
+
 /** Contact with its associated contact methods. */
 export interface ContactWithMethods extends Contact {
   contact_methods: ContactMethod[];

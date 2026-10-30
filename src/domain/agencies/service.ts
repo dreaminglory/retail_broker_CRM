@@ -22,7 +22,7 @@ export const AgencyService = {
       if (error.code === '22023') {
         throw new DomainError('agencies.invalidName', 'Invalid agency name length.');
       }
-      throw error;
+      throw new DomainError('errors.saveFailed', `Failed to create agency: ${error.message}`);
     }
     
     return data as string;

@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(5); -- Update this number as we add tests
+SELECT plan(6); -- Update this number as we add tests
 
 -- 1. Check that RLS is enabled and forced on all public tables
 -- Exclude PostGIS or internal tables if any, but in our schema we check all public tables.
@@ -63,6 +63,17 @@ SELECT is_empty(
       AND (p.proconfig IS NULL OR NOT ('search_path=public' = ANY(p.proconfig) OR 'search_path=public, pg_temp' = ANY(p.proconfig) OR 'search_path="public"' = ANY(p.proconfig) OR 'search_path=public,pg_temp' = ANY(p.proconfig)))
     $$,
     'All public non-extension functions must have search_path explicitly set'
+);
+
+-- AD-028: anon can execute nothing of ours, directly or through the PUBLIC default.
+SELECT is_empty(
+  $$ SELECT p.proname::text
+     FROM pg_proc p
+     JOIN pg_namespace n ON n.oid = p.pronamespace
+     LEFT JOIN pg_depend d ON d.objid = p.oid AND d.deptype = 'e'
+     WHERE n.nspname = 'public' AND d.objid IS NULL
+       AND has_function_privilege('anon', p.oid, 'EXECUTE') $$,
+  'No function in public is executable by anon'
 );
 
 SELECT * FROM finish();

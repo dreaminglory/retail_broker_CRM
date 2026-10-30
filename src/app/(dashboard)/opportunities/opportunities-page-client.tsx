@@ -19,42 +19,48 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { OpportunityListTable } from "@/components/domain/opportunities/opportunity-list-table";
+import { ListPager } from "@/components/ui/list-pager";
+import type { PageInfo } from "@/lib/pagination";
 import { OpportunityForm } from "@/components/domain/opportunities/opportunity-form";
 import { createOpportunityAction, searchOpportunitiesQuickAction } from "./actions";
 import type { Opportunity } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import type { LeadSource } from "@/domain/lead-sources/types";
-import type { Contact } from "@/domain/contacts/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 const STATUS_FILTER_KEYS = ["allStatuses", "active", "won", "lost", "nurture", "archived"];
+const TEMPERATURE_FILTER_KEYS = ["allTemperatures", "hot", "warm", "cold"] as const;
 const TYPE_FILTER_KEYS = ["allTypes", "buyer", "seller", "tenant", "landlord"];
 
 interface OpportunitiesPageClientProps {
   opportunities: Opportunity[];
+  pageInfo: PageInfo;
   stages: Stage[];
   leadSources: LeadSource[];
-  contacts: Contact[];
   brokers: ActiveBroker[];
   initialSearch: string;
   initialStatus: string;
   initialStage: string;
   initialType: string;
+  initialBroker: string;
+  initialTemperature: string;
 }
 
 export function OpportunitiesPageClient({
   opportunities,
+  pageInfo,
   stages,
   leadSources,
-  contacts,
   brokers,
   initialSearch,
   initialStatus,
   initialStage,
   initialType,
+  initialBroker,
+  initialTemperature,
 }: OpportunitiesPageClientProps) {
   const t = useTranslations("OpportunitiesPage");
   const getStageName = useStageTranslation();
@@ -110,7 +116,7 @@ export function OpportunitiesPageClient({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("count", { count: opportunities.length })}
+            {t("count", { count: pageInfo.total })}
           </p>
         </div>
 
@@ -131,7 +137,6 @@ export function OpportunitiesPageClient({
               createAction={createOpportunityAction}
               stages={stages}
               leadSources={leadSources}
-              contacts={contacts}
               brokers={brokers}
               onSuccess={(id) => {
                 setCreateOpen(false);
@@ -216,6 +221,41 @@ export function OpportunitiesPageClient({
           </SelectContent>
         </Select>
 
+        <Select value={initialBroker} onValueChange={(v) => updateParams({ broker: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-44">
+            <SelectValue>
+              {(val: string) =>
+                val && val !== "all"
+                  ? (brokers.find((b) => b.id === val)?.display_name ?? t("filters.unknownBroker"))
+                  : t("filters.allBrokers")
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("filters.allBrokers")}</SelectItem>
+            {brokers.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.display_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialTemperature} onValueChange={(v) => updateParams({ temperature: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-40">
+            <SelectValue>
+              {(val: string) => t(`filters.${TEMPERATURE_FILTER_KEYS.find((k) => k === val) ?? "allTemperatures"}`)}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {TEMPERATURE_FILTER_KEYS.map((k) => (
+              <SelectItem key={k} value={k === "allTemperatures" ? "all" : k}>
+                {t(`filters.${k}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={initialStage} onValueChange={(v) => updateParams({ stage: (v as string) || "all", page: "" })}>
           <SelectTrigger className="w-44">
             <SelectValue placeholder={t("filters.allStages")}>
@@ -238,6 +278,7 @@ export function OpportunitiesPageClient({
       {/* ── List ────────────────────────────────────────────────────────────── */}
       <div className={`${isPending ? "opacity-60 pointer-events-none" : ""}`}>
         <OpportunityListTable opportunities={opportunities} stages={stages} />
+        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
       </div>
     </>
   );

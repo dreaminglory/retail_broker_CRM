@@ -60,14 +60,17 @@ export async function toActionError(error: unknown, _t?: any): Promise<{ success
   const t = await getTranslations();
   
   if (error instanceof ZodError) {
+    // A validator without an i18n key carries Zod's default English message.
+    const translate = (message: string) =>
+      t.has(message as never) ? t(message as never) : t('validation.failed');
     const fieldErrors: Record<string, string[]> = {};
     for (const [path, messages] of Object.entries(error.flatten().fieldErrors)) {
       if (messages) {
-        fieldErrors[path] = messages.map((m) => t(m as any));
+        fieldErrors[path] = messages.map(translate);
       }
     }
     const formErrors = error.flatten().formErrors;
-    const translatedFormErrors = formErrors.map((m) => t(m as any));
+    const translatedFormErrors = formErrors.map(translate);
 
     return {
       success: false,
@@ -77,6 +80,7 @@ export async function toActionError(error: unknown, _t?: any): Promise<{ success
   }
 
   if (error instanceof DomainError) {
+    if (error.message !== error.code) console.error(error.message);
     try {
       const message = t(error.code as any, error.params);
       return { success: false, error: message || error.message };
@@ -89,7 +93,8 @@ export async function toActionError(error: unknown, _t?: any): Promise<{ success
     if (error.message === 'Unauthorized' || error.message === 'No active agency membership') {
       return { success: false, error: t('errors.unauthorized' as any) };
     }
-    return { success: false, error: error.message };
+    console.error(error);
+    return { success: false, error: t('errors.unexpected') };
   }
 
   return { success: false, error: t('errors.unexpected' as any) };

@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(5);
+SELECT plan(6);
 
 SELECT set_config('test.u1', gen_random_uuid()::text, true);
 INSERT INTO auth.users (id, email) VALUES (current_setting('test.u1')::uuid, 'user1@example.com');
@@ -45,6 +45,23 @@ SELECT throws_ok(
     $$ UPDATE agency_memberships SET user_id = gen_random_uuid() WHERE id = current_setting('test.m1')::uuid $$,
     'membership_identity_immutable',
     'prevent_membership_identity_change trigger works'
+);
+
+-- handle_new_user: display_name, then full_name, then first + last, then the email prefix.
+RESET ROLE;
+
+INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
+  ('00000000-0000-0000-0000-00000000f001', 'both@example.com', '{"display_name": "Display", "full_name": "Full Name"}'),
+  ('00000000-0000-0000-0000-00000000f002', 'full@example.com', '{"full_name": "  Иван Петров "}'),
+  ('00000000-0000-0000-0000-00000000f003', 'parts@example.com', '{"first_name": "Мария", "last_name": "Иванова"}'),
+  ('00000000-0000-0000-0000-00000000f004', 'first@example.com', '{"first_name": "Мария"}'),
+  ('00000000-0000-0000-0000-00000000f005', 'blank@example.com', '{"display_name": " ", "full_name": ""}'),
+  ('00000000-0000-0000-0000-00000000f006', 'none@example.com', NULL);
+
+SELECT results_eq(
+  $$ SELECT display_name FROM profiles WHERE id::text LIKE '00000000-0000-0000-0000-00000000f00%' ORDER BY id $$,
+  $$ VALUES ('Display'::text), ('Иван Петров'), ('Мария Иванова'), ('Мария'), ('blank'), ('none') $$,
+  'A new profile name falls back from display_name to full_name, first + last, then the email prefix'
 );
 
 SELECT * FROM finish();

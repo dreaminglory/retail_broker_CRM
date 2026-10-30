@@ -1,13 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { MemberRepository } from "@/domain/members/repository";
 import { getExceptionDataAction } from "./actions";
 import { ExceptionsPageClient } from "./exceptions-page-client";
 
-export const metadata = {
-  title: "Exceptions Dashboard | BrokerCRM",
-  description: "Manager exception dashboard",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("Metadata");
+  return { title: t("exceptions") };
+}
 
 export default async function ExceptionsPage() {
   const supabase = await createSupabaseServer();
@@ -33,8 +34,11 @@ export default async function ExceptionsPage() {
   // Fetch all exception data for the dashboard
   const data = await getExceptionDataAction();
   if (!data) {
-    return <div className="p-6">Failed to load exception data.</div>;
+    const t = await getTranslations("ExceptionsPage");
+    return <div className="p-6">{t("loadFailed")}</div>;
   }
 
-  return <ExceptionsPageClient data={data} />;
+  const brokers = await new MemberRepository(supabase).getActiveBrokers(membership.agency_id);
+
+  return <ExceptionsPageClient data={data} brokers={brokers} />;
 }

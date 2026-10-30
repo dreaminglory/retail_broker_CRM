@@ -37,7 +37,7 @@ export interface AtRiskOpportunity {
  * completed or cancelled the task after the service checked it.
  */
 function pendingWriteResult(data: unknown, error: { message: string } | null, verb: string): Task {
-  if (error) throw new Error(`Failed to ${verb} task: ${error.message}`);
+  if (error) throw new DomainError('errors.saveFailed', `Failed to ${verb} task: ${error.message}`);
   if (!data) throw new DomainError('errors.task_not_pending');
   return data as Task;
 }
@@ -81,7 +81,7 @@ export class TaskRepository {
     }
 
     const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch tasks: ${error.message}`);
     return (data ?? []) as Task[];
   }
 
@@ -95,7 +95,7 @@ export class TaskRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch task: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch task: ${error.message}`);
     }
     return data as Task;
   }
@@ -127,7 +127,7 @@ export class TaskRepository {
     }
 
     const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch tasks: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch tasks: ${error.message}`);
 
     // Map joined fields to flat TaskWithOpportunity structure
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -158,7 +158,7 @@ export class TaskRepository {
     query = query.order('updated_at', { ascending: true });
 
     const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch at-risk opportunities: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch at-risk opportunities: ${error.message}`);
 
     // Map the joined stage name
     return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
@@ -194,7 +194,7 @@ export class TaskRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create task: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create task: ${error.message}`);
     return data as Task;
   }
 

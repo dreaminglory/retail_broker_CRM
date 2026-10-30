@@ -66,7 +66,6 @@ Candidates from `/feature-ideas`, not yet on the map. Promote one by adding a ma
 
 | Idea | Evidence | Score | Notes |
 |---|---|---|---|
-| Atomic, role-checked merge RPC | E1 (AD-045 open question) | — | Merge is a sequence of edits today |
 
 ## 5. Current state
 
@@ -87,8 +86,7 @@ English leaks; resend invitation (`conversion-join`). BRD rows marked ⚠️ say
 **Go-live prerequisites (founder):** a domain verified in Resend, hosting that allows two daily
 crons (or the pg_cron fallback, AD-042), production env vars.
 
-**Open decisions:** AD-041 is Proposed (accepted when `trustworthy-loop` Task 1 lands). Smart
-Lists are in the gate, though AD-039 named only properties, requirements and matching (founder
+**Open decisions:** Smart Lists are in the gate, though AD-039 named only properties, requirements and matching (founder
 to confirm).
 
 ## 6. Pilot evidence

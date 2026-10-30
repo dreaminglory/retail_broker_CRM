@@ -1,7 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ImportRepository } from "./repository";
 import { CreateImportJobInput, ContactMappingInput, ContactImportOptionsInput, StageRowsInput, InquiryMappingInput, InquiryImportOptionsInput } from "./validation";
-import { ImportJob, ImportSummary } from "./types";
+import { ImportJob, ImportSummary, RevertResult } from "./types";
 import { mapRowToCandidate, mapRowToInquiryCandidate } from "./csv/row-mapper";
 import { classifyDuplicates, ExistingContactInfo } from "./duplicate-classifier";
 import { DomainError } from "@/lib/errors";
@@ -35,7 +35,7 @@ export class ImportService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create import job: ${error.message}`);
     
     return {
       jobId: data.id,
@@ -403,7 +403,7 @@ export class ImportService {
     }
   }
 
-  async revert(agencyId: string, jobId: string): Promise<any> {
+  async revert(agencyId: string, jobId: string): Promise<RevertResult> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
     return await this.repository.revertJob(jobId);
@@ -422,7 +422,11 @@ export class ImportService {
     };
   }
 
-  async buildErrorReportCsv(agencyId: string, jobId: string): Promise<string> {
+  async buildErrorReportCsv(
+    agencyId: string,
+    jobId: string,
+    labels: { reasonHeader: string; reason: (code: string) => string }
+  ): Promise<string> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
 
@@ -431,14 +435,14 @@ export class ImportService {
 
     if (errorRows.length === 0) return "";
 
-    const headers = [...job.headers, "Error Reason"];
+    const headers = [...job.headers, labels.reasonHeader];
     const delimiter = job.delimiter;
     
     let csv = '\uFEFF';
     csv += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(delimiter) + '\n';
 
     for (const row of errorRows) {
-      const errorMsg = row.errors.map(e => e.code).join(", ");
+      const errorMsg = row.errors.map(e => labels.reason(e.code).replace(/"/g, '""')).join(", ");
       const rowValues = job.headers.map(h => {
         const val = row.raw[h] || "";
         return `"${val.replace(/"/g, '""')}"`;

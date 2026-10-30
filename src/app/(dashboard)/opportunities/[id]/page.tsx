@@ -39,7 +39,17 @@ export default async function OpportunityDetailPage({
   const [stages, leadSources, contacts, tasks, timeline, brokers, settings] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
-    new ContactService(supabase).list(agencyId, { status: "active", limit: 500 }),
+    // Only the contacts this opportunity links to; pickers search the agency on demand.
+    new ContactService(supabase).getByIds(
+      [
+        ...new Set(
+          [opportunity.primary_contact_id, ...opportunity.participants.map((p) => p.contact_id)].filter(
+            (id): id is string => !!id
+          )
+        ),
+      ],
+      agencyId
+    ),
     new TaskService(supabase).list(agencyId, { opportunityId: id }),
     new TimelineService(supabase).getOpportunityTimeline(id, agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),

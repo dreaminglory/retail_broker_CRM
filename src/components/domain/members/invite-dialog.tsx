@@ -97,7 +97,9 @@ export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
               <Label htmlFor="role">{t("roleLabel")}</Label>
               <Select value={role} onValueChange={(v) => setRole(v as MemberRole)}>
                 <SelectTrigger id="role">
-                  <SelectValue placeholder={t("selectRole")} />
+                  <SelectValue placeholder={t("selectRole")}>
+                    {(value) => (value ? tRoles(value as never) : t("selectRole"))}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="broker">{tRoles("broker")}</SelectItem>

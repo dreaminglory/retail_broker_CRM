@@ -58,7 +58,9 @@ export function CloseOpportunityDialog({
             <Label htmlFor="outcome">{t("outcomeLabel")}</Label>
             <Select name="outcome" value={outcome} onValueChange={(v) => { if (v) setOutcome(v as string); }} required>
               <SelectTrigger>
-                <SelectValue placeholder={t("outcomePlaceholder")} />
+                <SelectValue placeholder={t("outcomePlaceholder")}>
+                  {(value) => (value ? t(value as never) : t("outcomePlaceholder"))}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="won">{t("won")}</SelectItem>

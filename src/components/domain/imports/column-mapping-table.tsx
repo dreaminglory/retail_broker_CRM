@@ -13,33 +13,33 @@ interface ColumnMappingTableProps {
   onChange: (mapping: Record<string, string | null>) => void;
 }
 
-const CONTACT_FIELD_OPTIONS: { value: ContactImportField; label: string }[] = [
-  { value: "full_name", label: "Full Name" },
-  { value: "first_name", label: "First Name" },
-  { value: "last_name", label: "Last Name" },
-  { value: "company_name", label: "Company Name" },
-  { value: "contact_type", label: "Contact Type" },
-  { value: "phone", label: "Phone" },
-  { value: "phone_2", label: "Phone 2" },
-  { value: "email", label: "Email" },
-  { value: "email_2", label: "Email 2" },
-  { value: "viber", label: "Viber" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "note", label: "Note" },
-  { value: "external_ref", label: "External Reference ID" },
+const CONTACT_FIELD_OPTIONS: { value: ContactImportField }[] = [
+  { value: "full_name" },
+  { value: "first_name" },
+  { value: "last_name" },
+  { value: "company_name" },
+  { value: "contact_type" },
+  { value: "phone" },
+  { value: "phone_2" },
+  { value: "email" },
+  { value: "email_2" },
+  { value: "viber" },
+  { value: "whatsapp" },
+  { value: "note" },
+  { value: "external_ref" },
 ];
 
-const INQUIRY_FIELD_OPTIONS: { value: InquiryImportField; label: string }[] = [
-  { value: "caller_name", label: "Caller Name" },
-  { value: "caller_phone", label: "Caller Phone" },
-  { value: "caller_email", label: "Caller Email" },
-  { value: "subject", label: "Subject" },
-  { value: "description", label: "Description" },
-  { value: "source", label: "Source" },
-  { value: "external_ref", label: "External Reference ID" },
-  { value: "received_at", label: "Date Received" },
-  { value: "assigned_to", label: "Assigned To" },
-  { value: "status", label: "Status" },
+const INQUIRY_FIELD_OPTIONS: { value: InquiryImportField }[] = [
+  { value: "caller_name" },
+  { value: "caller_phone" },
+  { value: "caller_email" },
+  { value: "subject" },
+  { value: "description" },
+  { value: "source" },
+  { value: "external_ref" },
+  { value: "received_at" },
+  { value: "assigned_to" },
+  { value: "status" },
 ];
 
 import { useTranslations } from "next-intl";
@@ -94,7 +94,9 @@ export function ColumnMappingTable({ headers, entityType, initialMapping, onChan
                   onValueChange={(val) => handleMappingChange(opt.value, val as string | null)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t("doNotImport")} />
+                    <SelectValue placeholder={t("doNotImport")}>
+                      {(value) => (value && value !== "none" ? value : t("doNotImport"))}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">{t("doNotImport")}</SelectItem>

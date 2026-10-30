@@ -4,19 +4,20 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServer } from '@/lib/supabase/server';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import { updateProfileSchema } from '@/domain/profiles/validation';
+import { DomainError } from '@/lib/errors';
 
 /**
  * Server Action: Update the current user's profile display name.
  * AD-023: Profile updates are user-level, not tenant-scoped.
  */
-export async function updateProfile(formData: FormData) {
+export async function updateProfile(formData: FormData): Promise<{ success?: boolean; error?: string }> {
   const supabase = await createSupabaseServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'Not authenticated' };
+    return toActionError(new DomainError('errors.unauthorized'));
   }
 
   const raw = {
@@ -25,7 +26,8 @@ export async function updateProfile(formData: FormData) {
 
   const parsed = updateProfileSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0]?.message ?? 'Invalid input' };
+    const result = await toActionError(parsed.error);
+    return { error: result.fieldErrors?.display_name?.[0] ?? result.error };
   }
 
   try {
@@ -35,8 +37,7 @@ export async function updateProfile(formData: FormData) {
     revalidatePath('/dashboard', 'layout');
     return { success: true };
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to update profile';
-    return { error: message };
+    return toActionError(err);
   }
 }
 
@@ -51,7 +52,7 @@ export async function updateLocaleAction(formData: FormData): Promise<ActionResu
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { success: false, error: 'Not authenticated' };
+    return toActionError(new DomainError('errors.unauthorized'));
   }
 
   const locale = formData.get('locale');

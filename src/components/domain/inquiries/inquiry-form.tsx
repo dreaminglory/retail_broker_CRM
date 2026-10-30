@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,8 +74,18 @@ export function InquiryForm({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
+  // Submitting through `action` would make React reset the fields after a rejected
+  // phone or email, and a broker mid-call would lose what they typed.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
+
   return (
-    <form ref={formRef} action={formAction} className="space-y-4">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       {/* Source */}
       <div key={`src-${resetKey}`} className="space-y-1.5">
         <Label htmlFor="inquiry-source">{t("source")}</Label>
@@ -106,6 +116,7 @@ export function InquiryForm({
           name="assigned_to"
           brokers={brokers}
           defaultValue={inquiry?.assigned_to ?? null}
+          placeholder={t("assignedToPlaceholder")}
         />
         {!state.success && state.fieldErrors?.assigned_to && (
           <p className="text-xs text-destructive">
@@ -221,7 +232,7 @@ export function InquiryForm({
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? t("saving") : t("submit")}
+        {pending ? t("saving") : inquiry ? t("saveChanges") : t("submit")}
       </Button>
     </form>
   );

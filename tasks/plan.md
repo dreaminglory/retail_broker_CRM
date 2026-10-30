@@ -23,38 +23,39 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 ## Task list
 
 ### Phase 1: Inquiry intake integrity
-- [ ] Task 1: International and landline phones (FR-CON-15)
-- [ ] Task 2: Normalise inquiry callers in validation and conversion (FR-INQ-14)
-- [ ] Task 3: Backfill stored inquiry callers
-- [ ] Task 4: Phone-aware global search
-- [ ] Task 5: Edit and reassign an inquiry (FR-INQ-13)
+- [x] Task 1: International and landline phones (FR-CON-15)
+- [x] Task 2: Normalise inquiry callers in validation and conversion (FR-INQ-14)
+- [x] Task 3: Backfill stored inquiry callers
+- [x] Task 4: Phone-aware global search
+- [x] Task 5: Edit and reassign an inquiry (FR-INQ-13)
 
 ### Checkpoint: intake
-- [ ] AC-1…AC-4 of the spec pass; Definition of Done for each task
+- [x] AC-1…AC-4 of the spec pass; Definition of Done for each task
 
 ### Phase 2: Lists at volume
-- [ ] Task 6: Volume seed script
-- [ ] Task 7: Paginated opportunity list with a shared pager
-- [ ] Task 8: Pager on contacts and inquiries (FR-CON-10)
-- [ ] Task 9: Agency-wide contact picker (FR-OPP-16)
-- [ ] Task 10: Broker and temperature filters on opportunities (FR-OPP-11)
+- [x] Task 6: Volume seed script
+- [x] Task 7: Paginated opportunity list with a shared pager
+- [x] Task 8: Pager on contacts and inquiries (FR-CON-10)
+- [x] Task 9: Agency-wide contact picker (FR-OPP-16)
+- [x] Task 10: Broker and temperature filters on opportunities (FR-OPP-11)
 
 ### Checkpoint: volume
-- [ ] AC-5…AC-7 pass with the volume seed loaded
+- [x] AC-5…AC-7 pass with the volume seed loaded
 
 ### Phase 3: Import and i18n hygiene
-- [ ] Task 11: Safe import revert and the `db_recheck` status
-- [ ] Task 12: Profile name fallback at signup (FR-PRF-03)
-- [ ] Task 13: Remove English leaks and untranslated errors (FR-LOC-01)
-- [ ] Task 14: BG click-through of every route
+- [x] Task 11: Safe import revert and the `db_recheck` status
+- [x] Task 12: Profile name fallback at signup (FR-PRF-03)
+- [x] Task 13: Remove English leaks and untranslated errors (FR-LOC-01)
+- [x] Task 14: BG click-through of every route
 
 ### Checkpoint: hygiene
-- [ ] AC-8…AC-10 pass
+- [x] AC-8…AC-10 pass
 
 ### Phase 4: Service tests in CI
 - [ ] Task 15: Supabase test client and the CI job
 - [ ] Task 16: Inquiry service and validation suites
-- [ ] Task 17 (cuttable): Opportunity and merge service suites
+- [ ] Task 17: Opportunity and merge service suites (required by AC-11)
+- [ ] Task 18: Contact, import, search and timeline service tests (AC-11)
 
 ### Checkpoint: module done
 - [ ] AC-11 passes; all spec acceptance criteria met

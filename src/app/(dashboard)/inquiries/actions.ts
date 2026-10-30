@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { InquiryService } from '@/domain/inquiries/service';
 import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
-import { findPotentialDuplicates, type PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
+import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { DomainError } from '@/lib/errors';
 
 export type { ActionResult };
 
@@ -45,29 +46,46 @@ export async function updateInquiryAction(
   id: string,
   _prevState: ActionResult,
   formData: FormData
-): Promise<ActionResult> {
+): Promise<ActionResult<{ id: string }>> {
   try {
     const { supabase, agencyId } = await getAuthContext();
 
     const raw = {
-      source_id: formData.get('source_id') ?? undefined,
-      source_description: formData.get('source_description') ?? undefined,
+      source_id: formData.get('source_id') || null,
       assigned_to: formData.get('assigned_to') || null,
-      caller_name: formData.get('caller_name') ?? undefined,
-      caller_phone: formData.get('caller_phone') ?? undefined,
-      caller_email: formData.get('caller_email') ?? undefined,
-      subject: formData.get('subject') ?? undefined,
-      description: formData.get('description') ?? undefined,
+      caller_name: formData.get('caller_name') || null,
+      caller_phone: formData.get('caller_phone') || null,
+      caller_email: formData.get('caller_email') || null,
+      subject: formData.get('subject') || null,
+      description: formData.get('description') || null,
+      external_ref: formData.get('external_ref') || null,
     };
 
-    const parsed = updateInquirySchema.safeParse(raw);
+    const service = new InquiryService(supabase);
+    await service.edit(id, agencyId, raw);
+
+    revalidatePath('/inquiries');
+    revalidatePath('/exceptions');
+    return { success: true, data: { id } };
+  } catch (error) { return toActionError(error); }
+}
+
+/** Any member may assign an inquiry (AD-001). `assignedTo` null unassigns it. */
+export async function reassignInquiryAction(
+  id: string,
+  assignedTo: string | null
+): Promise<ActionResult> {
+  try {
+    const { supabase, agencyId } = await getAuthContext();
+
+    const parsed = updateInquirySchema.safeParse({ assigned_to: assignedTo });
     if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
     await service.update(id, agencyId, parsed.data);
 
     revalidatePath('/inquiries');
-    revalidatePath(`/inquiries/${id}`);
+    revalidatePath('/exceptions');
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }
@@ -112,7 +130,7 @@ export async function convertInquiryAction(
   formData: FormData
 ): Promise<ActionResult<{ opportunityId: string; contactId: string | null } | { duplicates: PotentialDuplicate[] }>> {
   try {
-    const { supabase, userId, agencyId } = await getAuthContext();
+    const { supabase, agencyId } = await getAuthContext();
 
     // create_contact is JSON-encoded — it's optional
     let create_contact: unknown = undefined;
@@ -121,7 +139,7 @@ export async function convertInquiryAction(
       try {
         create_contact = JSON.parse(createContactRaw);
       } catch {
-        return { success: false, error: 'Invalid create_contact format' };
+        return toActionError(new DomainError('validation.failed'));
       }
     }
 
@@ -137,16 +155,17 @@ export async function convertInquiryAction(
     const parsed = convertInquirySchema.safeParse(raw);
     if (!parsed.success) return toActionError(parsed.error);
 
+    const service = new InquiryService(supabase);
+
     const skipDuplicateCheck = formData.get('skipDuplicateCheck') === 'true';
     if (parsed.data.create_contact && !skipDuplicateCheck) {
-      const duplicates = await findPotentialDuplicates(supabase, agencyId, parsed.data.create_contact as any);
+      const duplicates = await service.findConversionDuplicates(id, agencyId, parsed.data.create_contact);
       if (duplicates.length > 0) {
         return { success: true, data: { duplicates } };
       }
     }
 
-    const service = new InquiryService(supabase);
-    const result = await service.convert(id, agencyId, userId, parsed.data);
+    const result = await service.convert(id, agencyId, parsed.data);
 
     revalidatePath('/inquiries');
     revalidatePath('/opportunities');

@@ -3,8 +3,10 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { InquiryService } from "@/domain/inquiries/service";
 import { LeadSourceRepository } from "@/domain/lead-sources/repository";
 import { StageRepository } from "@/domain/stages/repository";
-import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
+import { ProfileRepository } from "@/domain/profiles/repository";
+import { PAGE_SIZE, loadPage, pageInfo, parsePage } from "@/lib/pagination";
+import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
 
 export async function generateMetadata() {
@@ -29,6 +31,7 @@ export default async function InquiriesPage({
   const search = params.search ?? "";
   const status = params.status ?? "all";
   const id = params.id;
+  const page = parsePage(params.page);
 
   const supabase = await createSupabaseServer();
   const {
@@ -45,35 +48,53 @@ export default async function InquiriesPage({
   const agencyId = membership?.agency_id ?? "";
 
   if (!agencyId) {
+    const tErrors = await getTranslations("errors");
     return (
       <div className="mx-auto max-w-4xl">
         <p className="text-sm text-muted-foreground">
-          No active agency membership found.
+          {tErrors("noMembership")}
         </p>
       </div>
     );
   }
 
   // Fetch all required data in parallel
-  const [inquiries, leadSources, stages, contacts, brokers] = await Promise.all([
-    new InquiryService(supabase).list(agencyId, {
-      search: search || undefined,
-      status: status === "all" ? undefined : status,
-    }),
+  const [paged, leadSources, stages, brokers] = await Promise.all([
+    id ? loadInquiryById(supabase, agencyId, id) : loadPage(page, PAGE_SIZE, (offset, limit) =>
+      new InquiryService(supabase).listPage(agencyId, {
+        search: search || undefined,
+        status: status === "all" ? undefined : status,
+        limit,
+        offset,
+      })
+    ),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new StageRepository(supabase).findActive(agencyId),
-    new ContactService(supabase).list(agencyId, { status: "active", limit: 200 }),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
+
+  // Assignees who were deactivated later aren't in the active list, but their inquiries still show them.
+  const inquiries = paged.rows;
+  const activeIds = new Set(brokers.map((b) => b.id));
+  const inactiveIds = inquiries.flatMap((i) =>
+    i.assigned_to && !activeIds.has(i.assigned_to) ? [i.assigned_to] : []
+  );
+  const inactiveProfiles = await new ProfileRepository(supabase).getProfilesByIds(inactiveIds);
+  const inactiveAssigneeNames = Object.fromEntries(
+    [...inactiveProfiles].flatMap(([id, profile]) =>
+      profile.display_name ? [[id, profile.display_name]] : []
+    )
+  );
 
   return (
     <div className="mx-auto max-w-4xl">
       <InquiriesPageClient
         inquiries={inquiries}
+        pageInfo={paged.info}
         leadSources={leadSources}
         stages={stages}
-        contacts={contacts}
         brokers={brokers}
+        inactiveAssigneeNames={inactiveAssigneeNames}
         initialSearch={search}
         initialStatus={status}
         initialId={id}
@@ -81,4 +102,16 @@ export default async function InquiriesPage({
       />
     </div>
   );
+}
+
+/** `?id=` deep link: the one inquiry, wherever it sits in the list; a bad or unknown id shows none. */
+async function loadInquiryById(
+  supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
+  agencyId: string,
+  id: string
+) {
+  const valid = z.string().uuid().safeParse(id).success;
+  const inquiry = valid ? await new InquiryService(supabase).getById(id, agencyId) : null;
+  const rows = inquiry ? [inquiry] : [];
+  return { rows, total: rows.length, info: pageInfo(1, PAGE_SIZE, rows.length) };
 }

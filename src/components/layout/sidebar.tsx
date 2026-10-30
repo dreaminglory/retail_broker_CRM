@@ -157,7 +157,7 @@ export function Sidebar({ userRole = "broker" }: SidebarProps) {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="flex w-full items-center justify-center rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -179,11 +179,11 @@ export function MobileSidebar({ userRole = "broker" }: SidebarProps) {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger className="md:hidden flex items-center justify-center rounded-md p-2 hover:bg-accent text-foreground">
         <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle Menu</span>
+        <span className="sr-only">{t("toggleMenu")}</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
-        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-        <SheetDescription className="sr-only">Access different sections of BrokerCRM.</SheetDescription>
+        <SheetTitle className="sr-only">{t("menuTitle")}</SheetTitle>
+        <SheetDescription className="sr-only">{t("menuDescription")}</SheetDescription>
         <div className="flex h-16 items-center gap-2 border-b px-4">
           <Building2 className="h-6 w-6 shrink-0 text-sidebar-primary" />
           <span className="text-lg font-bold tracking-tight text-sidebar-foreground">

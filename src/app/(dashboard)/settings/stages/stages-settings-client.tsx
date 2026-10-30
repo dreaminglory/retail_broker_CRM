@@ -63,17 +63,18 @@ import {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const TERMINAL_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  won: { label: 'Won', variant: 'default' },
-  lost: { label: 'Lost', variant: 'destructive' },
-  nurture: { label: 'Nurture', variant: 'secondary' },
+const TERMINAL_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  won: 'default',
+  lost: 'destructive',
+  nurture: 'secondary',
 };
 
 function TerminalBadge({ terminalType }: { terminalType: string | null }) {
+  const t = useTranslations("SettingsStages");
   if (!terminalType) return null;
-  const config = TERMINAL_LABELS[terminalType];
-  if (!config) return null;
-  return <Badge variant={config.variant} className="text-xs">{config.label}</Badge>;
+  const variant = TERMINAL_VARIANTS[terminalType];
+  if (!variant) return null;
+  return <Badge variant={variant} className="text-xs">{t(`terminal.${terminalType as "won" | "lost" | "nurture"}`)}</Badge>;
 }
 
 function TerminalIcon({ terminalType }: { terminalType: string | null }) {
@@ -453,6 +454,16 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
   const [stages, setStages] = useState<Stage[]>(initialStages);
   const [isSavingOrder, startOrderTransition] = useTransition();
 
+  const dndAccessibility = {
+    screenReaderInstructions: { draggable: t("dnd.instructions") },
+    announcements: {
+      onDragStart: () => t("dnd.started"),
+      onDragOver: () => t("dnd.moved"),
+      onDragEnd: () => t("dnd.dropped"),
+      onDragCancel: () => t("dnd.cancelled"),
+    },
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -571,6 +582,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
         ) : (
           <DndContext 
             id="pipeline-stages-dnd"
+            accessibility={dndAccessibility}
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={(e) => handleDragEnd(e, 'pipeline')}
@@ -612,6 +624,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
         ) : (
           <DndContext 
             id="terminal-stages-dnd"
+            accessibility={dndAccessibility}
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={(e) => handleDragEnd(e, 'terminal')}

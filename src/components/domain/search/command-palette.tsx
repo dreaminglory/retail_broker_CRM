@@ -17,6 +17,7 @@ import {
 import { Users, Briefcase, Phone, Search } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
@@ -51,7 +52,12 @@ export function CommandPalette() {
     if (debouncedSearch.trim().length >= 2) {
       startTransition(async () => {
         const res = await globalSearchAction(debouncedSearch);
-        setResults(res);
+        if (res.success) {
+          setResults(res.data);
+        } else {
+          setResults([]);
+          toast.error(res.error);
+        }
       });
     } else {
       setTimeout(() => setResults([]), 0);
@@ -91,7 +97,7 @@ export function CommandPalette() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} title={t("placeholder")} description={t("inputPlaceholder")}>
         <Command shouldFilter={false}>
           <CommandInput
         placeholder={t("inputPlaceholder")}
@@ -118,9 +124,13 @@ export function CommandPalette() {
               >
                 {getIcon(result.type)}
                 <div className="flex flex-col">
-                  <span>{result.title}</span>
-                  {result.subtitle && (
-                    <span className="text-xs text-muted-foreground">{result.subtitle}</span>
+                  <span>
+                    {result.title ?? t(result.type === "inquiry" ? "unknownCaller" : "unnamedContact")}
+                  </span>
+                  {(result.kind || result.subtitle) && (
+                    <span className="text-xs text-muted-foreground">
+                      {result.kind ? t(`kinds.${result.kind}`) : result.subtitle}
+                    </span>
                   )}
                 </div>
               </CommandItem>

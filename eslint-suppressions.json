@@ -4,27 +4,12 @@
       "count": 1
     }
   },
-  "src/app/(auth)/onboarding/actions.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/app/(auth)/signup/actions.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "src/app/(dashboard)/contacts/actions.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
   },
   "src/app/(dashboard)/contacts/contacts-page-client.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/app/(dashboard)/inquiries/actions.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
@@ -47,11 +32,6 @@
   "src/app/(dashboard)/settings/import/actions.ts": {
     "@typescript-eslint/no-explicit-any": {
       "count": 2
-    }
-  },
-  "src/app/(dashboard)/settings/import/revert-import-button.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
     }
   },
   "src/app/(dashboard)/settings/lead-sources/lead-source-list-client.tsx": {
@@ -119,7 +99,7 @@
   },
   "src/domain/imports/service.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 11
+      "count": 10
     },
     "prefer-const": {
       "count": 1
@@ -142,7 +122,7 @@
   },
   "src/lib/actions.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 7
+      "count": 5
     }
   },
   "src/lib/i18n/use-stage-translation.ts": {

@@ -2,10 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { ContactService } from '@/domain/contacts/service';
-import { createContactSchema, updateContactSchema, addContactMethodSchema } from '@/domain/contacts/validation';
+import { createContactSchema, updateContactSchema, addContactMethodSchema, contactPickerQuerySchema } from '@/domain/contacts/validation';
+import type { ContactOption } from '@/domain/contacts/types';
 import { findPotentialDuplicates, type PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { ContactRepository } from '@/domain/contacts/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { DomainError } from '@/lib/errors';
 
 export type { ActionResult };
 
@@ -25,7 +27,7 @@ export async function createContactAction(
       try {
         contact_methods = JSON.parse(methodsRaw);
       } catch {
-        return { success: false, error: 'Invalid contact methods format' };
+        return toActionError(new DomainError('validation.failed'));
       }
     }
 
@@ -155,4 +157,15 @@ export async function searchContactsQuickAction(search: string) {
   const { supabase, agencyId } = await getAuthContext();
   const repo = new ContactRepository(supabase);
   return repo.findAll(agencyId, { search, limit: 5, status: 'active' });
+}
+
+/** Async contact picker: active contacts anywhere in the agency, 20 at most (spec rule 8). */
+export async function searchContactsForPicker(query: string): Promise<ActionResult<ContactOption[]>> {
+  try {
+    const parsed = contactPickerQuerySchema.safeParse(query);
+    if (!parsed.success) return toActionError(parsed.error);
+    const { supabase, agencyId } = await getAuthContext();
+    const contacts = await new ContactService(supabase).searchForPicker(agencyId, parsed.data);
+    return { success: true, data: contacts };
+  } catch (error) { return toActionError(error); }
 }

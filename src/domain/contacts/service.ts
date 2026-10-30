@@ -8,6 +8,7 @@ import { ContactRepository } from './repository';
 import type {
   Contact,
   ContactMethod,
+  ContactOption,
   ContactWithMethods,
   CreateContactInput,
   UpdateContactInput,
@@ -17,6 +18,7 @@ import {
   createContactSchema,
   updateContactSchema,
   addContactMethodSchema,
+  CONTACT_PICKER_LIMIT,
 } from './validation';
 import type { ContactListOptions } from './repository';
 
@@ -31,6 +33,21 @@ export class ContactService {
 
   async list(agencyId: string, opts?: ContactListOptions): Promise<Contact[]> {
     return this.repo.findAll(agencyId, opts);
+  }
+
+  async listPage(
+    agencyId: string,
+    opts?: ContactListOptions
+  ): Promise<{ rows: Contact[]; total: number }> {
+    return this.repo.findPage(agencyId, opts);
+  }
+
+  async searchForPicker(agencyId: string, query: string): Promise<ContactOption[]> {
+    return this.repo.searchForPicker(agencyId, query, CONTACT_PICKER_LIMIT);
+  }
+
+  async getByIds(ids: string[], agencyId: string): Promise<Contact[]> {
+    return this.repo.findByIds(ids, agencyId);
   }
 
   async getById(id: string, agencyId: string): Promise<ContactWithMethods | null> {

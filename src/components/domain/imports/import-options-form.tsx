@@ -22,7 +22,7 @@ export function ImportOptionsForm({ options, onChange }: ImportOptionsFormProps)
         </p>
         <RadioGroup
           value={options.duplicate_strategy}
-          onValueChange={(val: "skip" | "update" | "create") =>
+          onValueChange={(val: "skip" | "create") =>
             onChange({ ...options, duplicate_strategy: val })
           }
           className="space-y-2"
@@ -30,10 +30,6 @@ export function ImportOptionsForm({ options, onChange }: ImportOptionsFormProps)
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="skip" id="skip" />
             <Label htmlFor="skip">{t("duplicateStrategy.skip")}</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="update" id="update" />
-            <Label htmlFor="update">{t("duplicateStrategy.update")}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="create" id="create" />

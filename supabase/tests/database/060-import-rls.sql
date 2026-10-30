@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Plan the tests
-SELECT plan(14);
+SELECT plan(15);
 
 -- Setup test users and agencies
 SELECT set_config('test.u_owner_1', gen_random_uuid()::text, true);
@@ -146,6 +146,15 @@ SELECT throws_ok(
      VALUES ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', current_setting('test.a1')::uuid, 3, '{"first_name": "Test"}', 'pending') $$,
   'new row violates row-level security policy for table "import_rows"',
   'Broker cannot insert import rows'
+);
+
+RESET ROLE;
+
+SELECT ok(
+  has_function_privilege('authenticated', 'import_commit_contacts(uuid, integer)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'import_commit_inquiries(uuid, integer)', 'EXECUTE')
+    AND has_function_privilege('authenticated', 'import_revert(uuid)', 'EXECUTE'),
+  'Signed-in users can still call the import RPCs'
 );
 
 SELECT * FROM finish();

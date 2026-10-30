@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ContactService } from "@/domain/contacts/service";
 import { ContactMethodList } from "@/components/domain/contacts/contact-method-list";
@@ -25,6 +26,7 @@ export default async function ContactDetailPage({
 }) {
   const { id } = await params;
 
+  const t = await getTranslations("ContactDetailPage");
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -80,7 +82,7 @@ export default async function ContactDetailPage({
           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Contacts
+          {t("back")}
         </Link>
       </div>
 
@@ -100,12 +102,12 @@ export default async function ContactDetailPage({
               ) : (
                 <Building2 className="h-3 w-3" />
               )}
-              {isPerson ? "Person" : "Organization"}
+              {isPerson ? t("typePerson") : t("typeOrganization")}
             </Badge>
             {contact.status === "archived" && (
               <Badge variant="secondary" className="gap-1 opacity-60">
                 <Archive className="h-3 w-3" />
-                Archived
+                {t("archived")}
               </Badge>
             )}
           </div>
@@ -116,7 +118,7 @@ export default async function ContactDetailPage({
           )}
           {importedFileName && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Imported from {importedFileName}
+              {t("importedFrom", { fileName: importedFileName })}
             </p>
           )}
         </div>
@@ -133,7 +135,7 @@ export default async function ContactDetailPage({
         {/* Contact methods */}
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Contact methods
+            {t("contactMethods")}
           </h2>
           <div className="rounded-lg border bg-card p-4">
             <ContactMethodList
@@ -147,7 +149,7 @@ export default async function ContactDetailPage({
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Linked opportunities
+              {t("linkedOpportunities")}
             </h2>
             {opportunities.length > 0 && (
               <Badge variant="secondary">{opportunities.length}</Badge>
@@ -161,7 +163,7 @@ export default async function ContactDetailPage({
       {contact.notes && (
         <section className="mt-8">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Notes
+            {t("notes")}
           </h2>
           <div className="rounded-lg border bg-card p-4 whitespace-pre-wrap text-sm">
             {contact.notes}
@@ -172,7 +174,7 @@ export default async function ContactDetailPage({
       {/* Activity Timeline */}
       <section className="mt-8">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Activity History
+          {t("activityHistory")}
         </h2>
         <ContactActivity initialTimeline={timeline} contactId={id} currentUserId={user?.id} />
       </section>

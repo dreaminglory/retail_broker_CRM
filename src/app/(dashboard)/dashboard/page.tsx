@@ -64,7 +64,7 @@ export default async function DashboardPage() {
           {t('welcome', { name: fullName.split(' ')[0] })}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {t('workspaceReady', { agency: agencyData?.name ?? 'Your agency' })}
+          {t('workspaceReady', { agency: agencyData?.name ?? t('yourAgency') })}
           {membership?.role === 'owner' && t('ownerNotice')}
         </p>
       </div>

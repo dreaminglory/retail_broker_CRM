@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(6);
+SELECT plan(22);
 
 -- Setup
 
@@ -73,6 +73,210 @@ SELECT is(
   (SELECT first_name FROM contacts WHERE import_job_id = '00000000-0000-0000-0000-000000000002'),
   'Test Revert 1',
   'The retained contact corresponds to Test Revert 1'
+);
+
+SELECT is(
+  (SELECT status FROM import_rows WHERE id = '00000000-0000-0000-0000-200000000001'),
+  'revert_skipped'::text,
+  'The row of the kept inquiry is revert_skipped'
+);
+
+SELECT is(
+  (SELECT status FROM import_rows WHERE id = '00000000-0000-0000-0000-200000000002'),
+  'reverted'::text,
+  'The row of the deleted inquiry is reverted'
+);
+
+-- Contact import, reverted as a signed-in owner: each row tests one guard.
+
+SELECT set_config('test.u_owner', gen_random_uuid()::text, true);
+SELECT set_config('test.a2', gen_random_uuid()::text, true);
+
+INSERT INTO auth.users (id, email) VALUES (current_setting('test.u_owner')::uuid, 'revert-owner@example.com');
+INSERT INTO agencies (id, name, slug) VALUES (current_setting('test.a2')::uuid, 'Revert Agency', 'revert-agency');
+INSERT INTO agency_memberships (agency_id, user_id, role, status)
+VALUES (current_setting('test.a2')::uuid, current_setting('test.u_owner')::uuid, 'owner', 'active');
+
+SELECT set_config('request.jwt.claims', format('{"sub": "%s", "role": "authenticated"}', current_setting('test.u_owner')), true);
+SET ROLE authenticated;
+
+INSERT INTO import_jobs (id, agency_id, entity_type, status, file_name, file_sha256, file_size_bytes, total_rows, options)
+VALUES ('00000000-0000-0000-0000-000000000003', current_setting('test.a2')::uuid, 'contact', 'validated', 'test-contacts.csv', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 100, 10, '{"duplicate_strategy": "skip"}');
+
+INSERT INTO import_rows (id, agency_id, import_job_id, row_number, status, raw, normalized)
+SELECT
+  ('00000000-0000-0000-0000-3000000000' || lpad(n::text, 2, '0'))::uuid,
+  current_setting('test.a2')::uuid,
+  '00000000-0000-0000-0000-000000000003',
+  n,
+  'valid',
+  '{}',
+  jsonb_build_object('first_name', first_name, 'contact_type', 'person', 'note', note)
+FROM (VALUES
+  (1, 'Untouched', 'From the file'),
+  (2, 'Noted', NULL),
+  (3, 'Edited note', 'Original text'),
+  (4, 'Tasked', NULL),
+  (5, 'In opportunity', NULL),
+  (6, 'Participant', NULL),
+  (7, 'Merge winner', NULL),
+  (8, 'Merge loser', NULL),
+  (9, 'Edited contact', NULL),
+  (10, 'Resaved note', 'Same text')
+) AS t(n, first_name, note);
+
+SELECT import_commit_contacts('00000000-0000-0000-0000-000000000003');
+
+-- A broker works on rows 2-10 after the import.
+INSERT INTO stages (id, agency_id, name, sort_order)
+VALUES ('00000000-0000-0000-0000-400000000001', current_setting('test.a2')::uuid, 'New', 1);
+
+INSERT INTO opportunities (id, agency_id, title, type, stage_id, primary_contact_id)
+SELECT '00000000-0000-0000-0000-400000000002', current_setting('test.a2')::uuid, 'Primary', 'buyer', '00000000-0000-0000-0000-400000000001', id
+FROM contacts WHERE first_name = 'In opportunity';
+
+INSERT INTO opportunities (id, agency_id, title, type, stage_id)
+VALUES ('00000000-0000-0000-0000-400000000003', current_setting('test.a2')::uuid, 'With participant', 'buyer', '00000000-0000-0000-0000-400000000001');
+
+INSERT INTO opportunity_participants (agency_id, opportunity_id, contact_id, role)
+SELECT current_setting('test.a2')::uuid, '00000000-0000-0000-0000-400000000003', id, 'buyer'
+FROM contacts WHERE first_name = 'Participant';
+
+INSERT INTO contacts (id, agency_id, type, first_name, display_name)
+VALUES ('00000000-0000-0000-0000-400000000004', current_setting('test.a2')::uuid, 'person', 'Manual', 'Manual');
+
+INSERT INTO merge_history (agency_id, winner_contact_id, loser_contact_id, merged_by, loser_snapshot)
+SELECT current_setting('test.a2')::uuid, id, '00000000-0000-0000-0000-400000000004', current_setting('test.u_owner')::uuid, '{}'
+FROM contacts WHERE first_name = 'Merge winner';
+
+INSERT INTO merge_history (agency_id, winner_contact_id, loser_contact_id, merged_by, loser_snapshot)
+SELECT current_setting('test.a2')::uuid, '00000000-0000-0000-0000-400000000004', id, current_setting('test.u_owner')::uuid, '{}'
+FROM contacts WHERE first_name = 'Merge loser';
+
+-- now() is frozen inside this transaction, so an edit needs a later updated_at set by hand.
+RESET ROLE;
+ALTER TABLE contacts DISABLE TRIGGER set_contacts_updated_at;
+ALTER TABLE notes DISABLE TRIGGER set_notes_updated_at;
+UPDATE contacts SET last_name = 'Corrected', updated_at = now() + INTERVAL '2 minutes' WHERE first_name = 'Edited contact';
+UPDATE notes SET updated_at = now() + INTERVAL '2 minutes' WHERE content = 'Same text';
+ALTER TABLE contacts ENABLE TRIGGER set_contacts_updated_at;
+ALTER TABLE notes ENABLE TRIGGER set_notes_updated_at;
+SET ROLE authenticated;
+
+INSERT INTO notes (agency_id, contact_id, content)
+SELECT current_setting('test.a2')::uuid, id, 'Called, wants a viewing'
+FROM contacts WHERE first_name = 'Noted' AND agency_id = current_setting('test.a2')::uuid;
+
+UPDATE notes SET content = 'Original text, and a correction'
+WHERE content = 'Original text' AND agency_id = current_setting('test.a2')::uuid;
+
+INSERT INTO tasks (agency_id, contact_id, title, due_at, assigned_to)
+SELECT current_setting('test.a2')::uuid, id, 'Call back', now() + INTERVAL '1 day', current_setting('test.u_owner')::uuid
+FROM contacts WHERE first_name = 'Tasked' AND agency_id = current_setting('test.a2')::uuid;
+
+SELECT is(
+  import_revert('00000000-0000-0000-0000-000000000003'),
+  '{"deleted": {"contacts": 1, "inquiries": 0}, "kept": {"contacts": 9, "inquiries": 0}}'::jsonb,
+  'Revert deletes the untouched contact and reports the nine it kept'
+);
+
+SELECT is_empty(
+  $$ SELECT 1 FROM contacts WHERE first_name = 'Untouched' $$,
+  'A contact with only the note from its import row is deleted'
+);
+
+SELECT is(
+  (SELECT content FROM notes n JOIN contacts c ON c.id = n.contact_id WHERE c.first_name = 'Noted'),
+  'Called, wants a viewing',
+  'A contact that gained a note keeps the contact and the note (AC-8)'
+);
+
+SELECT is(
+  (SELECT content FROM notes n JOIN contacts c ON c.id = n.contact_id WHERE c.first_name = 'Edited note'),
+  'Original text, and a correction',
+  'A contact whose imported note was edited is kept'
+);
+
+SELECT is(
+  (SELECT count(*)::int FROM tasks t JOIN contacts c ON c.id = t.contact_id WHERE c.first_name = 'Tasked'),
+  1,
+  'A contact that gained a task is kept'
+);
+
+SELECT results_eq(
+  $$ SELECT status FROM import_rows WHERE import_job_id = '00000000-0000-0000-0000-000000000003' ORDER BY row_number $$,
+  $$ VALUES ('reverted'::text), ('revert_skipped'), ('revert_skipped'), ('revert_skipped'), ('revert_skipped'),
+            ('revert_skipped'), ('revert_skipped'), ('revert_skipped'), ('revert_skipped'), ('revert_skipped') $$,
+  'Every row that created a contact is reverted or revert_skipped'
+);
+
+SELECT is(
+  (SELECT count(*)::int FROM contacts WHERE first_name = 'In opportunity'),
+  1,
+  'A contact that became an opportunity''s primary contact is kept'
+);
+
+SELECT is(
+  (SELECT count(*)::int FROM contacts WHERE first_name = 'Participant'),
+  1,
+  'A contact that became an opportunity participant is kept'
+);
+
+SELECT is(
+  (SELECT count(*)::int FROM contacts WHERE first_name = 'Merge winner'),
+  1,
+  'A contact that won a merge is kept'
+);
+
+SELECT is(
+  (SELECT count(*)::int FROM contacts WHERE first_name = 'Merge loser'),
+  1,
+  'A contact that lost a merge is kept'
+);
+
+SELECT is(
+  (SELECT count(*)::int FROM contacts WHERE first_name = 'Edited contact'),
+  1,
+  'A contact edited after the import is kept'
+);
+
+SELECT is(
+  (SELECT content FROM notes n JOIN contacts c ON c.id = n.contact_id WHERE c.first_name = 'Resaved note'),
+  'Same text',
+  'A contact whose imported note was re-saved with the same text is kept'
+);
+
+-- Inquiry import: a converted inquiry stays. Linking it sets updated_at to the frozen now(),
+-- so only the opportunity guard protects it here.
+INSERT INTO lead_sources (id, agency_id, name, channel)
+VALUES ('00000000-0000-0000-0000-400000000005', current_setting('test.a2')::uuid, 'Portal', 'other');
+
+INSERT INTO import_jobs (id, agency_id, entity_type, status, file_name, file_sha256, file_size_bytes, total_rows, options)
+VALUES ('00000000-0000-0000-0000-000000000004', current_setting('test.a2')::uuid, 'inquiry', 'validated', 'test-inquiries.csv', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 100, 2, '{}');
+
+INSERT INTO import_rows (id, agency_id, import_job_id, row_number, status, raw, normalized)
+VALUES
+  ('00000000-0000-0000-0000-500000000001', current_setting('test.a2')::uuid, '00000000-0000-0000-0000-000000000004', 1, 'valid', '{}',
+   '{"caller_name": "Converted caller", "source_id": "00000000-0000-0000-0000-400000000005"}'),
+  ('00000000-0000-0000-0000-500000000002', current_setting('test.a2')::uuid, '00000000-0000-0000-0000-000000000004', 2, 'valid', '{}',
+   '{"caller_name": "Untouched caller", "source_id": "00000000-0000-0000-0000-400000000005"}');
+
+SELECT import_commit_inquiries('00000000-0000-0000-0000-000000000004');
+
+UPDATE inquiries SET opportunity_id = '00000000-0000-0000-0000-400000000003' WHERE caller_name = 'Converted caller';
+
+SELECT import_revert('00000000-0000-0000-0000-000000000004');
+
+SELECT results_eq(
+  $$ SELECT caller_name FROM inquiries WHERE import_job_id = '00000000-0000-0000-0000-000000000004' $$,
+  $$ VALUES ('Converted caller'::text) $$,
+  'A converted inquiry is kept and an untouched one is deleted'
+);
+
+SELECT results_eq(
+  $$ SELECT status FROM import_rows WHERE import_job_id = '00000000-0000-0000-0000-000000000004' ORDER BY row_number $$,
+  $$ VALUES ('revert_skipped'::text), ('reverted') $$,
+  'The inquiry rows are revert_skipped and reverted'
 );
 
 SELECT * FROM finish();

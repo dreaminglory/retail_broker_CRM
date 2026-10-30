@@ -15,7 +15,8 @@ import {
 import type { Opportunity } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
-import type { Contact } from "@/domain/contacts/types";
+import type { ContactOption } from "@/domain/contacts/types";
+import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
 import type { ActiveBroker } from "@/domain/members/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
@@ -26,13 +27,13 @@ interface OpportunityFormProps {
   opportunity?: Opportunity;
   stages: Stage[];
   leadSources: LeadSource[];
-  contacts: Contact[];
+  /** The opportunity's current primary contact, so the picker can show its name. */
+  primaryContact?: ContactOption | null;
   brokers: ActiveBroker[];
   createAction: (prevState: ActionResult, formData: FormData) => Promise<ActionResult<{ id: string }>>;
   updateAction?: (prevState: ActionResult, formData: FormData) => Promise<ActionResult>;
   onSuccess?: (id?: string) => void;
   defaultInquiryId?: string;
-  defaultContactId?: string;
 }
 
 const initialState: ActionResult<{ id: string }> = { success: false, error: "" };
@@ -41,13 +42,12 @@ export function OpportunityForm({
   opportunity,
   stages,
   leadSources,
-  contacts,
+  primaryContact,
   brokers,
   createAction,
   updateAction,
   onSuccess,
   defaultInquiryId,
-  defaultContactId,
 }: OpportunityFormProps) {
   const t = useTranslations("OpportunityForm");
   const enums = useTranslations("Enums");
@@ -166,31 +166,15 @@ export function OpportunityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="primary_contact_id">{t("primaryContactLabel")}</Label>
-          <Select
-            key={`contact-${opportunity?.primary_contact_id ?? defaultContactId ?? "none"}`}
+          <ContactCombobox
+            id="primary_contact_id"
             name="primary_contact_id"
-            defaultValue={opportunity?.primary_contact_id ?? defaultContactId ?? "none"}
-          >
-            <SelectTrigger id="primary_contact_id">
-              <SelectValue placeholder={t("primaryContactPlaceholder")}>
-                {(val) => {
-                  if (val === "none") return t("none");
-                  return contacts.find((c) => c.id === val)?.display_name ?? t("primaryContactPlaceholder");
-                }}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none" className="text-muted-foreground italic">{t("none")}</SelectItem>
-              {contacts.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.display_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            defaultValue={primaryContact ?? null}
+            invalid={!!fieldErrors?.primary_contact_id}
+          />
         </div>
 
         <div className="space-y-1.5">

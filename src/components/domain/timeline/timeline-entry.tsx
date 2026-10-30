@@ -1,13 +1,13 @@
 "use client";
 
-import { formatDistanceToNow } from "date-fns";
+import { relativeTimeBase } from "@/lib/time/relative-time";
 import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 interface TimelineEntryProps {
   entry: TimelineEntry;
@@ -18,6 +18,13 @@ interface TimelineEntryProps {
 
 export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote }: TimelineEntryProps) {
   const t = useTranslations("Timeline");
+  const format = useFormatter();
+  const tEnum = useTranslations("Enums");
+  const tInquiry = useTranslations("InquiryCard");
+  const statusLabel = (value: string | null | undefined) => {
+    const key = `opportunityStatus.${value}` as never;
+    return tEnum.has(key) ? tEnum(key) : value;
+  };
   
   const getIcon = () => {
     switch (entry.type) {
@@ -70,7 +77,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                 {entry.type === 'inquiry' && t("events.newInquiry")}
               </div>
               <div className="text-xs text-muted-foreground flex flex-col items-end gap-1">
-                <span>{formatDistanceToNow(new Date(entry.timestamp), { addSuffix: true })}</span>
+                <span>{format.relativeTime(new Date(entry.timestamp), relativeTimeBase(new Date(entry.timestamp), new Date()))}</span>
                 {/* Author Info — uses display_name from profiles (Slice 4.2) */}
                 {'author' in entry.data && entry.data.author && (
                   <span className="text-xs">
@@ -111,9 +118,9 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                 )}
                 {entry.data.action === 'status_change' && (
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{entry.data.old_value}</Badge>
+                    <Badge variant="outline">{statusLabel(entry.data.old_value)}</Badge>
                     <ArrowRightLeft className="h-3 w-3" />
-                    <Badge variant="default">{entry.data.new_value}</Badge>
+                    <Badge variant="default">{statusLabel(entry.data.new_value)}</Badge>
                   </div>
                 )}
                 {entry.data.action === 'created' && (
@@ -131,7 +138,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
             {entry.type === 'inquiry' && (
               <div className="text-muted-foreground space-y-2">
                 <div className="flex gap-2">
-                  <Badge variant="secondary">{entry.data.status}</Badge>
+                  <Badge variant="secondary">{tInquiry(`status.${entry.data.status}` as never)}</Badge>
                   {entry.data.source_description && <Badge variant="outline">{entry.data.source_description}</Badge>}
                 </div>
                 {entry.data.subject && <p className="font-medium text-foreground">{entry.data.subject}</p>}

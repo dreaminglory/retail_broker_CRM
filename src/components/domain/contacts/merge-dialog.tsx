@@ -121,7 +121,7 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
           <DialogDescription>
             {t.rich("description", {
               name: currentContact.display_name,
-              nameTag: (chunks) => <strong>{chunks}</strong>
+              strong: (chunks) => <strong>{chunks}</strong>
             })}
           </DialogDescription>
         </DialogHeader>
@@ -174,6 +174,7 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
                     <li>{t("preview.opportunities", { count: preview.opportunitiesToTransfer })}</li>
                     <li>{t("preview.inquiries", { count: preview.inquiriesToTransfer })}</li>
                     <li>{t("preview.tasks", { count: preview.tasksToTransfer })}</li>
+                    <li>{t("preview.notes", { count: preview.notesToTransfer })}</li>
                     <li>{t("preview.methods", { count: preview.contactMethodsToTransfer })}</li>
                   </ul>
                 </div>

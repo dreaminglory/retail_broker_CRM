@@ -25,6 +25,7 @@ import { InquiryForm } from "@/components/domain/inquiries/inquiry-form";
 import { ConvertInquiryDialog } from "@/components/domain/inquiries/convert-inquiry-dialog";
 import {
   createInquiryAction,
+  updateInquiryAction,
   markInquiryContactedAction,
   dismissInquiryAction,
   convertInquiryAction,
@@ -33,11 +34,12 @@ import {
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
 import type { Stage } from "@/domain/stages/types";
-import type { Contact } from "@/domain/contacts/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus, Inbox } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
+import { ListPager } from "@/components/ui/list-pager";
+import type { PageInfo } from "@/lib/pagination";
 
 // ── Dismiss submit button ─────────────────────────────────────────────────────
 
@@ -70,10 +72,11 @@ const STATUS_FILTER_OPTIONS = [
 
 interface InquiriesPageClientProps {
   inquiries: Inquiry[];
+  pageInfo: PageInfo;
   leadSources: LeadSource[];
   stages: Stage[];
-  contacts: Contact[];
   brokers: ActiveBroker[];
+  inactiveAssigneeNames: Record<string, string>;
   initialSearch: string;
   initialStatus: string;
   initialId?: string;
@@ -84,10 +87,11 @@ interface InquiriesPageClientProps {
 
 export function InquiriesPageClient({
   inquiries,
+  pageInfo,
   leadSources,
   stages,
-  contacts,
   brokers,
+  inactiveAssigneeNames,
   initialSearch,
   initialStatus,
   initialId,
@@ -101,6 +105,7 @@ export function InquiriesPageClient({
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState(initialSearch);
 
+  const [editTarget, setEditTarget] = useState<Inquiry | null>(null);
   const [dismissTarget, setDismissTarget] = useState<Inquiry | null>(null);
   const [convertTarget, setConvertTarget] = useState<Inquiry | null>(null);
   const [convertOpen, setConvertOpen] = useState(false);
@@ -164,6 +169,13 @@ export function InquiriesPageClient({
     setConvertOpen(true);
   }
 
+  // A deactivated assignee stays selectable while editing their inquiry, so the select can name them.
+  function brokersWithAssignee(inquiry: Inquiry): ActiveBroker[] {
+    const name = inquiry.assigned_to ? inactiveAssigneeNames[inquiry.assigned_to] : undefined;
+    if (!inquiry.assigned_to || !name) return brokers;
+    return [...brokers, { id: inquiry.assigned_to, display_name: name, email: "", role: "broker" }];
+  }
+
   const statusLabel =
     t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.value ?? "all"}` as any);
 
@@ -178,7 +190,7 @@ export function InquiriesPageClient({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("count", { count: inquiries.length, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
+            {t("count", { count: pageInfo.total, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
             {initialSearch ? t("matchingSearch", { search: initialSearch }) : ""}
           </p>
         </div>
@@ -309,6 +321,9 @@ export function InquiriesPageClient({
               key={inquiry.id}
               inquiry={inquiry}
               leadSources={leadSources}
+              brokers={brokers}
+              inactiveAssigneeNames={inactiveAssigneeNames}
+              onEdit={setEditTarget}
               onMarkContacted={handleMarkContacted}
               onConvert={handleOpenConvert}
               onDismiss={handleOpenDismiss}
@@ -316,6 +331,36 @@ export function InquiriesPageClient({
           ))
         )}
       </div>
+      {!initialId && (
+        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
+      )}
+
+      {/* ── Edit dialog ──────────────────────────────────────────────────────── */}
+      <Dialog
+        open={!!editTarget}
+        onOpenChange={(open: boolean) => {
+          if (!open) setEditTarget(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("editInquiryTitle")}</DialogTitle>
+          </DialogHeader>
+          {editTarget && (
+            <InquiryForm
+              key={editTarget.id}
+              createAction={updateInquiryAction.bind(null, editTarget.id)}
+              inquiry={editTarget}
+              leadSources={leadSources}
+              brokers={brokersWithAssignee(editTarget)}
+              onSuccess={() => {
+                setEditTarget(null);
+                router.refresh();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Dismiss dialog ───────────────────────────────────────────────────── */}
       <Dialog
@@ -376,7 +421,6 @@ export function InquiriesPageClient({
           }}
           inquiry={convertTarget}
           stages={stages}
-          contacts={contacts}
           brokers={brokers}
           convertAction={convertInquiryAction}
           onSuccess={(opportunityId) => {

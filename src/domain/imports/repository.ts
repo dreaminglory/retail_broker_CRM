@@ -1,6 +1,13 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { ImportJob, ImportRow } from "./types";
+import { DomainError } from "@/lib/errors";
+import { ImportJob, ImportRow, RevertResult } from "./types";
 import { CreateImportJobInput } from "./validation";
+
+// import_revert raises these; the RPC can't see the request locale, so they become i18n keys.
+const REVERT_REFUSALS: Record<string, string> = {
+  "Job is not in completed state": "import.errors.invalidStatus",
+  "Revert window (7 days) expired": "import.errors.revertExpired",
+};
 
 export class ImportRepository {
   constructor(private db: SupabaseClient<any>) {}
@@ -22,7 +29,7 @@ export class ImportRepository {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create import job: ${error.message}`);
     return data as ImportJob;
   }
 
@@ -34,7 +41,7 @@ export class ImportRepository {
       .eq("id", jobId)
       .single();
 
-    if (error && error.code !== "PGRST116") throw error;
+    if (error && error.code !== "PGRST116") throw new DomainError('errors.loadFailed', `Failed to fetch import job: ${error.message}`);
     return data as ImportJob | null;
   }
 
@@ -50,7 +57,7 @@ export class ImportRepository {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) throw new DomainError('errors.loadFailed', `Failed to list import jobs: ${error.message}`);
     return data as ImportJob[];
   }
 
@@ -62,7 +69,7 @@ export class ImportRepository {
       .eq("file_sha256", hash)
       .order("created_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.loadFailed', `Failed to find import jobs by hash: ${error.message}`);
     return data as ImportJob[];
   }
 
@@ -75,7 +82,7 @@ export class ImportRepository {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update import job: ${error.message}`);
     return data as ImportJob;
   }
 
@@ -87,7 +94,7 @@ export class ImportRepository {
     }));
 
     const { error } = await this.db.from("import_rows").insert(payloads);
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to insert import rows: ${error.message}`);
   }
 
   async listRows(agencyId: string, jobId: string, options?: { status?: string; offset?: number; limit?: number }): Promise<ImportRow[]> {
@@ -107,7 +114,7 @@ export class ImportRepository {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+    if (error) throw new DomainError('errors.loadFailed', `Failed to list import rows: ${error.message}`);
     return data as ImportRow[];
   }
 
@@ -127,12 +134,14 @@ export class ImportRepository {
     const chunk_size = 200;
     for (let i = 0; i < updates.length; i += chunk_size) {
       const chunk = updates.slice(i, i + chunk_size);
-      await Promise.all(chunk.map(u => 
+      const results = await Promise.all(chunk.map(u => 
         this.db.from("import_rows")
           .update(u)
           .eq("id", u.id)
           .eq("agency_id", agencyId)
       ));
+      const failed = results.find(r => r.error);
+      if (failed?.error) throw new DomainError('errors.saveFailed', `Failed to update import rows: ${failed.error.message}`);
     }
   }
 
@@ -151,7 +160,7 @@ export class ImportRepository {
         .eq("agency_id", agencyId)
         .in("value", chunk);
         
-      if (error) throw error;
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up contact methods: ${error.message}`);
       if (data) results.push(...data);
     }
     
@@ -173,7 +182,7 @@ export class ImportRepository {
         .in("external_ref", chunk)
         .not("external_ref", "is", null);
         
-      if (error) throw error;
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up external refs: ${error.message}`);
       if (data) results.push(...data as any[]);
     }
     
@@ -198,7 +207,7 @@ export class ImportRepository {
         .eq("agency_id", agencyId)
         .in("display_name", chunk);
         
-      if (error) throw error;
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up contacts by name: ${error.message}`);
       if (data) results.push(...data);
     }
     return results;
@@ -226,7 +235,7 @@ export class ImportRepository {
       }
         
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up inquiry external refs: ${error.message}`);
       if (data) results.push(...data as any[]);
     }
     
@@ -239,7 +248,7 @@ export class ImportRepository {
       p_limit: limit,
     });
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to commit contacts: ${error.message}`);
     return data as { processed: number; remaining: number };
   }
 
@@ -249,16 +258,18 @@ export class ImportRepository {
       p_limit: limit,
     });
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to commit inquiries: ${error.message}`);
     return data as { processed: number; remaining: number };
   }
 
-  async revertJob(jobId: string): Promise<{ deleted: { contacts: number; inquiries: number }; kept: { contacts: number; inquiries: number } }> {
+  async revertJob(jobId: string): Promise<RevertResult> {
     const { data, error } = await this.db.rpc("import_revert", {
       p_job_id: jobId,
     });
 
-    if (error) throw error;
-    return data as { deleted: { contacts: number; inquiries: number }; kept: { contacts: number; inquiries: number } };
+    if (error) {
+      throw new DomainError(REVERT_REFUSALS[error.message] ?? "errors.saveFailed", `Failed to revert import: ${error.message}`);
+    }
+    return data as RevertResult;
   }
 }

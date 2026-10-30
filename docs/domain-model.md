@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 36th migration
-(`20261102000003_drop_untracked_profile_insert_policy.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 42nd migration
+(`20261102000009_merge_moves_notes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -262,9 +262,9 @@ erDiagram
     int row_number "UK per job"
     jsonb raw "PII"
     jsonb normalized
-    text status "pending | valid | invalid | duplicate | created | updated | skipped | error | reverted"
+    text status "pending | valid | invalid | duplicate | created | updated | skipped | error | reverted | revert_skipped"
     jsonb errors "i18n codes"
-    text match_reason "phone | email | external_ref | in_file | name_similar"
+    text match_reason "phone | email | external_ref | in_file | name_similar | db_recheck"
     uuid matched_entity_id
     uuid entity_id
   }
@@ -293,7 +293,8 @@ stateDiagram-v2
 
 Enforced by: `InquiryService` checks `INQUIRY_STATUS_TRANSITIONS`
 (`src/domain/inquiries/validation.ts`); `converted` and `dismissed` are final. The database
-checks the value list only.
+checks the value list; the RPC `convert_inquiry` also refuses to convert a final inquiry, under a
+row lock, so two simultaneous conversions can't both succeed.
 
 ### 3.2 Opportunity: status and stage
 
@@ -373,9 +374,15 @@ stateDiagram-v2
   completed --> reverted : owner/manager, within 7 days
 ```
 
-Revert is meant to delete only created records that haven't been touched since (no tasks,
-notes or linked inquiries) and mark their rows `reverted`. The notes guard doesn't work yet
-(see [Known gaps](#6-known-gaps)).
+Revert deletes only created records nobody has worked on since (AD-036). A contact is kept if
+it was edited or gained a note, task, opportunity, participant, inquiry or merge; the note its
+own import row brought in doesn't count unless it was edited. An inquiry is kept if it was
+edited or converted. Rows that created a record become `reverted` or `revert_skipped`; rows
+that created nothing keep their status.
+
+A duplicate found only at commit (`match_reason = 'db_recheck'`) is `skipped`, or created
+under the `create` strategy. The "update existing" strategy isn't built and isn't offered;
+a job that still has it stored skips.
 
 ---
 
@@ -422,15 +429,18 @@ The "Enforced by" column tells you which layer to change and test.
 | T3 | One active membership per user | partial unique index `uq_one_active_membership_per_user` |
 | T4 | Membership `user_id`/`agency_id` immutable | trigger `trg_membership_identity` |
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
-| T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions |
+| T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions + role check in RPC `merge_contacts` |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
-| C2 | Phones E.164, emails lowercase | `normalizePhone()` / Zod on contact methods (inquiry callers: not yet, see Known gaps) |
-| C3 | Duplicate check (phone, email, trigram name) before creating a contact | `duplicate-detection.ts` (service) |
-| C4 | Merge archives the loser and snapshots it | `merge.ts` + `merge_history` |
+| C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods and inquiry callers; `callerContactMethods()` at conversion |
+| C3 | Duplicate check (phone, email, trigram name) before creating a contact, including at inquiry conversion | `duplicate-detection.ts` (service) |
+| C4 | Merge moves everything to the winner, archives the loser and snapshots it, all or nothing (AD-050) | RPC `merge_contacts` + `070-atomic-convert-and-merge.sql` |
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
 | I1 | `raw_payload` is never modified | convention (not in update schema) |
 | I2 | Inquiry idempotent on `(agency_id, source_id, external_ref)` | unique index `uq_inquiries_source_external_ref` |
-| I3 | Inquiry status follows `new → contacted → converted / dismissed`; final states don't change | `InquiryService` + `INQUIRY_STATUS_TRANSITIONS` |
+| I3 | Inquiry status follows `new → contacted → converted / dismissed`; a converted or dismissed inquiry can't be edited or reassigned | `InquiryService` + `INQUIRY_STATUS_TRANSITIONS` |
+| I4 | An inquiry's new assignee is an active member of its agency; any member may assign (AD-001, AD-049) | `assertAssignable()` in `InquiryService` create, update and convert (a CSV import resolves assignees separately) |
+| I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
+| I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
 | O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
@@ -442,9 +452,10 @@ The "Enforced by" column tells you which layer to change and test.
 | K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
+| R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
-| M2 | Import revert: owner/manager, `completed` job, within 7 days | RPC `import_revert` |
+| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
 
 ---
 
@@ -460,15 +471,11 @@ module that fixes it is named where there is one. Remove a row when the fix land
    trigger exists on `inquiries`.
 3. **Opportunity status transitions are unchecked.** `close()` and `reactivate()` don't check
    the current status (inquiries and tasks are checked: I3, K3).
-4. **Inquiry callers aren't normalized.** `caller_phone` and `caller_email` are stored and
-   copied to `contact_methods` on conversion as typed, and only Bulgarian mobiles parse
-   (C2). → `trustworthy-loop` (AD-041).
-5. **Import revert and recheck.** The revert's notes guard can't fire, and the recheck writes
-   `match_reason` values (`db_recheck…`) that the `import_rows` CHECK rejects.
-   → `trustworthy-loop`.
-6. **Signup profile name.** Sign-up sends `full_name`, but `handle_new_user` reads
-   `display_name`, so the name defaults to the email prefix. → `trustworthy-loop`.
-7. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+4. **Old inquiry callers the backfill can't read.** New and edited callers are normalized (C2).
+   `backfill_inquiry_callers()` converted stored BG mobiles and emails; landlines and other
+   formats stored before `trustworthy-loop` stay as typed until edited, though conversion
+   still parses them.
+5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
 
 ---
 

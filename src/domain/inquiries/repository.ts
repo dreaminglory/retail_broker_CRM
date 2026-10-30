@@ -19,13 +19,23 @@ export class InquiryRepository {
   constructor(private readonly db: SupabaseClient) {}
 
   async findAll(agencyId: string, opts: InquiryListOptions = {}): Promise<Inquiry[]> {
+    const { rows } = await this.findPage(agencyId, opts);
+    return rows;
+  }
+
+  /** One page of rows plus the total that match the filters (for the pager). */
+  async findPage(
+    agencyId: string,
+    opts: InquiryListOptions = {}
+  ): Promise<{ rows: Inquiry[]; total: number }> {
     const { status = 'all', assignedTo, search, limit = 50, offset = 0 } = opts;
 
     let query = this.db
       .from('inquiries')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('agency_id', agencyId)
       .order('received_at', { ascending: false })
+      .order('id', { ascending: false }) // tie-break so pages never overlap
       .range(offset, offset + limit - 1);
 
     if (status !== 'all') {
@@ -41,9 +51,14 @@ export class InquiryRepository {
       );
     }
 
-    const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch inquiries: ${error.message}`);
-    return (data ?? []) as Inquiry[];
+    const { data, count, error } = await query;
+    if (error?.code === 'PGRST103') {
+      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
+      const retry = await query.range(0, 0);
+      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
+    }
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch inquiries: ${error.message}`);
+    return { rows: (data ?? []) as Inquiry[], total: count ?? 0 };
   }
 
   async findById(id: string, agencyId: string): Promise<Inquiry | null> {
@@ -56,7 +71,7 @@ export class InquiryRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch inquiry: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch inquiry: ${error.message}`);
     }
     return data as Inquiry;
   }
@@ -84,9 +99,9 @@ export class InquiryRepository {
 
     if (error) {
       if (error.code === '23505') {
-        throw new DomainError('inquiries.externalRefExists', 'External reference already exists');
+        throw new DomainError('errors.inquiries.external_ref_exists', 'External reference already exists');
       }
-      throw new Error(`Failed to create inquiry: ${error.message}`);
+      throw new DomainError('errors.saveFailed', `Failed to create inquiry: ${error.message}`);
     }
     return data as Inquiry;
   }
@@ -107,13 +122,19 @@ export class InquiryRepository {
         ...(input.caller_email !== undefined && { caller_email: input.caller_email }),
         ...(input.subject !== undefined && { subject: input.subject }),
         ...(input.description !== undefined && { description: input.description }),
+        ...(input.external_ref !== undefined && { external_ref: input.external_ref }),
       })
       .eq('id', id)
       .eq('agency_id', agencyId)
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update inquiry: ${error.message}`);
+    if (error) {
+      if (error.code === '23505') {
+        throw new DomainError('errors.inquiries.external_ref_exists', 'External reference already exists');
+      }
+      throw new DomainError('errors.saveFailed', `Failed to update inquiry: ${error.message}`);
+    }
     return data as Inquiry;
   }
 }

@@ -93,7 +93,9 @@ export function LeadSourceForm({
         </Label>
         <Select name="channel" defaultValue={leadSource?.channel ?? "other"} required>
           <SelectTrigger id="ls-channel" aria-invalid={!!fieldErrors?.channel}>
-            <SelectValue placeholder={t("selectChannel")} />
+            <SelectValue placeholder={t("selectChannel")}>
+              {(value) => (value ? tChannels(value as never) : t("selectChannel"))}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {CHANNELS.map((ch) => (

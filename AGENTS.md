@@ -27,6 +27,7 @@ npm run test           # vitest; one file: npx vitest run <path>
 npm run stack:up       # local Supabase (Docker Desktop running) + .env.local
 npx supabase db reset  # clean DB + seed (two agencies)
 npm run test:db        # pgTAP (needs the local stack)
+npm run test:services  # vitest with the service suites and coverage (needs the local stack)
 npm run test:e2e       # Playwright core loop, bg + en, 1280 and 390 px (needs the local stack;
                        # first time: npx playwright install chromium)
 ```

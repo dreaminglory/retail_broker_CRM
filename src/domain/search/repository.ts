@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DomainError } from '@/lib/errors';
 import type { SearchResult } from './types';
 
 export class SearchRepository {
@@ -22,16 +23,16 @@ export class SearchRepository {
       .limit(5);
 
     if (error) {
-      console.error('[SearchContacts] Error:', error);
-      throw error;
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
     }
     if (!data) return [];
 
     return data.map((c) => ({
       id: c.id,
       type: 'contact',
-      title: c.display_name || 'Unnamed Contact',
-      subtitle: c.type === 'organization' ? 'Company' : 'Person',
+      title: c.display_name || null,
+      subtitle: null,
+      kind: c.type,
       url: `/contacts/${c.id}`,
       relevance: 1, // Without RPC we can't easily get ts_rank, so we'll just set it to 1
     }));
@@ -54,8 +55,7 @@ export class SearchRepository {
       .limit(5);
 
     if (error) {
-      console.error('[SearchOpportunities] Error:', error);
-      throw error;
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
     }
     if (!data) return [];
 
@@ -63,7 +63,8 @@ export class SearchRepository {
       id: o.id,
       type: 'opportunity',
       title: o.title,
-      subtitle: o.type ? o.type.charAt(0).toUpperCase() + o.type.slice(1) : null,
+      subtitle: null,
+      kind: o.type,
       url: `/opportunities/${o.id}`,
       relevance: 1,
     }));
@@ -86,16 +87,16 @@ export class SearchRepository {
       .limit(5);
 
     if (error) {
-      console.error('[SearchInquiries] Error:', error);
-      throw error;
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
     }
     if (!data) return [];
 
     return data.map((i) => ({
       id: i.id,
       type: 'inquiry',
-      title: i.caller_name || 'Unknown Caller',
+      title: i.caller_name || null,
       subtitle: i.subject || null,
+      kind: null,
       url: `/inquiries?search=${encodeURIComponent(i.caller_name || i.subject || '')}`, // Temporary jump using readable text
       relevance: 1,
     }));

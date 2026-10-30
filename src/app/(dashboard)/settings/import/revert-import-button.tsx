@@ -34,13 +34,17 @@ export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps)
       try {
         const result = await revertImportJobAction(jobId);
         if (result.success) {
-          toast.success(`Import reverted. ${result.data.deleted} deleted, ${result.data.retained} retained (already modified or linked).`);
+          const { deleted, kept } = result.data;
+          toast.success(t("revertSuccess", {
+            deleted: deleted.contacts + deleted.inquiries,
+            kept: kept.contacts + kept.inquiries,
+          }));
           setOpen(false);
         } else {
-          toast.error("Failed to revert import: " + result.error);
+          toast.error(result.error);
         }
-      } catch (err: any) {
-        toast.error("An error occurred");
+      } catch {
+        toast.error(t("revertFailed"));
       }
     });
   };
@@ -56,7 +60,7 @@ export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps)
         <AlertDialogHeader>
           <AlertDialogTitle>{t("revertImport")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t.rich("revertConfirm", { fileName, strong: (c) => <strong>{c}</strong> })}
+            {t.rich("revertConfirm", { fileName, strong: (c) => <strong>{c}</strong> })}{" "}
             {t("revertDesc")}
           </AlertDialogDescription>
         </AlertDialogHeader>

@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 /**
  * Opportunity repository.
  * Handles opportunities, participants, and stage transitions.
@@ -17,6 +18,7 @@ import type {
 export interface OpportunityListOptions {
   status?: 'active' | 'won' | 'lost' | 'nurture' | 'archived' | 'all';
   assignedTo?: string;
+  temperature?: 'hot' | 'warm' | 'cold';
   stageId?: string;
   type?: 'buyer' | 'seller' | 'landlord' | 'tenant' | 'all';
   search?: string;
@@ -33,20 +35,48 @@ export class OpportunityRepository {
     agencyId: string,
     opts: OpportunityListOptions = {}
   ): Promise<Opportunity[]> {
-    const { status = 'active', assignedTo, stageId, search, limit = 50, offset = 0 } = opts;
+    const { limit = 50, offset = 0 } = opts;
+    const { data, error } = await this.filtered(agencyId, opts, false).range(offset, offset + limit - 1);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
+    return (data ?? []) as Opportunity[];
+  }
+
+  /** One page of rows plus the total that match the filters (for the pager). */
+  async findPage(
+    agencyId: string,
+    opts: OpportunityListOptions = {}
+  ): Promise<{ rows: Opportunity[]; total: number }> {
+    const { limit = 50, offset = 0 } = opts;
+    const query = this.filtered(agencyId, opts, true);
+    const { data, count, error } = await query.range(offset, offset + limit - 1);
+    if (error?.code === 'PGRST103') {
+      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
+      const retry = await query.range(0, 0);
+      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
+    }
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
+    return { rows: (data ?? []) as Opportunity[], total: count ?? 0 };
+  }
+
+  private filtered(agencyId: string, opts: OpportunityListOptions, withCount: boolean) {
+    const { status = 'active', assignedTo, stageId, search } = opts;
 
     let query = this.db
       .from('opportunities')
-      .select('*')
+      .select('*', withCount ? { count: 'exact' } : undefined)
       .eq('agency_id', agencyId)
+      // id breaks created_at ties so pages never overlap
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('id', { ascending: false });
 
     if (status !== 'all') {
       query = query.eq('status', status);
     }
     if (assignedTo) {
       query = query.eq('assigned_to', assignedTo);
+    }
+    if (opts.temperature) {
+      query = query.eq('temperature', opts.temperature);
     }
     if (stageId && stageId !== 'all') {
       query = query.eq('stage_id', stageId);
@@ -57,10 +87,7 @@ export class OpportunityRepository {
     if (search) {
       query = query.ilike('title', `%${search}%`);
     }
-
-    const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
-    return (data ?? []) as Opportunity[];
+    return query;
   }
 
   async findById(id: string, agencyId: string): Promise<OpportunityWithDetails | null> {
@@ -73,7 +100,7 @@ export class OpportunityRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null;
-      throw new Error(`Failed to fetch opportunity: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch opportunity: ${error.message}`);
     }
     return data as OpportunityWithDetails;
   }
@@ -93,8 +120,8 @@ export class OpportunityRepository {
         .eq('agency_id', agencyId)
     ]);
 
-    if (primaryRes.error) throw new Error(`Failed to fetch primary opportunities: ${primaryRes.error.message}`);
-    if (participantRes.error) throw new Error(`Failed to fetch participant opportunities: ${participantRes.error.message}`);
+    if (primaryRes.error) throw new DomainError('errors.loadFailed', `Failed to fetch primary opportunities: ${primaryRes.error.message}`);
+    if (participantRes.error) throw new DomainError('errors.loadFailed', `Failed to fetch participant opportunities: ${participantRes.error.message}`);
 
     const oppsMap = new Map<string, Opportunity>();
     
@@ -153,7 +180,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to create opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -181,7 +208,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -212,7 +239,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to close opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to close opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -226,7 +253,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to reactivate opportunity: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to reactivate opportunity: ${error.message}`);
     return data as Opportunity;
   }
 
@@ -250,7 +277,7 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to add participant: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to add participant: ${error.message}`);
     return data as OpportunityParticipant;
   }
 
@@ -261,6 +288,6 @@ export class OpportunityRepository {
       .eq('id', id)
       .eq('agency_id', agencyId);
 
-    if (error) throw new Error(`Failed to remove participant: ${error.message}`);
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to remove participant: ${error.message}`);
   }
 }

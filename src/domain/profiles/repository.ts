@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Profile, UpdateProfileInput } from './types';
 
@@ -21,7 +22,7 @@ export class ProfileRepository {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not found
-      throw new Error(`Failed to fetch profile: ${error.message}`);
+      throw new DomainError('errors.loadFailed', `Failed to fetch profile: ${error.message}`);
     }
     return data as Profile;
   }
@@ -41,7 +42,7 @@ export class ProfileRepository {
       .select('*')
       .in('id', uniqueIds);
 
-    if (error) throw new Error(`Failed to fetch profiles: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch profiles: ${error.message}`);
 
     const map = new Map<string, Profile>();
     (data ?? []).forEach((profile) => {
@@ -64,7 +65,7 @@ export class ProfileRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update profile: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update profile: ${error.message}`);
     return data as Profile;
   }
 
@@ -79,7 +80,7 @@ export class ProfileRepository {
       .select()
       .single();
 
-    if (error) throw new Error(`Failed to update locale: ${error.message}`);
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update locale: ${error.message}`);
     return data as Profile;
   }
 
@@ -94,7 +95,7 @@ export class ProfileRepository {
       .eq('agency_id', agencyId)
       .eq('status', 'active');
 
-    if (memberError) throw new Error(`Failed to fetch members: ${memberError.message}`);
+    if (memberError) throw new DomainError('errors.loadFailed', `Failed to fetch members: ${memberError.message}`);
 
     const userIds = (memberships ?? []).map((m) => m.user_id as string);
     if (userIds.length === 0) return [];
@@ -104,7 +105,7 @@ export class ProfileRepository {
       .select('*')
       .in('id', userIds);
 
-    if (error) throw new Error(`Failed to fetch member profiles: ${error.message}`);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch member profiles: ${error.message}`);
     return (data ?? []) as Profile[];
   }
 }
