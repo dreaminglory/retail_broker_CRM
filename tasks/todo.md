@@ -248,18 +248,32 @@ tasks, inquiries and contacts where missing.
 **Files likely touched:** `src/domain/inquiries/service.test.ts`, `src/domain/contacts/validation.test.ts`
 **Estimated scope:** M
 
-## Task 17 (cuttable): Opportunity and merge service suites
+## Task 17: Opportunity and merge service suites
 **Description:** Integration tests for opportunity close and reopen, and for merge (moves
-children, archives the loser).
+children, archives the loser). Required by AC-11, so no longer cuttable.
 
 **Acceptance criteria:**
-- [ ] Suites green locally and in CI; FR-TST-03 becomes ✅
+- [ ] Suites green locally and in CI
 
 **Verification:**
 - [ ] `npm run test` against the local stack
 
 **Dependencies:** Task 15
-**Files likely touched:** `src/domain/opportunities/service.test.ts`, `src/domain/contacts/merge.test.ts`
+**Files likely touched:** `src/domain/opportunities/service.integration.test.ts`, `src/domain/contacts/merge.integration.test.ts`
+**Estimated scope:** M
+
+## Task 18: Contact, import, search and timeline service tests
+**Description:** The remaining service files changed in this module get a test file, covering
+what the module changed in them.
+
+**Acceptance criteria:**
+- [ ] Every service file changed in this module has a test file (AC-11); FR-TST-03 becomes ✅
+
+**Verification:**
+- [ ] `npm run test` against the local stack
+
+**Dependencies:** Task 15
+**Files likely touched:** `src/domain/{contacts,imports,search,timeline}/service*.test.ts`
 **Estimated scope:** M
 
 ## Checkpoint: module done

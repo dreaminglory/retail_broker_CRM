@@ -54,7 +54,8 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 ### Phase 4: Service tests in CI
 - [ ] Task 15: Supabase test client and the CI job
 - [ ] Task 16: Inquiry service and validation suites
-- [ ] Task 17 (cuttable): Opportunity and merge service suites
+- [ ] Task 17: Opportunity and merge service suites (required by AC-11)
+- [ ] Task 18: Contact, import, search and timeline service tests (AC-11)
 
 ### Checkpoint: module done
 - [ ] AC-11 passes; all spec acceptance criteria met
