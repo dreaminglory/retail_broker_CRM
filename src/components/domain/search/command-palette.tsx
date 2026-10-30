@@ -17,6 +17,7 @@ import {
 import { Users, Briefcase, Phone, Search } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);
@@ -51,7 +52,12 @@ export function CommandPalette() {
     if (debouncedSearch.trim().length >= 2) {
       startTransition(async () => {
         const res = await globalSearchAction(debouncedSearch);
-        setResults(res);
+        if (res.success) {
+          setResults(res.data);
+        } else {
+          setResults([]);
+          toast.error(res.error);
+        }
       });
     } else {
       setTimeout(() => setResults([]), 0);

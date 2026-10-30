@@ -35,7 +35,7 @@ export class ImportService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) throw new DomainError('errors.saveFailed', `Failed to create import job: ${error.message}`);
     
     return {
       jobId: data.id,

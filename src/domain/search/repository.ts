@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DomainError } from '@/lib/errors';
 import type { SearchResult } from './types';
 
 export class SearchRepository {
@@ -22,8 +23,7 @@ export class SearchRepository {
       .limit(5);
 
     if (error) {
-      console.error('[SearchContacts] Error:', error);
-      throw error;
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
     }
     if (!data) return [];
 
@@ -54,8 +54,7 @@ export class SearchRepository {
       .limit(5);
 
     if (error) {
-      console.error('[SearchOpportunities] Error:', error);
-      throw error;
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
     }
     if (!data) return [];
 
@@ -86,8 +85,7 @@ export class SearchRepository {
       .limit(5);
 
     if (error) {
-      console.error('[SearchInquiries] Error:', error);
-      throw error;
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
     }
     if (!data) return [];
 

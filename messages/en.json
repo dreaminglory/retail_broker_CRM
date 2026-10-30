@@ -1188,6 +1188,7 @@
     "errors": {
       "notFound": "This import no longer exists.",
       "invalidStatus": "This import can't continue from its current state. Start a new one.",
+      "revertExpired": "This import can no longer be reverted: the 7-day window has passed.",
       "fileNameRequired": "The file has no name.",
       "invalidHash": "The file couldn't be read. Try uploading it again.",
       "emptyFile": "The file is empty.",

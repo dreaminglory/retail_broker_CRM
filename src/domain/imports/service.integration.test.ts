@@ -108,6 +108,27 @@ describeServices('ImportService against the local stack', () => {
     expect(csv).toBe('');
   });
 
+  it('says why when the job has not completed', async () => {
+    const jobId = await createJob();
+
+    await expect(imports.revert(owner.agencyId, jobId)).rejects.toMatchObject({
+      code: 'import.errors.invalidStatus',
+    });
+  });
+
+  it('says why when the revert window has passed', async () => {
+    const jobId = await createJob();
+    const { error } = await owner.db
+      .from('import_jobs')
+      .update({ status: 'completed', completed_at: new Date(Date.now() - 8 * 86_400_000).toISOString() })
+      .eq('id', jobId);
+    expect(error).toBeNull();
+
+    await expect(imports.revert(owner.agencyId, jobId)).rejects.toMatchObject({
+      code: 'import.errors.revertExpired',
+    });
+  });
+
   it("refuses another agency's job", async () => {
     const jobId = await createJob();
     const outsider = await signInAs('owner@beta.bg');
