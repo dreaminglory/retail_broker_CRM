@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
+import { TimelineService } from '@/domain/timeline/service';
 import { ContactMergeService } from './merge';
 import { ContactService } from './service';
 
@@ -103,6 +104,19 @@ describeServices('ContactMergeService against the local stack', () => {
       merged_by: manager.userId,
       loser_snapshot: { id: loser.id, first_name: 'Loser' },
     });
+  });
+
+  it("shows the loser's notes on the winner's timeline", async () => {
+    const winner = await createContact('Notes Winner');
+    const loser = await createContact('Notes Loser');
+    const noteId = await insert('notes', { contact_id: loser.id, content: 'Prefers morning calls', created_by: manager.userId });
+
+    expect((await merges.getPreview(manager.agencyId, winner.id, loser.id)).notesToTransfer).toBe(1);
+
+    await merges.merge(manager.agencyId, winner.id, loser.id);
+
+    const timeline = await new TimelineService(manager.db).getContactTimeline(winner.id, manager.agencyId);
+    expect(timeline.filter((entry) => entry.type === 'note').map((entry) => entry.data.id)).toEqual([noteId]);
   });
 
   it('drops the loser from a deal the winner is already on', async () => {

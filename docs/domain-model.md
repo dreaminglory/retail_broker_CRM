@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 41st migration
-(`20261102000008_atomic_convert_and_merge.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 42nd migration
+(`20261102000009_merge_moves_notes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -476,9 +476,6 @@ module that fixes it is named where there is one. Remove a row when the fix land
    formats stored before `trustworthy-loop` stay as typed until edited, though conversion
    still parses them.
 5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
-6. **Merge leaves notes on the loser.** `merge_contacts` moves methods, opportunities, participants,
-   inquiries and tasks, but not `notes.contact_id`, so the loser's direct notes drop out of the
-   winner's timeline.
 
 ---
 

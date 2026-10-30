@@ -33,7 +33,7 @@ describe('ContactMergeService.merge errors', () => {
 });
 
 describe('ContactMergeService.getPreview errors', () => {
-  it.each(['opportunities', 'inquiries', 'tasks'])(
+  it.each(['opportunities', 'inquiries', 'tasks', 'notes'])(
     'a failed %s count is an error, not "nothing to transfer"',
     async (table) => {
       const error = await serviceWith({ failingTables: [table] })

@@ -751,6 +751,7 @@
       "opportunities": "{count} opportunities will be transferred",
       "inquiries": "{count} inquiries will be transferred",
       "tasks": "{count} tasks will be transferred",
+      "notes": "{count} notes will be transferred",
       "methods": "{count} unique contact methods will be transferred"
     },
     "back": "Back",

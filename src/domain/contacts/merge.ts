@@ -50,6 +50,14 @@ export class ContactMergeService {
 
     if (tasksError) throw new DomainError('errors.loadFailed', `Merge preview tasks count failed: ${tasksError.message}`);
 
+    const { count: notesCount, error: notesError } = await this.db
+      .from('notes')
+      .select('id', { count: 'exact', head: true })
+      .eq('agency_id', agencyId)
+      .eq('contact_id', loserId);
+
+    if (notesError) throw new DomainError('errors.loadFailed', `Merge preview notes count failed: ${notesError.message}`);
+
     // Calculate unique contact methods to transfer
     let contactMethodsToTransfer = 0;
     loser.contact_methods.forEach(loserMethod => {
@@ -69,6 +77,7 @@ export class ContactMergeService {
       opportunitiesToTransfer: opportunitiesCount ?? 0,
       inquiriesToTransfer: inquiriesCount ?? 0,
       tasksToTransfer: tasksCount ?? 0,
+      notesToTransfer: notesCount ?? 0,
       contactMethodsToTransfer,
     };
   }

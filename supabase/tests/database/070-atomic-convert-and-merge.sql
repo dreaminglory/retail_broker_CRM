@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(31);
+SELECT plan(33);
 
 -- Setup: two agencies, as the superuser
 
@@ -41,6 +41,10 @@ INSERT INTO opportunities (id, agency_id, title, type, stage_id, primary_contact
 INSERT INTO opportunity_participants (agency_id, opportunity_id, contact_id, role) VALUES
   ('00000000-0000-0000-0000-71000000000a', '00000000-0000-0000-0000-740000000001', '00000000-0000-0000-0000-730000000001', 'buyer'),
   ('00000000-0000-0000-0000-71000000000a', '00000000-0000-0000-0000-740000000001', '00000000-0000-0000-0000-730000000002', 'buyer');
+
+INSERT INTO notes (id, agency_id, contact_id, content, created_by, created_at) VALUES
+  ('00000000-0000-0000-0000-760000000001', '00000000-0000-0000-0000-71000000000a', '00000000-0000-0000-0000-730000000002', 'Loser note', '00000000-0000-0000-0000-700000000002', '2026-01-01T09:00:00Z'),
+  ('00000000-0000-0000-0000-760000000002', '00000000-0000-0000-0000-71000000000a', '00000000-0000-0000-0000-730000000005', 'Doomed note', '00000000-0000-0000-0000-700000000002', '2026-01-01T09:00:00Z');
 
 INSERT INTO inquiries (id, agency_id, status, caller_name) VALUES
   ('00000000-0000-0000-0000-750000000001', '00000000-0000-0000-0000-71000000000a', 'new', 'Good'),
@@ -106,6 +110,11 @@ SELECT is(
   '00000000-0000-0000-0000-730000000005'::uuid,
   'the failed merge left the phone on the loser'
 );
+SELECT is(
+  (SELECT contact_id FROM notes WHERE id = '00000000-0000-0000-0000-760000000002'),
+  '00000000-0000-0000-0000-730000000005'::uuid,
+  'the failed merge left the note on the loser'
+);
 
 RESET ROLE;
 DROP TRIGGER fail_merge_history ON merge_history;
@@ -132,6 +141,11 @@ SELECT results_eq(
   $$ SELECT contact_id FROM opportunity_participants WHERE opportunity_id = '00000000-0000-0000-0000-740000000001' $$,
   $$ VALUES ('00000000-0000-0000-0000-730000000001'::uuid) $$,
   'a deal both were on keeps only the winner'
+);
+SELECT is(
+  (SELECT contact_id || '/' || created_by || '/' || (created_at = '2026-01-01T09:00:00Z') FROM notes WHERE id = '00000000-0000-0000-0000-760000000001'),
+  '00000000-0000-0000-0000-730000000001/00000000-0000-0000-0000-700000000002/true',
+  'the note moves to the winner, keeping its author and date'
 );
 SELECT is((SELECT status FROM contacts WHERE id = '00000000-0000-0000-0000-730000000002'), 'archived', 'the loser is archived');
 SELECT is(
