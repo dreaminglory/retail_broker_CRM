@@ -1,7 +1,7 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 36th migration
+Built from `supabase/migrations/` and `src/domain/` as of the 37th migration
 (`20261102000003_drop_untracked_profile_insert_policy.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
@@ -460,8 +460,10 @@ module that fixes it is named where there is one. Remove a row when the fix land
    trigger exists on `inquiries`.
 3. **Opportunity status transitions are unchecked.** `close()` and `reactivate()` don't check
    the current status (inquiries and tasks are checked: I3, K3).
-4. **Inquiry callers stored before `trustworthy-loop`.** New and edited callers are normalized
-   (C2), but older rows keep what was typed until the backfill runs. → `trustworthy-loop`.
+4. **Old inquiry callers the backfill can't read.** New and edited callers are normalized (C2).
+   `backfill_inquiry_callers()` converted stored BG mobiles and emails; landlines and other
+   formats stored before `trustworthy-loop` stay as typed until edited, though conversion
+   still parses them.
 5. **Import revert and recheck.** The revert's notes guard can't fire, and the recheck writes
    `match_reason` values (`db_recheck…`) that the `import_rows` CHECK rejects.
    → `trustworthy-loop`.

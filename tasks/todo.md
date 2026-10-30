@@ -42,11 +42,11 @@ passes both phone and email.
 where they parse, leaving `raw_payload` and unparseable values alone. pgTAP covers it.
 
 **Acceptance criteria:**
-- [ ] After `npx supabase db reset`, seeded inquiry callers are E.164 and lowercase
-- [ ] `raw_payload` is byte-for-byte unchanged
+- [x] After `npx supabase db reset`, seeded inquiry callers are E.164 and lowercase
+- [x] `raw_payload` is byte-for-byte unchanged
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
+- [x] `npx supabase db reset` then `npm run test:db`
 
 **Dependencies:** Task 1 (same parsing rules)
 **Files likely touched:** `supabase/migrations/<ts>_normalise_inquiry_callers.sql`, `supabase/tests/database/0NN-inquiry-callers.sql`
