@@ -134,12 +134,14 @@ export class ImportRepository {
     const chunk_size = 200;
     for (let i = 0; i < updates.length; i += chunk_size) {
       const chunk = updates.slice(i, i + chunk_size);
-      await Promise.all(chunk.map(u => 
+      const results = await Promise.all(chunk.map(u => 
         this.db.from("import_rows")
           .update(u)
           .eq("id", u.id)
           .eq("agency_id", agencyId)
       ));
+      const failed = results.find(r => r.error);
+      if (failed?.error) throw new DomainError('errors.saveFailed', `Failed to update import rows: ${failed.error.message}`);
     }
   }
 

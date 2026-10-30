@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DomainError } from '@/lib/errors';
 import { createFakeSupabase } from '@/test/fake-supabase';
 import { ImportRepository } from './repository';
+import type { ImportRow } from './types';
 import type { CreateImportJobInput } from './validation';
 
 function failingOn(table: string) {
@@ -47,5 +48,16 @@ describe('ImportRepository errors', () => {
     const error = await failingOn('import_jobs').getJob('a', 'j').catch((e) => e);
 
     expect(error.message).toContain('connection reset');
+  });
+});
+
+describe('ImportRepository.updateRowsBulk', () => {
+  const ROW = { id: 'r', status: 'valid', normalized: {}, errors: [], match_reason: null, matched_entity_id: null } as unknown as ImportRow;
+
+  it('a failed row update is errors.saveFailed, not a validated row that kept its old status', async () => {
+    const error = await failingOn('import_rows').updateRowsBulk('a', 'j', [ROW]).catch((e) => e);
+
+    expect(error).toBeInstanceOf(DomainError);
+    expect(error.code).toBe('errors.saveFailed');
   });
 });
