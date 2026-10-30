@@ -21,7 +21,7 @@ test('a broker takes an inquiry through to a scheduled next action', async ({ pa
   // The broker takes the inquiry they logged. (Leaving it "Unassigned" fails
   // validation today: BrokerSelect posts "none". Tracked separately.)
   await inquiryDialog.getByRole('combobox').nth(1).click();
-  await page.getByRole('option', { name: 'broker', exact: true }).click(); // seeded display name
+  await page.getByRole('option', { name: 'Charlie AlphaBroker', exact: true }).click(); // seeded first + last name
   await inquiryDialog.getByLabel(m.InquiryForm.callerName).fill(caller);
   // Unique per run: a phone already on a contact opens the duplicate warning at conversion.
   await inquiryDialog.getByLabel(m.InquiryForm.phone).fill(`+359888${String(Date.now()).slice(-6)}`);
