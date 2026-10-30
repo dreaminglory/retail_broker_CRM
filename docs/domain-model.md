@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 38th migration
-(`20261102000005_fix_import_revert_and_recheck.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 39th migration
+(`20261102000006_profile_name_fallback.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -450,6 +450,7 @@ The "Enforced by" column tells you which layer to change and test.
 | K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
+| R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
@@ -472,9 +473,7 @@ module that fixes it is named where there is one. Remove a row when the fix land
    `backfill_inquiry_callers()` converted stored BG mobiles and emails; landlines and other
    formats stored before `trustworthy-loop` stay as typed until edited, though conversion
    still parses them.
-5. **Signup profile name.** Sign-up sends `full_name`, but `handle_new_user` reads
-   `display_name`, so the name defaults to the email prefix. → `trustworthy-loop`.
-6. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
 
 ---
 

@@ -178,10 +178,10 @@ opportunity or merge since the import; mark every row `reverted` or `revert_skip
 last name, then the email prefix.
 
 **Acceptance criteria:**
-- [ ] A new signup's profile shows the full name (AC-10)
+- [x] A new signup's profile shows the full name (AC-10)
 
 **Verification:**
-- [ ] pgTAP `031`; manual signup on the local stack
+- [x] pgTAP `031`; manual signup on the local stack
 
 **Dependencies:** None
 **Files likely touched:** `supabase/migrations/<ts>_profile_name_fallback.sql`, `supabase/tests/database/031-provisioning.sql`
