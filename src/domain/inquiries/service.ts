@@ -1,4 +1,4 @@
-import { DomainError } from "@/lib/errors";
+import { DomainError, rpcFailure } from "@/lib/errors";
 /**
  * Inquiry service.
  * Enforces status transition rules and the convert-to-opportunity flow.
@@ -17,7 +17,6 @@ import {
   INQUIRY_STATUS_TRANSITIONS,
 } from './validation';
 import type { ConvertInquirySchema } from './validation';
-import { OpportunityRepository } from '../opportunities/repository';
 import { generateDisplayName } from '../contacts/validation';
 import { findPotentialDuplicates, type PotentialDuplicate } from '../contacts/duplicate-detection';
 import { MemberRepository } from '../members/repository';
@@ -26,12 +25,10 @@ import type { InquiryListOptions } from './repository';
 export class InquiryService {
   private readonly db: SupabaseClient;
   private readonly repo: InquiryRepository;
-  private readonly opportunityRepo: OpportunityRepository;
 
   constructor(db: SupabaseClient) {
     this.db = db;
     this.repo = new InquiryRepository(db);
-    this.opportunityRepo = new OpportunityRepository(db);
   }
 
   // ── Queries ───────────────────────────────────────────────────────────────
@@ -146,11 +143,11 @@ export class InquiryService {
    * Converts an inquiry to an opportunity (FR-INQ-07).
    * Optionally creates a new contact or links an existing one.
    * Sets inquiry status to 'converted' — terminal.
+   * All of it happens in the `convert_inquiry` RPC, or none of it does (AD-050).
    */
   async convert(
     id: string,
     agencyId: string,
-    userId: string,
     input: ConvertInquirySchema
   ): Promise<{ inquiryId: string; opportunityId: string; contactId: string | null }> {
     const parsed = convertInquirySchema.parse(input);
@@ -160,65 +157,37 @@ export class InquiryService {
     this.assertValidTransition(current.status, 'converted');
     await this.assertAssignable(agencyId, parsed.assigned_to, current.assigned_to);
 
-    let contactId: string | null = parsed.contact_id ?? null;
-
-    // Create a new contact from inquiry data if requested
-    if (parsed.create_contact) {
-      const displayName = generateDisplayName(parsed.create_contact.type, {
+    // A new contact takes its name from the form, then from the caller, and its methods from the caller
+    const newContact = parsed.create_contact && {
+      type: parsed.create_contact.type,
+      first_name: parsed.create_contact.first_name ?? current.caller_name?.split(' ')[0] ?? null,
+      last_name: parsed.create_contact.last_name ?? (current.caller_name?.split(' ').slice(1).join(' ') || null),
+      company_name: parsed.create_contact.company_name ?? null,
+      display_name: generateDisplayName(parsed.create_contact.type, {
         first_name: parsed.create_contact.first_name ?? current.caller_name?.split(' ')[0],
         last_name: parsed.create_contact.last_name ?? current.caller_name?.split(' ').slice(1).join(' '),
         company_name: parsed.create_contact.company_name,
-      });
+      }),
+    };
 
-      const { data: newContact, error: contactError } = await this.db
-        .from('contacts')
-        .insert({
-          agency_id: agencyId,
-          type: parsed.create_contact.type,
-          first_name: parsed.create_contact.first_name ?? current.caller_name?.split(' ')[0] ?? null,
-          last_name: parsed.create_contact.last_name ?? (current.caller_name?.split(' ').slice(1).join(' ') || null),
-          company_name: parsed.create_contact.company_name ?? null,
-          display_name: displayName,
-          created_by: userId,
-        })
-        .select()
-        .single();
-
-      if (contactError) throw new DomainError('errors.inquiries.contact_creation_failed', `Failed to create contact: ${contactError.message}`);
-      contactId = (newContact as { id: string }).id;
-
-      // Seed contact methods from caller info if available
-      const methods = callerContactMethods(current).map((method) => ({
-        ...method,
-        contact_id: contactId,
-        agency_id: agencyId,
-      }));
-      if (methods.length > 0) {
-        await this.db
-          .from('contact_methods')
-          .insert(methods);
-      }
-    }
-
-    // Create the opportunity
-    const opportunity = await this.opportunityRepo.create(agencyId, userId, {
-      title: parsed.opportunity_title,
-      type: parsed.opportunity_type,
-      stage_id: parsed.stage_id,
-      inquiry_id: id,
-      primary_contact_id: contactId,
-      assigned_to: parsed.assigned_to ?? current.assigned_to ?? null,
-      source_id: current.source_id,
+    const { data, error } = await this.db.rpc('convert_inquiry', {
+      p_agency_id: agencyId,
+      p_inquiry_id: id,
+      p_title: parsed.opportunity_title,
+      p_type: parsed.opportunity_type,
+      p_stage_id: parsed.stage_id,
+      p_assigned_to: parsed.assigned_to ?? current.assigned_to ?? null,
+      p_contact_id: parsed.contact_id ?? null,
+      p_new_contact: newContact ?? null,
+      p_contact_methods: newContact ? callerContactMethods(current) : [],
     });
+    if (error) throw rpcFailure(error);
 
-    // Mark inquiry as converted and link back
-    await this.repo.update(id, agencyId, {
-      status: 'converted',
-      contact_id: contactId,
-      opportunity_id: opportunity.id,
-    });
-
-    return { inquiryId: id, opportunityId: opportunity.id, contactId };
+    const { opportunity_id: opportunityId, contact_id: contactId } = data as {
+      opportunity_id: string;
+      contact_id: string | null;
+    };
+    return { inquiryId: id, opportunityId, contactId };
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

@@ -86,7 +86,16 @@ user immediately, so the membership is written after the call.
 `requireRole(ctx, CONFIG_ROLES)` in actions, hidden in the UI, and RLS on `stages`,
 `lead_sources` and `merge_history` writes.
 **Open:** a merge is a series of ordinary edits, so RLS blocks only its history row. An atomic,
-role-checked merge RPC is in the `SPEC.md` ideas backlog.
+role-checked merge RPC is in the `SPEC.md` ideas backlog. Answered by AD-050.
+
+### AD-050: Conversion and merge are atomic RPCs
+**Accepted** (2026-10-30). `convert_inquiry` and `merge_contacts` do all their writes in one
+transaction, as SECURITY INVOKER so RLS and audit triggers still apply. `merge_contacts` checks the
+role itself, and both refuse another agency's rows. Validation that needs TypeScript (phone
+normalising, assignee check) stays in the service. Failures surface through `rpcFailure()`.
+**Why:** checking each write's error would report a failure but leave a half-done merge or a
+stranded contact and opportunity, and a retry would then duplicate them.
+**Revisit if:** either flow needs work outside the database in the same step.
 
 ## Domain
 

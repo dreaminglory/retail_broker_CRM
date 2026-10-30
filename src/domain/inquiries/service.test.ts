@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
 import { DomainError } from '@/lib/errors';
+import { createFakeSupabase } from '@/test/fake-supabase';
 import { InquiryService } from './service';
 import type { Inquiry } from './types';
 
@@ -97,7 +98,7 @@ describe('InquiryService assignee check', () => {
   it('convert refuses an assignee outside the agency before writing anything', async () => {
     const { db, writes } = fakeDb();
     await expect(
-      new InquiryService(db).convert(INQUIRY_ID, AGENCY_ID, USER_ID, {
+      new InquiryService(db).convert(INQUIRY_ID, AGENCY_ID, {
         create_contact: { type: 'person', first_name: 'Ivan' },
         opportunity_title: 'Flat',
         opportunity_type: 'buyer',
@@ -106,6 +107,57 @@ describe('InquiryService assignee check', () => {
       })
     ).rejects.toEqual(notMember);
     expect(writes).toEqual([]);
+  });
+});
+
+describe('InquiryService.convert errors', () => {
+  const INPUT = {
+    create_contact: { type: 'person' as const },
+    opportunity_title: 'Flat',
+    opportunity_type: 'buyer' as const,
+    stage_id: STAGE_ID,
+  };
+
+  function serviceWith(options: Partial<Parameters<typeof createFakeSupabase>[0]>) {
+    const { client } = createFakeSupabase({
+      role: 'broker',
+      tables: {
+        inquiries: { ...INQUIRY, caller_phone: '+359888123456' },
+        contacts: { id: 'contact-1' },
+        opportunities: { id: 'opportunity-1' },
+      },
+      ...options,
+    });
+    return new InquiryService(client as SupabaseClient);
+  }
+
+  it('losing the caller\'s phone and email fails the conversion', async () => {
+    const service = serviceWith({
+      failingTables: ['rpc:convert_inquiry'],
+    });
+
+    const error = await service.convert(INQUIRY_ID, AGENCY_ID, INPUT).catch((e) => e);
+
+    expect(error).toBeInstanceOf(DomainError);
+    expect(error.code).toBe('errors.saveFailed');
+  });
+
+  it('a refusal the RPC raises keeps its i18n key', async () => {
+    const service = serviceWith({
+      rpcErrors: { convert_inquiry: { code: 'P0001', message: 'errors.inquiries.contact_creation_failed' } },
+    });
+
+    await expect(service.convert(INQUIRY_ID, AGENCY_ID, INPUT)).rejects.toMatchObject({
+      code: 'errors.inquiries.contact_creation_failed',
+    });
+  });
+
+  it('a database message that is not an i18n key never reaches the caller', async () => {
+    const service = serviceWith({
+      rpcErrors: { convert_inquiry: { code: 'P0001', message: 'trigger said no' } },
+    });
+
+    await expect(service.convert(INQUIRY_ID, AGENCY_ID, INPUT)).rejects.toMatchObject({ code: 'errors.saveFailed' });
   });
 });
 

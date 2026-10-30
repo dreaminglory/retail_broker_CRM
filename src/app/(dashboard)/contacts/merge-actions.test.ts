@@ -51,7 +51,7 @@ describe('contact merge actions (AD-045)', () => {
     const result = await mergeContactsAction(WINNER_ID, LOSER_ID);
 
     expect(result).toEqual({ success: true, data: undefined });
-    expect(fake.touchedTables).toContain('merge_history');
+    expect(fake.touchedTables).toContain('rpc:merge_contacts');
   });
 
   it('returns an error result instead of throwing when the user is signed out', async () => {

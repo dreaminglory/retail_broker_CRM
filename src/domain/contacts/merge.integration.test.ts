@@ -73,7 +73,7 @@ describeServices('ContactMergeService against the local stack', () => {
       role: 'buyer',
     });
 
-    await merges.merge(manager.agencyId, manager.userId, winner.id, loser.id);
+    await merges.merge(manager.agencyId, winner.id, loser.id);
 
     const merged = await contacts.getById(winner.id, manager.agencyId);
     expect(merged!.contact_methods.map((method) => method.value).sort()).toEqual(['+359888000001', '+359888000002']);
@@ -116,7 +116,7 @@ describeServices('ContactMergeService against the local stack', () => {
     });
     await insert('opportunity_participants', { opportunity_id: opportunityId, contact_id: loser.id, role: 'buyer' });
 
-    await merges.merge(manager.agencyId, manager.userId, winner.id, loser.id);
+    await merges.merge(manager.agencyId, winner.id, loser.id);
 
     const { data: participants } = await manager.db
       .from('opportunity_participants')
@@ -141,10 +141,21 @@ describeServices('ContactMergeService against the local stack', () => {
     expect(opportunity!.primary_contact_id).toBe(loser.id);
   });
 
+  it('refuses a broker, and moves nothing', async () => {
+    const winner = await createContact('Broker Winner');
+    const loser = await createContact('Broker Loser');
+    const broker = await signInAs('broker@alpha.bg');
+
+    await expect(
+      new ContactMergeService(broker.db).merge(broker.agencyId, winner.id, loser.id)
+    ).rejects.toMatchObject({ code: 'errors.forbidden' });
+    expect((await contacts.getById(loser.id, manager.agencyId))!.status).toBe('active');
+  });
+
   it('refuses to merge a contact with itself', async () => {
     const contact = await createContact('Self');
 
-    await expect(merges.merge(manager.agencyId, manager.userId, contact.id, contact.id)).rejects.toMatchObject({
+    await expect(merges.merge(manager.agencyId, contact.id, contact.id)).rejects.toMatchObject({
       code: 'errors.merge_self',
     });
   });
@@ -158,7 +169,7 @@ describeServices('ContactMergeService against the local stack', () => {
     });
     cleanup.track('contacts', foreign.id);
 
-    await expect(merges.merge(manager.agencyId, manager.userId, winner.id, foreign.id)).rejects.toMatchObject({
+    await expect(merges.merge(manager.agencyId, winner.id, foreign.id)).rejects.toMatchObject({
       code: 'errors.not_found',
     });
     expect((await new ContactService(outsider.db).getById(foreign.id, outsider.agencyId))!.status).toBe('active');

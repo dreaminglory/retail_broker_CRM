@@ -130,7 +130,7 @@ export async function convertInquiryAction(
   formData: FormData
 ): Promise<ActionResult<{ opportunityId: string; contactId: string | null } | { duplicates: PotentialDuplicate[] }>> {
   try {
-    const { supabase, userId, agencyId } = await getAuthContext();
+    const { supabase, agencyId } = await getAuthContext();
 
     // create_contact is JSON-encoded — it's optional
     let create_contact: unknown = undefined;
@@ -165,7 +165,7 @@ export async function convertInquiryAction(
       }
     }
 
-    const result = await service.convert(id, agencyId, userId, parsed.data);
+    const result = await service.convert(id, agencyId, parsed.data);
 
     revalidatePath('/inquiries');
     revalidatePath('/opportunities');

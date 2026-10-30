@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 40th migration
-(`20261102000007_revoke_import_rpcs_from_anon.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 41st migration
+(`20261102000008_atomic_convert_and_merge.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -293,7 +293,8 @@ stateDiagram-v2
 
 Enforced by: `InquiryService` checks `INQUIRY_STATUS_TRANSITIONS`
 (`src/domain/inquiries/validation.ts`); `converted` and `dismissed` are final. The database
-checks the value list only.
+checks the value list; the RPC `convert_inquiry` also refuses to convert a final inquiry, under a
+row lock, so two simultaneous conversions can't both succeed.
 
 ### 3.2 Opportunity: status and stage
 
@@ -428,17 +429,18 @@ The "Enforced by" column tells you which layer to change and test.
 | T3 | One active membership per user | partial unique index `uq_one_active_membership_per_user` |
 | T4 | Membership `user_id`/`agency_id` immutable | trigger `trg_membership_identity` |
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
-| T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions |
+| T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions + role check in RPC `merge_contacts` |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
 | C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods and inquiry callers; `callerContactMethods()` at conversion |
 | C3 | Duplicate check (phone, email, trigram name) before creating a contact, including at inquiry conversion | `duplicate-detection.ts` (service) |
-| C4 | Merge archives the loser and snapshots it | `merge.ts` + `merge_history` |
+| C4 | Merge moves everything to the winner, archives the loser and snapshots it, all or nothing (AD-050) | RPC `merge_contacts` + `070-atomic-convert-and-merge.sql` |
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
 | I1 | `raw_payload` is never modified | convention (not in update schema) |
 | I2 | Inquiry idempotent on `(agency_id, source_id, external_ref)` | unique index `uq_inquiries_source_external_ref` |
 | I3 | Inquiry status follows `new → contacted → converted / dismissed`; a converted or dismissed inquiry can't be edited or reassigned | `InquiryService` + `INQUIRY_STATUS_TRANSITIONS` |
 | I4 | An inquiry's new assignee is an active member of its agency; any member may assign (AD-001, AD-049) | `assertAssignable()` in `InquiryService` create, update and convert (a CSV import resolves assignees separately) |
 | I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
+| I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
 | O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
@@ -474,6 +476,9 @@ module that fixes it is named where there is one. Remove a row when the fix land
    formats stored before `trustworthy-loop` stay as typed until edited, though conversion
    still parses them.
 5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+6. **Merge leaves notes on the loser.** `merge_contacts` moves methods, opportunities, participants,
+   inquiries and tasks, but not `notes.contact_id`, so the loser's direct notes drop out of the
+   winner's timeline.
 
 ---
 

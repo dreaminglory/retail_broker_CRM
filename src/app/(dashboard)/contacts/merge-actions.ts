@@ -32,7 +32,7 @@ export async function mergeContactsAction(
     requireRole(ctx, CONFIG_ROLES);
 
     const mergeService = new ContactMergeService(ctx.supabase);
-    await mergeService.merge(ctx.agencyId, ctx.userId, winnerId, loserId);
+    await mergeService.merge(ctx.agencyId, winnerId, loserId);
 
     revalidatePath("/contacts");
     revalidatePath(`/contacts/${winnerId}`);

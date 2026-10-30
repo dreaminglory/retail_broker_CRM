@@ -30,6 +30,8 @@ export function createFakeSupabase(member: {
   tables?: Record<string, unknown>;
   /** Tables (or `rpc:<name>`) whose queries fail with a database error. */
   failingTables?: string[];
+  /** RPCs that fail with this error, for a refusal raised on purpose. */
+  rpcErrors?: Record<string, { code?: string; message: string }>;
   /** No session: auth.getUser returns no user. */
   signedOut?: boolean;
   /** Tables whose guarded writes match no row (another user changed it first). */
@@ -98,7 +100,7 @@ export function createFakeSupabase(member: {
       if (member.failingTables?.includes(`rpc:${fn}`)) {
         return chain({ data: null, error: { message: 'connection reset' } });
       }
-      return chain({ data: null, error: null });
+      return chain({ data: null, error: member.rpcErrors?.[fn] ?? null });
     },
   };
 

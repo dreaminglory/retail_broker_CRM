@@ -66,7 +66,6 @@ Candidates from `/feature-ideas`, not yet on the map. Promote one by adding a ma
 
 | Idea | Evidence | Score | Notes |
 |---|---|---|---|
-| Atomic, role-checked merge RPC | E1 (AD-045 open question) | — | Merge is a sequence of edits today |
 
 ## 5. Current state
 

@@ -123,7 +123,7 @@ describeServices('InquiryService against the local stack', () => {
       raw_payload: { message: 'Looking for a flat' },
     });
 
-    const result = await inquiries.convert(inquiry.id, broker.agencyId, broker.userId, {
+    const result = await inquiries.convert(inquiry.id, broker.agencyId, {
       create_contact: { type: 'person' },
       opportunity_title: 'Flat for Petar',
       opportunity_type: 'buyer',
@@ -160,12 +160,52 @@ describeServices('InquiryService against the local stack', () => {
     });
 
     await expect(
-      inquiries.convert(inquiry.id, broker.agencyId, broker.userId, {
+      inquiries.convert(inquiry.id, broker.agencyId, {
         opportunity_title: 'Twice',
         opportunity_type: 'buyer',
         stage_id: stageId,
       })
     ).rejects.toMatchObject({ code: 'errors.inquiries.invalid_transition' });
+  });
+
+  it('reports a contact the database rejects, and leaves the inquiry as it was', async () => {
+    const inquiry = await createInquiry({ caller_phone: uniqueMobile().local });
+
+    await expect(
+      inquiries.convert(inquiry.id, broker.agencyId, {
+        create_contact: { type: 'organization' },
+        opportunity_title: 'No company name',
+        opportunity_type: 'buyer',
+        stage_id: stageId,
+      })
+    ).rejects.toMatchObject({ code: 'errors.inquiries.contact_creation_failed' });
+
+    expect(await inquiries.getById(inquiry.id, broker.agencyId)).toMatchObject({
+      status: 'new',
+      contact_id: null,
+      opportunity_id: null,
+    });
+    const { data: opportunities } = await broker.db.from('opportunities').select('id').eq('inquiry_id', inquiry.id);
+    expect(opportunities).toEqual([]);
+  });
+
+  it('refuses a contact from another agency', async () => {
+    const inquiry = await createInquiry();
+    const outsider = await signInAs('manager@beta.bg');
+    const foreign = await new ContactService(outsider.db).create(outsider.agencyId, outsider.userId, {
+      type: 'person',
+      first_name: 'Foreign',
+    });
+    cleanup.track('contacts', foreign.id);
+
+    await expect(
+      inquiries.convert(inquiry.id, broker.agencyId, {
+        contact_id: foreign.id,
+        opportunity_title: 'Foreign link',
+        opportunity_type: 'buyer',
+        stage_id: stageId,
+      })
+    ).rejects.toMatchObject({ code: 'errors.not_found' });
   });
 
   it('keeps another agency from seeing or changing the inquiry', async () => {
