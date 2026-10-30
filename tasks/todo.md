@@ -82,7 +82,7 @@ reuses `inquiry-form.tsx` and wires `updateInquiryAction`. Show the assignee's n
 **Estimated scope:** M
 
 ## Checkpoint: intake
-- [ ] AC-1…AC-4 pass; review with the founder before Phase 2
+- [x] AC-1…AC-4 pass; review with the founder before Phase 2
 
 ## Task 6: Volume seed script
 **Description:** `scripts/seed-volume.ts` adds 2,000 contacts and 300 opportunities to the local
