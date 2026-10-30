@@ -3,9 +3,12 @@
     "unauthorized": "Your session has expired. Please sign in again.",
     "forbidden": "Only owners and managers can do this.",
     "unexpected": "Something went wrong. Please try again.",
+    "not_found": "This record no longer exists.",
     "task_not_found": "This task no longer exists.",
     "task_not_pending": "This task is already completed or cancelled.",
-    "inquiries": { "external_ref_exists": "Another inquiry from this source already has this external ref.", "assignee_not_member": "This person is not an active member of your agency.", "contact_creation_failed": "The contact could not be created. Please try again." }
+    "inquiries": { "external_ref_exists": "Another inquiry from this source already has this external ref.", "assignee_not_member": "This person is not an active member of your agency.", "contact_creation_failed": "The contact could not be created. Please try again.",
+    "final_state": "This inquiry is already converted or dismissed and can't be changed.",
+    "invalid_transition": "This inquiry has already moved on. Refresh the page and try again." }
   },
   "validation": {
     "invalid_phone": "Enter a valid phone number, with the country code if it is not Bulgarian.",

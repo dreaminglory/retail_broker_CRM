@@ -113,8 +113,8 @@ than storing a typo.
 
 ### AD-049: A new inquiry assignee must be an active agency member
 **Accepted.** Any member may assign (AD-001), and `assigned_to` only references `auth.users`, so
-`InquiryService.update` checks the new assignee against the agency's active members. Leaving a
-deactivated assignee in place is allowed, so an edit doesn't force a reassign.
+`InquiryService` checks a new assignee against the agency's active members on create, update and
+convert. Leaving a deactivated assignee in place is allowed, so an edit doesn't force a reassign.
 **Revisit if:** a database check covers every assignable table.
 
 ### AD-018: Contacts may share a phone or email

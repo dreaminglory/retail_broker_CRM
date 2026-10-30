@@ -430,8 +430,8 @@ The "Enforced by" column tells you which layer to change and test.
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
 | I1 | `raw_payload` is never modified | convention (not in update schema) |
 | I2 | Inquiry idempotent on `(agency_id, source_id, external_ref)` | unique index `uq_inquiries_source_external_ref` |
-| I3 | Inquiry status follows `new → contacted → converted / dismissed`; final states don't change | `InquiryService` + `INQUIRY_STATUS_TRANSITIONS` |
-| I4 | An inquiry's new assignee is an active member of its agency; any member may assign (AD-001, AD-049) | `canAssignTo()` in `InquiryService.update` (creation isn't checked yet) |
+| I3 | Inquiry status follows `new → contacted → converted / dismissed`; a converted or dismissed inquiry can't be edited or reassigned | `InquiryService` + `INQUIRY_STATUS_TRANSITIONS` |
+| I4 | An inquiry's new assignee is an active member of its agency; any member may assign (AD-001, AD-049) | `assertAssignable()` in `InquiryService` create, update and convert (a CSV import resolves assignees separately) |
 | I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |

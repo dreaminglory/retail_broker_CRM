@@ -67,19 +67,6 @@ export function callerContactMethods(
   return methods;
 }
 
-/**
- * Whether an inquiry may be assigned to this user. Keeping a deactivated assignee is allowed, so
- * editing other fields doesn't force a reassign. `assigned_to` only references auth.users, so
- * nothing below this check stops a user from another agency being set.
- */
-export function canAssignTo(
-  assignedTo: string | null,
-  currentAssignee: string | null,
-  activeMemberIds: string[]
-): boolean {
-  return !assignedTo || assignedTo === currentAssignee || activeMemberIds.includes(assignedTo);
-}
-
 // ── Schemas ────────────────────────────────────────────────────────────────
 
 function requireCallerOrContent(

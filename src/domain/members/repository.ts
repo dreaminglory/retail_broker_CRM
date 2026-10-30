@@ -128,6 +128,22 @@ export class MemberRepository {
     }
   }
 
+  async isActiveMember(agencyId: string, userId: string): Promise<boolean> {
+    const { data, error } = await this.db
+      .from("agency_memberships")
+      .select("user_id")
+      .eq("agency_id", agencyId)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Failed to check membership: ${error.message}`);
+    }
+
+    return data !== null;
+  }
+
   /**
    * Gets all active brokers (including managers/owners who act as brokers)
    * for the given agency, mapped to a simplified interface for dropdowns.

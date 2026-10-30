@@ -14,7 +14,6 @@ import {
   convertInquirySchema,
   editInquirySchemaFor,
   callerContactMethods,
-  canAssignTo,
   INQUIRY_STATUS_TRANSITIONS,
 } from './validation';
 import type { ConvertInquirySchema } from './validation';
@@ -54,6 +53,7 @@ export class InquiryService {
     input: CreateInquiryInput
   ): Promise<Inquiry> {
     const parsed = createInquirySchema.parse(input);
+    await this.assertAssignable(agencyId, parsed.assigned_to);
     return this.repo.create(agencyId, userId, parsed as CreateInquiryInput);
   }
 
@@ -65,21 +65,18 @@ export class InquiryService {
   ): Promise<Inquiry> {
     const parsed = updateInquirySchema.parse(input);
 
-    if (parsed.status || parsed.assigned_to) {
-      const current = await this.repo.findById(id, agencyId);
-      if (!current) throw new DomainError('errors.not_found');
+    const current = await this.repo.findById(id, agencyId);
+    if (!current) throw new DomainError('errors.not_found');
 
-      // Enforce status transition rules if status is being changed
-      if (parsed.status) this.assertValidTransition(current.status, parsed.status);
-
-      if (parsed.assigned_to) {
-        const members = await new MemberRepository(this.db).getActiveBrokers(agencyId);
-        const memberIds = members.map((member) => member.id);
-        if (!canAssignTo(parsed.assigned_to, current.assigned_to, memberIds)) {
-          throw new DomainError('errors.inquiries.assignee_not_member');
-        }
-      }
+    // Converted and dismissed inquiries are closed: nothing on them changes from here (I3).
+    if (INQUIRY_STATUS_TRANSITIONS[current.status].length === 0) {
+      throw new DomainError('errors.inquiries.final_state');
     }
+
+    // Enforce status transition rules if status is being changed
+    if (parsed.status) this.assertValidTransition(current.status, parsed.status);
+
+    await this.assertAssignable(agencyId, parsed.assigned_to, current.assigned_to);
 
     return this.repo.update(id, agencyId, parsed as UpdateInquiryInput);
   }
@@ -154,6 +151,7 @@ export class InquiryService {
     const current = await this.repo.findById(id, agencyId);
     if (!current) throw new DomainError('errors.not_found');
     this.assertValidTransition(current.status, 'converted');
+    await this.assertAssignable(agencyId, parsed.assigned_to, current.assigned_to);
 
     let contactId: string | null = parsed.contact_id ?? null;
 
@@ -221,10 +219,26 @@ export class InquiryService {
   private assertValidTransition(from: string, to: string): void {
     const allowed = INQUIRY_STATUS_TRANSITIONS[from] ?? [];
     if (!allowed.includes(to)) {
-      throw new Error(
+      throw new DomainError(
+        'errors.inquiries.invalid_transition',
         `Invalid status transition: '${from}' → '${to}'. ` +
         `Allowed: [${allowed.join(', ') || 'none'}]`
       );
+    }
+  }
+
+  /**
+   * A new assignee must be an active member of the agency (AD-049). Leaving a deactivated
+   * assignee in place is allowed, so editing other fields doesn't force a reassign.
+   */
+  private async assertAssignable(
+    agencyId: string,
+    assignedTo: string | null | undefined,
+    currentAssignee: string | null = null
+  ): Promise<void> {
+    if (!assignedTo || assignedTo === currentAssignee) return;
+    if (!(await new MemberRepository(this.db).isActiveMember(agencyId, assignedTo))) {
+      throw new DomainError('errors.inquiries.assignee_not_member');
     }
   }
 }

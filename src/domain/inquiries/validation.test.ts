@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   callerContactMethods,
-  canAssignTo,
   convertInquirySchema,
   createInquirySchema,
   editInquirySchemaFor,
@@ -182,26 +181,6 @@ describe('editInquirySchemaFor', () => {
 
   it('updateInquirySchema carries external_ref through to the service', () => {
     expect(updateInquirySchema.parse({ external_ref: 'IMOT-1' }).external_ref).toBe('IMOT-1');
-  });
-});
-
-describe('canAssignTo', () => {
-  const OTHER_ID = '33333333-3333-4333-8333-333333333333';
-
-  it('allows an active member of the agency', () => {
-    expect(canAssignTo(BROKER_ID, null, [BROKER_ID])).toBe(true);
-  });
-
-  it('refuses someone who is not an active member', () => {
-    expect(canAssignTo(OTHER_ID, BROKER_ID, [BROKER_ID])).toBe(false);
-  });
-
-  it('keeps a deactivated assignee when the edit leaves them in place', () => {
-    expect(canAssignTo(OTHER_ID, OTHER_ID, [BROKER_ID])).toBe(true);
-  });
-
-  it('always allows unassigning', () => {
-    expect(canAssignTo(null, BROKER_ID, [BROKER_ID])).toBe(true);
   });
 });
 
