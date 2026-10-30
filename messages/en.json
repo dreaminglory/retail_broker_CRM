@@ -740,7 +740,7 @@
   "MergeDialog": {
     "trigger": "Merge",
     "title": "Merge Contact",
-    "description": "Merge <name>{name}</name> into another contact. This contact will be archived.",
+    "description": "Merge <strong>{name}</strong> into another contact. This contact will be archived.",
     "searchLabel": "Search contacts",
     "searchPlaceholder": "Type a name to search (e.g. Dimitar Dimitrov)...",
     "select": "Select",
@@ -816,7 +816,7 @@
     "editTitle": "Edit contact",
     "archiveBtn": "Archive",
     "archiveTitle": "Archive contact?",
-    "archiveDescription": "<name>{name}</name> will be archived and hidden from the active contacts list. Linked opportunities are preserved. You can restore the contact later.",
+    "archiveDescription": "<strong>{name}</strong> will be archived and hidden from the active contacts list. Linked opportunities are preserved. You can restore the contact later.",
     "cancelBtn": "Cancel",
     "archivingBtn": "Archiving..."
   },

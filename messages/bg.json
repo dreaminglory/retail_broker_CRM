@@ -740,7 +740,7 @@
   "MergeDialog": {
     "trigger": "Сливане",
     "title": "Сливане на контакт",
-    "description": "Слейте <name>{name}</name> в друг контакт. Този контакт ще бъде архивиран.",
+    "description": "Слейте <strong>{name}</strong> в друг контакт. Този контакт ще бъде архивиран.",
     "searchLabel": "Търсене на контакти",
     "searchPlaceholder": "Въведете име за търсене (напр. Димитър)...",
     "select": "Избери",
@@ -816,7 +816,7 @@
     "editTitle": "Редактиране на контакт",
     "archiveBtn": "Архивиране",
     "archiveTitle": "Архивиране на контакт",
-    "archiveDescription": "<name>{name}</name> ще бъде архивиран и скрит от списъците. Свързаните сделки не се променят.",
+    "archiveDescription": "<strong>{name}</strong> ще бъде архивиран и скрит от списъците. Свързаните сделки не се променят.",
     "cancelBtn": "Отказ",
     "archivingBtn": "Архивиране..."
   },

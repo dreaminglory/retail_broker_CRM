@@ -121,7 +121,7 @@ export function MergeDialog({ currentContact }: MergeDialogProps) {
           <DialogDescription>
             {t.rich("description", {
               name: currentContact.display_name,
-              nameTag: (chunks) => <strong>{chunks}</strong>
+              strong: (chunks) => <strong>{chunks}</strong>
             })}
           </DialogDescription>
         </DialogHeader>

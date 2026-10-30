@@ -99,7 +99,7 @@ export function ContactDetailClient({ contact, canMerge }: ContactDetailClientPr
               <DialogTitle>{t("archiveTitle")}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              {t.rich("archiveDescription", { name: contact.display_name, nameTag: (chunks) => <strong>{chunks}</strong> })}
+              {t.rich("archiveDescription", { name: contact.display_name, strong: (chunks) => <strong>{chunks}</strong> })}
             </p>
             <div className="flex gap-3 pt-2">
               <Button
