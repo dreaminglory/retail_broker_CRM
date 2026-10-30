@@ -239,6 +239,19 @@ query still filters by `agency_id`. Local development uses Mailpit and manual tr
 not be suppressed by the day's earlier one.
 **Revisit if:** the pilot needs retries beyond the next day's run, or volume outgrows one request.
 
+### AD-052: Agency counts are part of the digest
+**Accepted** (2026-10-31, while building `reminders`; for founder review). Refines
+`spec/reminders.md` rules 2 and 5.
+- **Turning the digest off also stops the counts.** An owner or manager has one digest switch,
+  and no separate email carries the counts.
+- **Same rows as the sections.** The builder derives the counts from the agency's rows the digest
+  has already loaded, so they add no query. Definitions match Exceptions (`docs/domain-model.md` §4).
+- **The subject counts own work, or the agency's when there is none.** They aren't added together,
+  because an own overdue task is also in the agency's overdue count.
+**Why:** one switch is simpler to explain, and a count that can't disagree with the digest's own
+sections is easier to trust.
+**Revisit if:** owners want the counts without their own digest, or the other way round.
+
 ---
 
 ## Retired

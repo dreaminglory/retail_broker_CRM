@@ -102,9 +102,9 @@ export class NotificationRepository {
     return rows.map((row) => ({ id: row.id, title: row.title, dueAt: row.due_at, assignedTo: row.assigned_to }));
   }
 
-  /** Every assigned `new` inquiry. */
+  /** Every `new` inquiry. The unassigned ones feed the owner and manager counts. */
   async getNewInquiries(agencyId: string): Promise<DigestInquiryInput[]> {
-    const rows = await fetchAll<{ id: string; caller_name: string | null; received_at: string; assigned_to: string }>(
+    const rows = await fetchAll<{ id: string; caller_name: string | null; received_at: string; assigned_to: string | null }>(
       'inquiries',
       (from, to) =>
         this.db
@@ -112,7 +112,6 @@ export class NotificationRepository {
           .select('id, caller_name, received_at, assigned_to')
           .eq('agency_id', agencyId)
           .eq('status', 'new')
-          .not('assigned_to', 'is', null)
           .order('received_at')
           .order('id')
           .range(from, to),

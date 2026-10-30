@@ -33,8 +33,13 @@ export type DigestInquiryRow = { id: string; callerName: string | null };
 /** At most `DIGEST_MAX_ROWS` rows; `more` is how many were left out ("+N more"). */
 export type DigestSection<Row> = { rows: Row[]; more: number };
 
+/** The whole agency's numbers, same definitions as Exceptions. Owners and managers only. */
+export type AgencyCounts = { unassignedInquiries: number; overdueTasks: number };
+
 export type Digest = {
   overdue: DigestSection<DigestTaskRow>;
   dueToday: DigestSection<DigestTaskRow>;
   newInquiries: DigestSection<DigestInquiryRow>;
+  /** Null for a broker, and when both counts are zero. */
+  agency: AgencyCounts | null;
 };

@@ -92,7 +92,7 @@ export class NotificationService {
       deliveryId = await this.repo.claim(agencyId, recipient.userId, { kind: 'daily_digest', periodKey });
       if (!deliveryId) return 'alreadyDone';
 
-      const digest = buildDigest({ userId: recipient.userId, tasks, inquiries, timezone, now });
+      const digest = buildDigest({ userId: recipient.userId, role: recipient.role, tasks, inquiries, timezone, now });
       if (!digest) {
         await this.repo.settle(agencyId, deliveryId, { status: 'skipped' });
         return 'skipped';

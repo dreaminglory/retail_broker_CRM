@@ -1252,6 +1252,10 @@
       "newInquiries": "New inquiries ({count})",
       "more": "+{count} more",
       "open": "Open Today",
+      "agencyTitle": "Your agency",
+      "agencyUnassigned": "Unassigned inquiries: {count}",
+      "agencyOverdue": "Overdue tasks: {count}",
+      "agencyOpen": "Open Exceptions",
       "footer": "You get this digest every working day. You can turn it off in Settings → Profile."
     }
   }

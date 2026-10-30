@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { ExceptionsRepository } from '@/domain/exceptions/repository';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import { adminClient, createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
 import type { MailMessage, MailResult, Mailer } from './mailer';
@@ -56,10 +57,10 @@ describeServices('NotificationService daily digest against the local stack', () 
     for (const id of tempUserIds) await admin.auth.admin.deleteUser(id);
   });
 
-  async function createOverdueTask(userId: string, agencyId: string, title: string) {
+  async function createOverdueTask(userId: string, agencyId: string, title: string, dueAt = '2031-03-09T09:00:00Z') {
     const { data, error } = await admin
       .from('tasks')
-      .insert({ agency_id: agencyId, title, due_at: '2031-03-09T09:00:00Z', assigned_to: userId, status: 'pending' })
+      .insert({ agency_id: agencyId, title, due_at: dueAt, assigned_to: userId, status: 'pending' })
       .select('id')
       .single();
     if (error) throw new Error(error.message);
@@ -241,6 +242,76 @@ describeServices('NotificationService daily digest against the local stack', () 
     expect(monday.due).toBeGreaterThanOrEqual(2);
     expect(monday.agenciesFailed).toBe(0);
     expect(sent.map((message) => message.to)).toContain(await emailFor(broker.userId));
+  });
+
+  describe('agency counts', () => {
+    let agencyId: string;
+    let owner: { userId: string; email: string };
+    let member: { userId: string; email: string };
+
+    /** An agency of its own, so other suites' rows can't move the counts while this runs. */
+    beforeAll(async () => {
+      const stamp = Date.now();
+      const { data, error } = await admin
+        .from('agencies')
+        .insert({ name: 'Digest counts agency', slug: `digest-counts-${stamp}` })
+        .select('id')
+        .single();
+      if (error) throw new Error(error.message);
+      agencyId = data.id;
+
+      const addMember = async (role: 'owner' | 'broker') => {
+        const email = `digest-counts-${role}-${stamp}@counts.bg`;
+        const created = await admin.auth.admin.createUser({ email, password: 'password123', email_confirm: true });
+        if (created.error) throw new Error(created.error.message);
+        tempUserIds.push(created.data.user.id);
+        const added = await admin
+          .from('agency_memberships')
+          .insert({ agency_id: agencyId, user_id: created.data.user.id, role, status: 'active' });
+        if (added.error) throw new Error(added.error.message);
+        return { userId: created.data.user.id, email };
+      };
+      owner = await addMember('owner');
+      member = await addMember('broker');
+    });
+
+    afterAll(async () => {
+      if (agencyId) await admin.from('agencies').delete().eq('id', agencyId);
+    });
+
+    it('sends counts to an owner with no work of their own, never to a broker, matching Exceptions', async () => {
+      const empty = fakeMailer();
+      await run(empty.mailer, agencyId);
+      expect(empty.sent).toEqual([]);
+      expect(await deliveryFor(owner.userId)).toEqual({ status: 'skipped', error: null });
+
+      // Dated in the past, so they are overdue at NOW and at the real now /exceptions reads.
+      for (const title of ['One', 'Two', 'Three']) await createOverdueTask(member.userId, agencyId, title, '2020-01-01T09:00:00Z');
+      const unassigned = await admin
+        .from('inquiries')
+        .insert([{ agency_id: agencyId, caller_name: 'A' }, { agency_id: agencyId, caller_name: 'B' }]);
+      if (unassigned.error) throw new Error(unassigned.error.message);
+      // Beta's row must not count here.
+      await createOverdueTask(betaBroker.userId, betaBroker.agencyId, 'Beta only task', '2020-01-01T09:00:00Z');
+
+      const { mailer, sent } = fakeMailer();
+      await run(mailer, agencyId);
+
+      const exceptions = await new ExceptionsRepository(admin).getDashboardData(agencyId, TIMEZONE);
+      const overdue = exceptions.overdueTasksByBroker.reduce((sum, broker) => sum + broker.overdue_count, 0);
+      expect(exceptions.unassignedInquiries).toHaveLength(2);
+      expect(overdue).toBe(3);
+
+      const ownerMail = sent.find((m) => m.to === owner.email)!;
+      expect(ownerMail.text).toContain(`Невъзложени запитвания: ${exceptions.unassignedInquiries.length}`);
+      expect(ownerMail.text).toContain(`Просрочени задачи: ${overdue}`);
+      expect(ownerMail.html).toContain(`href="${APP_URL}/exceptions"`);
+
+      const brokerMail = sent.find((m) => m.to === member.email)!;
+      expect(brokerMail.html).toContain('One');
+      expect(brokerMail.text).not.toContain('Невъзложени запитвания');
+      expect(brokerMail.html).not.toContain('/exceptions');
+    });
   });
 
   it("never puts another agency's data in a digest", async () => {

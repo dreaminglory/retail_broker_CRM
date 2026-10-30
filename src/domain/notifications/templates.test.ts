@@ -6,6 +6,7 @@ const digest: Digest = {
   overdue: { rows: [{ id: 't1', title: 'Call Ivan about the offer', dueAt: '2026-01-09T09:00:00Z' }], more: 0 },
   dueToday: { rows: [{ id: 't2', title: 'Viewing on Vitosha', dueAt: '2026-01-12T12:30:00Z' }], more: 2 },
   newInquiries: { rows: [{ id: 'i1', callerName: 'Maria Petrova' }, { id: 'i2', callerName: null }], more: 0 },
+  agency: null,
 };
 
 const base = { digest, recipientName: 'Georgi', timezone: 'Europe/Sofia', appUrl: 'https://crm.example.bg/' };
@@ -43,6 +44,7 @@ describe('renderDailyDigest', () => {
       overdue: { rows: [], more: 0 },
       dueToday: { rows: [{ id: 't', title: 'Only one', dueAt: '2026-01-12T12:30:00Z' }], more: 0 },
       newInquiries: { rows: [], more: 0 },
+      agency: null,
     };
 
     expect(renderDailyDigest({ ...base, digest: one, locale: 'en' }).subject).toBe('1 thing needs your attention today');
@@ -68,6 +70,7 @@ describe('renderDailyDigest', () => {
       overdue: { rows: [{ id: 't', title: '<script>alert("x")</script>', dueAt: '2026-01-09T09:00:00Z' }], more: 0 },
       dueToday: { rows: [], more: 0 },
       newInquiries: { rows: [{ id: 'i', callerName: '<img src=x onerror=1>' }], more: 0 },
+      agency: null,
     };
     const { html, subject } = renderDailyDigest({ ...base, digest: hostile, recipientName: '<b>Eve</b>', locale: 'en' });
 
@@ -76,6 +79,57 @@ describe('renderDailyDigest', () => {
     expect(html).not.toContain('<b>Eve</b>');
     expect(html).toContain('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;');
     expect(subject).not.toMatch(/[<>]/);
+  });
+
+  describe('agency counts', () => {
+    const withCounts: Digest = { ...digest, agency: { unassignedInquiries: 2, overdueTasks: 5 } };
+    const countsOnly: Digest = {
+      overdue: { rows: [], more: 0 },
+      dueToday: { rows: [], more: 0 },
+      newInquiries: { rows: [], more: 0 },
+      agency: { unassignedInquiries: 2, overdueTasks: 5 },
+    };
+
+    it('shows the counts and links to Exceptions, in both languages', () => {
+      const en = renderDailyDigest({ ...base, digest: withCounts, locale: 'en' });
+      expect(en.html).toContain('Your agency');
+      expect(en.html).toContain('Unassigned inquiries: 2');
+      expect(en.text).toContain('Overdue tasks: 5');
+      expect(en.html).toContain('href="https://crm.example.bg/exceptions"');
+      expect(en.text).toContain('https://crm.example.bg/exceptions');
+
+      const bg = renderDailyDigest({ ...base, digest: withCounts, locale: 'bg' });
+      expect(bg.html).toContain('Вашата агенция');
+      expect(bg.html).toContain('Невъзложени запитвания: 2');
+      expect(bg.text).toContain('Просрочени задачи: 5');
+    });
+
+    it('leaves out a count of zero', () => {
+      const { html } = renderDailyDigest({
+        ...base,
+        digest: { ...digest, agency: { unassignedInquiries: 0, overdueTasks: 5 } },
+        locale: 'en',
+      });
+
+      expect(html).not.toContain('Unassigned inquiries');
+      expect(html).toContain('Overdue tasks: 5');
+    });
+
+    it('shows no agency block and no Exceptions link without counts', () => {
+      const { html, text } = renderDailyDigest({ ...base, locale: 'en' });
+
+      expect(html).not.toContain('Your agency');
+      expect(html).not.toContain('/exceptions');
+      expect(text).not.toContain('/exceptions');
+    });
+
+    it('counts own work in the subject, since an own overdue task is also in the agency count', () => {
+      expect(renderDailyDigest({ ...base, digest: withCounts, locale: 'en' }).subject).toBe('6 things need your attention today');
+    });
+
+    it('counts the agency in the subject when there is no own work', () => {
+      expect(renderDailyDigest({ ...base, digest: countsOnly, locale: 'en' }).subject).toBe('7 things need your attention today');
+    });
   });
 
   it('shows nothing but the names and titles it was given', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { MemberRole } from '@/domain/members/types';
 import { todayBucket } from '@/lib/time/agency-day';
 import { buildDigest, DIGEST_MAX_ROWS } from './digest-builder';
 import type { DigestInquiryInput, DigestTaskInput } from './types';
@@ -16,8 +17,8 @@ function inquiry(id: string, receivedAt = '2026-01-12T05:00:00Z', assignedTo: st
   return { id, callerName: `Caller ${id}`, receivedAt, assignedTo };
 }
 
-const build = (tasks: DigestTaskInput[], inquiries: DigestInquiryInput[] = []) =>
-  buildDigest({ userId: ME, tasks, inquiries, timezone: SOFIA, now: NOW });
+const build = (tasks: DigestTaskInput[], inquiries: DigestInquiryInput[] = [], role: MemberRole = 'broker') =>
+  buildDigest({ userId: ME, role, tasks, inquiries, timezone: SOFIA, now: NOW });
 
 describe('buildDigest', () => {
   it('is null when every section is empty', () => {
@@ -102,6 +103,7 @@ describe('buildDigest', () => {
     const now = new Date('2026-03-29T05:30:00Z'); // 08:30 Sofia (UTC+3)
     const digest = buildDigest({
       userId: ME,
+      role: 'broker',
       timezone: SOFIA,
       now,
       inquiries: [],
@@ -112,6 +114,45 @@ describe('buildDigest', () => {
     })!;
 
     expect(digest.dueToday.rows.map((r) => r.id)).toEqual(['today-end']);
+  });
+
+  describe('agency counts', () => {
+    const OVERDUE = '2026-01-09T09:00:00Z';
+    const LATER_TODAY = '2026-01-12T15:00:00Z';
+
+    it("gives owners and managers the whole agency's unassigned inquiries and overdue tasks", () => {
+      const tasks = [task('mine', OVERDUE), task('theirs', OVERDUE, OTHER), task('not-yet', LATER_TODAY, OTHER)];
+      const inquiries = [inquiry('u1', undefined, null), inquiry('u2', undefined, null), inquiry('assigned', undefined, OTHER)];
+
+      for (const role of ['owner', 'manager'] as const) {
+        expect(build(tasks, inquiries, role)!.agency, role).toEqual({ unassignedInquiries: 2, overdueTasks: 2 });
+      }
+    });
+
+    it('never gives them to a broker', () => {
+      const digest = build([task('mine', OVERDUE), task('theirs', OVERDUE, OTHER)], [inquiry('u', undefined, null)], 'broker');
+
+      expect(digest!.agency).toBeNull();
+    });
+
+    it('makes a digest for an owner with no work of their own when a count is not zero', () => {
+      const digest = build([task('theirs', OVERDUE, OTHER)], [], 'owner');
+
+      expect(digest!.overdue.rows).toEqual([]);
+      expect(digest!.agency).toEqual({ unassignedInquiries: 0, overdueTasks: 1 });
+    });
+
+    it('makes no digest for an owner when own work and counts are all empty', () => {
+      expect(build([task('not-yet', LATER_TODAY, OTHER)], [inquiry('assigned', undefined, OTHER)], 'owner')).toBeNull();
+    });
+
+    it('leaves the counts out when both are zero but own work exists', () => {
+      expect(build([task('mine', LATER_TODAY)], [], 'owner')!.agency).toBeNull();
+    });
+
+    it('makes no digest for a broker when only agency rows exist', () => {
+      expect(build([task('theirs', OVERDUE, OTHER)], [inquiry('u', undefined, null)], 'broker')).toBeNull();
+    });
   });
 
   it('carries no phone, email, note or subject field', () => {

@@ -443,6 +443,12 @@ The ranges are half-open and contiguous (`getTodayWindows`), so a task is in one
 | Stale | same, but not updated for 7+ days |
 | Workload | active opportunities and pending tasks per broker |
 
+**Daily digest** (`src/domain/notifications`): the recipient's own Overdue, Due today and New
+inquiries, as on Today. Owners and managers also get two agency counts, as on Exceptions:
+unassigned inquiries, and overdue tasks with an assignee. The digest reads past PostgREST's
+1,000-row cap and `getDashboardData` doesn't, so above that size the digest's count is the right
+one (AD-052).
+
 ---
 
 ## 5. Invariants

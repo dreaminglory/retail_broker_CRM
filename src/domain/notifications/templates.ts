@@ -45,8 +45,18 @@ type SectionView = { title: string; section: DigestSection<unknown>; lines: stri
 export function renderDailyDigest({ digest, recipientName, locale, timezone, appUrl }: RenderDigestInput): RenderedEmail {
   const t = createTranslator({ locale, messages: MESSAGES[locale], namespace: 'notifications' });
   const format = createFormatter({ locale, timeZone: timezone });
-  const total = sectionTotal(digest.overdue) + sectionTotal(digest.dueToday) + sectionTotal(digest.newInquiries);
+  const ownTotal = sectionTotal(digest.overdue) + sectionTotal(digest.dueToday) + sectionTotal(digest.newInquiries);
+  const agencyTotal = digest.agency ? digest.agency.unassignedInquiries + digest.agency.overdueTasks : 0;
+  // Not added together: an own overdue task is also in the agency's overdue count.
+  const total = ownTotal > 0 ? ownTotal : agencyTotal;
   const todayUrl = link(appUrl, '/today');
+  const exceptionsUrl = link(appUrl, '/exceptions');
+  const agencyLines = digest.agency
+    ? [
+        ...(digest.agency.unassignedInquiries > 0 ? [t('digest.agencyUnassigned', { count: digest.agency.unassignedInquiries })] : []),
+        ...(digest.agency.overdueTasks > 0 ? [t('digest.agencyOverdue', { count: digest.agency.overdueTasks })] : []),
+      ]
+    : [];
 
   const taskLine = (row: DigestTaskRow, withDate: boolean) =>
     `${row.title} — ${format.dateTime(new Date(row.dueAt), withDate ? DATE_TIME : TIME)}`;
@@ -84,6 +94,15 @@ export function renderDailyDigest({ digest, recipientName, locale, timezone, app
       ...(section.more > 0 ? [`<li style="color:#666666">${escapeHtml(more(section.more))}</li>`] : []),
       `</ul>`,
     ]),
+    ...(agencyLines.length > 0
+      ? [
+          `<p style="font-weight:bold;margin:16px 0 4px">${escapeHtml(t('digest.agencyTitle'))}</p>`,
+          `<ul style="margin:0;padding-left:20px">`,
+          ...agencyLines.map((line) => `<li>${escapeHtml(line)}</li>`),
+          `</ul>`,
+          `<p style="margin:8px 0 0"><a href="${escapeHtml(exceptionsUrl)}" style="color:#1a1a1a">${escapeHtml(t('digest.agencyOpen'))}</a></p>`,
+        ]
+      : []),
     `<p style="margin:24px 0"><a href="${escapeHtml(todayUrl)}" style="background:#1a1a1a;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none">${escapeHtml(t('digest.open'))}</a></p>`,
     `<p style="font-size:12px;color:#666666">${escapeHtml(t('digest.footer'))}</p>`,
     `</div>`,
@@ -99,6 +118,9 @@ export function renderDailyDigest({ digest, recipientName, locale, timezone, app
       ...lines.map((line) => `- ${line}`),
       ...(section.more > 0 ? [`- ${more(section.more)}`] : []),
     ]),
+    ...(agencyLines.length > 0
+      ? ['', t('digest.agencyTitle'), ...agencyLines.map((line) => `- ${line}`), `${t('digest.agencyOpen')}: ${exceptionsUrl}`]
+      : []),
     '',
     `${t('digest.open')}: ${todayUrl}`,
     '',
