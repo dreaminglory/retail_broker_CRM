@@ -210,7 +210,7 @@ active opportunity has an owner, a next action and a complete history.
 |----|------------|
 | FR-TST-01 | `supabase db reset` builds the full schema and seed data from scratch |
 | FR-TST-02 | pgTAP tests prove tenant isolation on every table |
-| FR-TST-03 | ⚠️ Vitest tests for business logic. Phone, timezone, validation and the task service are covered; the other domain services are not (module `trustworthy-loop`) |
+| FR-TST-03 | ⚠️ Vitest tests for business logic. Phone, timezone, validation and every service changed in `trustworthy-loop` are covered (tasks, inquiries, contacts, merge, opportunities, imports, search, timeline); the `agencies`, `lead-sources`, `members`, `notes` and `stages` services have no tests yet |
 | FR-TST-04 | CI runs typecheck, lint, Vitest and pgTAP on every pull request and push to `main` |
 | FR-TST-05 | ✅ One command brings up the app with local Supabase and seeded logins on a local machine (AD-043, AD-048, Sprint 6) |
 | FR-TST-06 | ✅ An E2E smoke test covers the core loop in `bg` and `en` at 1280 and 390 px (AD-043, Sprint 6) |

@@ -272,7 +272,8 @@ what the module changed in them.
 
 **Acceptance criteria:**
 - [x] Every service file changed in this module has a test file (AC-11)
-- [ ] CI green, then FR-TST-03 becomes ✅ when the module closes
+- [x] FR-TST-03 says what's covered; it stays ⚠️ because five services have no tests
+- [ ] CI green
 
 **Verification:**
 - [x] `npm run test:services`

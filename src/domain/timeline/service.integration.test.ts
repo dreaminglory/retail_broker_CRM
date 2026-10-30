@@ -64,6 +64,8 @@ describeServices('TimelineService against the local stack', () => {
   });
 
   it("resolves a note's author from their profile", async () => {
+    await insert('notes', { opportunity_id: opportunityId, content: 'With an author', created_by: broker.userId });
+
     const entries = await new TimelineService(broker.db).getOpportunityTimeline(opportunityId, broker.agencyId);
 
     const note = entries.find((entry) => entry.type === 'note');

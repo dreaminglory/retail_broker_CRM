@@ -91,7 +91,6 @@ Already done in this module (Sprint 6, slices 6.0–6.2): prod synced with migra
 
 ## Cut order if time runs short
 1. Owner and primary-contact columns on opportunity rows.
-2. Opportunity and merge service suites (keep tasks and inquiries).
 
 ## Open questions
 - None blocking. The AD-045 merge-RPC question is tracked in `SPEC.md` §4.
