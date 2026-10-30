@@ -433,7 +433,17 @@
     "inputPlaceholder": "Search contacts, opportunities, and inquiries...",
     "searching": "Searching...",
     "noResults": "No results found.",
-    "results": "Results"
+    "results": "Results",
+    "unnamedContact": "Unnamed contact",
+    "unknownCaller": "Unknown caller",
+    "kinds": {
+      "person": "Person",
+      "organization": "Organization",
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "landlord": "Landlord",
+      "tenant": "Tenant"
+    }
   },
   "auth": {
     "login": {

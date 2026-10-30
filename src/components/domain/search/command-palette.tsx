@@ -124,9 +124,13 @@ export function CommandPalette() {
               >
                 {getIcon(result.type)}
                 <div className="flex flex-col">
-                  <span>{result.title}</span>
-                  {result.subtitle && (
-                    <span className="text-xs text-muted-foreground">{result.subtitle}</span>
+                  <span>
+                    {result.title ?? t(result.type === "inquiry" ? "unknownCaller" : "unnamedContact")}
+                  </span>
+                  {(result.kind || result.subtitle) && (
+                    <span className="text-xs text-muted-foreground">
+                      {result.kind ? t(`kinds.${result.kind}`) : result.subtitle}
+                    </span>
                   )}
                 </div>
               </CommandItem>

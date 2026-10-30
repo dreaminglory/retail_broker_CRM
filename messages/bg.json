@@ -433,7 +433,17 @@
     "inputPlaceholder": "Търсене на контакти, сделки и запитвания...",
     "searching": "Търсене...",
     "noResults": "Няма намерени резултати.",
-    "results": "Резултати"
+    "results": "Резултати",
+    "unnamedContact": "Контакт без име",
+    "unknownCaller": "Неизвестен обаждащ се",
+    "kinds": {
+      "person": "Лице",
+      "organization": "Организация",
+      "buyer": "Купувач",
+      "seller": "Продавач",
+      "landlord": "Наемодател",
+      "tenant": "Наемател"
+    }
   },
   "auth": {
     "login": {
