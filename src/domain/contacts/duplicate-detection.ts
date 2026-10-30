@@ -1,3 +1,4 @@
+import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CreateContactInput, Contact, ContactMethod } from './types';
 import { generateDisplayName, normalizeContactMethodValue } from './validation';
@@ -54,20 +55,24 @@ export async function findPotentialDuplicates(
     .filter(Boolean);
 
   if (allMethodValues.length > 0) {
-    const { data: methodMatches } = await db
+    const { data: methodMatches, error: methodsError } = await db
       .from('contact_methods')
       .select('contact_id, type')
       .eq('agency_id', agencyId)
       .in('value', allMethodValues);
 
+    if (methodsError) throw new DomainError('errors.loadFailed', `Duplicate check on contact methods failed: ${methodsError.message}`);
+
     if (methodMatches && methodMatches.length > 0) {
       const contactIds = [...new Set(methodMatches.map((m) => m.contact_id))];
-      const { data: contacts } = await db
+      const { data: contacts, error: contactsError } = await db
         .from('contacts')
         .select('*, contact_methods(*)')
         .eq('agency_id', agencyId)
         .in('id', contactIds)
         .eq('status', 'active'); // Only active duplicates
+
+      if (contactsError) throw new DomainError('errors.loadFailed', `Duplicate check on contacts failed: ${contactsError.message}`);
 
       if (contacts) {
         for (const c of contacts) {
@@ -95,12 +100,14 @@ export async function findPotentialDuplicates(
     displayName !== 'Unnamed Organization'
   ) {
     // Trigram-accelerated ILIKE
-    const { data: nameMatches } = await db
+    const { data: nameMatches, error: namesError } = await db
       .from('contacts')
       .select('*, contact_methods(*)')
       .eq('agency_id', agencyId)
       .eq('status', 'active')
       .ilike('display_name', `%${displayName}%`);
+
+    if (namesError) throw new DomainError('errors.loadFailed', `Duplicate check on names failed: ${namesError.message}`);
 
     if (nameMatches) {
       for (const c of nameMatches) {

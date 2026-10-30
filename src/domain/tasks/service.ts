@@ -90,11 +90,13 @@ export class TaskService {
     
     // Automatically inherit assigned_to from the opportunity if not provided
     if (!parsed.assigned_to && parsed.opportunity_id) {
-      const { data } = await this.db
+      const { data, error } = await this.db
         .from('opportunities')
         .select('assigned_to')
         .eq('id', parsed.opportunity_id)
-        .single();
+        .eq('agency_id', agencyId)
+        .maybeSingle();
+      if (error) throw new DomainError('errors.loadFailed', `Failed to fetch the task's opportunity: ${error.message}`);
       if (data?.assigned_to) {
         parsed.assigned_to = data.assigned_to;
       }

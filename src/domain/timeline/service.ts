@@ -45,16 +45,21 @@ export class TimelineService {
     offset = 0
   ): Promise<TimelineEntry[]> {
     // 1. Find linked opportunities
-    const { data: opps } = await this.db
+    const { data: opps, error: oppsError } = await this.db
       .from('opportunities')
       .select('id')
       .eq('agency_id', agencyId)
       .eq('primary_contact_id', contactId);
 
-    const { data: participants } = await this.db
+    if (oppsError) throw new DomainError('errors.loadFailed', `Timeline opportunities fetch failed: ${oppsError.message}`);
+
+    const { data: participants, error: participantsError } = await this.db
       .from('opportunity_participants')
       .select('opportunity_id')
+      .eq('agency_id', agencyId)
       .eq('contact_id', contactId);
+
+    if (participantsError) throw new DomainError('errors.loadFailed', `Timeline participants fetch failed: ${participantsError.message}`);
 
     const oppIds = new Set<string>();
     opps?.forEach((o) => oppIds.add(o.id));

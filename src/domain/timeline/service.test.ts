@@ -10,7 +10,7 @@ function failingOn(table: string) {
 }
 
 describe('TimelineService errors', () => {
-  it.each(['notes', 'tasks', 'audit_log', 'inquiries'])(
+  it.each(['opportunities', 'opportunity_participants', 'notes', 'tasks', 'audit_log', 'inquiries'])(
     'a failed %s read on a contact is a translated error, not the database message',
     async (table) => {
       const error = await failingOn(table).getContactTimeline('contact-1', 'agency-1').catch((e) => e);

@@ -153,3 +153,23 @@ describe('TaskService pending-only guards', () => {
     await expect(service.cancel(TASK_ID, 'agency-1', {})).rejects.toEqual(new DomainError('errors.task_not_found'));
   });
 });
+
+describe('TaskService.create inheriting the assignee', () => {
+  const INPUT = {
+    title: 'Call back',
+    due_at: '2026-11-02T09:00:00.000Z',
+    opportunity_id: '44444444-4444-4444-8444-444444444444',
+  };
+
+  it('a failed opportunity read is an error, not an unassigned task', async () => {
+    fake = createFakeSupabase({ role: 'broker', tables: { tasks: task('pending') }, failingTables: ['opportunities'] });
+
+    const error = await new TaskService(fake.client as SupabaseClient, { timezone: SOFIA })
+      .create('agency-1', 'user-1', INPUT)
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(DomainError);
+    expect(error.code).toBe('errors.loadFailed');
+    expect(fake.writes).toEqual([]);
+  });
+});
