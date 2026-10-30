@@ -35,6 +35,13 @@ export class OpportunityService {
     return this.repo.findAll(agencyId, opts);
   }
 
+  async listPage(
+    agencyId: string,
+    opts?: OpportunityListOptions
+  ): Promise<{ rows: Opportunity[]; total: number }> {
+    return this.repo.findPage(agencyId, opts);
+  }
+
   async getById(id: string, agencyId: string): Promise<OpportunityWithDetails | null> {
     return this.repo.findById(id, agencyId);
   }

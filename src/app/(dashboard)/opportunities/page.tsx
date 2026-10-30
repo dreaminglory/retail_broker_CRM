@@ -7,6 +7,7 @@ import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { OpportunitiesPageClient } from "./opportunities-page-client";
 import type { OpportunityType } from "@/domain/opportunities/types";
+import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -32,6 +33,7 @@ export default async function OpportunitiesPage({
   const status = params.status ?? "active";
   const stage = params.stage ?? "all";
   const type = params.type ?? "all";
+  const page = parsePage(params.page);
 
   const supabase = await createSupabaseServer();
   const {
@@ -58,14 +60,17 @@ export default async function OpportunitiesPage({
   }
 
   // Fetch all required data in parallel
-  const [opportunities, stages, leadSources, contacts, brokers] = await Promise.all([
-    new OpportunityService(supabase).list(agencyId, {
-      search: search || undefined,
-      status: status === "all" ? "all" : status,
-      stageId: stage === "all" ? undefined : stage,
-      type: type === "all" ? "all" : type,
-      limit: 200,
-    }),
+  const [paged, stages, leadSources, contacts, brokers] = await Promise.all([
+    loadPage(page, PAGE_SIZE, (offset, limit) =>
+      new OpportunityService(supabase).listPage(agencyId, {
+        search: search || undefined,
+        status: status === "all" ? "all" : status,
+        stageId: stage === "all" ? undefined : stage,
+        type: type === "all" ? "all" : type,
+        limit,
+        offset,
+      })
+    ),
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new ContactService(supabase).list(agencyId, { status: "active", limit: 200 }),
@@ -75,7 +80,8 @@ export default async function OpportunitiesPage({
   return (
     <div className="mx-auto max-w-5xl">
       <OpportunitiesPageClient
-        opportunities={opportunities}
+        opportunities={paged.rows}
+        pageInfo={paged.info}
         stages={stages}
         leadSources={leadSources}
         contacts={contacts}

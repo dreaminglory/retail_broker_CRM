@@ -33,14 +33,33 @@ export class OpportunityRepository {
     agencyId: string,
     opts: OpportunityListOptions = {}
   ): Promise<Opportunity[]> {
-    const { status = 'active', assignedTo, stageId, search, limit = 50, offset = 0 } = opts;
+    const { limit = 50, offset = 0 } = opts;
+    const { data, error } = await this.filtered(agencyId, opts, false).range(offset, offset + limit - 1);
+    if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
+    return (data ?? []) as Opportunity[];
+  }
+
+  /** One page of rows plus the total that match the filters (for the pager). */
+  async findPage(
+    agencyId: string,
+    opts: OpportunityListOptions = {}
+  ): Promise<{ rows: Opportunity[]; total: number }> {
+    const { limit = 50, offset = 0 } = opts;
+    const { data, count, error } = await this.filtered(agencyId, opts, true).range(offset, offset + limit - 1);
+    if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
+    return { rows: (data ?? []) as Opportunity[], total: count ?? 0 };
+  }
+
+  private filtered(agencyId: string, opts: OpportunityListOptions, withCount: boolean) {
+    const { status = 'active', assignedTo, stageId, search } = opts;
 
     let query = this.db
       .from('opportunities')
-      .select('*')
+      .select('*', withCount ? { count: 'exact' } : undefined)
       .eq('agency_id', agencyId)
+      // id breaks created_at ties so pages never overlap
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('id', { ascending: false });
 
     if (status !== 'all') {
       query = query.eq('status', status);
@@ -57,10 +76,7 @@ export class OpportunityRepository {
     if (search) {
       query = query.ilike('title', `%${search}%`);
     }
-
-    const { data, error } = await query;
-    if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
-    return (data ?? []) as Opportunity[];
+    return query;
   }
 
   async findById(id: string, agencyId: string): Promise<OpportunityWithDetails | null> {

@@ -103,11 +103,11 @@ stack (refuses to run against a non-local URL).
 200 cap. A shared `ListPager` (prev/next, "x–y of n", `?page=`) shows on the opportunity list.
 
 **Acceptance criteria:**
-- [ ] With the volume seed, all 300 opportunities are reachable page by page
-- [ ] A page loads in under 3 s locally (NFR-07)
+- [x] With the volume seed, all 300 opportunities are reachable page by page
+- [x] A page loads in under 3 s locally (NFR-07)
 
 **Verification:**
-- [ ] Vitest for the paging maths; browser check at 390 px
+- [x] Vitest for the paging maths; browser check at 390 px
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/opportunities/repository.ts`, `src/components/ui/list-pager.tsx` (or `components/domain/shared`), the opportunities page

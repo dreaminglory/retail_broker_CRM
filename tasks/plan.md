@@ -34,7 +34,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 
 ### Phase 2: Lists at volume
 - [x] Task 6: Volume seed script
-- [ ] Task 7: Paginated opportunity list with a shared pager
+- [x] Task 7: Paginated opportunity list with a shared pager
 - [ ] Task 8: Pager on contacts and inquiries (FR-CON-10)
 - [ ] Task 9: Agency-wide contact picker (FR-OPP-16)
 - [ ] Task 10: Broker and temperature filters on opportunities (FR-OPP-11)

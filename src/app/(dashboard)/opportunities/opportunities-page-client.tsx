@@ -19,6 +19,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { OpportunityListTable } from "@/components/domain/opportunities/opportunity-list-table";
+import { ListPager } from "@/components/ui/list-pager";
+import type { PageInfo } from "@/lib/pagination";
 import { OpportunityForm } from "@/components/domain/opportunities/opportunity-form";
 import { createOpportunityAction, searchOpportunitiesQuickAction } from "./actions";
 import type { Opportunity } from "@/domain/opportunities/types";
@@ -35,6 +37,7 @@ const TYPE_FILTER_KEYS = ["allTypes", "buyer", "seller", "tenant", "landlord"];
 
 interface OpportunitiesPageClientProps {
   opportunities: Opportunity[];
+  pageInfo: PageInfo;
   stages: Stage[];
   leadSources: LeadSource[];
   contacts: Contact[];
@@ -47,6 +50,7 @@ interface OpportunitiesPageClientProps {
 
 export function OpportunitiesPageClient({
   opportunities,
+  pageInfo,
   stages,
   leadSources,
   contacts,
@@ -110,7 +114,7 @@ export function OpportunitiesPageClient({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("count", { count: opportunities.length })}
+            {t("count", { count: pageInfo.total })}
           </p>
         </div>
 
@@ -238,6 +242,7 @@ export function OpportunitiesPageClient({
       {/* ── List ────────────────────────────────────────────────────────────── */}
       <div className={`${isPending ? "opacity-60 pointer-events-none" : ""}`}>
         <OpportunityListTable opportunities={opportunities} stages={stages} />
+        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
       </div>
     </>
   );

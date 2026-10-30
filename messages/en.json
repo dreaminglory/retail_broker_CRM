@@ -1085,5 +1085,12 @@
         "pendingTasks": "Pending Tasks"
       }
     }
+  },
+  "ListPager": {
+    "label": "Pagination",
+    "range": "{from}–{to} of {total}",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}"
   }
 }

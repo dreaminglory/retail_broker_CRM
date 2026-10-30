@@ -1069,5 +1069,12 @@
         "pendingTasks": "Чакащи задачи"
       }
     }
+  },
+  "ListPager": {
+    "label": "Странициране",
+    "range": "{from}–{to} от {total}",
+    "prev": "Назад",
+    "next": "Напред",
+    "pageOf": "Страница {page} от {pages}"
   }
 }
