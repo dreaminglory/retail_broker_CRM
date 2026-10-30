@@ -4,6 +4,8 @@
  * (spec/reminders.md rule 3), so a template can't leak what the builder never receives.
  */
 
+import type { MemberRole } from '@/domain/members/types';
+
 export type NotificationKind = 'daily_digest' | 'inquiry_assigned';
 
 export type DeliveryStatus = 'pending' | 'sent' | 'failed' | 'skipped';
@@ -16,6 +18,7 @@ export type DigestRecipient = {
   email: string;
   name: string;
   locale: NotificationLocale;
+  role: MemberRole;
 };
 
 /** A pending task, as loaded for the digest. */

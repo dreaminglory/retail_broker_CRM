@@ -70,3 +70,8 @@ export function createRowCleanup() {
     },
   };
 }
+
+/** The service-role client, for what the app does through the admin client: setup and the cron route. */
+export function adminClient(): SupabaseClient {
+  return newClient(env('SUPABASE_TEST_SERVICE_ROLE_KEY'));
+}
