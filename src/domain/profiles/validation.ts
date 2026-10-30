@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Zod schemas for profile validation.
- * AD-023: Profile updates are limited to display_name (2-100 chars).
+ * AD-023: display_name is 2-100 chars. Locale and the daily digest have their own schemas.
  */
 
 export const updateProfileSchema = z.object({

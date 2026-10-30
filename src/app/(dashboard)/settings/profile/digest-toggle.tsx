@@ -19,13 +19,17 @@ export function DigestToggle({ currentEnabled }: DigestToggleProps) {
   function onChange(next: boolean) {
     setEnabled(next);
     startTransition(async () => {
-      const res = await updateDigestEnabledAction(next);
-      if (res.success) {
-        toast.success(next ? t('digestOn') : t('digestOff'));
-      } else {
-        setEnabled(!next);
-        toast.error(t('digestError'));
+      try {
+        const res = await updateDigestEnabledAction(next);
+        if (res.success) {
+          toast.success(next ? t('digestOn') : t('digestOff'));
+          return;
+        }
+      } catch {
+        // The request itself failed. Uncaught, this would replace the page with the error boundary.
       }
+      setEnabled(!next);
+      toast.error(t('digestError'));
     });
   }
 

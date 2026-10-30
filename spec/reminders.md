@@ -19,13 +19,13 @@ pilot-gate item (AD-039).
 2. Content: the recipient's overdue tasks, tasks due today, and new uncontacted inquiries
    assigned to them. Owners and managers also get agency counts (unassigned inquiries, overdue
    tasks) with a link to Exceptions. At most 10 rows per section, then "+N more".
-3. No email when every section is empty, and none to deactivated members. The language is
+3. No email when every section and the agency counts are empty, and none to deactivated members. The language is
    `profiles.locale`; dates are in agency time. Emails show names and task titles only, never
    phones or notes (GDPR minimisation).
 4. When an inquiry is assigned to someone other than the person acting, the assignee gets an
    immediate email. A bulk import sends one summary per assignee. A failed email never fails
    the action.
-5. Each user can turn the digest off (default on). Sends are idempotent per
+5. Each user can turn the digest off (default on), which also stops the agency counts (AD-052). Sends are idempotent per
    (user, kind, period key): the local date for the digest, the inquiry and date for an
    assignment email, the import job for an import summary (AD-051).
 6. Bulgarian public holidays are **not** skipped yet. [ASSUMPTION — validate: complaints in

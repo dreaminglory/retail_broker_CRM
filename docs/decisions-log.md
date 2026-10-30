@@ -240,8 +240,8 @@ not be suppressed by the day's earlier one.
 **Revisit if:** the pilot needs retries beyond the next day's run, or volume outgrows one request.
 
 ### AD-052: Agency counts are part of the digest
-**Proposed** (2026-10-31, while building `reminders`; for founder review). Refines
-`spec/reminders.md` rules 2 and 5.
+**Accepted** (founder, 2026-10-31, while building `reminders`). Refines
+`spec/reminders.md` rules 2, 3 and 5.
 - **Turning the digest off also stops the counts.** An owner or manager has one digest switch,
   and no separate email carries the counts.
 - **Same rows as the sections.** The builder derives the counts from the agency's rows the digest

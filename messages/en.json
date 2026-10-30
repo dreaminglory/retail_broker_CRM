@@ -412,7 +412,7 @@
     "selectLanguage": "Select language",
     "languageHelp": "Choose the application language.",
     "digest": "Daily email digest",
-    "digestHelp": "An email every working morning with your overdue tasks, tasks due today and new inquiries.",
+    "digestHelp": "An email every working morning with your overdue tasks, tasks due today and new inquiries. Owners and managers also get the agency's counts in it.",
     "digestOn": "Daily digest turned on",
     "digestOff": "Daily digest turned off",
     "digestError": "Failed to update the daily digest"
