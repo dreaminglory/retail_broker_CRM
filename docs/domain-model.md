@@ -424,8 +424,8 @@ The "Enforced by" column tells you which layer to change and test.
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
 | T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
-| C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods (inquiry callers: not yet, see Known gaps) |
-| C3 | Duplicate check (phone, email, trigram name) before creating a contact | `duplicate-detection.ts` (service) |
+| C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods and inquiry callers; `callerContactMethods()` at conversion |
+| C3 | Duplicate check (phone, email, trigram name) before creating a contact, including at inquiry conversion | `duplicate-detection.ts` (service) |
 | C4 | Merge archives the loser and snapshots it | `merge.ts` + `merge_history` |
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
 | I1 | `raw_payload` is never modified | convention (not in update schema) |
@@ -460,9 +460,8 @@ module that fixes it is named where there is one. Remove a row when the fix land
    trigger exists on `inquiries`.
 3. **Opportunity status transitions are unchecked.** `close()` and `reactivate()` don't check
    the current status (inquiries and tasks are checked: I3, K3).
-4. **Inquiry callers aren't normalized.** `caller_phone` and `caller_email` are stored and
-   copied to `contact_methods` on conversion as typed, and only Bulgarian mobiles parse
-   (C2). → `trustworthy-loop` (AD-041).
+4. **Inquiry callers stored before `trustworthy-loop`.** New and edited callers are normalized
+   (C2), but older rows keep what was typed until the backfill runs. → `trustworthy-loop`.
 5. **Import revert and recheck.** The revert's notes guard can't fire, and the recheck writes
    `match_reason` values (`db_recheck…`) that the `import_rows` CHECK rejects.
    → `trustworthy-loop`.

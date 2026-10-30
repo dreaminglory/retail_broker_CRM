@@ -12,11 +12,13 @@ import {
   updateInquirySchema,
   dismissInquirySchema,
   convertInquirySchema,
+  callerContactMethods,
   INQUIRY_STATUS_TRANSITIONS,
 } from './validation';
 import type { ConvertInquirySchema } from './validation';
 import { OpportunityRepository } from '../opportunities/repository';
 import { generateDisplayName } from '../contacts/validation';
+import { findPotentialDuplicates, type PotentialDuplicate } from '../contacts/duplicate-detection';
 import type { InquiryListOptions } from './repository';
 
 export class InquiryService {
@@ -95,6 +97,24 @@ export class InquiryService {
   }
 
   /**
+   * Finds contacts that a conversion would duplicate, matching the new contact's name
+   * and the caller's phone and email (FR-INQ-14).
+   */
+  async findConversionDuplicates(
+    id: string,
+    agencyId: string,
+    newContact: NonNullable<ConvertInquirySchema['create_contact']>
+  ): Promise<PotentialDuplicate[]> {
+    const current = await this.repo.findById(id, agencyId);
+    if (!current) throw new DomainError('errors.not_found');
+
+    return findPotentialDuplicates(this.db, agencyId, {
+      ...newContact,
+      contact_methods: callerContactMethods(current),
+    });
+  }
+
+  /**
    * Converts an inquiry to an opportunity (FR-INQ-07).
    * Optionally creates a new contact or links an existing one.
    * Sets inquiry status to 'converted' — terminal.
@@ -139,13 +159,11 @@ export class InquiryService {
       contactId = (newContact as { id: string }).id;
 
       // Seed contact methods from caller info if available
-      const methods = [];
-      if (current.caller_phone) {
-        methods.push({ contact_id: contactId, agency_id: agencyId, type: 'phone', value: current.caller_phone, is_primary: true });
-      }
-      if (current.caller_email) {
-        methods.push({ contact_id: contactId, agency_id: agencyId, type: 'email', value: current.caller_email, is_primary: !current.caller_phone });
-      }
+      const methods = callerContactMethods(current).map((method) => ({
+        ...method,
+        contact_id: contactId,
+        agency_id: agencyId,
+      }));
       if (methods.length > 0) {
         await this.db
           .from('contact_methods')

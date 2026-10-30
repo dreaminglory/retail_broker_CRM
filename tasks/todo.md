@@ -26,12 +26,12 @@ tests and add foreign numbers. Mark AD-041 Accepted in `docs/decisions-log.md`.
 passes both phone and email.
 
 **Acceptance criteria:**
-- [ ] An inquiry `0888 123 456` converts with a duplicate warning against `+359888123456` (AC-2)
-- [ ] `raw_payload` is unchanged after create, edit and convert (AC-4)
+- [x] An inquiry `0888 123 456` converts with a duplicate warning against `+359888123456` (AC-2)
+- [x] `raw_payload` is unchanged after create, edit and convert (AC-4)
 
 **Verification:**
-- [ ] `npx vitest run src/domain/inquiries`
-- [ ] Manual: convert a seeded inquiry with a local-format number and see the duplicate warning
+- [x] `npx vitest run src/domain/inquiries`
+- [x] Manual: convert a seeded inquiry with a local-format number and see the duplicate warning
 
 **Dependencies:** Task 1
 **Files likely touched:** `src/domain/inquiries/validation.ts`, `validation.test.ts`, `service.ts`

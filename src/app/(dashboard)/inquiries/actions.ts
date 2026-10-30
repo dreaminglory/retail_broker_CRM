@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { InquiryService } from '@/domain/inquiries/service';
 import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
-import { findPotentialDuplicates, type PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
+import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
@@ -137,15 +137,16 @@ export async function convertInquiryAction(
     const parsed = convertInquirySchema.safeParse(raw);
     if (!parsed.success) return toActionError(parsed.error);
 
+    const service = new InquiryService(supabase);
+
     const skipDuplicateCheck = formData.get('skipDuplicateCheck') === 'true';
     if (parsed.data.create_contact && !skipDuplicateCheck) {
-      const duplicates = await findPotentialDuplicates(supabase, agencyId, parsed.data.create_contact as any);
+      const duplicates = await service.findConversionDuplicates(id, agencyId, parsed.data.create_contact);
       if (duplicates.length > 0) {
         return { success: true, data: { duplicates } };
       }
     }
 
-    const service = new InquiryService(supabase);
     const result = await service.convert(id, agencyId, userId, parsed.data);
 
     revalidatePath('/inquiries');

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  callerContactMethods,
   convertInquirySchema,
   createInquirySchema,
   updateInquirySchema,
@@ -45,5 +46,94 @@ describe('inquiry schemas: assigned_to', () => {
       assigned_to: 'none',
     });
     expect(parsed.assigned_to).toBeNull();
+  });
+});
+
+describe('inquiry schemas: caller normalisation', () => {
+  it.each([
+    ['createInquirySchema', createInquirySchema],
+    ['updateInquirySchema', updateInquirySchema],
+  ])('%s stores a local phone as E.164', (_label, schema) => {
+    const parsed = schema.parse({ caller_phone: '0888 123 456' });
+    expect(parsed.caller_phone).toBe('+359888123456');
+  });
+
+  it.each([
+    ['createInquirySchema', createInquirySchema],
+    ['updateInquirySchema', updateInquirySchema],
+  ])('%s lowercases and trims the email', (_label, schema) => {
+    const parsed = schema.parse({ caller_email: ' Ivan@Example.BG ' });
+    expect(parsed.caller_email).toBe('ivan@example.bg');
+  });
+
+  it.each([
+    ['createInquirySchema', createInquirySchema],
+    ['updateInquirySchema', updateInquirySchema],
+  ])('%s rejects an unparseable phone with an i18n key', (_label, schema) => {
+    const result = schema.safeParse({ caller_name: 'Ivan', caller_phone: 'call me' });
+    expect(result.success).toBe(false);
+    expect(result.error?.flatten().fieldErrors.caller_phone).toEqual(['validation.invalid_phone']);
+  });
+
+  it('updateInquirySchema clears empty caller fields to null', () => {
+    const parsed = updateInquirySchema.parse({ caller_phone: '', caller_email: '' });
+    expect(parsed.caller_phone).toBeNull();
+    expect(parsed.caller_email).toBeNull();
+  });
+
+  it('updateInquirySchema leaves omitted caller fields undefined', () => {
+    const parsed = updateInquirySchema.parse({ subject: 'Flat' });
+    expect(parsed.caller_phone).toBeUndefined();
+    expect(parsed.caller_email).toBeUndefined();
+  });
+
+  it('parsing twice gives the same value', () => {
+    const once = createInquirySchema.parse({ caller_phone: '0888 123 456' });
+    expect(createInquirySchema.parse(once).caller_phone).toBe('+359888123456');
+  });
+});
+
+describe('inquiry schemas: immutable fields', () => {
+  it('createInquirySchema keeps raw_payload unchanged', () => {
+    const rawPayload = { phone: '0888 123 456', Email: 'IVAN@EXAMPLE.BG' };
+    const parsed = createInquirySchema.parse({ caller_phone: '0888 123 456', raw_payload: rawPayload });
+    expect(parsed.raw_payload).toEqual({ phone: '0888 123 456', Email: 'IVAN@EXAMPLE.BG' });
+  });
+
+  it('updateInquirySchema strips raw_payload and received_at', () => {
+    const parsed = updateInquirySchema.parse({
+      subject: 'Flat',
+      raw_payload: { tampered: true },
+      received_at: '2020-01-01T00:00:00Z',
+    });
+    expect(parsed).not.toHaveProperty('raw_payload');
+    expect(parsed).not.toHaveProperty('received_at');
+  });
+});
+
+describe('callerContactMethods', () => {
+  it('normalises a stored local phone and mixed-case email, phone first', () => {
+    expect(
+      callerContactMethods({ caller_phone: '0888 123 456', caller_email: 'Ivan@Example.BG' })
+    ).toEqual([
+      { type: 'phone', value: '+359888123456', label: null, is_primary: true },
+      { type: 'email', value: 'ivan@example.bg', label: null, is_primary: false },
+    ]);
+  });
+
+  it('makes the email primary when there is no phone', () => {
+    expect(callerContactMethods({ caller_phone: null, caller_email: 'ivan@example.bg' })).toEqual([
+      { type: 'email', value: 'ivan@example.bg', label: null, is_primary: true },
+    ]);
+  });
+
+  it('keeps a phone that cannot be parsed rather than losing it', () => {
+    expect(callerContactMethods({ caller_phone: 'legacy 123', caller_email: null })).toEqual([
+      { type: 'phone', value: 'legacy 123', label: null, is_primary: true },
+    ]);
+  });
+
+  it('returns nothing when the caller left no details', () => {
+    expect(callerContactMethods({ caller_phone: null, caller_email: null })).toEqual([]);
   });
 });

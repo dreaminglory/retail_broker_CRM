@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { nullableUuid } from '@/lib/validation';
+import { normalizePhone, phoneValidationMessage } from '../contacts/phone';
+import { normalizeContactMethodValue } from '../contacts/validation';
+import type { Inquiry } from './types';
 
 // ── Status transition map ──────────────────────────────────────────────────
 // Defines which statuses can follow which (for service-layer enforcement).
@@ -10,6 +13,53 @@ export const INQUIRY_STATUS_TRANSITIONS: Record<string, string[]> = {
   dismissed: [],   // terminal — cannot revert
 };
 
+// ── Caller fields ──────────────────────────────────────────────────────────
+
+const emptyToNull = (value: unknown) =>
+  typeof value === 'string' && value.trim() === '' ? null : value;
+
+/** E.164 like contact methods (C2). Omitted stays undefined, so partial updates leave it alone. */
+const callerPhoneSchema = z
+  .preprocess(emptyToNull, z.string().max(50).nullable().optional())
+  .transform((value, ctx) => {
+    if (!value) return value;
+    const normalized = normalizePhone(value);
+    if (!normalized) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: phoneValidationMessage() });
+      return z.NEVER;
+    }
+    return normalized;
+  });
+
+const callerEmailSchema = z.preprocess(
+  emptyToNull,
+  z.string().trim().toLowerCase().email('validation.invalid_email').nullable().optional()
+);
+
+/** The contact methods a caller's details become at conversion, normalised (C2). */
+export function callerContactMethods(
+  caller: Pick<Inquiry, 'caller_phone' | 'caller_email'>
+): { type: 'phone' | 'email'; value: string; label: null; is_primary: boolean }[] {
+  const methods: { type: 'phone' | 'email'; value: string; label: null; is_primary: boolean }[] = [];
+  if (caller.caller_phone) {
+    methods.push({
+      type: 'phone',
+      value: normalizeContactMethodValue('phone', caller.caller_phone),
+      label: null,
+      is_primary: true,
+    });
+  }
+  if (caller.caller_email) {
+    methods.push({
+      type: 'email',
+      value: normalizeContactMethodValue('email', caller.caller_email),
+      label: null,
+      is_primary: !caller.caller_phone,
+    });
+  }
+  return methods;
+}
+
 // ── Schemas ────────────────────────────────────────────────────────────────
 
 export const createInquirySchema = z
@@ -17,8 +67,8 @@ export const createInquirySchema = z
     source_id: nullableUuid(),
     source_description: z.string().max(500).nullable().optional(),
     caller_name: z.string().max(200).nullable().optional(),
-    caller_phone: z.string().max(50).nullable().optional(),
-    caller_email: z.string().email('validation.invalid_email').nullable().optional(),
+    caller_phone: callerPhoneSchema,
+    caller_email: callerEmailSchema,
     subject: z.string().max(500).nullable().optional(),
     description: z.string().max(5000).nullable().optional(),
     external_ref: z.string().max(200).nullable().optional(),
@@ -49,8 +99,8 @@ export const updateInquirySchema = z.object({
   status: z.enum(['new', 'contacted', 'converted', 'dismissed']).optional(),
   dismissed_reason: z.string().max(1000).nullable().optional(),
   caller_name: z.string().max(200).nullable().optional(),
-  caller_phone: z.string().max(50).nullable().optional(),
-  caller_email: z.string().email('validation.invalid_email').nullable().optional(),
+  caller_phone: callerPhoneSchema,
+  caller_email: callerEmailSchema,
   subject: z.string().max(500).nullable().optional(),
   description: z.string().max(5000).nullable().optional(),
 });
