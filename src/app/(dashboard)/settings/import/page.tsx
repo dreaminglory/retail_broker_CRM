@@ -6,21 +6,13 @@ export async function generateMetadata() {
 }
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ImportService } from "@/domain/imports/service";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { differenceInDays } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { getFormatter } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { RevertImportButton } from "./revert-import-button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { NewImportMenu } from "./new-import-menu";
 
 export default async function ImportHistoryPage() {
   const t = await getTranslations("SettingsImport");
@@ -60,33 +52,7 @@ export default async function ImportHistoryPage() {
             {t("description")}
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger render={
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t("newImport")}
-            </Button>
-          }>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("newImport")}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem render={
-              <Link href="/settings/import/new?type=contact" className="w-full">
-                {t("importContacts")}
-              </Link>
-            }>
-              {t("importContacts")}
-            </DropdownMenuItem>
-            <DropdownMenuItem render={
-              <Link href="/settings/import/new?type=inquiry" className="w-full">
-                {t("importInquiries")}
-              </Link>
-            }>
-              {t("importInquiries")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NewImportMenu />
       </div>
 
       <div className="rounded-md border bg-card">
