@@ -62,11 +62,11 @@ active opportunity has an owner, a next action and a complete history.
 | FR-CON-07 | Add and remove contact methods |
 | FR-CON-08 | Person and organization have type-specific fields |
 | FR-CON-09 | Display name is generated from first + last name, or company name |
-| FR-CON-10 | ⚠️ Contact list is paginated. Server-side `?page=` only; no pager in the UI (module `trustworthy-loop`) |
+| FR-CON-10 | ✅ Contact list is paginated, 50 per page with `?page=` and a pager (module `trustworthy-loop`) |
 | FR-CON-11 | Contacts are archived (soft), not deleted |
 | FR-CON-13 | Warn about likely duplicates (phone, email, similar name) before creating a contact (Sprint 2) |
 | FR-CON-14 | Merge duplicates: the loser is archived and snapshotted in merge history (Sprint 2) |
-| FR-CON-15 | ❌ International and landline phone numbers are accepted and stored as E.164 (AD-041, module `trustworthy-loop`) |
+| FR-CON-15 | ✅ International and landline phone numbers are accepted and stored as E.164 (AD-041, module `trustworthy-loop`) |
 
 ### FR-INQ: Inquiries (Sprint 1)
 
@@ -75,16 +75,16 @@ active opportunity has an owner, a next action and a complete history.
 | FR-INQ-02 | Inquiry inbox with status filter |
 | FR-INQ-03 | Manual inquiry creation: caller info, source, subject, description |
 | FR-INQ-04 | Status lifecycle: new → contacted → converted, or dismissed |
-| FR-INQ-05 | ⚠️ Assign an inquiry to a broker. Only at creation or conversion until FR-INQ-13 |
+| FR-INQ-05 | ✅ Assign an inquiry to a broker, at creation, at conversion and later from the inbox and Exceptions (module `trustworthy-loop`) |
 | FR-INQ-06 | Link an inquiry to an existing contact |
 | FR-INQ-07 | Create a contact from inquiry data (prefilled) |
 | FR-INQ-08 | Convert an inquiry into an opportunity linked to the inquiry and contact |
 | FR-INQ-09 | Dismiss an inquiry with an optional reason |
 | FR-INQ-10 | Original source data is preserved unchanged in `raw_payload` |
-| FR-INQ-11 | ⚠️ Inquiry rows show caller, source, status, assigned broker and age. Cards show "Assigned" without a name |
+| FR-INQ-11 | ✅ Inquiry rows show caller, source, status, assigned broker's name and age (module `trustworthy-loop`) |
 | FR-INQ-12 | External reference for portal IDs and other tracking numbers |
-| FR-INQ-13 | ❌ Edit an inquiry and reassign it from the inbox and Exceptions; the card shows the assignee's name (module `trustworthy-loop`) |
-| FR-INQ-14 | ❌ Inquiry caller phone and email are normalised, and the conversion duplicate check uses them (module `trustworthy-loop`) |
+| FR-INQ-13 | ✅ Edit an inquiry and reassign it from the inbox and Exceptions; the card shows the assignee's name (module `trustworthy-loop`) |
+| FR-INQ-14 | ✅ Inquiry caller phone and email are normalised, and the conversion duplicate check uses them (module `trustworthy-loop`) |
 
 ### FR-OPP: Opportunities and pipeline (Sprint 1)
 
@@ -99,10 +99,10 @@ active opportunity has an owner, a next action and a complete history.
 | FR-OPP-08 | Add and remove participants with roles |
 | FR-OPP-09 | Status: active, won, lost, nurture, archived |
 | FR-OPP-10 | Temperature: hot, warm, cold |
-| FR-OPP-11 | ⚠️ Filter by status, stage, type, broker and temperature. No broker or temperature filter in the UI (module `trustworthy-loop`) |
+| FR-OPP-11 | ✅ Filter by status, stage, type, broker and temperature (module `trustworthy-loop`) |
 | FR-OPP-12 | Close as won, lost (reason required) or nurture, and reactivate |
 | FR-OPP-14 | Keeps a reference to the inquiry it came from |
-| FR-OPP-16 | ❌ The opportunity list is paginated, and contact pickers search the whole agency (module `trustworthy-loop`) |
+| FR-OPP-16 | ✅ The opportunity list is paginated, and contact pickers search the whole agency (module `trustworthy-loop`) |
 | FR-OPP-15 | Optional expected value and currency |
 
 ### FR-STG: Pipeline stages (Sprints 1–2)
@@ -165,7 +165,7 @@ active opportunity has an owner, a next action and a complete history.
 |----|------------|
 | FR-PRF-01 | Every user automatically gets a profile |
 | FR-PRF-02 | Users edit their own display name and language |
-| FR-PRF-03 | ⚠️ Real names appear on timeline, notes, tasks and audit entries. A new signup's name defaults to the email prefix (module `trustworthy-loop`) |
+| FR-PRF-03 | ✅ Real names appear on timeline, notes, tasks and audit entries. A new signup's name falls back from display name to full name, then first and last name, then the email prefix (module `trustworthy-loop`) |
 | FR-PRF-04 | A profile is visible only to its user and their colleagues (AD-029) |
 
 ### FR-TEM: Team and invitations (Sprint 4)
@@ -211,7 +211,7 @@ active opportunity has an owner, a next action and a complete history.
 | FR-TST-01 | `supabase db reset` builds the full schema and seed data from scratch |
 | FR-TST-02 | pgTAP tests prove tenant isolation on every table |
 | FR-TST-03 | ⚠️ Vitest tests for business logic. Phone, timezone, validation and every service changed in `trustworthy-loop` are covered (tasks, inquiries, contacts, merge, opportunities, imports, search, timeline); the `agencies`, `lead-sources`, `members`, `notes` and `stages` services have no tests yet |
-| FR-TST-04 | CI runs typecheck, lint, Vitest and pgTAP on every pull request and push to `main` |
+| FR-TST-04 | CI runs typecheck, lint, Vitest, pgTAP and the service integration suites on every pull request and push to `main` |
 | FR-TST-05 | ✅ One command brings up the app with local Supabase and seeded logins on a local machine (AD-043, AD-048, Sprint 6) |
 | FR-TST-06 | ✅ An E2E smoke test covers the core loop in `bg` and `en` at 1280 and 390 px (AD-043, Sprint 6) |
 
@@ -234,7 +234,7 @@ active opportunity has an owner, a next action and a complete history.
 | FR-SET-03 | Agency default currency (EUR) |
 | FR-SET-04 | Each user chooses `bg` or `en`; the choice follows them across devices |
 | FR-SET-06 | ✅ Stages, lead sources and contact merge are restricted to owners and managers (AD-045, Sprint 6) |
-| FR-LOC-01 | ⚠️ Bulgarian is the default language everywhere, including errors and empty states. Some English strings and untranslated repository errors remain (module `trustworthy-loop`) |
+| FR-LOC-01 | ✅ Bulgarian is the default language everywhere, including errors and empty states (module `trustworthy-loop`) |
 | FR-LOC-02 | Money is formatted with the agency currency and the user's locale |
 | FR-LOC-03 | Date boundaries ("today", "overdue") use the agency timezone |
 | FR-LOC-04 | ⚠️ Auth emails are sent in the user's language. The templates are Bulgarian only |

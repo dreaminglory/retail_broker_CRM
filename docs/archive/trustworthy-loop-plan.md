@@ -1,7 +1,7 @@
 # Implementation Plan: trustworthy-loop
 
-> **Spec:** `spec/trustworthy-loop.md` · **Checklist:** `tasks/todo.md`
-> **Status:** approved scope, carried over from Sprint 6 (slices 6.3–6.6). Slices 6.0–6.2 are done;
+> **Spec:** `spec/trustworthy-loop.md` · **Checklist:** `docs/archive/trustworthy-loop-todo.md`
+> **Status:** Done (2026-10-30). Approved scope, carried over from Sprint 6 (slices 6.3–6.6). Slices 6.0–6.2 are done;
 > their plan is in `docs/archive/sprint-6-implementation-plan.md`.
 
 ## Overview
@@ -52,14 +52,14 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 - [x] AC-8…AC-10 pass
 
 ### Phase 4: Service tests in CI
-- [ ] Task 15: Supabase test client and the CI job
-- [ ] Task 16: Inquiry service and validation suites
-- [ ] Task 17: Opportunity and merge service suites (required by AC-11)
-- [ ] Task 18: Contact, import, search and timeline service tests (AC-11)
+- [x] Task 15: Supabase test client and the CI job
+- [x] Task 16: Inquiry service and validation suites
+- [x] Task 17: Opportunity and merge service suites (required by AC-11)
+- [x] Task 18: Contact, import, search and timeline service tests (AC-11)
 
 ### Checkpoint: module done
-- [ ] AC-11 passes; all spec acceptance criteria met
-- [ ] Close the module (AGENTS.md *Workflow* step 6)
+- [x] AC-11 passes; all spec acceptance criteria met
+- [x] Close the module (AGENTS.md *Workflow* step 6)
 
 ## Risks and mitigations
 | Risk | Impact | Mitigation |

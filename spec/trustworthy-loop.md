@@ -1,6 +1,7 @@
 # Spec: trustworthy-loop
 
-> **Status:** In progress. Approved scope (founder, 2026-10-28, as Sprint 6). Plan: `tasks/plan.md`.
+> **Status:** Done (2026-10-30). Approved scope (founder, 2026-10-28, as Sprint 6). Plan:
+> `docs/archive/trustworthy-loop-plan.md`.
 > **Evidence:** `docs/research/crm-competitive-gap-analysis.md` §5.0, `docs/research/brokercrm-feature-inventory.md`
 > §2.13 and §4. Nothing is E3 yet (`SPEC.md` *Pilot evidence* is empty).
 

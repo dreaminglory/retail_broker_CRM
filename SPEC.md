@@ -1,6 +1,6 @@
 # Spec: BrokerCRM
 
-> Last updated 2026-10-29. The product spec: what we build, in which order, and where it stands.
+> Last updated 2026-10-30. The product spec: what we build, in which order, and where it stands.
 > Module specs: `spec/<module-id>.md`. Active plan: `tasks/plan.md` + `tasks/todo.md`.
 
 ## 1. Objective
@@ -25,7 +25,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 
 | Gate item | Module | Status |
 |---|---|---|
-| Core-loop defects fixed | `trustworthy-loop` | In progress |
+| Core-loop defects fixed | `trustworthy-loop` | Done |
 | Reminders and daily digest | `reminders` | Next |
 | Light property record linked to opportunities | `properties` | Planned |
 | Buyer/tenant requirements | `requirements` | Planned |
@@ -41,7 +41,7 @@ starts; pilot evidence sets the order.
 
 | Module | Scope | Depends on | Status |
 |---|---|---|---|
-| `trustworthy-loop` | International phones (AD-041), inquiry edit and reassign, pagers and contact picker at volume, import revert and i18n fixes, service tests in CI | — | In progress |
+| `trustworthy-loop` | International phones (AD-041), inquiry edit and reassign, pagers and contact picker at volume, import revert and i18n fixes, service tests in CI | — | Done |
 | `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | Next |
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Planned |
 | `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Planned |
@@ -73,14 +73,17 @@ Candidates from `/feature-ideas`, not yet on the map. Promote one by adding a ma
 manual inquiries and conversion; opportunities with custom stages, participants, close and
 reopen; tasks with the next-action trigger, Today (Mine/Agency) and Exceptions; notes,
 timeline and audit triggers; ⌘K search (desktop); CSV import with revert; BG/EN, agency
-timezone, EUR; local QA stack and E2E smoke; CI runs typecheck, lint, Vitest and pgTAP.
+timezone, EUR; local QA stack and E2E smoke; international and landline phones; inquiry edit
+and reassign; pagers and agency-wide contact pickers; atomic conversion and merge (AD-050); CI
+runs typecheck, lint, Vitest, pgTAP and the service integration suites.
 
-**Known gaps** (fixed by `trustworthy-loop` unless noted): BG mobile numbers only; no inquiry
-edit or reassign UI; 200-row lists without pagers; the import revert ignores notes; some
-English leaks; resend invitation (`conversion-join`). BRD rows marked ⚠️ say where each is handled.
+**Known gaps:** resend invitation (`conversion-join`); five services have no tests yet
+(FR-TST-03). BRD rows marked ⚠️ say where each is handled.
 
 **Production:** Supabase `emflwmivjachbnaqumnn` (eu-west-2); migration history equals the repo
-(AD-040), changes go through migrations only. Leaked-password protection is still off
+(AD-040), changes go through migrations only. `main` now holds migrations through
+`20261102000009`: confirm and apply them with `/ship` before deploying this code, which calls the
+AD-050 RPCs. Leaked-password protection is still off
 (founder). No app hosting yet.
 
 **Go-live prerequisites (founder):** a domain verified in Resend, hosting that allows two daily
