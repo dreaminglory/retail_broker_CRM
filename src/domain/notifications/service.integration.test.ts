@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
+import { ProfileRepository } from '@/domain/profiles/repository';
 import { adminClient, createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
 import type { MailMessage, MailResult, Mailer } from './mailer';
 import { NotificationRepository } from './repository';
@@ -208,6 +209,22 @@ describeServices('NotificationService daily digest against the local stack', () 
     expect(recipients).not.toContain(gone.email);
     expect(await deliveryFor(off.userId)).toBeNull();
     expect(await deliveryFor(gone.userId)).toBeNull();
+  });
+
+  it('stops the digest when a member turns it off, and brings it back when they turn it on (AC-4)', async () => {
+    const member = await createTempMember('toggle');
+    await createOverdueTask(member.userId, broker.agencyId, 'Temp member task');
+    const profiles = new ProfileRepository(admin);
+
+    await profiles.updateDigestEnabled(member.userId, false);
+    const off = fakeMailer();
+    await run(off.mailer);
+    expect(off.sent.map((m) => m.to)).not.toContain(member.email);
+
+    await profiles.updateDigestEnabled(member.userId, true);
+    const on = fakeMailer();
+    await run(on.mailer);
+    expect(on.sent.map((m) => m.to)).toContain(member.email);
   });
 
   it('runs only the agencies whose local time is 08:xx on a weekday', async () => {

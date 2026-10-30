@@ -35,7 +35,8 @@ function newClient(key: string): SupabaseClient {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-export async function signInAs(email: SeededLogin): Promise<TestSession> {
+/** A seeded login, or a member a test made with the seeded password. */
+export async function signInAs(email: SeededLogin | (string & {})): Promise<TestSession> {
   const db = newClient(env('SUPABASE_TEST_ANON_KEY'));
 
   const { data, error } = await db.auth.signInWithPassword({ email, password: SEEDED_PASSWORD });

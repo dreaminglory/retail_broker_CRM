@@ -22,3 +22,7 @@ export const updateLocaleSchema = z.object({
 });
 
 export type UpdateLocaleSchema = z.infer<typeof updateLocaleSchema>;
+
+export const updateDigestEnabledSchema = z.object({
+  digest_enabled: z.boolean(),
+});
