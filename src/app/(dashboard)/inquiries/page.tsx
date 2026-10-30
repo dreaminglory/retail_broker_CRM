@@ -5,7 +5,8 @@ import { LeadSourceRepository } from "@/domain/lead-sources/repository";
 import { StageRepository } from "@/domain/stages/repository";
 import { MemberRepository } from "@/domain/members/repository";
 import { ProfileRepository } from "@/domain/profiles/repository";
-import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
+import { PAGE_SIZE, loadPage, pageInfo, parsePage } from "@/lib/pagination";
+import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
 
 export async function generateMetadata() {
@@ -58,7 +59,7 @@ export default async function InquiriesPage({
 
   // Fetch all required data in parallel
   const [paged, leadSources, stages, brokers] = await Promise.all([
-    loadPage(page, PAGE_SIZE, (offset, limit) =>
+    id ? loadInquiryById(supabase, agencyId, id) : loadPage(page, PAGE_SIZE, (offset, limit) =>
       new InquiryService(supabase).listPage(agencyId, {
         search: search || undefined,
         status: status === "all" ? undefined : status,
@@ -100,4 +101,16 @@ export default async function InquiriesPage({
       />
     </div>
   );
+}
+
+/** `?id=` deep link: the one inquiry, wherever it sits in the list; a bad or unknown id shows none. */
+async function loadInquiryById(
+  supabase: Awaited<ReturnType<typeof createSupabaseServer>>,
+  agencyId: string,
+  id: string
+) {
+  const valid = z.string().uuid().safeParse(id).success;
+  const inquiry = valid ? await new InquiryService(supabase).getById(id, agencyId) : null;
+  const rows = inquiry ? [inquiry] : [];
+  return { rows, total: rows.length, info: pageInfo(1, PAGE_SIZE, rows.length) };
 }

@@ -23,6 +23,8 @@ type ContactComboboxProps = {
 /**
  * Searches the whole agency as you type (20 results) instead of preloading a list.
  * The list renders inline, not in a portal, so it works inside dialogs and on phones.
+ * Text that was typed but never picked is never submitted: leaving the field restores the
+ * contact that was chosen before, or empties it.
  */
 export function ContactCombobox({
   id,
@@ -45,6 +47,8 @@ export function ContactCombobox({
   const [failed, setFailed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const latestRequest = useRef(0);
+  // The contact to fall back to when the user types something and leaves without picking.
+  const committed = useRef<ContactOption | null>(defaultValue);
 
   // Search while the list is open and nothing is chosen. A slower, older response is dropped.
   useEffect(() => {
@@ -52,27 +56,39 @@ export function ContactCombobox({
     const request = ++latestRequest.current;
     const timer = setTimeout(async () => {
       setLoading(true);
-      const result = await searchContactsForPicker(text);
-      if (request !== latestRequest.current) return;
-      setLoading(false);
-      setFailed(!result.success);
-      setResults(result.success ? result.data : []);
-      setActiveIndex(-1);
+      try {
+        const result = await searchContactsForPicker(text);
+        if (request !== latestRequest.current) return;
+        setFailed(!result.success);
+        setResults(result.success ? result.data : []);
+        setActiveIndex(-1);
+      } catch {
+        // The action itself failed (network, a deploy): say so instead of searching forever.
+        if (request !== latestRequest.current) return;
+        setFailed(true);
+        setResults([]);
+      } finally {
+        if (request === latestRequest.current) setLoading(false);
+      }
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [text, open, selected]);
 
   function choose(contact: ContactOption) {
+    committed.current = contact;
     setSelected(contact);
     setText(contact.display_name);
     setOpen(false);
+    setActiveIndex(-1);
     onChange?.(contact);
   }
 
   function clear() {
+    committed.current = null;
     setSelected(null);
     setText("");
     setResults([]);
+    setActiveIndex(-1);
     onChange?.(null);
   }
 
@@ -85,24 +101,58 @@ export function ContactCombobox({
     }
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setOpen(true);
-      setActiveIndex((i) => Math.min(i + 1, results.length - 1));
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (event.key === "Enter" && open && activeIndex >= 0 && results[activeIndex]) {
-      event.preventDefault(); // pick the contact, don't submit the form
-      choose(results[activeIndex]);
-    } else if (event.key === "Escape" && open) {
-      event.stopPropagation(); // close the list, not the dialog around it
-      setOpen(false);
+  function handleBlur() {
+    setOpen(false);
+    if (selected) return;
+    if (text.trim() === "") {
+      // Emptying the field is a deliberate clear.
+      committed.current = null;
+      return;
+    }
+    const previous = committed.current;
+    if (previous) {
+      setSelected(previous);
+      setText(previous.display_name);
+      onChange?.(previous);
+    } else {
+      setText("");
     }
   }
 
   const showList = open && !selected;
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (!showList) setOpen(true);
+      else setActiveIndex((i) => Math.min(i + 1, results.length - 1));
+    } else if (event.key === "ArrowUp" && showList) {
+      event.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (event.key === "Enter") {
+      if (showList && activeIndex >= 0 && results[activeIndex]) {
+        event.preventDefault(); // pick the contact, don't submit the form
+        choose(results[activeIndex]);
+      } else if (!selected && text.trim() !== "") {
+        event.preventDefault(); // typed text that isn't a contact must not submit
+      }
+    } else if (event.key === "Escape" && showList) {
+      // The dialog around the picker listens on the document too, so stop that listener as well.
+      event.stopPropagation();
+      event.nativeEvent.stopImmediatePropagation();
+      setOpen(false);
+    }
+  }
+
+  const status = !showList
+    ? ""
+    : loading
+      ? t("searching")
+      : failed
+        ? t("error")
+        : results.length === 0
+          ? t("noResults")
+          : t("resultsCount", { count: results.length });
 
   return (
     <div className="relative">
@@ -112,9 +162,9 @@ export function ContactCombobox({
           id={inputId}
           role="combobox"
           aria-expanded={showList}
-          aria-controls={listId}
+          aria-controls={showList ? listId : undefined}
           aria-autocomplete="list"
-          aria-activedescendant={activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
+          aria-activedescendant={showList && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
           aria-invalid={invalid}
           // Required means a contact must be chosen, not just text typed.
           required={required && !selected}
@@ -124,11 +174,13 @@ export function ContactCombobox({
           value={text}
           onChange={(e) => handleInput(e.target.value)}
           onFocus={() => setOpen(true)}
-          onBlur={() => setOpen(false)}
+          onBlur={handleBlur}
           onKeyDown={handleKeyDown}
         />
         <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />}
+          {loading && showList && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />
+          )}
           {(selected || text) && (
             <button
               type="button"
@@ -142,6 +194,9 @@ export function ContactCombobox({
           )}
         </div>
       </div>
+      <span role="status" className="sr-only">
+        {status}
+      </span>
 
       {showList && (
         <ul

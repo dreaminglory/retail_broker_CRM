@@ -1105,6 +1105,7 @@
     "clear": "Clear contact",
     "searching": "Searching…",
     "noResults": "No contacts found",
+    "resultsCount": "{count, plural, one {# contact found} other {# contacts found}}",
     "error": "Could not search contacts"
   }
 }

@@ -27,6 +27,10 @@ describe('escapeLikePattern', () => {
     expect(escapeLikePattern(`50%_off${bs}`)).toBe(`50${bs}%${bs}_off${bs}${bs}`);
   });
 
+  it('drops * because PostgREST would read it as a wildcard', () => {
+    expect(escapeLikePattern('a*b')).toBe('ab');
+  });
+
   it('leaves ordinary text alone', () => {
     expect(escapeLikePattern('Иван Петров')).toBe('Иван Петров');
   });

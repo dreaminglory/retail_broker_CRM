@@ -100,7 +100,7 @@ export function ContactsPageClient({
           <p className="mt-0.5 text-sm text-muted-foreground">
             {t("count", { count: pageInfo.total })}
             {initialStatus === "archived" ? t("archivedBadge") : ""}
-            {initialSearch ? ` matching "${initialSearch}"` : ""}
+            {initialSearch ? t("matchingSearch", { search: initialSearch }) : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">

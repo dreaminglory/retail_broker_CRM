@@ -21,6 +21,7 @@ import type { Inquiry } from "@/domain/inquiries/types";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
+import type { ContactOption } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
 import type { ActiveBroker } from "@/domain/members/types";
 import { UserPlus, Users } from "lucide-react";
@@ -93,6 +94,8 @@ export function ConvertInquiryDialog({
 
   // Contact tab: "new" | "existing"
   const [contactTab, setContactTab] = useState<"new" | "existing">("new");
+  // Kept here so the pick survives switching to "Create new" and back.
+  const [existingContact, setExistingContact] = useState<ContactOption | null>(null);
 
   // New contact fields
   const [newContactType, setNewContactType] = useState<"person" | "organization">("person");
@@ -261,7 +264,14 @@ export function ConvertInquiryDialog({
                 <Label htmlFor="convert-contact-search" className="sr-only">
                   {t("existingContactLabel")}
                 </Label>
-                <ContactCombobox id="convert-contact-search" name="contact_id" />
+                <ContactCombobox
+                  id="convert-contact-search"
+                  name="contact_id"
+                  defaultValue={existingContact}
+                  onChange={setExistingContact}
+                  required
+                  invalid={!state.success && !!state.fieldErrors?.contact_id}
+                />
 
                 {!state.success && state.fieldErrors?.contact_id && (
                   <p className="text-xs text-destructive">

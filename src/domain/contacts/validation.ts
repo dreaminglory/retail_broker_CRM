@@ -199,7 +199,10 @@ export const CONTACT_PICKER_LIMIT = 20;
 /** The text typed into a contact picker; empty lists the first contacts alphabetically. */
 export const contactPickerQuerySchema = z.string().trim().max(100);
 
-/** Escapes LIKE wildcards so `50%` or `a_b` match literally. */
+/**
+ * Escapes LIKE wildcards so `50%` or `a_b` match literally. PostgREST also reads `*` as a
+ * wildcard and has no escape for it, so it is dropped.
+ */
 export function escapeLikePattern(value: string): string {
-  return value.replace(/[\\%_]/g, (c) => '\\' + c);
+  return value.replaceAll('*', '').replace(/[\\%_]/g, (c) => '\\' + c);
 }
