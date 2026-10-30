@@ -117,10 +117,10 @@ stack (refuses to run against a non-local URL).
 **Description:** Reuse `ListPager` on the contact and inquiry lists.
 
 **Acceptance criteria:**
-- [ ] Every list has a working pager (AC-6, FR-CON-10)
+- [x] Every list has a working pager (AC-6, FR-CON-10)
 
 **Verification:**
-- [ ] Browser check in `bg` and `en` at 1280 and 390 px
+- [x] Browser check in `bg` and `en` at 1280 and 390 px
 
 **Dependencies:** Task 7
 **Files likely touched:** contacts and inquiries pages and repositories

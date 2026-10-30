@@ -29,13 +29,23 @@ export class ContactRepository {
   // ── Contacts ─────────────────────────────────────────────────────────────
 
   async findAll(agencyId: string, opts: ContactListOptions = {}): Promise<Contact[]> {
+    const { rows } = await this.findPage(agencyId, opts);
+    return rows;
+  }
+
+  /** One page of rows plus the total that match the filters (for the pager). */
+  async findPage(
+    agencyId: string,
+    opts: ContactListOptions = {}
+  ): Promise<{ rows: Contact[]; total: number }> {
     const { status = 'active', search, limit = 50, offset = 0 } = opts;
 
     let query = this.db
       .from('contacts')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('agency_id', agencyId)
       .order('display_name', { ascending: true })
+      .order('id', { ascending: true }) // tie-break so pages never overlap
       .range(offset, offset + limit - 1);
 
     if (status !== 'all') {
@@ -45,9 +55,14 @@ export class ContactRepository {
       query = query.ilike('display_name', `%${search}%`);
     }
 
-    const { data, error } = await query;
+    const { data, count, error } = await query;
+    if (error?.code === 'PGRST103') {
+      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
+      const retry = await query.range(0, 0);
+      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
+    }
     if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
-    return (data ?? []) as Contact[];
+    return { rows: (data ?? []) as Contact[], total: count ?? 0 };
   }
 
   async findById(id: string, agencyId: string): Promise<ContactWithMethods | null> {

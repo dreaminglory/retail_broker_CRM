@@ -45,7 +45,13 @@ export class OpportunityRepository {
     opts: OpportunityListOptions = {}
   ): Promise<{ rows: Opportunity[]; total: number }> {
     const { limit = 50, offset = 0 } = opts;
-    const { data, count, error } = await this.filtered(agencyId, opts, true).range(offset, offset + limit - 1);
+    const query = this.filtered(agencyId, opts, true);
+    const { data, count, error } = await query.range(offset, offset + limit - 1);
+    if (error?.code === 'PGRST103') {
+      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
+      const retry = await query.range(0, 0);
+      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
+    }
     if (error) throw new Error(`Failed to fetch opportunities: ${error.message}`);
     return { rows: (data ?? []) as Opportunity[], total: count ?? 0 };
   }

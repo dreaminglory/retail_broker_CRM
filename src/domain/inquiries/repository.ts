@@ -19,13 +19,23 @@ export class InquiryRepository {
   constructor(private readonly db: SupabaseClient) {}
 
   async findAll(agencyId: string, opts: InquiryListOptions = {}): Promise<Inquiry[]> {
+    const { rows } = await this.findPage(agencyId, opts);
+    return rows;
+  }
+
+  /** One page of rows plus the total that match the filters (for the pager). */
+  async findPage(
+    agencyId: string,
+    opts: InquiryListOptions = {}
+  ): Promise<{ rows: Inquiry[]; total: number }> {
     const { status = 'all', assignedTo, search, limit = 50, offset = 0 } = opts;
 
     let query = this.db
       .from('inquiries')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('agency_id', agencyId)
       .order('received_at', { ascending: false })
+      .order('id', { ascending: false }) // tie-break so pages never overlap
       .range(offset, offset + limit - 1);
 
     if (status !== 'all') {
@@ -41,9 +51,14 @@ export class InquiryRepository {
       );
     }
 
-    const { data, error } = await query;
+    const { data, count, error } = await query;
+    if (error?.code === 'PGRST103') {
+      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
+      const retry = await query.range(0, 0);
+      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
+    }
     if (error) throw new Error(`Failed to fetch inquiries: ${error.message}`);
-    return (data ?? []) as Inquiry[];
+    return { rows: (data ?? []) as Inquiry[], total: count ?? 0 };
   }
 
   async findById(id: string, agencyId: string): Promise<Inquiry | null> {

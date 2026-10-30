@@ -40,6 +40,13 @@ export class InquiryService {
     return this.repo.findAll(agencyId, opts);
   }
 
+  async listPage(
+    agencyId: string,
+    opts?: InquiryListOptions
+  ): Promise<{ rows: Inquiry[]; total: number }> {
+    return this.repo.findPage(agencyId, opts);
+  }
+
   async getById(id: string, agencyId: string): Promise<Inquiry | null> {
     return this.repo.findById(id, agencyId);
   }

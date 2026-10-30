@@ -18,6 +18,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ListPager } from "@/components/ui/list-pager";
+import type { PageInfo } from "@/lib/pagination";
 import { ContactListTable } from "@/components/domain/contacts/contact-list-table";
 import { ContactForm } from "@/components/domain/contacts/contact-form";
 import { createContactAction, searchContactsQuickAction } from "./actions";
@@ -27,6 +29,7 @@ import { useTranslations } from "next-intl";
 
 interface ContactsPageClientProps {
   contacts: Contact[];
+  pageInfo: PageInfo;
   initialSearch: string;
   initialStatus: string;
   agencyId: string;
@@ -35,6 +38,7 @@ interface ContactsPageClientProps {
 
 export function ContactsPageClient({
   contacts,
+  pageInfo,
   initialSearch,
   initialStatus,
   userRole,
@@ -94,7 +98,7 @@ export function ContactsPageClient({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("count", { count: contacts.length })}
+            {t("count", { count: pageInfo.total })}
             {initialStatus === "archived" ? t("archivedBadge") : ""}
             {initialSearch ? ` matching "${initialSearch}"` : ""}
           </p>
@@ -195,6 +199,7 @@ export function ContactsPageClient({
       {/* List */}
       <div className={isPending ? "opacity-60 pointer-events-none" : ""}>
         <ContactListTable contacts={contacts} />
+        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
       </div>
     </>
   );

@@ -39,6 +39,8 @@ import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus, Inbox } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
+import { ListPager } from "@/components/ui/list-pager";
+import type { PageInfo } from "@/lib/pagination";
 
 // ── Dismiss submit button ─────────────────────────────────────────────────────
 
@@ -71,6 +73,7 @@ const STATUS_FILTER_OPTIONS = [
 
 interface InquiriesPageClientProps {
   inquiries: Inquiry[];
+  pageInfo: PageInfo;
   leadSources: LeadSource[];
   stages: Stage[];
   contacts: Contact[];
@@ -86,6 +89,7 @@ interface InquiriesPageClientProps {
 
 export function InquiriesPageClient({
   inquiries,
+  pageInfo,
   leadSources,
   stages,
   contacts,
@@ -189,7 +193,7 @@ export function InquiriesPageClient({
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {t("count", { count: inquiries.length, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
+            {t("count", { count: pageInfo.total, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
             {initialSearch ? t("matchingSearch", { search: initialSearch }) : ""}
           </p>
         </div>
@@ -330,6 +334,9 @@ export function InquiriesPageClient({
           ))
         )}
       </div>
+      {!initialId && (
+        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
+      )}
 
       {/* ── Edit dialog ──────────────────────────────────────────────────────── */}
       <Dialog

@@ -33,6 +33,13 @@ export class ContactService {
     return this.repo.findAll(agencyId, opts);
   }
 
+  async listPage(
+    agencyId: string,
+    opts?: ContactListOptions
+  ): Promise<{ rows: Contact[]; total: number }> {
+    return this.repo.findPage(agencyId, opts);
+  }
+
   async getById(id: string, agencyId: string): Promise<ContactWithMethods | null> {
     return this.repo.findById(id, agencyId);
   }

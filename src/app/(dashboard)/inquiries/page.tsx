@@ -6,6 +6,7 @@ import { StageRepository } from "@/domain/stages/repository";
 import { ContactService } from "@/domain/contacts/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { ProfileRepository } from "@/domain/profiles/repository";
+import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
 import { InquiriesPageClient } from "./inquiries-page-client";
 
 export async function generateMetadata() {
@@ -30,6 +31,7 @@ export default async function InquiriesPage({
   const search = params.search ?? "";
   const status = params.status ?? "all";
   const id = params.id;
+  const page = parsePage(params.page);
 
   const supabase = await createSupabaseServer();
   const {
@@ -56,11 +58,15 @@ export default async function InquiriesPage({
   }
 
   // Fetch all required data in parallel
-  const [inquiries, leadSources, stages, contacts, brokers] = await Promise.all([
-    new InquiryService(supabase).list(agencyId, {
-      search: search || undefined,
-      status: status === "all" ? undefined : status,
-    }),
+  const [paged, leadSources, stages, contacts, brokers] = await Promise.all([
+    loadPage(page, PAGE_SIZE, (offset, limit) =>
+      new InquiryService(supabase).listPage(agencyId, {
+        search: search || undefined,
+        status: status === "all" ? undefined : status,
+        limit,
+        offset,
+      })
+    ),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new StageRepository(supabase).findActive(agencyId),
     new ContactService(supabase).list(agencyId, { status: "active", limit: 200 }),
@@ -68,6 +74,7 @@ export default async function InquiriesPage({
   ]);
 
   // Assignees who were deactivated later aren't in the active list, but their inquiries still show them.
+  const inquiries = paged.rows;
   const activeIds = new Set(brokers.map((b) => b.id));
   const inactiveIds = inquiries.flatMap((i) =>
     i.assigned_to && !activeIds.has(i.assigned_to) ? [i.assigned_to] : []
@@ -83,6 +90,7 @@ export default async function InquiriesPage({
     <div className="mx-auto max-w-4xl">
       <InquiriesPageClient
         inquiries={inquiries}
+        pageInfo={paged.info}
         leadSources={leadSources}
         stages={stages}
         contacts={contacts}

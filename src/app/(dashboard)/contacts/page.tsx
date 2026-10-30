@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ContactService } from "@/domain/contacts/service";
+import { PAGE_SIZE, loadPage, pageInfo, parsePage } from "@/lib/pagination";
 import { ContactsPageClient } from "./contacts-page-client";
 
 export async function generateMetadata() {
@@ -15,8 +16,6 @@ interface SearchParams {
   page?: string;
 }
 
-const PAGE_SIZE = 50;
-
 export default async function ContactsPage({
   searchParams,
 }: {
@@ -25,8 +24,7 @@ export default async function ContactsPage({
   const params = await searchParams;
   const search = params.search ?? "";
   const status = params.status ?? "active";
-  const page = Number(params.page ?? 1);
-  const offset = (page - 1) * PAGE_SIZE;
+  const page = parsePage(params.page);
 
   const supabase = await createSupabaseServer();
   const {
@@ -43,19 +41,22 @@ export default async function ContactsPage({
   const agencyId = membership?.agency_id ?? "";
 
   const service = new ContactService(supabase);
-  const contacts = agencyId
-    ? await service.list(agencyId, {
-        search: search || undefined,
-        status: status === "all" ? "all" : status === "archived" ? "archived" : "active",
-        limit: PAGE_SIZE,
-        offset,
-      })
-    : [];
+  const paged = agencyId
+    ? await loadPage(page, PAGE_SIZE, (offset, limit) =>
+        service.listPage(agencyId, {
+          search: search || undefined,
+          status: status === "all" ? "all" : status === "archived" ? "archived" : "active",
+          limit,
+          offset,
+        })
+      )
+    : { rows: [], total: 0, info: pageInfo(1, PAGE_SIZE, 0) };
 
   return (
     <div className="mx-auto max-w-5xl">
       <ContactsPageClient
-        contacts={contacts}
+        contacts={paged.rows}
+        pageInfo={paged.info}
         initialSearch={search}
         initialStatus={status}
         agencyId={agencyId}
