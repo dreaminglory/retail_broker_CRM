@@ -56,10 +56,10 @@ where they parse, leaving `raw_payload` and unparseable values alone. pgTAP cove
 **Description:** Global search normalises queries that look like phone numbers before matching.
 
 **Acceptance criteria:**
-- [ ] Searching `0888 123 456` finds the contact stored as `+359888123456`
+- [x] Searching `0888 123 456` finds the contact stored as `+359888123456`
 
 **Verification:**
-- [ ] Vitest for the query normaliser; manual ⌘K check
+- [x] Vitest for the query normaliser; manual ⌘K check
 
 **Dependencies:** Task 1
 **Files likely touched:** the global search action and repository
