@@ -163,11 +163,11 @@ opportunity or merge since the import; mark every row `reverted` or `revert_skip
 `db_recheck` to the `match_reason` CHECK. Hide the "update existing" strategy in the UI.
 
 **Acceptance criteria:**
-- [ ] Reverting an import whose contact got a note keeps the contact and the note (AC-8)
-- [ ] A `db_recheck` row is `skipped`
+- [x] Reverting an import whose contact got a note keeps the contact and the note (AC-8)
+- [x] A `db_recheck` row is `skipped`
 
 **Verification:**
-- [ ] pgTAP `063` and `061` updated; `npx supabase db reset` then `npm run test:db`
+- [x] pgTAP `063` and `061` updated; `npx supabase db reset` then `npm run test:db`
 
 **Dependencies:** None
 **Files likely touched:** `supabase/migrations/<ts>_fix_import_revert_and_recheck.sql`, `supabase/tests/database/061-*.sql`, `063-*.sql`, `src/components/domain/imports/import-options-form.tsx`

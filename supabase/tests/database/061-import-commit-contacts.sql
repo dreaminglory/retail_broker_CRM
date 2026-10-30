@@ -1,7 +1,7 @@
 BEGIN;
 
 -- Plan the tests
-SELECT plan(8);
+SELECT plan(11);
 
 -- Setup test users and agencies
 SELECT set_config('test.u_owner_1', gen_random_uuid()::text, true);
@@ -92,6 +92,43 @@ SELECT results_eq(
   $$ SELECT action FROM public.audit_log WHERE action = 'created' AND entity_type = 'contact' AND (metadata->>'import_job_id') = '00000000-0000-0000-0000-000000000010' $$,
   $$ VALUES ('created'::text) $$,
   'Audit log for created contact contains import_job_id metadata'
+);
+
+-- A duplicate that only appears at commit time, under each strategy that skips.
+-- 'update' is hidden in the UI, but a job can still have it stored.
+INSERT INTO public.contacts (id, agency_id, type, first_name, display_name)
+VALUES ('00000000-0000-0000-0000-000000000020', current_setting('test.a1')::uuid, 'person', 'Existing', 'Existing');
+INSERT INTO public.contact_methods (agency_id, contact_id, type, value, is_primary)
+VALUES (current_setting('test.a1')::uuid, '00000000-0000-0000-0000-000000000020', 'phone', '+359888777666', TRUE);
+
+INSERT INTO public.import_jobs (id, agency_id, entity_type, status, file_name, file_sha256, file_size_bytes, options)
+VALUES
+  ('00000000-0000-0000-0000-000000000021', current_setting('test.a1')::uuid, 'contact', 'committing', 'skip.csv', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 100, '{"duplicate_strategy": "skip"}'),
+  ('00000000-0000-0000-0000-000000000022', current_setting('test.a1')::uuid, 'contact', 'committing', 'update.csv', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 100, '{"duplicate_strategy": "update"}');
+
+INSERT INTO public.import_rows (import_job_id, agency_id, row_number, raw, normalized, status)
+VALUES
+  ('00000000-0000-0000-0000-000000000021', current_setting('test.a1')::uuid, 1, '{}', '{"first_name": "Again", "contact_type": "person", "phone": "+359888777666"}', 'valid'),
+  ('00000000-0000-0000-0000-000000000022', current_setting('test.a1')::uuid, 1, '{}', '{"first_name": "Again", "contact_type": "person", "phone": "+359888777666"}', 'valid');
+
+SELECT public.import_commit_contacts('00000000-0000-0000-0000-000000000021');
+SELECT public.import_commit_contacts('00000000-0000-0000-0000-000000000022');
+
+SELECT results_eq(
+  $$ SELECT status, match_reason, matched_entity_id FROM public.import_rows WHERE import_job_id = '00000000-0000-0000-0000-000000000021' $$,
+  $$ VALUES ('skipped'::text, 'db_recheck'::text, '00000000-0000-0000-0000-000000000020'::uuid) $$,
+  'A db_recheck row is skipped and points at the existing contact'
+);
+
+SELECT results_eq(
+  $$ SELECT status, match_reason FROM public.import_rows WHERE import_job_id = '00000000-0000-0000-0000-000000000022' $$,
+  $$ VALUES ('skipped'::text, 'db_recheck'::text) $$,
+  'A stored update strategy skips the duplicate too'
+);
+
+SELECT is_empty(
+  $$ SELECT 1 FROM public.contacts WHERE first_name = 'Again' $$,
+  'No contact is created for a db_recheck row'
 );
 
 SELECT * FROM finish();

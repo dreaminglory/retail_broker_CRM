@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 37th migration
-(`20261102000003_drop_untracked_profile_insert_policy.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 38th migration
+(`20261102000005_fix_import_revert_and_recheck.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -262,9 +262,9 @@ erDiagram
     int row_number "UK per job"
     jsonb raw "PII"
     jsonb normalized
-    text status "pending | valid | invalid | duplicate | created | updated | skipped | error | reverted"
+    text status "pending | valid | invalid | duplicate | created | updated | skipped | error | reverted | revert_skipped"
     jsonb errors "i18n codes"
-    text match_reason "phone | email | external_ref | in_file | name_similar"
+    text match_reason "phone | email | external_ref | in_file | name_similar | db_recheck"
     uuid matched_entity_id
     uuid entity_id
   }
@@ -373,9 +373,15 @@ stateDiagram-v2
   completed --> reverted : owner/manager, within 7 days
 ```
 
-Revert is meant to delete only created records that haven't been touched since (no tasks,
-notes or linked inquiries) and mark their rows `reverted`. The notes guard doesn't work yet
-(see [Known gaps](#6-known-gaps)).
+Revert deletes only created records nobody has worked on since (AD-036). A contact is kept if
+it was edited or gained a note, task, opportunity, participant, inquiry or merge; the note its
+own import row brought in doesn't count unless it was edited. An inquiry is kept if it was
+edited or converted. Rows that created a record become `reverted` or `revert_skipped`; rows
+that created nothing keep their status.
+
+A duplicate found only at commit (`match_reason = 'db_recheck'`) is `skipped`, or created
+under the `create` strategy. The "update existing" strategy isn't built and isn't offered;
+a job that still has it stored skips.
 
 ---
 
@@ -446,7 +452,7 @@ The "Enforced by" column tells you which layer to change and test.
 | N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
-| M2 | Import revert: owner/manager, `completed` job, within 7 days | RPC `import_revert` |
+| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
 
 ---
 
@@ -466,12 +472,9 @@ module that fixes it is named where there is one. Remove a row when the fix land
    `backfill_inquiry_callers()` converted stored BG mobiles and emails; landlines and other
    formats stored before `trustworthy-loop` stay as typed until edited, though conversion
    still parses them.
-5. **Import revert and recheck.** The revert's notes guard can't fire, and the recheck writes
-   `match_reason` values (`db_recheck…`) that the `import_rows` CHECK rejects.
-   → `trustworthy-loop`.
-6. **Signup profile name.** Sign-up sends `full_name`, but `handle_new_user` reads
+5. **Signup profile name.** Sign-up sends `full_name`, but `handle_new_user` reads
    `display_name`, so the name defaults to the email prefix. → `trustworthy-loop`.
-7. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+6. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
 
 ---
 

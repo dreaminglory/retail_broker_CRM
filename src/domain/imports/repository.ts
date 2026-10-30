@@ -1,5 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { ImportJob, ImportRow } from "./types";
+import { ImportJob, ImportRow, RevertResult } from "./types";
 import { CreateImportJobInput } from "./validation";
 
 export class ImportRepository {
@@ -253,12 +253,12 @@ export class ImportRepository {
     return data as { processed: number; remaining: number };
   }
 
-  async revertJob(jobId: string): Promise<{ deleted: { contacts: number; inquiries: number }; kept: { contacts: number; inquiries: number } }> {
+  async revertJob(jobId: string): Promise<RevertResult> {
     const { data, error } = await this.db.rpc("import_revert", {
       p_job_id: jobId,
     });
 
     if (error) throw error;
-    return data as { deleted: { contacts: number; inquiries: number }; kept: { contacts: number; inquiries: number } };
+    return data as RevertResult;
   }
 }

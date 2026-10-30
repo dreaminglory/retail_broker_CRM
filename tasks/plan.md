@@ -43,7 +43,7 @@ because the `reminders` module needs inquiry reassign; the others can run in any
 - [x] AC-5…AC-7 pass with the volume seed loaded
 
 ### Phase 3: Import and i18n hygiene
-- [ ] Task 11: Safe import revert and the `db_recheck` status
+- [x] Task 11: Safe import revert and the `db_recheck` status
 - [ ] Task 12: Profile name fallback at signup (FR-PRF-03)
 - [ ] Task 13: Remove English leaks and untranslated errors (FR-LOC-01)
 - [ ] Task 14: BG click-through of every route

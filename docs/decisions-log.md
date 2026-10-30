@@ -174,8 +174,11 @@ Action bodies max 1 MB), the server validates, and the client loops batch-commit
 portal feeds skip exact duplicates.
 
 ### AD-036: Import revert within 7 days, untouched records only
-**Accepted.** The revert deletes only imported records with no notes, tasks, inquiries or stage
-changes since import, and marks the rest of the rows reverted.
+**Accepted.** The revert deletes only imported records nobody has worked on: a contact with no
+edit, note, task, opportunity, participant, inquiry or merge since the import, an inquiry with
+no edit or conversion. The note an import row brought in isn't work unless edited. Rows that
+created a record become `reverted` or `revert_skipped`. The edit guard on contacts goes beyond
+`spec/trustworthy-loop.md` rule 10 because the confirmation dialog promises it.
 
 ## i18n
 

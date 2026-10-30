@@ -12,6 +12,7 @@ import {
   stageRowsSchema 
 } from "@/domain/imports/validation";
 import { ImportRepository } from "@/domain/imports/repository";
+import type { RevertResult } from "@/domain/imports/types";
 
 function assertManagerOrOwner(role: string) {
   if (role !== "owner" && role !== "manager") {
@@ -132,7 +133,7 @@ export async function commitImportBatchAction(
 
 export async function revertImportJobAction(
   jobId: string
-): Promise<ActionResult<{ deleted: number; retained: number }>> {
+): Promise<ActionResult<RevertResult>> {
   try {
     const ctx = await getAuthContext();
     assertManagerOrOwner(ctx.role);

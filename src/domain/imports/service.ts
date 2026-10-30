@@ -1,7 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ImportRepository } from "./repository";
 import { CreateImportJobInput, ContactMappingInput, ContactImportOptionsInput, StageRowsInput, InquiryMappingInput, InquiryImportOptionsInput } from "./validation";
-import { ImportJob, ImportSummary } from "./types";
+import { ImportJob, ImportSummary, RevertResult } from "./types";
 import { mapRowToCandidate, mapRowToInquiryCandidate } from "./csv/row-mapper";
 import { classifyDuplicates, ExistingContactInfo } from "./duplicate-classifier";
 import { DomainError } from "@/lib/errors";
@@ -403,7 +403,7 @@ export class ImportService {
     }
   }
 
-  async revert(agencyId: string, jobId: string): Promise<any> {
+  async revert(agencyId: string, jobId: string): Promise<RevertResult> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
     return await this.repository.revertJob(jobId);

@@ -78,7 +78,9 @@
     "reverting": "Reverting...",
     "revertImport": "Revert Import",
     "revertConfirm": "Are you sure you want to revert the import of {fileName}?",
-    "revertDesc": "This will permanently delete all newly created records from this job that haven't been modified or referenced by other records since import.",
+    "revertDesc": "This will permanently delete all records created by this import that haven't been worked on since. Anything with a new note, task, opportunity or merge is kept.",
+    "revertSuccess": "Import reverted: {deleted} deleted, {kept} kept because they were worked on.",
+    "revertFailed": "The import could not be reverted.",
     "cancel": "Cancel",
     "wizard": {
       "title": "Import {type}",
@@ -163,7 +165,6 @@
         "title": "Duplicate Strategy",
         "desc": "What should happen if a contact in the file already exists in the CRM (matched by phone, email, or external ID)?",
         "skip": "Skip duplicates (Recommended)",
-        "update": "Add missing details to existing contacts",
         "create": "Create anyway (Allow duplicates)"
       },
       "defaultContactType": {
