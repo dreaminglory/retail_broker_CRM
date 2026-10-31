@@ -6,6 +6,7 @@ import { mapRowToCandidate, mapRowToInquiryCandidate } from "./csv/row-mapper";
 import { classifyDuplicates, ExistingContactInfo } from "./duplicate-classifier";
 import { DomainError } from "@/lib/errors";
 import { normalizePhone } from "../contacts/phone";
+import { MemberRepository } from "../members/repository";
 import { parseDate } from "./csv/date-parse";
 import { resolveSource, resolveAssignee, resolveStatus } from "./csv/value-resolvers";
 
@@ -221,22 +222,15 @@ export class ImportService {
     let hasMore = true;
     
     // Fetch lookup data
-    const [{ data: sources }, { data: members }] = await Promise.all([
+    const [{ data: sources }, members] = await Promise.all([
       this.db.from("lead_sources").select("id, name").eq("agency_id", agencyId),
-      this.db.from("agency_memberships")
-        .select("user_id, status, profiles:user_id(display_name)")
-        .eq("agency_id", agencyId)
-        .eq("status", "active")
+      new MemberRepository(this.db).getActiveBrokers(agencyId)
     ]);
 
-    // Need email too for members, let's fetch emails for active users via RPC or if possible via a join.
-    // Wait, profiles only has display_name. The email is restricted.
-    // For Pilot we can just skip email resolution if it's too complex or we can assume display_name is enough.
-    // The plan said: "assignee by email/name". If we can't easily fetch email, we'll just resolve by display_name.
-    const memberList = (members || []).map(m => ({
-      user_id: m.user_id,
-      email: null, // Hard to fetch without admin rights securely
-      display_name: (m.profiles as any)?.display_name
+    const memberList = members.map(m => ({
+      user_id: m.id,
+      email: m.email,
+      display_name: m.display_name
     }));
 
     const options = job.options as InquiryImportOptionsInput;
