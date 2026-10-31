@@ -231,7 +231,7 @@ query still filters by `agency_id`. Local development uses Mailpit and manual tr
 - **`skipped` means an empty digest**, so "why didn't X get an email?" has an answer. A user who
   turned the digest off, or a deactivated member, gets no row at all.
 - **Only the service role writes** the table (the digest route, and `after()` work in the
-  inquiry actions). Members read their own rows, owners and managers the agency's.
+  inquiry and import actions). Members read their own rows, owners and managers the agency's.
 - **The route stays off until `go-live`.** With no `CRON_SECRET` it refuses every call;
   `?now=` is ignored when `NODE_ENV=production`.
 - **Mail transport:** `MAIL_TRANSPORT=smtp` (Mailpit) or `resend` (plain `fetch`, paced).

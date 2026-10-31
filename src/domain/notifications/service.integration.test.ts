@@ -550,8 +550,8 @@ describeServices('NotificationService daily digest against the local stack', () 
       await notifyImport(mailer, jobId, broker.userId);
 
       expect(sent).toHaveLength(2);
-      expect(sent.find((m) => m.to === first.email)?.subject).toContain('3');
-      expect(sent.find((m) => m.to === second.email)?.subject).toContain('1');
+      expect(sent.find((m) => m.to === first.email)?.subject).toBe('3 нови запитвания за вас');
+      expect(sent.find((m) => m.to === second.email)?.subject).toBe('1 ново запитване за вас');
       const { data } = await admin.from('notification_deliveries').select('kind, period_key, entity_id, status').eq('user_id', first.userId);
       expect(data).toEqual([{ kind: 'inquiry_assigned', period_key: `import:${jobId}`, entity_id: jobId, status: 'sent' }]);
     });
@@ -589,7 +589,7 @@ describeServices('NotificationService daily digest against the local stack', () 
       await notifyImport(mailer, jobId, broker.userId);
 
       expect(sent).toHaveLength(1);
-      expect(sent[0].subject).toContain('2');
+      expect(sent[0].subject).toBe('2 нови запитвания за вас');
     });
 
     it('sends nothing for a job with no inquiries, such as a contact import', async () => {
