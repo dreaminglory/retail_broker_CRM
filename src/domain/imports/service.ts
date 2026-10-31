@@ -222,10 +222,11 @@ export class ImportService {
     let hasMore = true;
     
     // Fetch lookup data
-    const [{ data: sources }, members] = await Promise.all([
+    const [{ data: sources, error: sourcesError }, members] = await Promise.all([
       this.db.from("lead_sources").select("id, name").eq("agency_id", agencyId),
       new MemberRepository(this.db).getActiveBrokers(agencyId)
     ]);
+    if (sourcesError) throw new DomainError("errors.loadFailed", `Failed to load lead sources: ${sourcesError.message}`);
 
     const memberList = members.map(m => ({
       user_id: m.id,
