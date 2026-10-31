@@ -1,6 +1,6 @@
 # Spec: BrokerCRM
 
-> Last updated 2026-10-30. The product spec: what we build, in which order, and where it stands.
+> Last updated 2026-10-31. The product spec: what we build, in which order, and where it stands.
 > Module specs: `spec/<module-id>.md`. Active plan: `tasks/plan.md` + `tasks/todo.md`.
 
 ## 1. Objective
@@ -26,7 +26,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Gate item | Module | Status |
 |---|---|---|
 | Core-loop defects fixed | `trustworthy-loop` | Done |
-| Reminders and daily digest | `reminders` | In progress |
+| Reminders and daily digest | `reminders` | Done |
 | Light property record linked to opportunities | `properties` | Planned |
 | Buyer/tenant requirements | `requirements` | Planned |
 | Inquiry can create **or join** an opportunity | `conversion-join` | Planned |
@@ -42,7 +42,7 @@ starts; pilot evidence sets the order.
 | Module | Scope | Depends on | Status |
 |---|---|---|---|
 | `trustworthy-loop` | International phones (AD-041), inquiry edit and reassign, pagers and contact picker at volume, import revert and i18n fixes, service tests in CI | — | Done |
-| `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | In progress |
+| `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | Done |
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Planned |
 | `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Planned |
 | `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
@@ -75,14 +75,17 @@ reopen; tasks with the next-action trigger, Today (Mine/Agency) and Exceptions; 
 timeline and audit triggers; ⌘K search (desktop); CSV import with revert; BG/EN, agency
 timezone, EUR; local QA stack and E2E smoke; international and landline phones; inquiry edit
 and reassign; pagers and agency-wide contact pickers; atomic conversion and merge (AD-050); CI
-runs typecheck, lint, Vitest, pgTAP and the service integration suites.
+runs typecheck, lint, Vitest, pgTAP and the service integration suites; daily digest with
+agency counts and an opt-out, and assignment emails (Mailpit locally; Resend and the crons are
+switched on in `go-live`).
 
 **Known gaps:** resend invitation (`conversion-join`); five services have no tests yet
-(FR-TST-03). BRD rows marked ⚠️ say where each is handled.
+(FR-TST-03); the CSV import reads every UTF-8 file as windows-1251, which garbles Cyrillic
+(`file-drop-zone.tsx`). BRD rows marked ⚠️ say where each is handled.
 
 **Production:** Supabase `emflwmivjachbnaqumnn` (eu-west-2); migration history equals the repo
 (AD-040), changes go through migrations only. `main` now holds migrations through
-`20261102000009`: confirm and apply them with `/ship` before deploying this code, which calls the
+`20261102000009` (`20261102000010` once `reminders` merges): confirm and apply them with `/ship` before deploying this code, which calls the
 AD-050 RPCs. Leaked-password protection is still off
 (founder). No app hosting yet.
 

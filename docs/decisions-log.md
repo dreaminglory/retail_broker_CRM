@@ -252,6 +252,21 @@ not be suppressed by the day's earlier one.
 sections is easier to trust.
 **Revisit if:** owners want the counts without their own digest, or the other way round.
 
+### AD-053: Who gets an assignment email, and what it counts
+**Proposed** (2026-10-31, while building `reminders`; for founder review). Refines
+`spec/reminders.md` rule 4 and AD-051.
+- **Active members of the agency only.** The service role bypasses RLS, so the send checks
+  membership itself. Anyone else gets no email and no row, as with the digest.
+- **An import summary counts `new` inquiries**, the same number the import preview shows. An
+  import of closed history sends nothing.
+- **A conversion uses the inquiry's date key.** If an inquiry goes A → B → A in one day, A hears
+  once, and a conversion back to A that day sends nothing.
+- **Nothing retries a failed assignment email.** It stays `failed`; a `new` inquiry still reaches
+  the next digest.
+**Why:** a summary of work to do shouldn't count work that's closed, and one key per inquiry per
+day keeps a busy reassignment from spamming anyone.
+**Revisit if:** pilot brokers miss a same-day hand-back, or ask to hear about imported history.
+
 ---
 
 ## Retired

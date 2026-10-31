@@ -243,9 +243,9 @@ active opportunity has an owner, a next action and a complete history.
 
 | ID | Requirement |
 |----|------------|
-| FR-NTF-01 | ❌ A daily digest email on working days at about 08:00 agency time (AD-042) |
-| FR-NTF-02 | ❌ An immediate email when an inquiry is assigned to you by someone else |
-| FR-NTF-03 | ❌ Each user can turn off the digest |
+| FR-NTF-01 | A daily digest email on working days at about 08:00 agency time (AD-042) |
+| FR-NTF-02 | An immediate email when an inquiry is assigned to you by someone else |
+| FR-NTF-03 | Each user can turn off the digest |
 
 ## 4. Non-functional requirements
 

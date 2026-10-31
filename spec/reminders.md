@@ -1,7 +1,7 @@
 # Spec: reminders
 
-> **Status:** In progress (`tasks/plan.md`). Approved scope (founder, 2026-10-28, as Sprint 6
-> slice 6.7). Plan decisions (claim-then-send, per-email keys): AD-051.
+> **Status:** Done (2026-10-31). Approved scope (founder, 2026-10-28, as Sprint 6 slice 6.7). Plan:
+> `docs/archive/reminders-plan.md`. Decisions: AD-051, AD-052, AD-053.
 > **Evidence:** gap analysis §5.1 #1, AD-025 events, AD-042 delivery. Assumption A1 is unvalidated.
 
 ## Objective
@@ -76,4 +76,4 @@ pilot-gate item (AD-039).
 1. The immediate `inquiry_assigned` email (keep the digest).
 
 ## Open questions
-- None. FR-NTF-01…03 are in `docs/BRD.md` as ❌.
+- None.
