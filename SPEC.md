@@ -80,8 +80,7 @@ agency counts and an opt-out, and assignment emails (Mailpit locally; Resend and
 switched on in `go-live`).
 
 **Known gaps:** resend invitation (`conversion-join`); five services have no tests yet
-(FR-TST-03); the CSV import reads every UTF-8 file as windows-1251, which garbles Cyrillic
-(`file-drop-zone.tsx`). BRD rows marked ⚠️ say where each is handled.
+(FR-TST-03). BRD rows marked ⚠️ say where each is handled.
 
 **Production:** Supabase `emflwmivjachbnaqumnn` (eu-west-2); migration history equals the repo
 (AD-040), changes go through migrations only. `main` now holds migrations through

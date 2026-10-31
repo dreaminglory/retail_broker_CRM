@@ -19,3 +19,24 @@ test('the import page hydrates and the new import menu opens the wizard', async 
 
   expect(consoleErrors.filter((text) => /hydrat/i.test(text))).toEqual([]);
 });
+
+// "Брокер" (a header the wizard maps by itself) in each encoding a Bulgarian CSV arrives in.
+const BROKER_HEADER = {
+  'utf-8': Buffer.from('Брокер', 'utf-8'),
+  'windows-1251': Buffer.from([0xc1, 0xf0, 0xee, 0xea, 0xe5, 0xf0]),
+};
+
+for (const [encoding, header] of Object.entries(BROKER_HEADER)) {
+  test(`the wizard reads Cyrillic headers from a ${encoding} file`, async ({ page, signInAs }) => {
+    await signInAs('owner@alpha.bg');
+    await page.goto('/settings/import/new?type=inquiry');
+
+    await page.locator('input[type="file"]').setInputFiles({
+      name: `${encoding}.csv`,
+      mimeType: 'text/csv',
+      buffer: Buffer.concat([header, Buffer.from(',Phone\nx,+359888100001\n')]),
+    });
+
+    await expect(page.getByText('Брокер', { exact: true }).first()).toBeVisible();
+  });
+}
