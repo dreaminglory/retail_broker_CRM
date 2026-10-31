@@ -101,47 +101,39 @@ export class NotificationService {
     return { ...total, agencies: agencies.length, due, agenciesFailed };
   }
 
-  /** Emails the assignee of an inquiry (rule 4). Never throws: a failed email must not fail the action. */
+  /** Emails the assignee of an inquiry (rule 4). `notifyAfterResponse` catches anything that throws here. */
   async notifyInquiryAssigned({ agencyId, assigneeId, inquiryId, callerName, opportunityId, now = new Date() }: InquiryAssignedInput): Promise<void> {
-    try {
-      const timezone = await this.repo.getTimezone(agencyId);
-      await this.sendAssignmentEmail({
-        agencyId,
-        userId: assigneeId,
-        periodKey: `${inquiryId}:${agencyDateKey(timezone, now)}`,
-        entityId: inquiryId,
-        render: (recipient) =>
-          renderInquiryAssigned({ recipientName: recipient.name, callerName, locale: recipient.locale, appUrl: this.appUrl, opportunityId }),
-      });
-    } catch (error) {
-      console.error(`Assignment email failed for user ${assigneeId} in agency ${agencyId}:`, error);
-    }
+    const timezone = await this.repo.getTimezone(agencyId);
+    await this.sendAssignmentEmail({
+      agencyId,
+      userId: assigneeId,
+      periodKey: `${inquiryId}:${agencyDateKey(timezone, now)}`,
+      entityId: inquiryId,
+      render: (recipient) =>
+        renderInquiryAssigned({ recipientName: recipient.name, callerName, locale: recipient.locale, appUrl: this.appUrl, opportunityId }),
+    });
   }
 
   /**
    * After an import, sends each assignee other than the person importing one summary (rule 4).
-   * Never throws, and one assignee's failure doesn't stop the others.
+   * One assignee's failure doesn't stop the others. `notifyAfterResponse` catches anything else.
    */
   async notifyImportCompleted({ agencyId, jobId, actorId }: { agencyId: string; jobId: string; actorId: string }): Promise<void> {
-    try {
-      const counts = await this.repo.getImportAssigneeCounts(agencyId, jobId);
-      for (const [userId, count] of counts) {
-        if (userId === actorId) continue;
-        try {
-          await this.sendAssignmentEmail({
-            agencyId,
-            userId,
-            periodKey: `import:${jobId}`,
-            entityId: jobId,
-            render: (recipient) =>
-              renderImportSummary({ recipientName: recipient.name, count, locale: recipient.locale, appUrl: this.appUrl }),
-          });
-        } catch (error) {
-          console.error(`Import summary failed for user ${userId} in agency ${agencyId}:`, error);
-        }
+    const counts = await this.repo.getImportAssigneeCounts(agencyId, jobId);
+    for (const [userId, count] of counts) {
+      if (userId === actorId) continue;
+      try {
+        await this.sendAssignmentEmail({
+          agencyId,
+          userId,
+          periodKey: `import:${jobId}`,
+          entityId: jobId,
+          render: (recipient) =>
+            renderImportSummary({ recipientName: recipient.name, count, locale: recipient.locale, appUrl: this.appUrl }),
+        });
+      } catch (error) {
+        console.error(`Import summary failed for user ${userId} in agency ${agencyId}:`, error);
       }
-    } catch (error) {
-      console.error(`Import summaries failed for job ${jobId} in agency ${agencyId}:`, error);
     }
   }
 
