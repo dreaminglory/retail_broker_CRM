@@ -609,6 +609,16 @@ describeServices('NotificationService daily digest against the local stack', () 
       await notifyImport(mailer, jobId, broker.userId);
 
       expect(sent).toHaveLength(0);
+      expect(await repo.getImportAssigneeCounts(broker.agencyId, jobId)).toEqual(new Map());
+    });
+
+    it('leaves unassigned inquiries out of the counts', async () => {
+      const member = await createTempMember('import-unassigned');
+      const jobId = await createImportJob();
+      await createImportedInquiries(jobId, member.userId, 2);
+      await createImportedInquiries(jobId, null, 3);
+
+      expect(await repo.getImportAssigneeCounts(broker.agencyId, jobId)).toEqual(new Map([[member.userId, 2]]));
     });
 
     it("carries on after one assignee's email fails", async () => {
