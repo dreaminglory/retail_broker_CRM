@@ -1265,6 +1265,11 @@
         "body": "The inquiry from {caller} was assigned to you.",
         "open": "Open Inquiries"
       },
+      "opportunity": {
+        "subject": "New opportunity assigned to you: {caller}",
+        "body": "The opportunity from the inquiry by {caller} was assigned to you.",
+        "open": "Open the opportunity"
+      },
       "footer": "You get this email when someone assigns work to you."
     }
   }

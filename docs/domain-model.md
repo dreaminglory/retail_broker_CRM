@@ -453,7 +453,9 @@ one (AD-052).
 other than the person acting, the new assignee gets an email after the response, whatever their
 digest setting. It holds the caller's name and a link, and goes only to an active member of the
 agency. A failure is logged and recorded as `failed`, and never fails the action. Nothing retries
-it, but a `new` inquiry still appears in the next digest.
+it, but a `new` inquiry still appears in the next digest. On conversion the opportunity's owner
+gets it, linking to the opportunity, when they differ from the inquiry's assignee and the person
+acting.
 
 ---
 

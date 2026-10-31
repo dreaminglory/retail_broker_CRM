@@ -158,17 +158,20 @@ type RenderAssignedInput = {
   callerName: string | null;
   locale: NotificationLocale;
   appUrl: string;
+  /** Set when a conversion made the recipient the owner: the email is about the opportunity. */
+  opportunityId?: string;
 };
 
-export function renderInquiryAssigned({ recipientName, callerName, locale, appUrl }: RenderAssignedInput): RenderedEmail {
+export function renderInquiryAssigned({ recipientName, callerName, locale, appUrl, opportunityId }: RenderAssignedInput): RenderedEmail {
   const t = createTranslator({ locale, messages: MESSAGES[locale], namespace: 'notifications' });
   const caller = callerName?.trim() || t('unknownCaller');
+  const kind = opportunityId ? 'opportunity' : 'inquiry';
   return renderNotice({
-    subject: t('assigned.inquiry.subject', { caller }),
+    subject: t(`assigned.${kind}.subject`, { caller }),
     greeting: t('assigned.greeting', { name: recipientName }),
-    body: t('assigned.inquiry.body', { caller }),
-    action: t('assigned.inquiry.open'),
-    url: link(appUrl, '/inquiries'),
+    body: t(`assigned.${kind}.body`, { caller }),
+    action: t(`assigned.${kind}.open`),
+    url: link(appUrl, opportunityId ? `/opportunities/${opportunityId}` : '/inquiries'),
     footer: t('assigned.footer'),
   });
 }

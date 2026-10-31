@@ -29,6 +29,8 @@ type InquiryAssignedInput = {
   assigneeId: string;
   inquiryId: string;
   callerName: string | null;
+  /** Set when a conversion made them the owner. The key stays the inquiry and date (AD-051). */
+  opportunityId?: string;
   now?: Date;
 };
 
@@ -100,7 +102,7 @@ export class NotificationService {
   }
 
   /** Emails the assignee of an inquiry (rule 4). Never throws: a failed email must not fail the action. */
-  async notifyInquiryAssigned({ agencyId, assigneeId, inquiryId, callerName, now = new Date() }: InquiryAssignedInput): Promise<void> {
+  async notifyInquiryAssigned({ agencyId, assigneeId, inquiryId, callerName, opportunityId, now = new Date() }: InquiryAssignedInput): Promise<void> {
     try {
       const timezone = await this.repo.getTimezone(agencyId);
       await this.sendAssignmentEmail({
@@ -109,7 +111,7 @@ export class NotificationService {
         periodKey: `${inquiryId}:${agencyDateKey(timezone, now)}`,
         entityId: inquiryId,
         render: (recipient) =>
-          renderInquiryAssigned({ recipientName: recipient.name, callerName, locale: recipient.locale, appUrl: this.appUrl }),
+          renderInquiryAssigned({ recipientName: recipient.name, callerName, locale: recipient.locale, appUrl: this.appUrl, opportunityId }),
       });
     } catch (error) {
       console.error(`Assignment email failed for user ${assigneeId} in agency ${agencyId}:`, error);

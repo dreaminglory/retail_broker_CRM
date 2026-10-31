@@ -186,3 +186,28 @@ describe('renderInquiryAssigned', () => {
     expect(html).toContain('&lt;script&gt;');
   });
 });
+
+describe('renderInquiryAssigned for a conversion', () => {
+  const converted = {
+    recipientName: 'Georgi',
+    callerName: 'Maria Petrova',
+    appUrl: 'https://crm.example.bg',
+    opportunityId: 'opp-1',
+  };
+
+  it('renders in Bulgarian and links to the opportunity', () => {
+    const { subject, text } = renderInquiryAssigned({ ...converted, locale: 'bg' });
+
+    expect(subject).toBe('Нова сделка за вас: Maria Petrova');
+    expect(text).toContain('Сделката по запитването от Maria Petrova е възложена на вас.');
+    expect(text).toContain('https://crm.example.bg/opportunities/opp-1');
+  });
+
+  it('renders the same email in English', () => {
+    const { subject, text } = renderInquiryAssigned({ ...converted, locale: 'en' });
+
+    expect(subject).toBe('New opportunity assigned to you: Maria Petrova');
+    expect(text).toContain('The opportunity from the inquiry by Maria Petrova was assigned to you.');
+    expect(text).toContain('https://crm.example.bg/opportunities/opp-1');
+  });
+});

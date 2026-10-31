@@ -471,6 +471,25 @@ describeServices('NotificationService daily digest against the local stack', () 
       expect(delivery.status).toBe('failed');
     });
 
+    it('links a conversion email to the opportunity, under the same inquiry and date key', async () => {
+      const member = await createTempMember('converted');
+      const { mailer, sent } = fakeMailer();
+      const inquiryId = randomUUID();
+
+      await service(mailer).notifyInquiryAssigned({
+        agencyId: broker.agencyId,
+        assigneeId: member.userId,
+        inquiryId,
+        callerName: 'Maria Petrova',
+        opportunityId: 'opp-1',
+        now: ASSIGNED_NOW,
+      });
+
+      expect(sent[0].text).toContain(`${APP_URL}/opportunities/opp-1`);
+      const [delivery] = await deliveriesFor(member.userId);
+      expect(delivery.period_key).toBe(`${inquiryId}:${ASSIGNED_DATE}`);
+    });
+
     it('uses the translated fallback for a nameless caller', async () => {
       const member = await createTempMember('nameless');
       const { mailer, sent } = fakeMailer();

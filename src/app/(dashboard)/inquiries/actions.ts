@@ -17,7 +17,8 @@ function notifyIfAssignedToColleague(
   agencyId: string,
   actorId: string,
   previousAssignee: string | null | undefined,
-  inquiry: { id: string; assigned_to: string | null; caller_name: string | null }
+  inquiry: { id: string; assigned_to: string | null; caller_name: string | null },
+  opportunityId?: string
 ): void {
   const assigneeId = assigneeToNotify({ previous: previousAssignee, next: inquiry.assigned_to, actorId });
   if (!assigneeId) return;
@@ -27,6 +28,7 @@ function notifyIfAssignedToColleague(
       assigneeId,
       inquiryId: inquiry.id,
       callerName: inquiry.caller_name,
+      opportunityId,
     })
   );
 }
@@ -57,6 +59,7 @@ export async function createInquiryAction(
 
     const service = new InquiryService(supabase);
     const inquiry = await service.create(agencyId, userId, parsed.data);
+    notifyIfAssignedToColleague(agencyId, userId, null, inquiry);
 
     revalidatePath('/inquiries');
     return { success: true, data: { id: inquiry.id } };
@@ -155,7 +158,7 @@ export async function convertInquiryAction(
   formData: FormData
 ): Promise<ActionResult<{ opportunityId: string; contactId: string | null } | { duplicates: PotentialDuplicate[] }>> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const { supabase, userId, agencyId } = await getAuthContext();
 
     // create_contact is JSON-encoded — it's optional
     let create_contact: unknown = undefined;
@@ -190,7 +193,20 @@ export async function convertInquiryAction(
       }
     }
 
+    const before = await service.getById(id, agencyId);
     const result = await service.convert(id, agencyId, parsed.data);
+    // `convert_inquiry` assigns the opportunity and leaves the inquiry's assignee alone.
+    notifyIfAssignedToColleague(
+      agencyId,
+      userId,
+      before?.assigned_to,
+      {
+        id,
+        assigned_to: parsed.data.assigned_to ?? before?.assigned_to ?? null,
+        caller_name: before?.caller_name ?? null,
+      },
+      result.opportunityId
+    );
 
     revalidatePath('/inquiries');
     revalidatePath('/opportunities');
