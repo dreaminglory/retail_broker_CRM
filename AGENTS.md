@@ -47,7 +47,8 @@ Switch language with the `NEXT_LOCALE` cookie (`bg`/`en`). `SUPABASE_SERVICE_ROL
   never throw, and wrap errors with `toActionError()` (`src/lib/actions.ts`). Business-rule
   violations throw `DomainError` with an i18n key.
 - Supabase clients `src/lib/supabase/`: `server.ts`, `client.ts`, `admin.ts` (service role,
-  only in Server Actions that need it and the reminders cron route, AD-042).
+  only in Server Actions that need it, their `notify-after.ts` helper and the reminders cron
+  route, AD-042).
 - i18n: next-intl, no locale routing, Bulgarian default. Every key goes in **both**
   `messages/bg.json` and `messages/en.json`. Dates and numbers via `useFormatter`.
   "Today" is agency-local (`src/lib/time/agency-day.ts`).

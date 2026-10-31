@@ -5,7 +5,7 @@ import { InquiryService } from '@/domain/inquiries/service';
 import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
-import { notifyAfterResponse } from '@/domain/notifications/notify-after';
+import { notifyAfterResponse } from '../notify-after';
 import { assigneeToNotify } from '@/domain/notifications/service';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 import { DomainError } from '@/lib/errors';

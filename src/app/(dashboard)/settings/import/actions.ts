@@ -12,7 +12,7 @@ import {
   stageRowsSchema 
 } from "@/domain/imports/validation";
 import { ImportRepository } from "@/domain/imports/repository";
-import { notifyAfterResponse } from "@/domain/notifications/notify-after";
+import { notifyAfterResponse } from "../../notify-after";
 import { DomainError } from "@/lib/errors";
 import type { RevertResult } from "@/domain/imports/types";
 

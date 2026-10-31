@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { createMailer } from '@/domain/notifications/mailer';
 import { NotificationRepository } from '@/domain/notifications/repository';
 import { NotificationService } from '@/domain/notifications/service';
+import { getAppUrl } from '@/lib/app-url';
 import { createSupabaseAdmin } from '@/lib/supabase/admin';
 
 /**
@@ -40,7 +41,7 @@ export async function GET(request: Request): Promise<Response> {
     if (isNaN(now.getTime())) return json({ error: 'invalid_now' }, 400);
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (isProduction ? '' : 'http://localhost:3000');
+  const appUrl = getAppUrl();
   if (!appUrl) return json({ error: 'app_url_not_configured' }, 500);
 
   try {

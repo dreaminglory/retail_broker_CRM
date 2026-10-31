@@ -1,8 +1,9 @@
 import { after } from 'next/server';
+import { getAppUrl } from '@/lib/app-url';
 import { createSupabaseAdmin } from '@/lib/supabase/admin';
-import { createMailer } from './mailer';
-import { NotificationRepository } from './repository';
-import { NotificationService } from './service';
+import { createMailer } from '@/domain/notifications/mailer';
+import { NotificationRepository } from '@/domain/notifications/repository';
+import { NotificationService } from '@/domain/notifications/service';
 
 /**
  * Runs notification work after the action's response (AD-042). Members can't write
@@ -12,7 +13,7 @@ import { NotificationService } from './service';
 export function notifyAfterResponse(work: (notifications: NotificationService) => Promise<void>): void {
   after(async () => {
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000');
+      const appUrl = getAppUrl();
       if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is not set');
       await work(new NotificationService(new NotificationRepository(createSupabaseAdmin()), createMailer(), appUrl));
     } catch (error) {

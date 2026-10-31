@@ -29,7 +29,7 @@ vi.mock('@/domain/inquiries/service', () => ({
     findConversionDuplicates = inquiries.findConversionDuplicates;
   },
 }));
-vi.mock('@/domain/notifications/notify-after', () => ({
+vi.mock('../notify-after', () => ({
   notifyAfterResponse: (work: (service: unknown) => Promise<void>) => {
     scheduled.push(() => work({ notifyInquiryAssigned }));
   },

@@ -9,7 +9,7 @@ vi.mock('next/server', () => ({
   },
 }));
 vi.mock('@/lib/supabase/admin', () => ({ createSupabaseAdmin: () => ({}) }));
-vi.mock('./mailer', () => ({ createMailer: () => createMailer() }));
+vi.mock('@/domain/notifications/mailer', () => ({ createMailer: () => createMailer() }));
 
 const { notifyAfterResponse } = await import('./notify-after');
 
