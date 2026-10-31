@@ -20,6 +20,22 @@ test('the import page hydrates and the new import menu opens the wizard', async 
   expect(consoleErrors.filter((text) => /hydrat/i.test(text))).toEqual([]);
 });
 
+test('the wizard says so when a file cannot be read', async ({ page, m, signInAs }) => {
+  await signInAs('owner@alpha.bg');
+  await page.addInitScript(() => {
+    File.prototype.arrayBuffer = () => Promise.reject(new Error('File moved after it was picked'));
+  });
+  await page.goto('/settings/import/new?type=inquiry');
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'unreadable.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from('Name\nx\n'),
+  });
+
+  await expect(page.getByText(m.SettingsImport.dropzone.parseFailed)).toBeVisible();
+});
+
 // "Брокер" (a header the wizard maps by itself) in each encoding a Bulgarian CSV arrives in.
 const BROKER_HEADER = {
   'utf-8': Buffer.from('Брокер', 'utf-8'),

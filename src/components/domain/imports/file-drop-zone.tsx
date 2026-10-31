@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { detectEncoding } from "@/domain/imports/csv/detect-encoding";
+import { detectEncoding, type CsvEncoding } from "@/domain/imports/csv/detect-encoding";
 
 interface FileDropZoneProps {
   onFileAccepted: (file: File, headers: string[], encoding: 'utf-8' | 'windows-1251', delimiter: string) => void;
@@ -35,7 +35,13 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
       return;
     }
 
-    const encoding = detectEncoding(await file.arrayBuffer());
+    let encoding: CsvEncoding;
+    try {
+      encoding = detectEncoding(await file.arrayBuffer());
+    } catch {
+      setError(t("parseFailed"));
+      return;
+    }
 
     // Parse just the first few lines to get headers
     Papa.parse<string[]>(file, {
