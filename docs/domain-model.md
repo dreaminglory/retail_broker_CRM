@@ -455,7 +455,8 @@ digest setting. It holds the caller's name and a link, and goes only to an activ
 agency. A failure is logged and recorded as `failed`, and never fails the action. Nothing retries
 it, but a `new` inquiry still appears in the next digest. On conversion the opportunity's owner
 gets it, linking to the opportunity, when they differ from the inquiry's assignee and the person
-acting.
+acting. An inquiry import sends each assignee other than the importer one summary with their
+count of `new` inquiries, the same count as the import preview, once the last batch is in.
 
 ---
 

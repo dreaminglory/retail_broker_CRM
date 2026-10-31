@@ -2,7 +2,7 @@ import { agencyDateKey, getTodayWindows, isDigestTime } from '@/lib/time/agency-
 import { buildDigest } from './digest-builder';
 import type { MailResult, Mailer } from './mailer';
 import type { NotificationRepository } from './repository';
-import { renderDailyDigest, renderInquiryAssigned, type RenderedEmail } from './templates';
+import { renderDailyDigest, renderImportSummary, renderInquiryAssigned, type RenderedEmail } from './templates';
 import type { DigestInquiryInput, DigestRecipient, DigestTaskInput } from './types';
 
 /** What one agency's run did, per recipient. `alreadyDone` held a `sent` or `pending` row. */
@@ -115,6 +115,33 @@ export class NotificationService {
       });
     } catch (error) {
       console.error(`Assignment email failed for user ${assigneeId} in agency ${agencyId}:`, error);
+    }
+  }
+
+  /**
+   * After an import, sends each assignee other than the person importing one summary (rule 4).
+   * Never throws, and one assignee's failure doesn't stop the others.
+   */
+  async notifyImportCompleted({ agencyId, jobId, actorId }: { agencyId: string; jobId: string; actorId: string }): Promise<void> {
+    try {
+      const counts = await this.repo.getImportAssigneeCounts(agencyId, jobId);
+      for (const [userId, count] of counts) {
+        if (userId === actorId) continue;
+        try {
+          await this.sendAssignmentEmail({
+            agencyId,
+            userId,
+            periodKey: `import:${jobId}`,
+            entityId: jobId,
+            render: (recipient) =>
+              renderImportSummary({ recipientName: recipient.name, count, locale: recipient.locale, appUrl: this.appUrl }),
+          });
+        } catch (error) {
+          console.error(`Import summary failed for user ${userId} in agency ${agencyId}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error(`Import summaries failed for job ${jobId} in agency ${agencyId}:`, error);
     }
   }
 

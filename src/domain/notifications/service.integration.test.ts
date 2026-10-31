@@ -499,4 +499,129 @@ describeServices('NotificationService daily digest against the local stack', () 
       expect(sent[0].text).toContain('Неизвестен обаждащ се');
     });
   });
+
+  describe('import summary', () => {
+    async function createImportJob(agencyId = broker.agencyId) {
+      const { data, error } = await admin
+        .from('import_jobs')
+        .insert({
+          agency_id: agencyId,
+          entity_type: 'inquiry',
+          status: 'completed',
+          file_name: 'inquiries.csv',
+          file_sha256: 'b'.repeat(64),
+          file_size_bytes: 100,
+          encoding: 'utf-8',
+          delimiter: ',',
+          headers: ['Name'],
+        })
+        .select('id')
+        .single();
+      if (error) throw new Error(error.message);
+      cleanup.track('import_jobs', data.id);
+      return data.id as string;
+    }
+
+    async function createImportedInquiries(jobId: string, assignedTo: string | null, count: number, status = 'new', agencyId = broker.agencyId) {
+      const rows = Array.from({ length: count }, (_, i) => ({
+        agency_id: agencyId,
+        import_job_id: jobId,
+        assigned_to: assignedTo,
+        status,
+        caller_name: `Imported ${i}`,
+        ...(status === 'dismissed' ? { dismissed_reason: 'test' } : {}),
+      }));
+      const { data, error } = await admin.from('inquiries').insert(rows).select('id');
+      if (error) throw new Error(error.message);
+      for (const row of data) cleanup.track('inquiries', row.id);
+    }
+
+    const notifyImport = (mailer: Mailer, jobId: string, actorId: string) =>
+      service(mailer).notifyImportCompleted({ agencyId: broker.agencyId, jobId, actorId });
+
+    it('sends one summary per assignee with their own count', async () => {
+      const first = await createTempMember('import-first');
+      const second = await createTempMember('import-second');
+      const jobId = await createImportJob();
+      await createImportedInquiries(jobId, first.userId, 3);
+      await createImportedInquiries(jobId, second.userId, 1);
+      const { mailer, sent } = fakeMailer();
+
+      await notifyImport(mailer, jobId, broker.userId);
+
+      expect(sent).toHaveLength(2);
+      expect(sent.find((m) => m.to === first.email)?.subject).toContain('3');
+      expect(sent.find((m) => m.to === second.email)?.subject).toContain('1');
+      const { data } = await admin.from('notification_deliveries').select('kind, period_key, entity_id, status').eq('user_id', first.userId);
+      expect(data).toEqual([{ kind: 'inquiry_assigned', period_key: `import:${jobId}`, entity_id: jobId, status: 'sent' }]);
+    });
+
+    it('sends nothing to the person importing', async () => {
+      const member = await createTempMember('import-self');
+      const jobId = await createImportJob();
+      await createImportedInquiries(jobId, member.userId, 2);
+      const { mailer, sent } = fakeMailer();
+
+      await notifyImport(mailer, jobId, member.userId);
+
+      expect(sent).toHaveLength(0);
+    });
+
+    it('does not send twice when the final batch is retried', async () => {
+      const member = await createTempMember('import-retry');
+      const jobId = await createImportJob();
+      await createImportedInquiries(jobId, member.userId, 2);
+      const { mailer, sent } = fakeMailer();
+
+      await notifyImport(mailer, jobId, broker.userId);
+      await notifyImport(mailer, jobId, broker.userId);
+
+      expect(sent).toHaveLength(1);
+    });
+
+    it('counts only new inquiries, as the import preview does', async () => {
+      const member = await createTempMember('import-closed');
+      const jobId = await createImportJob();
+      await createImportedInquiries(jobId, member.userId, 2);
+      await createImportedInquiries(jobId, member.userId, 4, 'contacted');
+      const { mailer, sent } = fakeMailer();
+
+      await notifyImport(mailer, jobId, broker.userId);
+
+      expect(sent).toHaveLength(1);
+      expect(sent[0].subject).toContain('2');
+    });
+
+    it('sends nothing for a job with no inquiries, such as a contact import', async () => {
+      const jobId = await createImportJob();
+      const { mailer, sent } = fakeMailer();
+
+      await notifyImport(mailer, jobId, broker.userId);
+
+      expect(sent).toHaveLength(0);
+    });
+
+    it("never reads another agency's job", async () => {
+      const jobId = await createImportJob(betaBroker.agencyId);
+      await createImportedInquiries(jobId, betaBroker.userId, 2, 'new', betaBroker.agencyId);
+      const { mailer, sent } = fakeMailer();
+
+      await notifyImport(mailer, jobId, broker.userId);
+
+      expect(sent).toHaveLength(0);
+    });
+
+    it("carries on after one assignee's email fails", async () => {
+      const failing = await createTempMember('import-fail');
+      const working = await createTempMember('import-work');
+      const jobId = await createImportJob();
+      await createImportedInquiries(jobId, failing.userId, 1);
+      await createImportedInquiries(jobId, working.userId, 1);
+      const { mailer, sent } = fakeMailer(failing.email);
+
+      await expect(notifyImport(mailer, jobId, broker.userId)).resolves.toBeUndefined();
+
+      expect(sent.map((m) => m.to)).toEqual([working.email]);
+    });
+  });
 });

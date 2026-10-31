@@ -139,6 +139,24 @@ export class NotificationRepository {
     }));
   }
 
+  /** How many `new` inquiries an import gave each assignee, as the import preview counts them. */
+  async getImportAssigneeCounts(agencyId: string, jobId: string): Promise<Map<string, number>> {
+    const rows = await fetchAll<{ assigned_to: string }>('imported inquiries', (from, to) =>
+      this.db
+        .from('inquiries')
+        .select('assigned_to')
+        .eq('agency_id', agencyId)
+        .eq('import_job_id', jobId)
+        .eq('status', 'new')
+        .not('assigned_to', 'is', null)
+        .order('id')
+        .range(from, to),
+    );
+    const counts = new Map<string, number>();
+    for (const row of rows) counts.set(row.assigned_to, (counts.get(row.assigned_to) ?? 0) + 1);
+    return counts;
+  }
+
   /**
    * Takes the right to send this email (AD-051). Returns the delivery id when this caller won,
    * or null when a `sent` or `pending` row already holds the key. A `failed` or `skipped` row

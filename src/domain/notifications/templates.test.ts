@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderDailyDigest, renderInquiryAssigned } from './templates';
+import { renderDailyDigest, renderImportSummary, renderInquiryAssigned } from './templates';
 import type { Digest } from './types';
 
 const digest: Digest = {
@@ -209,5 +209,29 @@ describe('renderInquiryAssigned for a conversion', () => {
     expect(subject).toBe('New opportunity assigned to you: Maria Petrova');
     expect(text).toContain('The opportunity from the inquiry by Maria Petrova was assigned to you.');
     expect(text).toContain('https://crm.example.bg/opportunities/opp-1');
+  });
+});
+
+describe('renderImportSummary', () => {
+  const summary = { recipientName: 'Georgi', appUrl: 'https://crm.example.bg/' };
+
+  it('renders the count in Bulgarian and links to the inquiries', () => {
+    const { subject, text } = renderImportSummary({ ...summary, count: 12, locale: 'bg' });
+
+    expect(subject).toBe('12 нови запитвания за вас');
+    expect(text).toContain('12 внесени запитвания са възложени на вас.');
+    expect(text).toContain('https://crm.example.bg/inquiries');
+  });
+
+  it('renders the count in English', () => {
+    const { subject, text } = renderImportSummary({ ...summary, count: 12, locale: 'en' });
+
+    expect(subject).toBe('12 new inquiries assigned to you');
+    expect(text).toContain('12 imported inquiries were assigned to you.');
+  });
+
+  it('uses the singular for one inquiry', () => {
+    expect(renderImportSummary({ ...summary, count: 1, locale: 'en' }).subject).toBe('1 new inquiry assigned to you');
+    expect(renderImportSummary({ ...summary, count: 1, locale: 'bg' }).subject).toBe('1 ново запитване за вас');
   });
 });

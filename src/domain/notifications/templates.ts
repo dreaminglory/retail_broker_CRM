@@ -175,3 +175,22 @@ export function renderInquiryAssigned({ recipientName, callerName, locale, appUr
     footer: t('assigned.footer'),
   });
 }
+
+type RenderImportSummaryInput = {
+  recipientName: string;
+  count: number;
+  locale: NotificationLocale;
+  appUrl: string;
+};
+
+export function renderImportSummary({ recipientName, count, locale, appUrl }: RenderImportSummaryInput): RenderedEmail {
+  const t = createTranslator({ locale, messages: MESSAGES[locale], namespace: 'notifications' });
+  return renderNotice({
+    subject: t('assigned.import.subject', { count }),
+    greeting: t('assigned.greeting', { name: recipientName }),
+    body: t('assigned.import.body', { count }),
+    action: t('assigned.import.open'),
+    url: link(appUrl, '/inquiries'),
+    footer: t('assigned.footer'),
+  });
+}

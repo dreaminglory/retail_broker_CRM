@@ -1270,6 +1270,11 @@
         "body": "The opportunity from the inquiry by {caller} was assigned to you.",
         "open": "Open the opportunity"
       },
+      "import": {
+        "subject": "{count, plural, one {# new inquiry assigned to you} other {# new inquiries assigned to you}}",
+        "body": "{count, plural, one {# imported inquiry was assigned to you.} other {# imported inquiries were assigned to you.}}",
+        "open": "Open Inquiries"
+      },
       "footer": "You get this email when someone assigns work to you."
     }
   }
