@@ -253,7 +253,7 @@ sections is easier to trust.
 **Revisit if:** owners want the counts without their own digest, or the other way round.
 
 ### AD-053: Who gets an assignment email, and what it counts
-**Proposed** (2026-10-31, while building `reminders`; for founder review). Refines
+**Accepted** (founder, 2026-10-31, while building `reminders`). Refines
 `spec/reminders.md` rule 4 and AD-051.
 - **Active members of the agency only.** The service role bypasses RLS, so the send checks
   membership itself. Anyone else gets no email and no row, as with the digest.
