@@ -1257,6 +1257,15 @@
       "agencyOverdue": "Overdue tasks: {count}",
       "agencyOpen": "Open Exceptions",
       "footer": "You get this digest every working day. You can turn it off in Settings → Profile."
+    },
+    "assigned": {
+      "greeting": "Hello, {name}!",
+      "inquiry": {
+        "subject": "New inquiry assigned to you: {caller}",
+        "body": "The inquiry from {caller} was assigned to you.",
+        "open": "Open Inquiries"
+      },
+      "footer": "You get this email when someone assigns work to you."
     }
   }
 }

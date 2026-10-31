@@ -449,6 +449,12 @@ unassigned inquiries, and overdue tasks with an assignee. The digest reads past 
 1,000-row cap and `getDashboardData` doesn't, so above that size the digest's count is the right
 one (AD-052).
 
+**Assignment email** (`notifyInquiryAssigned`): when a change really moves an inquiry to someone
+other than the person acting, the new assignee gets an email after the response, whatever their
+digest setting. It holds the caller's name and a link, and goes only to an active member of the
+agency. A failure is logged and recorded as `failed`, and never fails the action. Nothing retries
+it, but a `new` inquiry still appears in the next digest.
+
 ---
 
 ## 5. Invariants

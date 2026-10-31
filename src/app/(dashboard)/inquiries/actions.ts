@@ -5,10 +5,31 @@ import { InquiryService } from '@/domain/inquiries/service';
 import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
+import { notifyAfterResponse } from '@/domain/notifications/notify-after';
+import { assigneeToNotify } from '@/domain/notifications/service';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 import { DomainError } from '@/lib/errors';
 
 export type { ActionResult };
+
+/** After the response, emails the assignee if this change assigned the inquiry to a colleague (rule 4). */
+function notifyIfAssignedToColleague(
+  agencyId: string,
+  actorId: string,
+  previousAssignee: string | null | undefined,
+  inquiry: { id: string; assigned_to: string | null; caller_name: string | null }
+): void {
+  const assigneeId = assigneeToNotify({ previous: previousAssignee, next: inquiry.assigned_to, actorId });
+  if (!assigneeId) return;
+  notifyAfterResponse((notifications) =>
+    notifications.notifyInquiryAssigned({
+      agencyId,
+      assigneeId,
+      inquiryId: inquiry.id,
+      callerName: inquiry.caller_name,
+    })
+  );
+}
 
 // ── Inquiry actions ───────────────────────────────────────────────────────────
 
@@ -48,7 +69,7 @@ export async function updateInquiryAction(
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const { supabase, userId, agencyId } = await getAuthContext();
 
     const raw = {
       source_id: formData.get('source_id') || null,
@@ -62,7 +83,9 @@ export async function updateInquiryAction(
     };
 
     const service = new InquiryService(supabase);
-    await service.edit(id, agencyId, raw);
+    const before = await service.getById(id, agencyId);
+    const updated = await service.edit(id, agencyId, raw);
+    notifyIfAssignedToColleague(agencyId, userId, before?.assigned_to, updated);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');
@@ -76,13 +99,15 @@ export async function reassignInquiryAction(
   assignedTo: string | null
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const { supabase, userId, agencyId } = await getAuthContext();
 
     const parsed = updateInquirySchema.safeParse({ assigned_to: assignedTo });
     if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
-    await service.update(id, agencyId, parsed.data);
+    const before = await service.getById(id, agencyId);
+    const updated = await service.update(id, agencyId, parsed.data);
+    notifyIfAssignedToColleague(agencyId, userId, before?.assigned_to, updated);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');

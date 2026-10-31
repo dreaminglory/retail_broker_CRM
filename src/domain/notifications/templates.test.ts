@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderDailyDigest } from './templates';
+import { renderDailyDigest, renderInquiryAssigned } from './templates';
 import type { Digest } from './types';
 
 const digest: Digest = {
@@ -149,5 +149,40 @@ describe('renderDailyDigest', () => {
     for (const out of [html, text]) {
       expect(out).not.toMatch(/\+359|0888/);
     }
+  });
+});
+
+describe('renderInquiryAssigned', () => {
+  const assigned = { recipientName: 'Georgi', callerName: 'Maria Petrova', appUrl: 'https://crm.example.bg/' };
+
+  it('renders in Bulgarian and links to the inquiries', () => {
+    const { subject, html, text } = renderInquiryAssigned({ ...assigned, locale: 'bg' });
+
+    expect(subject).toBe('Ново запитване за вас: Maria Petrova');
+    expect(html).toContain('Здравейте, Georgi!');
+    expect(html).toContain('https://crm.example.bg/inquiries');
+    expect(text).toContain('Запитването от Maria Petrova е възложено на вас.');
+  });
+
+  it('renders the same email in English', () => {
+    const { subject, text } = renderInquiryAssigned({ ...assigned, locale: 'en' });
+
+    expect(subject).toBe('New inquiry assigned to you: Maria Petrova');
+    expect(text).toContain('The inquiry from Maria Petrova was assigned to you.');
+    expect(text).toContain('https://crm.example.bg/inquiries');
+  });
+
+  it('falls back to a translated name for a nameless caller', () => {
+    const { subject } = renderInquiryAssigned({ ...assigned, callerName: '  ', locale: 'en' });
+
+    expect(subject).toBe('New inquiry assigned to you: Unknown caller');
+  });
+
+  it('escapes the names in the HTML', () => {
+    const { html } = renderInquiryAssigned({ ...assigned, callerName: '<script>x</script>', recipientName: '<b>G</b>', locale: 'en' });
+
+    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('<b>G');
+    expect(html).toContain('&lt;script&gt;');
   });
 });

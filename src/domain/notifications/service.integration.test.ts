@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ExceptionsRepository } from '@/domain/exceptions/repository';
@@ -335,5 +336,148 @@ describeServices('NotificationService daily digest against the local stack', () 
       expect(message.to).not.toMatch(/@alpha\.bg$/);
     }
     expect(betaMail.find((m) => m.to === 'broker@beta.bg')!.html).toContain('Beta only task');
+  });
+
+  describe('inquiry-assigned email', () => {
+    // A different date from the digest tests, so these rows have their own period keys.
+    const ASSIGNED_NOW = new Date('2031-04-07T09:00:00Z');
+    const ASSIGNED_DATE = '2031-04-07';
+
+    afterAll(() => admin.from('notification_deliveries').delete().like('period_key', `%${ASSIGNED_DATE}`));
+
+    const notify = (mailer: Mailer, assigneeId: string, inquiryId: string, callerName: string | null = 'Maria Petrova') =>
+      service(mailer).notifyInquiryAssigned({
+        agencyId: broker.agencyId,
+        assigneeId,
+        inquiryId,
+        callerName,
+        now: ASSIGNED_NOW,
+      });
+
+    async function deliveriesFor(userId: string) {
+      const { data } = await admin
+        .from('notification_deliveries')
+        .select('kind, period_key, entity_id, status, provider_id, error')
+        .eq('user_id', userId)
+        .like('period_key', `%${ASSIGNED_DATE}`);
+      return data ?? [];
+    }
+
+    it('emails the assignee and records the delivery under the inquiry and date (AC-3)', async () => {
+      const member = await createTempMember('basic');
+      const { mailer, sent } = fakeMailer();
+      const inquiryId = randomUUID();
+
+      await notify(mailer, member.userId, inquiryId);
+
+      expect(sent).toHaveLength(1);
+      expect(sent[0].to).toBe(member.email);
+      expect(sent[0].text).toContain('Maria Petrova');
+      expect(sent[0].text).toContain(`${APP_URL}/inquiries`);
+      expect(await deliveriesFor(member.userId)).toEqual([
+        {
+          kind: 'inquiry_assigned',
+          period_key: `${inquiryId}:${ASSIGNED_DATE}`,
+          entity_id: inquiryId,
+          status: 'sent',
+          provider_id: 'fake-1',
+          error: null,
+        },
+      ]);
+    });
+
+    it('writes in the language of the assignee', async () => {
+      const member = await createTempMember('english');
+      await admin.from('profiles').update({ locale: 'en' }).eq('id', member.userId);
+      const { mailer, sent } = fakeMailer();
+
+      await notify(mailer, member.userId, randomUUID());
+
+      expect(sent[0].subject).toContain('assigned to you');
+    });
+
+    it("still emails a broker's second inquiry on the same day", async () => {
+      const member = await createTempMember('second');
+      const { mailer, sent } = fakeMailer();
+
+      await notify(mailer, member.userId, randomUUID());
+      await notify(mailer, member.userId, randomUUID());
+
+      expect(sent).toHaveLength(2);
+    });
+
+    it('sends one email when the same inquiry is assigned to them twice in a day (AD-051)', async () => {
+      const member = await createTempMember('repeat');
+      const { mailer, sent } = fakeMailer();
+      const inquiryId = randomUUID();
+
+      await notify(mailer, member.userId, inquiryId);
+      await notify(mailer, member.userId, inquiryId);
+
+      expect(sent).toHaveLength(1);
+    });
+
+    it('still emails someone who turned the digest off (AC-4)', async () => {
+      const member = await createTempMember('digest-off');
+      await admin.from('profiles').update({ digest_enabled: false }).eq('id', member.userId);
+      const { mailer, sent } = fakeMailer();
+
+      await notify(mailer, member.userId, randomUUID());
+
+      expect(sent).toHaveLength(1);
+    });
+
+    it('sends nothing and records nothing for a deactivated member', async () => {
+      const member = await createTempMember('deactivated', 'deactivated');
+      const { mailer, sent } = fakeMailer();
+
+      await notify(mailer, member.userId, randomUUID());
+
+      expect(sent).toHaveLength(0);
+      expect(await deliveriesFor(member.userId)).toEqual([]);
+    });
+
+    it('sends nothing to a member of another agency', async () => {
+      const { mailer, sent } = fakeMailer();
+
+      await notify(mailer, betaBroker.userId, randomUUID());
+
+      expect(sent).toHaveLength(0);
+      expect(await deliveriesFor(betaBroker.userId)).toEqual([]);
+    });
+
+    it('records a refused send as failed and does not throw', async () => {
+      const member = await createTempMember('refused');
+      const mailer: Mailer = { send: async () => ({ ok: false, error: 'Mailbox unavailable' }) };
+
+      await expect(notify(mailer, member.userId, randomUUID())).resolves.toBeUndefined();
+
+      const [delivery] = await deliveriesFor(member.userId);
+      expect(delivery.status).toBe('failed');
+      expect(delivery.error).toBe('Mailbox unavailable');
+    });
+
+    it('records a mailer that throws as failed and does not throw', async () => {
+      const member = await createTempMember('throws');
+      const mailer: Mailer = {
+        send: async () => {
+          throw new Error('connection refused');
+        },
+      };
+
+      await expect(notify(mailer, member.userId, randomUUID())).resolves.toBeUndefined();
+
+      const [delivery] = await deliveriesFor(member.userId);
+      expect(delivery.status).toBe('failed');
+    });
+
+    it('uses the translated fallback for a nameless caller', async () => {
+      const member = await createTempMember('nameless');
+      const { mailer, sent } = fakeMailer();
+
+      await notify(mailer, member.userId, randomUUID(), null);
+
+      expect(sent[0].text).toContain('Неизвестен обаждащ се');
+    });
   });
 });

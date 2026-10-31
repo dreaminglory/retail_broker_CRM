@@ -129,3 +129,46 @@ export function renderDailyDigest({ digest, recipientName, locale, timezone, app
 
   return { subject: t('digest.subject', { count: total }), html, text };
 }
+
+type NoticeInput = {
+  subject: string;
+  greeting: string;
+  body: string;
+  action: string;
+  url: string;
+  footer: string;
+};
+
+/** A short email with one message and one link. */
+function renderNotice({ subject, greeting, body, action, url, footer }: NoticeInput): RenderedEmail {
+  const html = [
+    `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#1a1a1a;max-width:560px">`,
+    `<p style="font-size:18px;font-weight:bold;margin:0 0 8px">${escapeHtml(greeting)}</p>`,
+    `<p style="margin:0 0 16px">${escapeHtml(body)}</p>`,
+    `<p style="margin:24px 0"><a href="${escapeHtml(url)}" style="background:#1a1a1a;color:#ffffff;padding:10px 18px;border-radius:6px;text-decoration:none">${escapeHtml(action)}</a></p>`,
+    `<p style="font-size:12px;color:#666666">${escapeHtml(footer)}</p>`,
+    `</div>`,
+  ].join('\n');
+  const text = [greeting, '', body, '', `${action}: ${url}`, '', footer].join('\n');
+  return { subject, html, text };
+}
+
+type RenderAssignedInput = {
+  recipientName: string;
+  callerName: string | null;
+  locale: NotificationLocale;
+  appUrl: string;
+};
+
+export function renderInquiryAssigned({ recipientName, callerName, locale, appUrl }: RenderAssignedInput): RenderedEmail {
+  const t = createTranslator({ locale, messages: MESSAGES[locale], namespace: 'notifications' });
+  const caller = callerName?.trim() || t('unknownCaller');
+  return renderNotice({
+    subject: t('assigned.inquiry.subject', { caller }),
+    greeting: t('assigned.greeting', { name: recipientName }),
+    body: t('assigned.inquiry.body', { caller }),
+    action: t('assigned.inquiry.open'),
+    url: link(appUrl, '/inquiries'),
+    footer: t('assigned.footer'),
+  });
+}

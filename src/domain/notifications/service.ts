@@ -1,8 +1,8 @@
 import { agencyDateKey, getTodayWindows, isDigestTime } from '@/lib/time/agency-day';
 import { buildDigest } from './digest-builder';
-import type { Mailer } from './mailer';
+import type { MailResult, Mailer } from './mailer';
 import type { NotificationRepository } from './repository';
-import { renderDailyDigest } from './templates';
+import { renderDailyDigest, renderInquiryAssigned, type RenderedEmail } from './templates';
 import type { DigestInquiryInput, DigestRecipient, DigestTaskInput } from './types';
 
 /** What one agency's run did, per recipient. `alreadyDone` held a `sent` or `pending` row. */
@@ -23,6 +23,31 @@ export function addRunResults(a: DigestRunResult, b: DigestRunResult): DigestRun
 export type CronRunResult = DigestRunResult & { agencies: number; due: number; agenciesFailed: number };
 
 type RunDigestInput = { agencyId: string; timezone: string; now: Date };
+
+type InquiryAssignedInput = {
+  agencyId: string;
+  assigneeId: string;
+  inquiryId: string;
+  callerName: string | null;
+  now?: Date;
+};
+
+/**
+ * Who an assignment change should email (rule 4): the new assignee, unless nothing changed,
+ * the inquiry was unassigned, or they did it themself.
+ */
+export function assigneeToNotify({
+  previous,
+  next,
+  actorId,
+}: {
+  previous: string | null | undefined;
+  next: string | null | undefined;
+  actorId: string;
+}): string | null {
+  if (!next || next === previous || next === actorId) return null;
+  return next;
+}
 
 /**
  * Sends the daily digest (AD-042). Safe to run again: each recipient's send is claimed first
@@ -72,6 +97,57 @@ export class NotificationService {
       }
     }
     return { ...total, agencies: agencies.length, due, agenciesFailed };
+  }
+
+  /** Emails the assignee of an inquiry (rule 4). Never throws: a failed email must not fail the action. */
+  async notifyInquiryAssigned({ agencyId, assigneeId, inquiryId, callerName, now = new Date() }: InquiryAssignedInput): Promise<void> {
+    try {
+      const timezone = await this.repo.getTimezone(agencyId);
+      await this.sendAssignmentEmail({
+        agencyId,
+        userId: assigneeId,
+        periodKey: `${inquiryId}:${agencyDateKey(timezone, now)}`,
+        entityId: inquiryId,
+        render: (recipient) =>
+          renderInquiryAssigned({ recipientName: recipient.name, callerName, locale: recipient.locale, appUrl: this.appUrl }),
+      });
+    } catch (error) {
+      console.error(`Assignment email failed for user ${assigneeId} in agency ${agencyId}:`, error);
+    }
+  }
+
+  /** Claims the key, sends and records the result (AD-051). A member who isn't active in the agency gets no email and no row. */
+  private async sendAssignmentEmail({
+    agencyId,
+    userId,
+    periodKey,
+    entityId,
+    render,
+  }: {
+    agencyId: string;
+    userId: string;
+    periodKey: string;
+    entityId: string;
+    render: (recipient: DigestRecipient) => RenderedEmail;
+  }): Promise<void> {
+    const recipient = await this.repo.getActiveRecipient(agencyId, userId);
+    if (!recipient) return;
+
+    const deliveryId = await this.repo.claim(agencyId, userId, { kind: 'inquiry_assigned', periodKey, entityId });
+    if (!deliveryId) return;
+
+    let sent: MailResult;
+    try {
+      sent = await this.mailer.send({ to: recipient.email, ...render(recipient) });
+    } catch (error) {
+      console.error(`Assignment email failed for user ${userId} in agency ${agencyId}:`, error);
+      sent = { ok: false, error: 'Unexpected error before the email was confirmed sent' };
+    }
+    await this.repo.settle(
+      agencyId,
+      deliveryId,
+      sent.ok ? { status: 'sent', providerId: sent.providerId } : { status: 'failed', error: sent.error },
+    );
   }
 
   private async sendDigest(

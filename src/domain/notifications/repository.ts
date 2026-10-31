@@ -74,14 +74,29 @@ export class NotificationRepository {
 
     return (profiles ?? [])
       .filter((profile) => profile.email)
-      .map((profile) => ({
-        userId: profile.id as string,
-        email: profile.email as string,
-        name: (profile.display_name as string | null)?.trim() || (profile.email as string).split('@')[0],
-        locale: (profile.locale === 'en' ? 'en' : 'bg') as NotificationLocale,
-        role: roles.get(profile.id as string)!,
-      }))
+      .map((profile) => toRecipient(profile, roles.get(profile.id as string)!))
       .sort((a, b) => a.email.localeCompare(b.email));
+  }
+
+  /** The member to email about an assignment, whatever their digest setting. Null unless they're active in this agency. */
+  async getActiveRecipient(agencyId: string, userId: string): Promise<DigestRecipient | null> {
+    const { data: membership, error } = await this.db
+      .from('agency_memberships')
+      .select('role')
+      .eq('agency_id', agencyId)
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (error) throw new DomainError('errors.loadFailed', `Failed to load member: ${error.message}`);
+    if (!membership) return null;
+
+    const { data: profile, error: profileError } = await this.db
+      .from('profiles')
+      .select('id, email, display_name, locale')
+      .eq('id', userId)
+      .maybeSingle();
+    if (profileError) throw new DomainError('errors.loadFailed', `Failed to load profile: ${profileError.message}`);
+    return profile?.email ? toRecipient(profile, membership.role as MemberRole) : null;
   }
 
   /** Every assigned pending task due before `dueBefore` (agency midnight), overdue ones included. */
@@ -161,6 +176,18 @@ export class NotificationRepository {
       .eq('id', deliveryId);
     if (updateError) throw new DomainError('errors.saveFailed', `Failed to record delivery: ${updateError.message}`);
   }
+}
+
+type ProfileRow = { id: unknown; email: unknown; display_name: unknown; locale: unknown };
+
+function toRecipient(profile: ProfileRow, role: MemberRole): DigestRecipient {
+  return {
+    userId: profile.id as string,
+    email: profile.email as string,
+    name: (profile.display_name as string | null)?.trim() || (profile.email as string).split('@')[0],
+    locale: (profile.locale === 'en' ? 'en' : 'bg') as NotificationLocale,
+    role,
+  };
 }
 
 function parseTimezone(settings: unknown): string {
