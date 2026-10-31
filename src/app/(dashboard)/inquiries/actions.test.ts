@@ -4,7 +4,6 @@ import { createFakeSupabase, type FakeSupabase } from '@/test/fake-supabase';
 let fake: FakeSupabase;
 
 const inquiries = {
-  getById: vi.fn(),
   update: vi.fn(),
   edit: vi.fn(),
   create: vi.fn(),
@@ -23,7 +22,6 @@ vi.mock('next-intl/server', () => ({
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
 vi.mock('@/domain/inquiries/service', () => ({
   InquiryService: class {
-    getById = inquiries.getById;
     update = inquiries.update;
     edit = inquiries.edit;
     create = inquiries.create;
@@ -44,6 +42,10 @@ const COLLEAGUE = '11111111-1111-4111-8111-111111111111';
 const OTHER = '22222222-2222-4222-8222-222222222222';
 
 const inquiry = (assignedTo: string | null) => ({ id: 'inq-1', assigned_to: assignedTo, caller_name: 'Maria' });
+const change = (assignedTo: string | null, previousAssignee: string | null = OTHER) => ({
+  inquiry: inquiry(assignedTo),
+  previousAssignee,
+});
 
 function editForm(assignedTo: string | null): FormData {
   const form = new FormData();
@@ -60,14 +62,13 @@ beforeEach(() => {
   fake = createFakeSupabase({ role: 'broker', userId: ME, agencyId: 'agency-1' });
   scheduled = [];
   notifyInquiryAssigned.mockReset();
-  inquiries.getById.mockReset().mockResolvedValue(inquiry(OTHER));
   inquiries.update.mockReset();
   inquiries.edit.mockReset();
 });
 
 describe('reassignInquiryAction', () => {
   it('emails a colleague it assigns the inquiry to (AC-3)', async () => {
-    inquiries.update.mockResolvedValue(inquiry(COLLEAGUE));
+    inquiries.update.mockResolvedValue(change(COLLEAGUE));
 
     const result = await reassignInquiryAction('inq-1', COLLEAGUE);
     await runScheduled();
@@ -82,7 +83,7 @@ describe('reassignInquiryAction', () => {
   });
 
   it('sends nothing when you assign the inquiry to yourself', async () => {
-    inquiries.update.mockResolvedValue(inquiry(ME));
+    inquiries.update.mockResolvedValue(change(ME));
 
     await reassignInquiryAction('inq-1', COLLEAGUE);
 
@@ -90,7 +91,7 @@ describe('reassignInquiryAction', () => {
   });
 
   it('sends nothing when the inquiry is unassigned', async () => {
-    inquiries.update.mockResolvedValue(inquiry(null));
+    inquiries.update.mockResolvedValue(change(null));
 
     await reassignInquiryAction('inq-1', null);
 
@@ -98,8 +99,7 @@ describe('reassignInquiryAction', () => {
   });
 
   it('sends nothing when the assignee stays the same', async () => {
-    inquiries.getById.mockResolvedValue(inquiry(COLLEAGUE));
-    inquiries.update.mockResolvedValue(inquiry(COLLEAGUE));
+    inquiries.update.mockResolvedValue(change(COLLEAGUE, COLLEAGUE));
 
     await reassignInquiryAction('inq-1', COLLEAGUE);
 
@@ -118,7 +118,7 @@ describe('reassignInquiryAction', () => {
 
 describe('updateInquiryAction', () => {
   it('emails a colleague when the edit changes the assignee', async () => {
-    inquiries.edit.mockResolvedValue(inquiry(COLLEAGUE));
+    inquiries.edit.mockResolvedValue(change(COLLEAGUE));
 
     const result = await updateInquiryAction('inq-1', { success: true, data: undefined }, editForm(COLLEAGUE));
     await runScheduled();
@@ -133,7 +133,7 @@ describe('updateInquiryAction', () => {
   });
 
   it('sends nothing when the edit leaves the assignee alone', async () => {
-    inquiries.edit.mockResolvedValue(inquiry(OTHER));
+    inquiries.edit.mockResolvedValue(change(OTHER));
 
     await updateInquiryAction('inq-1', { success: true, data: undefined }, editForm(OTHER));
 
@@ -194,7 +194,14 @@ describe('convertInquiryAction', () => {
     for (const [key, value] of Object.entries(extra)) form.set(key, value);
     return form;
   };
-  const converted = { inquiryId: 'inq-1', opportunityId: 'opp-1', contactId: 'contact-1' };
+  const converted = {
+    inquiryId: 'inq-1',
+    opportunityId: 'opp-1',
+    contactId: 'contact-1',
+    ownerId: COLLEAGUE,
+    previousAssignee: OTHER,
+    callerName: 'Maria',
+  };
 
   beforeEach(() => {
     inquiries.convert.mockReset().mockResolvedValue(converted);
@@ -216,18 +223,24 @@ describe('convertInquiryAction', () => {
   });
 
   it('sends nothing when the owner is the inquiry assignee', async () => {
+    inquiries.convert.mockResolvedValue({ ...converted, ownerId: OTHER });
+
     await convertInquiryAction('inq-1', { success: true, data: undefined }, convertForm(OTHER));
 
     expect(scheduled).toHaveLength(0);
   });
 
   it('sends nothing when no owner is chosen, since the inquiry assignee keeps it', async () => {
+    inquiries.convert.mockResolvedValue({ ...converted, ownerId: OTHER });
+
     await convertInquiryAction('inq-1', { success: true, data: undefined }, convertForm(null));
 
     expect(scheduled).toHaveLength(0);
   });
 
   it('sends nothing when you make yourself the owner', async () => {
+    inquiries.convert.mockResolvedValue({ ...converted, ownerId: ME });
+
     await convertInquiryAction('inq-1', { success: true, data: undefined }, convertForm(ME));
 
     expect(scheduled).toHaveLength(0);

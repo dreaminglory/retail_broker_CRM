@@ -86,9 +86,8 @@ export async function updateInquiryAction(
     };
 
     const service = new InquiryService(supabase);
-    const before = await service.getById(id, agencyId);
-    const updated = await service.edit(id, agencyId, raw);
-    notifyIfAssignedToColleague(agencyId, userId, before?.assigned_to, updated);
+    const { inquiry, previousAssignee } = await service.edit(id, agencyId, raw);
+    notifyIfAssignedToColleague(agencyId, userId, previousAssignee, inquiry);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');
@@ -108,9 +107,8 @@ export async function reassignInquiryAction(
     if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
-    const before = await service.getById(id, agencyId);
-    const updated = await service.update(id, agencyId, parsed.data);
-    notifyIfAssignedToColleague(agencyId, userId, before?.assigned_to, updated);
+    const { inquiry, previousAssignee } = await service.update(id, agencyId, parsed.data);
+    notifyIfAssignedToColleague(agencyId, userId, previousAssignee, inquiry);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');
@@ -193,18 +191,13 @@ export async function convertInquiryAction(
       }
     }
 
-    const before = await service.getById(id, agencyId);
     const result = await service.convert(id, agencyId, parsed.data);
     // `convert_inquiry` assigns the opportunity and leaves the inquiry's assignee alone.
     notifyIfAssignedToColleague(
       agencyId,
       userId,
-      before?.assigned_to,
-      {
-        id,
-        assigned_to: parsed.data.assigned_to ?? before?.assigned_to ?? null,
-        caller_name: before?.caller_name ?? null,
-      },
+      result.previousAssignee,
+      { id, assigned_to: result.ownerId, caller_name: result.callerName },
       result.opportunityId
     );
 

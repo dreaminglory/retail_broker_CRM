@@ -22,6 +22,9 @@ import { findPotentialDuplicates, type PotentialDuplicate } from '../contacts/du
 import { MemberRepository } from '../members/repository';
 import type { InquiryListOptions } from './repository';
 
+/** An inquiry after a change, and who had it before, so a caller can tell if the assignee moved. */
+export type InquiryChange = { inquiry: Inquiry; previousAssignee: string | null };
+
 export class InquiryService {
   private readonly db: SupabaseClient;
   private readonly repo: InquiryRepository;
@@ -66,32 +69,20 @@ export class InquiryService {
     id: string,
     agencyId: string,
     input: UpdateInquiryInput
-  ): Promise<Inquiry> {
-    const parsed = updateInquirySchema.parse(input);
-
+  ): Promise<InquiryChange> {
     const current = await this.repo.findById(id, agencyId);
     if (!current) throw new DomainError('errors.not_found');
 
-    // Converted and dismissed inquiries are closed: nothing on them changes from here (I3).
-    if (INQUIRY_STATUS_TRANSITIONS[current.status].length === 0) {
-      throw new DomainError('errors.inquiries.final_state');
-    }
-
-    // Enforce status transition rules if status is being changed
-    if (parsed.status) this.assertValidTransition(current.status, parsed.status);
-
-    await this.assertAssignable(agencyId, parsed.assigned_to, current.assigned_to);
-
-    return this.repo.update(id, agencyId, parsed as UpdateInquiryInput);
+    return this.applyUpdate(current, agencyId, input);
   }
 
   /** Applies a person's edit. A stored phone the edit leaves unchanged isn't validated or rewritten. */
-  async edit(id: string, agencyId: string, input: unknown): Promise<Inquiry> {
+  async edit(id: string, agencyId: string, input: unknown): Promise<InquiryChange> {
     const current = await this.repo.findById(id, agencyId);
     if (!current) throw new DomainError('errors.not_found');
 
     const { caller_phone: callerPhone, ...rest } = editInquirySchemaFor(current.caller_phone).parse(input);
-    return this.update(id, agencyId, {
+    return this.applyUpdate(current, agencyId, {
       ...rest,
       ...(callerPhone !== current.caller_phone && { caller_phone: callerPhone }),
     });
@@ -149,7 +140,14 @@ export class InquiryService {
     id: string,
     agencyId: string,
     input: ConvertInquirySchema
-  ): Promise<{ inquiryId: string; opportunityId: string; contactId: string | null }> {
+  ): Promise<{
+    inquiryId: string;
+    opportunityId: string;
+    contactId: string | null;
+    ownerId: string | null;
+    previousAssignee: string | null;
+    callerName: string | null;
+  }> {
     const parsed = convertInquirySchema.parse(input);
 
     const current = await this.repo.findById(id, agencyId);
@@ -170,13 +168,15 @@ export class InquiryService {
       }),
     };
 
+    const ownerId = parsed.assigned_to ?? current.assigned_to ?? null;
+
     const { data, error } = await this.db.rpc('convert_inquiry', {
       p_agency_id: agencyId,
       p_inquiry_id: id,
       p_title: parsed.opportunity_title,
       p_type: parsed.opportunity_type,
       p_stage_id: parsed.stage_id,
-      p_assigned_to: parsed.assigned_to ?? current.assigned_to ?? null,
+      p_assigned_to: ownerId,
       p_contact_id: parsed.contact_id ?? null,
       p_new_contact: newContact ?? null,
       p_contact_methods: newContact ? callerContactMethods(current) : [],
@@ -187,10 +187,34 @@ export class InquiryService {
       opportunity_id: string;
       contact_id: string | null;
     };
-    return { inquiryId: id, opportunityId, contactId };
+    return {
+      inquiryId: id,
+      opportunityId,
+      contactId,
+      ownerId,
+      previousAssignee: current.assigned_to,
+      callerName: current.caller_name,
+    };
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
+
+  private async applyUpdate(current: Inquiry, agencyId: string, input: UpdateInquiryInput): Promise<InquiryChange> {
+    const parsed = updateInquirySchema.parse(input);
+
+    // Converted and dismissed inquiries are closed: nothing on them changes from here (I3).
+    if (INQUIRY_STATUS_TRANSITIONS[current.status].length === 0) {
+      throw new DomainError('errors.inquiries.final_state');
+    }
+
+    // Enforce status transition rules if status is being changed
+    if (parsed.status) this.assertValidTransition(current.status, parsed.status);
+
+    await this.assertAssignable(agencyId, parsed.assigned_to, current.assigned_to);
+
+    const inquiry = await this.repo.update(current.id, agencyId, parsed as UpdateInquiryInput);
+    return { inquiry, previousAssignee: current.assigned_to };
+  }
 
   private assertValidTransition(from: string, to: string): void {
     const allowed = INQUIRY_STATUS_TRANSITIONS[from] ?? [];
