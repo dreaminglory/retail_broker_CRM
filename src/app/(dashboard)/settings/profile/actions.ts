@@ -42,7 +42,7 @@ export async function updateProfile(formData: FormData): Promise<{ success?: boo
 }
 
 import { cookies } from 'next/headers';
-import { updateLocaleSchema } from '@/domain/profiles/validation';
+import { updateDigestEnabledSchema, updateLocaleSchema } from '@/domain/profiles/validation';
 import { toActionError, ActionResult } from '@/lib/actions';
 
 export async function updateLocaleAction(formData: FormData): Promise<ActionResult> {
@@ -72,6 +72,30 @@ export async function updateLocaleAction(formData: FormData): Promise<ActionResu
     });
 
     revalidatePath('/', 'layout');
+    return { success: true, data: undefined };
+  } catch (err) {
+    return toActionError(err);
+  }
+}
+
+/** The user comes from the session, never the caller, so a member changes only their own digest. */
+export async function updateDigestEnabledAction(enabled: boolean): Promise<ActionResult> {
+  const supabase = await createSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return toActionError(new DomainError('errors.unauthorized'));
+  }
+
+  const parsed = updateDigestEnabledSchema.safeParse({ digest_enabled: enabled });
+  if (!parsed.success) return toActionError(parsed.error);
+
+  try {
+    const repo = new ProfileRepository(supabase);
+    await repo.updateDigestEnabled(user.id, parsed.data.digest_enabled);
+    revalidatePath('/settings/profile');
     return { success: true, data: undefined };
   } catch (err) {
     return toActionError(err);

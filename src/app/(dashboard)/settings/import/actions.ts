@@ -12,6 +12,7 @@ import {
   stageRowsSchema 
 } from "@/domain/imports/validation";
 import { ImportRepository } from "@/domain/imports/repository";
+import { notifyAfterResponse } from "../../notify-after";
 import { DomainError } from "@/lib/errors";
 import type { RevertResult } from "@/domain/imports/types";
 
@@ -126,6 +127,10 @@ export async function commitImportBatchAction(
       revalidatePath("/contacts");
       revalidatePath("/inquiries");
       revalidatePath("/");
+      // A contact job has no inquiries, so it sends nothing.
+      notifyAfterResponse((notifications) =>
+        notifications.notifyImportCompleted({ agencyId: ctx.agencyId, jobId, actorId: ctx.userId })
+      );
     }
 
     return { success: true, data: result };

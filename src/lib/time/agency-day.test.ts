@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getStaleThreshold, getTodayWindows, parseAgencyLocal, toAgencyLocalInput, todayBucket } from './agency-day';
+import { agencyDateKey, getStaleThreshold, getTodayWindows, isDigestTime, parseAgencyLocal, toAgencyLocalInput, todayBucket } from './agency-day';
 
 const SOFIA = 'Europe/Sofia';
 const utc = (iso: string) => new Date(iso).toISOString();
@@ -78,5 +78,49 @@ describe('toAgencyLocalInput', () => {
   it('shows a stored instant as the agency wall clock for a datetime-local input', () => {
     expect(toAgencyLocalInput('2026-01-15T12:00:00.000Z', SOFIA)).toBe('2026-01-15T14:00');
     expect(toAgencyLocalInput('2026-07-15T21:30:00.000Z', SOFIA)).toBe('2026-07-16T00:30');
+  });
+});
+
+describe('agencyDateKey', () => {
+  it('is the agency-local date, not the UTC date', () => {
+    expect(agencyDateKey(SOFIA, new Date('2026-01-14T22:30:00Z'))).toBe('2026-01-15');
+    expect(agencyDateKey(SOFIA, new Date('2026-01-15T21:30:00Z'))).toBe('2026-01-15');
+    expect(agencyDateKey('UTC', new Date('2026-01-14T22:30:00Z'))).toBe('2026-01-14');
+  });
+});
+
+describe('isDigestTime', () => {
+  it('holds from 08:00 to 08:59 Sofia on a winter weekday (UTC+2)', () => {
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T05:59:00Z'))).toBe(false); // 07:59, a Monday
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T06:00:00Z'))).toBe(true);
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T06:59:00Z'))).toBe(true);
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T07:00:00Z'))).toBe(false);
+  });
+
+  it('holds from 08:00 to 08:59 Sofia on a summer weekday (UTC+3)', () => {
+    expect(isDigestTime(SOFIA, new Date('2026-07-15T04:59:00Z'))).toBe(false); // 07:59, a Wednesday
+    expect(isDigestTime(SOFIA, new Date('2026-07-15T05:00:00Z'))).toBe(true);
+    expect(isDigestTime(SOFIA, new Date('2026-07-15T05:59:00Z'))).toBe(true);
+    expect(isDigestTime(SOFIA, new Date('2026-07-15T06:00:00Z'))).toBe(false);
+  });
+
+  it('matches exactly one of the 05:00 and 06:00 UTC crons in each season', () => {
+    // The 05:00 and 06:00 UTC crons: only one of them is 08:xx Sofia in each season.
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T05:00:00Z'))).toBe(false);
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T06:00:00Z'))).toBe(true);
+    expect(isDigestTime(SOFIA, new Date('2026-07-15T05:00:00Z'))).toBe(true);
+    expect(isDigestTime(SOFIA, new Date('2026-07-15T06:00:00Z'))).toBe(false);
+  });
+
+  it('is false at the weekend and true on Monday and Friday', () => {
+    expect(isDigestTime(SOFIA, new Date('2026-01-10T06:30:00Z'))).toBe(false); // Saturday
+    expect(isDigestTime(SOFIA, new Date('2026-01-11T06:30:00Z'))).toBe(false); // Sunday
+    expect(isDigestTime(SOFIA, new Date('2026-01-12T06:30:00Z'))).toBe(true); // Monday
+    expect(isDigestTime(SOFIA, new Date('2026-01-16T06:30:00Z'))).toBe(true); // Friday
+  });
+
+  it('uses the weekday of the agency, not of UTC', () => {
+    expect(isDigestTime('Pacific/Auckland', new Date('2026-01-11T19:30:00Z'))).toBe(true); // Mon 08:30 NZDT
+    expect(isDigestTime('Pacific/Auckland', new Date('2026-01-09T19:30:00Z'))).toBe(false); // Sat 08:30 NZDT
   });
 });

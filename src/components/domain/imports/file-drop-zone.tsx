@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { detectEncoding, type CsvEncoding } from "@/domain/imports/csv/detect-encoding";
 
 interface FileDropZoneProps {
   onFileAccepted: (file: File, headers: string[], encoding: 'utf-8' | 'windows-1251', delimiter: string) => void;
@@ -18,9 +19,8 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [encoding, setEncoding] = useState<'utf-8' | 'windows-1251'>('utf-8');
 
-  const processFile = async (file: File, forcedEncoding?: 'utf-8' | 'windows-1251') => {
+  const processFile = async (file: File) => {
     setError(null);
 
     // Size check
@@ -35,13 +35,19 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
       return;
     }
 
-    const currentEncoding = forcedEncoding || encoding;
+    let encoding: CsvEncoding;
+    try {
+      encoding = detectEncoding(await file.arrayBuffer());
+    } catch {
+      setError(t("parseFailed"));
+      return;
+    }
 
     // Parse just the first few lines to get headers
     Papa.parse<string[]>(file, {
       preview: 5,
       skipEmptyLines: true,
-      encoding: currentEncoding,
+      encoding,
       complete: (results) => {
         if (results.errors.length > 0 && results.errors[0].code === "UndetectableDelimiter") {
           setError(t("noDelimiter"));
@@ -54,16 +60,8 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
         }
 
         const headers = results.data[0];
-        
-        // Basic check for windows-1251 if utf-8 was used and we see weird characters
-        // A very simple heuristic: if headers contain the replacement character 
-        if (!forcedEncoding && currentEncoding === 'utf-8' && headers.some(h => h.includes(''))) {
-          setEncoding('windows-1251');
-          processFile(file, 'windows-1251');
-          return;
-        }
 
-        onFileAccepted(file, headers, currentEncoding, results.meta.delimiter || ',');
+        onFileAccepted(file, headers, encoding, results.meta.delimiter || ',');
       },
       error: () => {
         setError(t("parseFailed"));

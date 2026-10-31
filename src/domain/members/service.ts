@@ -2,6 +2,7 @@ import { DomainError } from "@/lib/errors";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MemberRepository } from "./repository";
 import type { AgencyMember, MemberRole } from "./types";
+import { getAppUrl } from "@/lib/app-url";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import type { AuthContext } from "@/lib/actions";
 
@@ -69,13 +70,18 @@ export class MemberService {
       throw new DomainError('errors.members.already_member');
     }
 
+    const appUrl = getAppUrl();
+    if (!appUrl) {
+      throw new DomainError('errors.members.invite_failed', 'NEXT_PUBLIC_APP_URL is not set');
+    }
+
     const adminDb = createSupabaseAdmin();
     const { data, error } = await adminDb.auth.admin.inviteUserByEmail(email, {
       data: {
         invited_by: ctx.userId,
         agency_id: ctx.agencyId,
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback?next=/update-password`,
+      redirectTo: `${appUrl}/auth/callback?next=/update-password`,
     });
 
     if (error) {

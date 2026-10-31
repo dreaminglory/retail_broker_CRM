@@ -410,7 +410,12 @@
     "langError": "Failed to update language",
     "language": "Language",
     "selectLanguage": "Select language",
-    "languageHelp": "Choose the application language."
+    "languageHelp": "Choose the application language.",
+    "digest": "Daily email digest",
+    "digestHelp": "An email every working morning with your overdue tasks, tasks due today and new inquiries. Owners and managers also get the agency's counts in it.",
+    "digestOn": "Daily digest turned on",
+    "digestOff": "Daily digest turned off",
+    "digestError": "Failed to update the daily digest"
   },
   "settings": {
     "title": "Settings",
@@ -1235,5 +1240,42 @@
     "activityHistory": "Activity history",
     "typePerson": "Person",
     "typeOrganization": "Organization"
+  },
+  "notifications": {
+    "unknownCaller": "Unknown caller",
+    "digest": {
+      "subject": "{count, plural, one {# thing needs your attention today} other {# things need your attention today}}",
+      "greeting": "Good morning, {name}!",
+      "intro": "Here is what is waiting for you today.",
+      "overdue": "Overdue tasks ({count})",
+      "dueToday": "Due today ({count})",
+      "newInquiries": "New inquiries ({count})",
+      "more": "+{count} more",
+      "open": "Open Today",
+      "agencyTitle": "Your agency",
+      "agencyUnassigned": "Unassigned inquiries: {count}",
+      "agencyOverdue": "Overdue tasks: {count}",
+      "agencyOpen": "Open Exceptions",
+      "footer": "You get this digest every working day. You can turn it off in Settings → Profile."
+    },
+    "assigned": {
+      "greeting": "Hello, {name}!",
+      "inquiry": {
+        "subject": "New inquiry assigned to you: {caller}",
+        "body": "The inquiry from {caller} was assigned to you.",
+        "open": "Open Inquiries"
+      },
+      "opportunity": {
+        "subject": "New opportunity assigned to you: {caller}",
+        "body": "The opportunity from the inquiry by {caller} was assigned to you.",
+        "open": "Open the opportunity"
+      },
+      "import": {
+        "subject": "{count, plural, one {# new inquiry assigned to you} other {# new inquiries assigned to you}}",
+        "body": "{count, plural, one {# imported inquiry was assigned to you.} other {# imported inquiries were assigned to you.}}",
+        "open": "Open Inquiries"
+      },
+      "footer": "You get this email when someone assigns work to you."
+    }
   }
 }

@@ -10,6 +10,7 @@ export interface Profile {
   display_name: string;
   avatar_url: string | null;
   locale: string;
+  digest_enabled: boolean;
   created_at: string;
   updated_at: string;
 }

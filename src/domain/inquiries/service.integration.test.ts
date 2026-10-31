@@ -69,7 +69,7 @@ describeServices('InquiryService against the local stack', () => {
   it('an edit never changes raw_payload or received_at (AC-4)', async () => {
     const before = await createInquiry({ caller_name: 'Before', raw_payload: { original: true } });
 
-    const after = await inquiries.edit(before.id, broker.agencyId, {
+    const { inquiry: after } = await inquiries.edit(before.id, broker.agencyId, {
       caller_name: 'After',
       raw_payload: { original: false },
       received_at: '2000-01-01T00:00:00Z',
@@ -85,8 +85,12 @@ describeServices('InquiryService against the local stack', () => {
     const manager = await signInAs('manager@alpha.bg');
     const outsider = await signInAs('broker@beta.bg');
 
-    const assigned = await inquiries.update(id, broker.agencyId, { assigned_to: manager.userId });
+    const { inquiry: assigned, previousAssignee } = await inquiries.update(id, broker.agencyId, { assigned_to: manager.userId });
     expect(assigned.assigned_to).toBe(manager.userId);
+    expect(previousAssignee).toBeNull();
+
+    const second = await inquiries.update(id, broker.agencyId, { assigned_to: broker.userId });
+    expect(second.previousAssignee).toBe(manager.userId);
 
     await expect(inquiries.update(id, broker.agencyId, { assigned_to: outsider.userId })).rejects.toMatchObject({
       code: 'errors.inquiries.assignee_not_member',
@@ -132,6 +136,7 @@ describeServices('InquiryService against the local stack', () => {
     });
     cleanup.track('opportunities', result.opportunityId);
     cleanup.track('contacts', result.contactId);
+    expect(result).toMatchObject({ ownerId: broker.userId, previousAssignee: null, callerName: 'Petar Georgiev' });
 
     const converted = await inquiries.getById(inquiry.id, broker.agencyId);
     expect(converted).toMatchObject({
