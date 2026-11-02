@@ -194,3 +194,14 @@ describe('InquiryService.edit', () => {
     expect(writes[0].values.caller_phone).toBe('+359888123456');
   });
 });
+
+describe('InquiryService.edit', () => {
+  it('reads the inquiry once and reports who had it before', async () => {
+    const { db, tables } = fakeDb({ ...INQUIRY, assigned_to: MEMBER_ID } as Inquiry);
+
+    const { previousAssignee } = await new InquiryService(db).edit(INQUIRY_ID, AGENCY_ID, { caller_name: 'New name' });
+
+    expect(previousAssignee).toBe(MEMBER_ID);
+    expect(tables.filter((table) => table === 'inquiries')).toHaveLength(2); // one read, one write
+  });
+});

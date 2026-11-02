@@ -35,19 +35,30 @@ function newClient(key: string): SupabaseClient {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-export async function signInAs(email: SeededLogin): Promise<TestSession> {
+/** A seeded login, or a member a test made with the seeded password. */
+export async function signInAs(email: SeededLogin | (string & {})): Promise<TestSession> {
   const db = newClient(env('SUPABASE_TEST_ANON_KEY'));
 
   const { data, error } = await db.auth.signInWithPassword({ email, password: SEEDED_PASSWORD });
   if (error) throw new Error(`Could not sign in as ${email}: ${error.message}`);
 
-  const { data: membership, error: membershipError } = await db
-    .from('agency_memberships')
-    .select('agency_id')
-    .eq('user_id', data.user.id)
-    .eq('status', 'active')
-    .single();
-  if (membershipError) throw new Error(`${email} has no active membership: ${membershipError.message}`);
+  // The stack's containers can run a second or two behind the host, so PostgREST sometimes
+  // answers a fresh token with "JWT issued at future". Waiting a moment clears it.
+  let membership: { agency_id: string } | null = null;
+  let membershipError: { message: string } | null = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    ({ data: membership, error: membershipError } = await db
+      .from('agency_memberships')
+      .select('agency_id')
+      .eq('user_id', data.user.id)
+      .eq('status', 'active')
+      .single());
+    if (!membershipError || !membershipError.message.includes('issued at future')) break;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+  if (membershipError || !membership) {
+    throw new Error(`${email} has no active membership: ${membershipError?.message}`);
+  }
 
   return { db, userId: data.user.id, agencyId: membership.agency_id };
 }
@@ -69,4 +80,9 @@ export function createRowCleanup() {
       }
     },
   };
+}
+
+/** The service-role client, for what the app does through the admin client: setup and the cron route. */
+export function adminClient(): SupabaseClient {
+  return newClient(env('SUPABASE_TEST_SERVICE_ROLE_KEY'));
 }

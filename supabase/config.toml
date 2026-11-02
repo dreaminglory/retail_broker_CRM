@@ -13,3 +13,8 @@ content_path = "./supabase/templates/magic-link.html"
 [auth.email.template.confirmation]
 subject = "Потвърждение на имейл - BrokerCRM"
 content_path = "./supabase/templates/confirmation.html"
+
+# Mailpit's SMTP port, so the app can send local mail (AD-042). Web UI stays on 54324.
+[local_smtp]
+enabled = true
+smtp_port = 54325

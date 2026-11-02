@@ -80,6 +80,46 @@ describeServices('ImportService against the local stack', () => {
     expect(rows!.map((row) => row.status)).toEqual(['reverted', 'revert_skipped']);
   });
 
+  it('resolves an inquiry row assignee by name or email, and refuses an unknown one', async () => {
+    const { jobId } = await imports.createJob(owner.agencyId, {
+      file_name: 'inquiries.csv',
+      file_sha256: 'c'.repeat(64),
+      file_size_bytes: 100,
+      encoding: 'utf-8',
+      delimiter: ',',
+      entity_type: 'inquiry',
+      headers: ['Name', 'Broker'],
+    });
+    cleanup.track('import_jobs', jobId);
+    await imports.saveMapping(
+      owner.agencyId,
+      jobId,
+      { caller_name: 'Name', assigned_to: 'Broker' },
+      { unknown_source: 'use_default', default_status: 'new', link_contacts: false, create_missing_contacts: false }
+    );
+    const broker = await signInAs('broker@alpha.bg');
+    const { data: profile } = await broker.db.from('profiles').select('display_name, email').eq('id', broker.userId).single();
+    await insertRows(jobId, [
+      { status: 'pending', raw: { Name: 'By name', Broker: profile!.display_name } },
+      { status: 'pending', raw: { Name: 'By email', Broker: profile!.email } },
+      { status: 'pending', raw: { Name: 'Unknown', Broker: 'No Such Person' } },
+    ]);
+
+    const summary = await imports.validate(owner.agencyId, jobId);
+
+    const { data: rows } = await owner.db
+      .from('import_rows')
+      .select('status, normalized')
+      .eq('import_job_id', jobId)
+      .order('row_number');
+    expect(rows!.map((row) => [row.status, row.normalized.assigned_to])).toEqual([
+      ['valid', broker.userId],
+      ['valid', broker.userId],
+      ['invalid', 'No Such Person'],
+    ]);
+    expect(summary.brokerImpact).toEqual([{ userId: broker.userId, name: profile!.display_name, newInquiries: 2 }]);
+  });
+
   it('builds the error report with the translated reasons, and quotes them', async () => {
     const jobId = await createJob(['Name', 'Phone']);
     await insertRows(jobId, [

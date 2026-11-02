@@ -5,10 +5,33 @@ import { InquiryService } from '@/domain/inquiries/service';
 import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
+import { notifyAfterResponse } from '../notify-after';
+import { assigneeToNotify } from '@/domain/notifications/service';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 import { DomainError } from '@/lib/errors';
 
 export type { ActionResult };
+
+/** After the response, emails the assignee if this change assigned the inquiry to a colleague (rule 4). */
+function notifyIfAssignedToColleague(
+  agencyId: string,
+  actorId: string,
+  previousAssignee: string | null | undefined,
+  inquiry: { id: string; assigned_to: string | null; caller_name: string | null },
+  opportunityId?: string
+): void {
+  const assigneeId = assigneeToNotify({ previous: previousAssignee, next: inquiry.assigned_to, actorId });
+  if (!assigneeId) return;
+  notifyAfterResponse((notifications) =>
+    notifications.notifyInquiryAssigned({
+      agencyId,
+      assigneeId,
+      inquiryId: inquiry.id,
+      callerName: inquiry.caller_name,
+      opportunityId,
+    })
+  );
+}
 
 // ── Inquiry actions ───────────────────────────────────────────────────────────
 
@@ -36,6 +59,7 @@ export async function createInquiryAction(
 
     const service = new InquiryService(supabase);
     const inquiry = await service.create(agencyId, userId, parsed.data);
+    notifyIfAssignedToColleague(agencyId, userId, null, inquiry);
 
     revalidatePath('/inquiries');
     return { success: true, data: { id: inquiry.id } };
@@ -48,7 +72,7 @@ export async function updateInquiryAction(
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const { supabase, userId, agencyId } = await getAuthContext();
 
     const raw = {
       source_id: formData.get('source_id') || null,
@@ -62,7 +86,8 @@ export async function updateInquiryAction(
     };
 
     const service = new InquiryService(supabase);
-    await service.edit(id, agencyId, raw);
+    const { inquiry, previousAssignee } = await service.edit(id, agencyId, raw);
+    notifyIfAssignedToColleague(agencyId, userId, previousAssignee, inquiry);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');
@@ -76,13 +101,14 @@ export async function reassignInquiryAction(
   assignedTo: string | null
 ): Promise<ActionResult> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const { supabase, userId, agencyId } = await getAuthContext();
 
     const parsed = updateInquirySchema.safeParse({ assigned_to: assignedTo });
     if (!parsed.success) return toActionError(parsed.error);
 
     const service = new InquiryService(supabase);
-    await service.update(id, agencyId, parsed.data);
+    const { inquiry, previousAssignee } = await service.update(id, agencyId, parsed.data);
+    notifyIfAssignedToColleague(agencyId, userId, previousAssignee, inquiry);
 
     revalidatePath('/inquiries');
     revalidatePath('/exceptions');
@@ -130,7 +156,7 @@ export async function convertInquiryAction(
   formData: FormData
 ): Promise<ActionResult<{ opportunityId: string; contactId: string | null } | { duplicates: PotentialDuplicate[] }>> {
   try {
-    const { supabase, agencyId } = await getAuthContext();
+    const { supabase, userId, agencyId } = await getAuthContext();
 
     // create_contact is JSON-encoded — it's optional
     let create_contact: unknown = undefined;
@@ -166,6 +192,14 @@ export async function convertInquiryAction(
     }
 
     const result = await service.convert(id, agencyId, parsed.data);
+    // `convert_inquiry` assigns the opportunity and leaves the inquiry's assignee alone.
+    notifyIfAssignedToColleague(
+      agencyId,
+      userId,
+      result.previousAssignee,
+      { id, assigned_to: result.ownerId, caller_name: result.callerName },
+      result.opportunityId
+    );
 
     revalidatePath('/inquiries');
     revalidatePath('/opportunities');

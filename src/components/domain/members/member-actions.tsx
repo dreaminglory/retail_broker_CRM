@@ -100,16 +100,13 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t("changeRole")}</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => handleRoleChange("owner")} disabled={currentRole === "owner"}>
             <Crown className="mr-2 h-4 w-4" />
-            <Crown className="mr-2 h-4 w-4" />
             {t("makeOwner")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleRoleChange("manager")} disabled={currentRole === "manager"}>
             <ShieldCheck className="mr-2 h-4 w-4" />
-            <ShieldCheck className="mr-2 h-4 w-4" />
             {t("makeManager")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleRoleChange("broker")} disabled={currentRole === "broker"}>
-            <User className="mr-2 h-4 w-4" />
             <User className="mr-2 h-4 w-4" />
             {t("makeBroker")}
           </DropdownMenuItem>
@@ -125,7 +122,6 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
                   className="text-destructive focus:text-destructive"
                 >
                   <UserX className="mr-2 h-4 w-4" />
-                  <UserX className="mr-2 h-4 w-4" />
                   {t("cancelInvitation")}
                 </DropdownMenuItem>
               ) : status === "active" ? (
@@ -134,12 +130,10 @@ export function MemberActions({ membershipId, currentRole, status, canManage, is
                   className="text-destructive focus:text-destructive"
                 >
                   <UserX className="mr-2 h-4 w-4" />
-                  <UserX className="mr-2 h-4 w-4" />
                   {t("deactivateMember")}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => handleStatusChange("active")}>
-                  <UserCheck className="mr-2 h-4 w-4" />
                   <UserCheck className="mr-2 h-4 w-4" />
                   {t("reactivateMember")}
                 </DropdownMenuItem>

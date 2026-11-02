@@ -3,6 +3,9 @@ import type { Profile } from "@/domain/profiles/types";
 export type MemberRole = "owner" | "manager" | "broker";
 export type MemberStatus = "active" | "invited" | "deactivated";
 
+/** Shown in place of a member with no display name. It isn't anyone's actual name. */
+export const UNKNOWN_MEMBER_NAME = "Unknown Member";
+
 export interface AgencyMembership {
   id: string;
   user_id: string;

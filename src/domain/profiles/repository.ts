@@ -85,6 +85,22 @@ export class ProfileRepository {
   }
 
   /**
+   * Turn a user's daily digest on or off. RLS lets only the profile owner do this, so another
+   * user's id matches no row and `.single()` makes that an error.
+   */
+  async updateDigestEnabled(userId: string, enabled: boolean): Promise<Profile> {
+    const { data, error } = await this.db
+      .from('profiles')
+      .update({ digest_enabled: enabled })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw new DomainError('errors.saveFailed', `Failed to update digest setting: ${error.message}`);
+    return data as Profile;
+  }
+
+  /**
    * Get all profiles for members of a given agency.
    * Joins agency_memberships → profiles to get team members.
    */

@@ -1,6 +1,6 @@
 import { DomainError } from '@/lib/errors';
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AgencyMember, AgencyMembership, MemberRole, MemberStatus } from "./types";
+import { UNKNOWN_MEMBER_NAME, type AgencyMember, type AgencyMembership, type MemberRole, type MemberStatus } from "./types";
 import { ProfileRepository } from "../profiles/repository";
 
 export class MemberRepository {
@@ -171,7 +171,7 @@ export class MemberRepository {
       const profile = m.user_id ? profilesMap.get(m.user_id) : null;
       return {
         id: m.user_id,
-        display_name: profile?.display_name || "Unknown Member",
+        display_name: profile?.display_name || UNKNOWN_MEMBER_NAME,
         email: profile?.email || "",
         role: m.role,
       };

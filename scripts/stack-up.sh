@@ -47,6 +47,10 @@ NEXT_PUBLIC_SUPABASE_URL=$API_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Email goes to Mailpit (http://localhost:54324); the digest route needs the secret (AD-042).
+MAIL_TRANSPORT=smtp
+EMAIL_FROM=BrokerCRM <no-reply@brokercrm.local>
+CRON_SECRET=local-cron-secret
 ENV
 
 echo "stack:up: ready. Run 'npm run dev' and sign in as owner@alpha.bg / password123."

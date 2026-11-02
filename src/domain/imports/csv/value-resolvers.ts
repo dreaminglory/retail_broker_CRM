@@ -1,3 +1,5 @@
+import { UNKNOWN_MEMBER_NAME } from "@/domain/members/types";
+
 export function resolveSource(
   value: string | null | undefined,
   sources: { id: string; name: string }[],
@@ -24,12 +26,17 @@ export function resolveAssignee(
   if (!value || !value.trim()) return defaultAssigneeId;
   const normalized = value.trim().toLowerCase();
 
-  const match = members.find(m => 
-    (m.email && m.email.toLowerCase() === normalized) ||
-    (m.display_name && m.display_name.toLowerCase() === normalized)
-  );
+  const byEmail = members.find(m => m.email && m.email.toLowerCase() === normalized);
+  if (byEmail) return byEmail.user_id;
 
-  if (match) return match.user_id;
+  // Two members can share a name, and guessing would hand one the other's inquiries.
+  const byName = members.filter(m =>
+    m.display_name &&
+    m.display_name !== UNKNOWN_MEMBER_NAME &&
+    m.display_name.toLowerCase() === normalized
+  );
+  if (byName.length === 1) return byName[0].user_id;
+
   return defaultAssigneeId;
 }
 

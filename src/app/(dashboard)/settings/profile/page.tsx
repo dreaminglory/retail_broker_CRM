@@ -2,6 +2,7 @@ import { createSupabaseServer } from '@/lib/supabase/server';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import { ProfileForm } from './profile-form';
 import { LanguageSwitcher } from './language-switcher';
+import { DigestToggle } from './digest-toggle';
 
 import { getTranslations } from "next-intl/server";
 
@@ -48,6 +49,10 @@ export default async function ProfileSettingsPage() {
 
         <LanguageSwitcher
           currentLocale={profile?.locale ?? 'bg'}
+        />
+
+        <DigestToggle
+          currentEnabled={profile?.digest_enabled ?? true}
         />
       </div>
     </div>

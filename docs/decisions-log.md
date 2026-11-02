@@ -218,6 +218,55 @@ query still filters by `agency_id`. Local development uses Mailpit and manual tr
 `spec/reminders.md`.
 **Revisit if:** push notifications arrive with the PWA.
 
+### AD-051: How reminder emails are claimed, keyed and sent
+**Accepted** (founder, 2026-10-30, with the reminders plan). Refines AD-042; scope stays in
+`spec/reminders.md`.
+- **Claim, then send.** A send first inserts a `pending` row in `notification_deliveries`
+  (`ON CONFLICT DO NOTHING`); only the run that inserted it sends, then sets `sent` or `failed`.
+  `sent` and `pending` block a repeat, `failed` and `skipped` can be claimed again. A crash
+  mid-send leaves `pending`: that user misses one email rather than getting two.
+- **Key per email.** `(user_id, kind, period_key)` is unique. `daily_digest` → `YYYY-MM-DD`
+  (agency-local date); `inquiry_assigned` → `<inquiry_id>:YYYY-MM-DD`; an import summary →
+  `import:<job_id>`. A single date key would stop a broker's second inquiry email of the day.
+- **`skipped` means an empty digest**, so "why didn't X get an email?" has an answer. A user who
+  turned the digest off, or a deactivated member, gets no row at all.
+- **Only the service role writes** the table (the digest route, and `after()` work in the
+  inquiry and import actions). Members read their own rows, owners and managers the agency's.
+- **The route stays off until `go-live`.** With no `CRON_SECRET` it refuses every call;
+  `?now=` is ignored when `NODE_ENV=production`.
+- **Mail transport:** `MAIL_TRANSPORT=smtp` (Mailpit) or `resend` (plain `fetch`, paced).
+**Why:** a double email costs trust and a missed one costs one digest; an inquiry email must
+not be suppressed by the day's earlier one.
+**Revisit if:** the pilot needs retries beyond the next day's run, or volume outgrows one request.
+
+### AD-052: Agency counts are part of the digest
+**Accepted** (founder, 2026-10-31, while building `reminders`). Refines
+`spec/reminders.md` rules 2, 3 and 5.
+- **Turning the digest off also stops the counts.** An owner or manager has one digest switch,
+  and no separate email carries the counts.
+- **Same rows as the sections.** The builder derives the counts from the agency's rows the digest
+  has already loaded, so they add no query. Definitions match Exceptions (`docs/domain-model.md` §4).
+- **The subject counts own work, or the agency's when there is none.** They aren't added together,
+  because an own overdue task is also in the agency's overdue count.
+**Why:** one switch is simpler to explain, and a count that can't disagree with the digest's own
+sections is easier to trust.
+**Revisit if:** owners want the counts without their own digest, or the other way round.
+
+### AD-053: Who gets an assignment email, and what it counts
+**Accepted** (founder, 2026-10-31, while building `reminders`). Refines
+`spec/reminders.md` rule 4 and AD-051.
+- **Active members of the agency only.** The service role bypasses RLS, so the send checks
+  membership itself. Anyone else gets no email and no row, as with the digest.
+- **An import summary counts `new` inquiries**, the same number the import preview shows. An
+  import of closed history sends nothing.
+- **A conversion uses the inquiry's date key.** If an inquiry goes A → B → A in one day, A hears
+  once, and a conversion back to A that day sends nothing.
+- **Nothing retries a failed assignment email.** It stays `failed`; a `new` inquiry still reaches
+  the next digest.
+**Why:** a summary of work to do shouldn't count work that's closed, and one key per inquiry per
+day keeps a busy reassignment from spamming anyone.
+**Revisit if:** pilot brokers miss a same-day hand-back, or ask to hear about imported history.
+
 ---
 
 ## Retired
