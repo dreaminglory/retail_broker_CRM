@@ -82,7 +82,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 ### Phase 1: Data model
 - [x] Task 1: Settlements reference data (EKATTE)
 - [x] Task 2: Property tables, RLS and constraints
-- [ ] Task 3: Property triggers (code, audit, rules 5, 7, 8)
+- [x] Task 3: Property triggers (code, audit, rules 5, 7, 8)
 - [ ] Task 4: Seed properties for both agencies
 
 **Checkpoint 1:** `db reset` + `test:db` green; founder reviews the model in `docs/domain-model.md`.

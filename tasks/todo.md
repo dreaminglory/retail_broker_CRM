@@ -72,13 +72,15 @@ owner/manager only (T6). Add every table to `010-rls-catalog.sql`. Update `docs/
 Write `073-property-triggers.sql`. Add the invariants to `docs/domain-model.md`.
 
 **Acceptance criteria:**
-- [ ] Two concurrent inserts in one agency get different codes; codes are per agency
-- [ ] Completing a viewing task moves `candidate` → `viewed`, creates a missing link as `viewed`, and leaves `offered` untouched (AC-3 in the DB)
-- [ ] A `subject` link on a buyer opportunity, a buyer → seller type change with candidates, and a new listing on an archived property are each refused with an i18n key
-- [ ] Price and link status changes write one audit row each; members still can't insert into `audit_log`
+- [x] Two concurrent inserts in one agency get different codes; codes are per agency
+- [x] Completing a viewing task moves `candidate` → `viewed`, creates a missing link as `viewed`, and leaves `offered` untouched (AC-3 in the DB)
+- [x] A `subject` link on a buyer opportunity, a buyer → seller type change with candidates, and a new listing on an archived property are each refused with an i18n key
+- [x] Price and link status changes write one audit row each; members still can't insert into `audit_log`
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
+- [x] `npx supabase db reset` then `npm run test:db`
+
+**Log:** Concurrency checked by hand with two `psql` sessions: the second insert waited on the counter row lock until the first finished (pgTAP runs one session). Beyond the plan: rule 4 is also a trigger (`guard_listing_update`, read-only closed or withdrawn listings, sets `closed_at`), adding and removing a link are audited too (NULL ↔ status), rule 7 creates a missing link only on buyer and tenant deals with an active property, and an existing link on an archived property can still change status. Raised keys for the services to map: `properties.errors.relationNotAllowed`, `properties.errors.archived`, `opportunities.errors.typeHasProperties`, `listings.errors.readOnly`. `050-trigger-integrity.sql` was left unchanged; the new triggers are covered in `073`.
 
 **Dependencies:** Task 2
 **Files likely touched:** `supabase/migrations/20261103000003_property_triggers.sql`, `073-property-triggers.sql`, `050-trigger-integrity.sql`, `docs/domain-model.md`

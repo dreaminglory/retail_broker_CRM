@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 45th migration
-(`20261103000002_properties.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 46th migration
+(`20261103000003_property_triggers.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -67,7 +67,7 @@ flowchart LR
   contacts -->|primary contact| opportunities
   import_jobs -->|creates| contacts & inquiries
   tasks -->|trigger: next_action_at| opportunities
-  opportunities & contacts -->|triggers| audit_log
+  opportunities & contacts & properties & listings -->|triggers| audit_log
 ```
 
 Every table except `agencies`, `profiles` and the global reference table `settlements` carries
@@ -225,12 +225,13 @@ erDiagram
 
   notes {
     uuid contact_id FK "at least one parent"
+    uuid property_id FK "at least one parent"
     uuid opportunity_id FK "at least one parent"
     text content "non-blank"
     uuid created_by FK
   }
   audit_log {
-    text entity_type "opportunity | contact | inquiry"
+    text entity_type "opportunity | contact | inquiry | property | listing"
     uuid entity_id "polymorphic, no FK"
     text action "field_change | status_change | stage_change | assignment_change | created | merged | archived"
     text field_name
@@ -507,6 +508,41 @@ A duplicate found only at commit (`match_reason = 'db_recheck'`) is `skipped`, o
 under the `create` strategy. The "update existing" strategy isn't built and isn't offered;
 a job that still has it stored skips.
 
+### 3.6 Property and listing
+
+```mermaid
+stateDiagram-v2
+  state "Property" as P {
+    [*] --> active
+    active --> archived : archive (withdraws open listings)
+    archived --> active : unarchive
+  }
+  state "Listing" as L {
+    [*] --> l_active
+    l_active --> reserved
+    reserved --> l_active
+    l_active --> closed
+    reserved --> closed
+    l_active --> withdrawn
+    reserved --> withdrawn
+  }
+```
+
+`closed` and `withdrawn` are final and read-only (rule 4, trigger `guard_listing_update`, which
+also sets `closed_at`); reopening means a new listing, so the price history stays in the audit
+log. Unarchiving a property doesn't reopen its withdrawn listings. An archived property gets no
+new listing, link or viewing task (rule 8).
+
+### 3.7 Opportunity–property link
+
+A `subject` link has no status. A `candidate` link's status (`candidate | viewed | offered |
+rejected | selected`) can move to any other value, because brokers correct mistakes (rule 6).
+The one automatic move is rule 7: completing a `viewing` task with an opportunity and a
+property sets `candidate → viewed`, or creates the link as `viewed` on a buyer or tenant deal
+when it was missing and the property is active. It never touches `offered`, `rejected`,
+`selected` or `subject`. Every change, including adding and removing a link, is one
+`opportunity` audit row with `field_name = 'property_link'` and `metadata.property_id`.
+
 ---
 
 ## 4. Derived views: Today and Exceptions
@@ -591,7 +627,7 @@ The "Enforced by" column tells you which layer to change and test.
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact, opportunity or property parent, and non-blank content | `CHECK` on `notes` |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
-| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
+| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities, contacts (imported contacts via `audit_imported_contact_created`), properties, listings and opportunity–property links |
 | E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |
 | E2 | Clients never write `notification_deliveries`; members read their own rows, owners and managers the agency's | RLS (no write policy, writes revoked) + `071-notification-deliveries.sql` |
 | L1 | Settlements are read by every signed-in user and written only by migrations | RLS `FORCE` with a `SELECT` policy only, writes revoked from `authenticated`, all access from `anon` + `072-properties.sql` |
@@ -602,6 +638,11 @@ The "Enforced by" column tells you which layer to change and test.
 | L6 | One open party row per property and contact | unique index `uq_property_parties_open` |
 | L7 | A link has a status iff it is a `candidate`, a reason only when `rejected`; one `selected` and one `subject` per opportunity | `CHECK`s + unique indexes on `opportunity_properties` |
 | L8 | A linked property can't be deleted, nor an area a property uses | FK `ON DELETE RESTRICT` |
+| L9 | A property `code` is the agency's next number from 1001, never reused within the agency and never changed | trigger `assign_property_code` (row lock on `agencies.property_code_seq`) + `073-property-triggers.sql` |
+| L10 | `subject` links only on seller/landlord deals, `candidate` only on buyer/tenant; an opportunity's type can't change to one its links don't allow (rule 5) | triggers `check_property_link_relation`, `check_opportunity_type_vs_properties` |
+| L11 | A `closed` or `withdrawn` listing is read-only (rule 4) | trigger `guard_listing_update` |
+| L12 | Archiving withdraws open listings; an archived property gets no new listing, link or viewing task (rule 8) | triggers `withdraw_listings_on_archive`, `refuse_archived_property` |
+| L13 | A completed viewing moves its link `candidate → viewed` or creates it as `viewed`, never backwards (rule 7) | trigger `mark_property_viewed` + `073-property-triggers.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
