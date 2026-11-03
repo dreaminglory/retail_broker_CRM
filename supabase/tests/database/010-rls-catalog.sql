@@ -7,7 +7,7 @@ SELECT tables_are(
     'public',
     ARRAY['agencies', 'profiles', 'agency_memberships', 'contacts', 'inquiries', 'opportunities', 'notes', 'tasks', 'audit_log', 'lead_sources', 'stages', 'opportunity_participants', 'contact_methods', 'merge_history', 'import_jobs', 'import_rows', 'notification_deliveries',
           -- global reference data (properties, AD-057)
-          'settlements'],
+          'settlements', 'areas', 'properties', 'listings', 'property_parties', 'opportunity_properties'],
     'All expected tables should exist'
 );
 

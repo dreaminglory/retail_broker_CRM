@@ -44,13 +44,15 @@ owner/manager only (T6). Add every table to `010-rls-catalog.sql`. Update `docs/
 Населено място, Кандидат). Add AD-057 with the plan's decisions.
 
 **Acceptance criteria:**
-- [ ] Beta's broker sees and writes none of Alpha's rows in the five tables; a broker can't delete a property, listing or area, a manager can
-- [ ] An apartment without `rooms`, a plot with `floor`, `floor > floors_total`, a price ≤ 0 and a second open sale listing are each rejected
-- [ ] A second `selected` link on one opportunity and an area from another settlement are rejected
+- [x] Beta's broker sees and writes none of Alpha's rows in the five tables; a broker can't delete a property, listing or area, a manager can
+- [x] An apartment without `rooms`, a plot with `floor`, `floor > floors_total`, a price ≤ 0 and a second open sale listing are each rejected
+- [x] A second `selected` link on one opportunity and an area from another settlement are rejected
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `npm run typecheck` (no generated-type drift)
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `npm run typecheck` (no generated-type drift)
+
+**Log:** `typecheck` runs as `npx tsc --noEmit`: `next typegen` fails in this environment (SWC native binding refuses its cache folder because of the folder permissions; not a code issue). Beyond the plan, and recorded in AD-057 (Proposed): composite `(agency_id, x_id)` foreign keys, with `UNIQUE (agency_id, id)` added to contacts and opportunities; one `subject` per opportunity; a used area is `RESTRICT`; party hard delete is owner/manager only, link delete any member; `merge_contacts` moves property parties. The `audit_log.entity_type` extension moves to Task 3 with the audit triggers.
 
 **Dependencies:** Task 1
 **Files likely touched:** `supabase/migrations/20261103000002_properties.sql`, `010-rls-catalog.sql`, `072-properties.sql`, `docs/domain-model.md`, `docs/decisions-log.md`

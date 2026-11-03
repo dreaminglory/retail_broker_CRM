@@ -193,6 +193,20 @@ EKATTE `settlements` table plus agency-managed `areas`. No owner or price column
 **Why:** mandates, syndication and matching attach to listings and exact areas without a split
 migration; several parties and both deal sides stay possible (business brief data rules).
 
+### AD-057: How the property model is enforced
+**Proposed** (founder review at Checkpoint 1, `tasks/plan.md`). Rules sit in the database: `CHECK`s
+for rule 3 and prices, partial unique indexes (one open listing per offer type, one `selected` and
+one `subject` per opportunity, one open party per contact), and triggers for the code, audit and
+rules 5, 7 and 8. Every reference between agency rows is a composite `(agency_id, x_id)` foreign
+key, so a guessed id from another agency is refused (hence `UNIQUE (agency_id, id)` on contacts and
+opportunities). A linked property or a used area can't be deleted (`RESTRICT`): archive or
+deactivate. `code` comes from `agencies.property_code_seq` (first code 1001). A link status change is
+one `opportunity` audit row with `field_name = 'property_link'`, read by both timelines. Settlements
+come from the NSI EKATTE export through `scripts/ekatte/build-settlements.ts` with our own
+Transliteration Act 2009 names; a contact merge moves property parties (C4).
+**Why:** the data model is the module's main risk (`SPEC.md` §7); the strongest layer keeps
+`matching`, `mandates` and imports honest without re-checking in each service.
+
 ## Import
 
 ### AD-034: Chunked import pipeline
