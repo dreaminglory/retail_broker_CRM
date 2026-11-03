@@ -10,6 +10,8 @@ import {
   setListingStatusSchema,
   updateListingPriceSchema,
 } from '@/domain/listings/validation';
+import { PropertyPartyService } from '@/domain/property-parties/service';
+import { addPropertyPartySchema } from '@/domain/property-parties/validation';
 import { PropertyService } from '@/domain/properties/service';
 import { propertyFormSchema } from '@/domain/properties/validation';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
@@ -106,6 +108,39 @@ export async function setListingStatusAction(
 
     await new ListingService(supabase).setStatus(listingId, agencyId, parsed.data);
     revalidateProperty(propertyId);
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+// ── Parties ─────────────────────────────────────────────────────────────────
+
+export async function addPropertyPartyAction(
+  propertyId: string,
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    const { supabase, agencyId, userId } = await getAuthContext();
+    const parsed = addPropertyPartySchema.safeParse({
+      property_id: propertyId,
+      contact_id: formData.get('contact_id') || undefined,
+      role: formData.get('role'),
+    });
+    if (!parsed.success) return toActionError(parsed.error);
+
+    await new PropertyPartyService(supabase).add(agencyId, userId, parsed.data);
+    revalidatePath(`/properties/${propertyId}`);
+    revalidatePath(`/contacts/${parsed.data.contact_id}`);
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+export async function endPropertyPartyAction(partyId: string, propertyId: string): Promise<ActionResult> {
+  try {
+    const { supabase, agencyId } = await getAuthContext();
+    const party = await new PropertyPartyService(supabase).end(partyId, agencyId);
+    revalidatePath(`/properties/${propertyId}`);
+    revalidatePath(`/contacts/${party.contact_id}`);
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }

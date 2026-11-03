@@ -188,13 +188,15 @@ with the existing contact form, then end a party. The contact page gets a "Prope
 role and status.
 
 **Acceptance criteria:**
-- [ ] Add an owner and a co-owner; ending the owner keeps it under "Past parties"
-- [ ] Adding the same open contact twice is refused with a translated error
-- [ ] The contact page lists the property with the role, in both locales
+- [x] Add an owner and a co-owner; ending the owner keeps it under "Past parties"
+- [x] Adding the same open contact twice is refused with a translated error
+- [x] The contact page lists the property with the role, in both locales
 
 **Verification:**
-- [ ] `npx vitest run src/domain/property-parties`; service suite
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/property-parties`; service suite
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** "Add party" picks a role, then an existing contact (ContactCombobox) or a new one through the existing ContactForm and `createContactAction`, so the duplicate check (C3) runs as usual; the new contact is then added with the chosen role. Ending sets `ended_at` only on a current row, and ending twice gives `propertyParties.errors.alreadyEnded`. The open-party index maps to `propertyParties.errors.alreadyParty`. The contact page's Properties block is a Server Component on `contacts/[id]/page.tsx` (not the client file the plan named), current parties first. Browser: BG and EN at 1280 and 390 px on #1011: owner Ivan Ivanov and a new co-owner added, the duplicate refused in BG, the owner ended and listed under past parties, and Ivan's contact page shows the property with Owner · Ended.
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/property-parties/*`, `src/components/domain/properties/party-section.tsx`, `contacts/[id]/contact-detail-client.tsx`, `properties/actions.ts`, `messages/{bg,en}.json`

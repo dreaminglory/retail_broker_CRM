@@ -74,7 +74,9 @@
     "price_required": "Въведете цена.",
     "price_positive": "Цената трябва да е по-голяма от нула.",
     "price_cents": "Цената е с най-много два знака след десетичната запетая.",
-    "offer_type_required": "Изберете продажба или наем."
+    "offer_type_required": "Изберете продажба или наем.",
+    "contact_required": "Изберете контакт.",
+    "party_role_required": "Изберете роля."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -768,6 +770,12 @@
       "reserved": "Резервирана",
       "closed": "Приключена",
       "withdrawn": "Оттеглена"
+    },
+    "partyRole": {
+      "owner": "Собственик",
+      "co_owner": "Съсобственик",
+      "representative": "Представител",
+      "occupant": "Обитател"
     }
   },
   "ContactMethodList": {
@@ -1290,7 +1298,8 @@
     "notes": "Бележки",
     "activityHistory": "История на дейността",
     "typePerson": "Лице",
-    "typeOrganization": "Организация"
+    "typeOrganization": "Организация",
+    "properties": "Имоти"
   },
   "notifications": {
     "unknownCaller": "Неизвестен обаждащ се",
@@ -1483,5 +1492,30 @@
         "description": "Оттеглена обява не може да се променя. За да предложите имота отново, пуснете нова обява."
       }
     }
+  },
+  "propertyParties": {
+    "errors": {
+      "alreadyParty": "Този контакт вече е страна по имота.",
+      "alreadyEnded": "Тази страна вече е прекратена."
+    }
+  },
+  "PartySection": {
+    "title": "Страни",
+    "addParty": "Добави страна",
+    "empty": "Още няма собственици или други страни.",
+    "past": "Минали страни ({count})",
+    "endedOn": "Прекратена на {date}",
+    "end": "Прекрати",
+    "endParty": "Прекрати {name} като страна",
+    "role": "Роля",
+    "contact": "Контакт",
+    "existingContact": "Съществуващ контакт",
+    "newContact": "Нов контакт",
+    "saving": "Запазване…"
+  },
+  "ContactProperties": {
+    "empty": "Контактът не е страна по имот.",
+    "ended": "Прекратена",
+    "archived": "Архивиран"
   }
 }

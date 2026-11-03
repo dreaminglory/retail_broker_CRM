@@ -74,7 +74,9 @@
     "price_required": "Enter a price.",
     "price_positive": "The price must be greater than zero.",
     "price_cents": "The price has at most two decimals.",
-    "offer_type_required": "Choose sale or rent."
+    "offer_type_required": "Choose sale or rent.",
+    "contact_required": "Choose a contact.",
+    "party_role_required": "Choose a role."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -768,6 +770,12 @@
       "reserved": "Reserved",
       "closed": "Closed",
       "withdrawn": "Withdrawn"
+    },
+    "partyRole": {
+      "owner": "Owner",
+      "co_owner": "Co-owner",
+      "representative": "Representative",
+      "occupant": "Occupant"
     }
   },
   "ContactMethodList": {
@@ -1290,7 +1298,8 @@
     "notes": "Notes",
     "activityHistory": "Activity history",
     "typePerson": "Person",
-    "typeOrganization": "Organization"
+    "typeOrganization": "Organization",
+    "properties": "Properties"
   },
   "notifications": {
     "unknownCaller": "Unknown caller",
@@ -1483,5 +1492,30 @@
         "description": "A withdrawn listing can't be changed. To offer the property again, add a new listing."
       }
     }
+  },
+  "propertyParties": {
+    "errors": {
+      "alreadyParty": "This contact is already a party to this property.",
+      "alreadyEnded": "This party has already ended."
+    }
+  },
+  "PartySection": {
+    "title": "Parties",
+    "addParty": "Add party",
+    "empty": "No owners or other parties yet.",
+    "past": "Past parties ({count})",
+    "endedOn": "Ended on {date}",
+    "end": "End",
+    "endParty": "End {name} as a party",
+    "role": "Role",
+    "contact": "Contact",
+    "existingContact": "Existing contact",
+    "newContact": "New contact",
+    "saving": "Saving…"
+  },
+  "ContactProperties": {
+    "empty": "This contact is not a party to any property.",
+    "ended": "Ended",
+    "archived": "Archived"
   }
 }
