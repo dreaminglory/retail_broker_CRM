@@ -1,7 +1,7 @@
 # Implementation Plan: properties
 
 > **Spec:** `spec/properties.md` · **Checklist:** `tasks/todo.md`
-> **Status:** Draft (2026-11-03), awaiting founder approval. Approved scope (founder, 2026-11-03).
+> **Status:** Plan approved (founder, 2026-11-03). Approved scope (founder, 2026-11-03).
 > Data model: AD-056. Branch: `feat/properties`.
 
 ## Overview
