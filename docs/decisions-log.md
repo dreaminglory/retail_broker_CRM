@@ -194,7 +194,7 @@ EKATTE `settlements` table plus agency-managed `areas`. No owner or price column
 migration; several parties and both deal sides stay possible (business brief data rules).
 
 ### AD-057: How the property model is enforced
-**Proposed** (founder review at Checkpoint 1, `tasks/plan.md`). Rules sit in the database: `CHECK`s
+**Accepted** (founder, 2026-11-03, Checkpoint 1 of `tasks/plan.md`). Rules sit in the database: `CHECK`s
 for rule 3 and prices, partial unique indexes (one open listing per offer type, one `selected` and
 one `subject` per opportunity, one open party per contact), and triggers for the code, audit and
 rules 5, 7 and 8. Every reference between agency rows is a composite `(agency_id, x_id)` foreign
