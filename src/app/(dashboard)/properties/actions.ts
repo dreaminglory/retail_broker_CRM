@@ -14,7 +14,7 @@ import { PropertyPartyService } from '@/domain/property-parties/service';
 import { addPropertyPartySchema } from '@/domain/property-parties/validation';
 import { PropertyService } from '@/domain/properties/service';
 import { propertyFormSchema } from '@/domain/properties/validation';
-import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { CONFIG_ROLES, getAuthContext, requireRole, toActionError, type ActionResult } from '@/lib/actions';
 import { z } from 'zod';
 
 function propertyFormValues(formData: FormData) {
@@ -49,6 +49,43 @@ export async function createPropertyAction(
     const property = await new PropertyService(supabase).create(agencyId, userId, parsed.data);
     revalidatePath('/properties');
     return { success: true, data: { id: property.id } };
+  } catch (error) { return toActionError(error); }
+}
+
+export async function updatePropertyAction(
+  id: string,
+  _prevState: ActionResult<{ id: string }>,
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const { supabase, agencyId } = await getAuthContext();
+    const parsed = propertyFormSchema.safeParse(propertyFormValues(formData));
+    if (!parsed.success) return toActionError(parsed.error);
+
+    await new PropertyService(supabase).update(id, agencyId, parsed.data);
+    revalidateProperty(id);
+    return { success: true, data: { id } };
+  } catch (error) { return toActionError(error); }
+}
+
+/** Any member (rule 1); archiving withdraws open listings. */
+export async function setPropertyArchivedAction(id: string, archived: boolean): Promise<ActionResult> {
+  try {
+    const { supabase, agencyId } = await getAuthContext();
+    await new PropertyService(supabase).setArchived(id, agencyId, archived);
+    revalidateProperty(id);
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+/** Owner/manager only (T2); refused for a property in use. */
+export async function deletePropertyAction(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await getAuthContext();
+    requireRole(ctx, CONFIG_ROLES);
+    await new PropertyService(ctx.supabase).delete(id, ctx.agencyId);
+    revalidatePath('/properties');
+    return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }
 

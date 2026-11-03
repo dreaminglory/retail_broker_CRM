@@ -643,6 +643,8 @@ The "Enforced by" column tells you which layer to change and test.
 | L11 | A `closed` or `withdrawn` listing is read-only (rule 4) | trigger `guard_listing_update` |
 | L12 | Archiving withdraws open listings; an archived property gets no new listing, link or viewing task (rule 8) | triggers `withdraw_listings_on_archive`, `refuse_archived_property` |
 | L13 | A completed viewing moves its link `candidate → viewed` or creates it as `viewed`, never backwards (rule 7) | trigger `mark_property_viewed` + `073-property-triggers.sql` |
+| L14 | A property with links, open listings or tasks is archived, not deleted (rule 1) | `PropertyService.delete` counts all three first (not atomic: links are also `RESTRICT`, L8, but a task added meanwhile only gets `property_id` set to NULL) + `manage.integration.test.ts` |
+| L15 | A property's responsible broker is an active member; the creator by default (rule 2) | `assertAssignable()` in `PropertyService` create and update, like I4 |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |

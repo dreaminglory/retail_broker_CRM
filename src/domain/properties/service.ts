@@ -85,6 +85,32 @@ export class PropertyService {
     return this.repo.create(agencyId, userId, { ...parsed, assigned_to: assignedTo });
   }
 
+  /** Edits the attributes and the responsible broker; leaving the broker out keeps the current one. */
+  async update(id: string, agencyId: string, input: PropertyFormInput): Promise<Property> {
+    const current = await this.repo.findById(id, agencyId);
+    if (!current) throw new DomainError('errors.not_found');
+    const parsed = propertyFormSchema.parse(input);
+    const assignedTo = parsed.assigned_to ?? current.assigned_to;
+    if (assignedTo) await this.assertAssignable(agencyId, assignedTo, current.assigned_to);
+    return this.repo.update(id, agencyId, { ...parsed, assigned_to: assignedTo });
+  }
+
+  /** Any member archives or unarchives; archiving withdraws open listings (L12). */
+  async setArchived(id: string, agencyId: string, archived: boolean): Promise<Property> {
+    return this.repo.update(id, agencyId, { status: archived ? 'archived' : 'active' });
+  }
+
+  /**
+   * Owner/manager only (T2, RLS). A property with links, open listings or tasks is archived
+   * instead (rule 1); tasks only SET NULL in the database, so that part is checked here.
+   */
+  async delete(id: string, agencyId: string): Promise<void> {
+    const current = await this.repo.findById(id, agencyId);
+    if (!current) throw new DomainError('errors.not_found');
+    if ((await this.repo.countUsage(id, agencyId)) > 0) throw new DomainError('properties.errors.inUse');
+    if (!(await this.repo.delete(id, agencyId))) throw new DomainError('errors.forbidden');
+  }
+
   /** Same check as I4. Keeping the current assignee is always allowed. */
   private async assertAssignable(agencyId: string, assignedTo: string, currentAssignee: string | null = null) {
     if (assignedTo === currentAssignee) return;

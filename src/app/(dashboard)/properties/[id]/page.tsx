@@ -11,6 +11,8 @@ import { propertyCode, propertyHeadline } from "@/components/domain/properties/p
 import { ListingSection } from "@/components/domain/properties/listing-section";
 import { ListingService } from "@/domain/listings/service";
 import { PartySection } from "@/components/domain/properties/party-section";
+import { PropertyActionsMenu } from "@/components/domain/properties/property-actions-menu";
+import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 import { PropertyPartyService } from "@/domain/property-parties/service";
 import type { Locale } from "@/i18n/config";
 
@@ -38,6 +40,7 @@ export default async function PropertyPage({ params }: Props) {
   if (!property) notFound();
 
   const supabase = await createSupabaseServer();
+  const membership = await getCurrentMembership();
   const [listings, parties] = await Promise.all([
     new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
@@ -86,15 +89,22 @@ export default async function PropertyPage({ params }: Props) {
         {t("backToList")}
       </Link>
 
-      <header className="space-y-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className="font-mono">
-            {propertyCode(property)}
-          </Badge>
-          {property.status === "archived" && <Badge variant="secondary">{t("archived")}</Badge>}
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="font-mono">
+              {propertyCode(property)}
+            </Badge>
+            {property.status === "archived" && <Badge variant="secondary">{t("archived")}</Badge>}
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("title", { headline, place })}</h1>
+          {property.address && <p className="text-sm text-muted-foreground">{property.address}</p>}
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">{t("title", { headline, place })}</h1>
-        {property.address && <p className="text-sm text-muted-foreground">{property.address}</p>}
+        <PropertyActionsMenu
+          propertyId={property.id}
+          status={property.status}
+          canDelete={hasRole(membership?.role, CONFIG_ROLES)}
+        />
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">

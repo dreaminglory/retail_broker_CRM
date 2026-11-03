@@ -83,6 +83,45 @@ export class PropertyRepository {
     return { rows, total: count ?? 0 };
   }
 
+  async update(id: string, agencyId: string, changes: Partial<Property>): Promise<Property> {
+    const { data, error } = await this.db
+      .from('properties')
+      .update(changes)
+      .eq('id', id)
+      .eq('agency_id', agencyId)
+      .select()
+      .maybeSingle();
+
+    if (error) throw propertyWriteFailure(error);
+    if (!data) throw new DomainError('errors.not_found');
+    return data as Property;
+  }
+
+  /** What keeps a property from being deleted (rule 1): links, open listings and tasks. */
+  async countUsage(id: string, agencyId: string): Promise<number> {
+    const count = async (table: string, open?: boolean) => {
+      let query = this.db.from(table).select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('property_id', id);
+      if (open) query = query.in('status', OPEN_LISTING_STATUSES);
+      const { count: rows, error } = await query;
+      if (error) throw new DomainError('errors.loadFailed', `Failed to count ${table}: ${error.message}`);
+      return rows ?? 0;
+    };
+    const counts = await Promise.all([count('opportunity_properties'), count('listings', true), count('tasks')]);
+    return counts.reduce((sum, rows) => sum + rows, 0);
+  }
+
+  /** False when RLS let nothing through: only owners and managers delete (T2). */
+  async delete(id: string, agencyId: string): Promise<boolean> {
+    const { data, error } = await this.db.from('properties').delete().eq('id', id).eq('agency_id', agencyId).select('id');
+
+    if (error) {
+      // A link added since the check: the foreign key is RESTRICT (L8).
+      if (error.code === '23503') throw new DomainError('properties.errors.inUse');
+      throw new DomainError('errors.deleteFailed', `Failed to delete property: ${error.message}`);
+    }
+    return (data ?? []).length > 0;
+  }
+
   async create(
     agencyId: string,
     userId: string,

@@ -229,13 +229,15 @@ unarchive (any member). Delete is owner/manager only, and refused when there are
 listings or tasks, with a suggestion to archive.
 
 **Acceptance criteria:**
-- [ ] Archiving withdraws open listings, and the property drops out of the list and pickers
-- [ ] A broker sees no Delete; a manager deleting a linked property gets a translated refusal
-- [ ] A reassignment shows in `audit_log`
+- [x] Archiving withdraws open listings, and the property drops out of the list and pickers
+- [x] A broker sees no Delete; a manager deleting a linked property gets a translated refusal
+- [x] A reassignment shows in `audit_log`
 
 **Verification:**
-- [ ] `PropertyService` archive and delete cases in `npm run test:services`
-- [ ] Browser: BG and EN, 1280 px
+- [x] `PropertyService` archive and delete cases in `npm run test:services`
+- [x] Browser: BG and EN, 1280 px
+
+**Log:** Editing is a page, `/properties/[id]/edit`, reusing PropertyForm. A deactivated area the property still uses stays selectable. Leaving the broker out keeps the current one. Delete counts links, open listings and tasks first (`properties.errors.inUse`); a delete that RLS lets through to no row means `errors.forbidden`, and the action also checks `CONFIG_ROLES` first. The task part of rule 1 lives in the service, because `tasks.property_id` is SET NULL; recorded as L14 in `docs/domain-model.md` with the gap (not atomic), plus L15 for the assignee check. Browser: broker in BG sees Edit and Archive but no Delete. #1011 was reassigned to Bob (an `assignment_change` row in `audit_log`, checked with psql), archived (sale listing withdrawn, gone from the list), then unarchived. The manager's delete of linked #1001 got the translated refusal. EN checked at 1280 px.
 
 **Dependencies:** Task 6, Task 7
 **Files likely touched:** `src/domain/properties/service.ts`, `properties/actions.ts`, `src/components/domain/properties/property-actions-menu.tsx`, `messages/{bg,en}.json`

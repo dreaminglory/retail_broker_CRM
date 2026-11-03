@@ -124,7 +124,8 @@
     "areas": "Areas | BrokerCRM",
     "properties": "Properties | BrokerCRM",
     "newProperty": "New property | BrokerCRM",
-    "property": "Property {code} | BrokerCRM"
+    "property": "Property {code} | BrokerCRM",
+    "editProperty": "Edit property | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -1387,7 +1388,8 @@
       "assigneeNotMember": "This person is not an active member of your agency.",
       "areaNotInSettlement": "This area is not in the chosen settlement.",
       "archived": "This property is archived and can't get new listings, links or viewings.",
-      "relationNotAllowed": "This link isn't allowed for this type of deal."
+      "relationNotAllowed": "This link isn't allowed for this type of deal.",
+      "inUse": "This property has deals, open listings or tasks linked to it and can't be deleted. Archive it instead."
     }
   },
   "PropertiesPage": {
@@ -1438,7 +1440,8 @@
     "cancel": "Cancel",
     "saving": "Saving…",
     "save": "Save",
-    "create": "Create property"
+    "create": "Create property",
+    "editTitle": "Edit {code}"
   },
   "PropertyDetail": {
     "backToList": "Properties",
@@ -1557,5 +1560,19 @@
     "applyPrice": "Apply",
     "clear": "Clear filters",
     "listingFilterNote": "Only properties with a listing that matches are shown."
+  },
+  "PropertyActions": {
+    "edit": "Edit",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "archiveTitle": "Archive this property?",
+    "archiveDescription": "Its open listings are withdrawn and it leaves the list and the pickers. You can unarchive it later.",
+    "deleteTitle": "Delete this property?",
+    "deleteDescription": "The property and its past listings, parties and notes are deleted for good. A property linked to deals, open listings or tasks can't be deleted: archive it instead.",
+    "archivedToast": "Property archived.",
+    "unarchivedToast": "Property unarchived.",
+    "deletedToast": "Property deleted."
   }
 }
