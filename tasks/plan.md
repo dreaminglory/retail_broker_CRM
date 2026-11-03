@@ -89,7 +89,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 
 ### Phase 2: Inventory
 - [x] Task 5: Areas in Settings
-- [ ] Task 6: Create a property and see its page
+- [x] Task 6: Create a property and see its page
 - [ ] Task 7: Listings on a property
 - [ ] Task 8: Parties on a property and on the contact page
 - [ ] Task 9: Property list with filters and pager

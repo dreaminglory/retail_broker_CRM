@@ -1,0 +1,55 @@
+"use server";
+
+import { revalidatePath } from 'next/cache';
+import { AreaService } from '@/domain/areas/service';
+import type { Area } from '@/domain/areas/types';
+import { PropertyService } from '@/domain/properties/service';
+import { propertyFormSchema } from '@/domain/properties/validation';
+import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
+import { z } from 'zod';
+
+function propertyFormValues(formData: FormData) {
+  const field = (name: string) => formData.get(name) ?? undefined;
+  return {
+    type: field('type'),
+    rooms: field('rooms'),
+    area_m2: field('area_m2'),
+    plot_m2: field('plot_m2'),
+    floor: field('floor'),
+    floors_total: field('floors_total'),
+    construction: field('construction'),
+    year_built: field('year_built'),
+    settlement_id: field('settlement_id'),
+    area_id: field('area_id'),
+    address: field('address'),
+    location_note: field('location_note'),
+    description: field('description'),
+    assigned_to: field('assigned_to'),
+  };
+}
+
+export async function createPropertyAction(
+  _prevState: ActionResult<{ id: string }>,
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const { supabase, agencyId, userId } = await getAuthContext();
+    const parsed = propertyFormSchema.safeParse(propertyFormValues(formData));
+    if (!parsed.success) return toActionError(parsed.error);
+
+    const property = await new PropertyService(supabase).create(agencyId, userId, parsed.data);
+    revalidatePath('/properties');
+    return { success: true, data: { id: property.id } };
+  } catch (error) { return toActionError(error); }
+}
+
+/** The active areas of a settlement, for the property form's area select. */
+export async function listAreasForSettlementAction(settlementId: string): Promise<ActionResult<Pick<Area, 'id' | 'name'>[]>> {
+  try {
+    const parsed = z.string().uuid().safeParse(settlementId);
+    if (!parsed.success) return toActionError(parsed.error);
+    const { supabase, agencyId } = await getAuthContext();
+    const areas = await new AreaService(supabase).listActiveForSettlement(agencyId, parsed.data);
+    return { success: true, data: areas.map(({ id, name }) => ({ id, name })) };
+  } catch (error) { return toActionError(error); }
+}

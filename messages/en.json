@@ -58,7 +58,19 @@
     "participant_required": "Choose a contact or a team member.",
     "content_required": "Write something first.",
     "linked_entity_required": "A note must belong to a contact or an opportunity.",
-    "settlement_required": "Choose a settlement."
+    "settlement_required": "Choose a settlement.",
+    "property_type_required": "Choose the property type.",
+    "rooms_required": "Enter the apartment's number of rooms.",
+    "rooms_range": "Rooms go from 1 to 9.",
+    "plot_m2_required": "Enter the plot area.",
+    "floor_above_total": "The floor can't be above the building's number of floors.",
+    "floor_range": "The floor goes from -5 to 200.",
+    "floors_total_range": "Floors go from 1 to 200.",
+    "year_range": "The year goes from 1800 to 2100.",
+    "positive_number": "Enter a number greater than zero.",
+    "number_invalid": "Enter a number.",
+    "number_too_large": "The number is too large.",
+    "text_too_long": "The text is too long."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -77,7 +89,8 @@
     "collapseSidebar": "Collapse sidebar",
     "toggleMenu": "Toggle menu",
     "menuTitle": "Navigation menu",
-    "menuDescription": "Go to the different sections of BrokerCRM."
+    "menuDescription": "Go to the different sections of BrokerCRM.",
+    "properties": "Properties"
   },
   "header": {
     "loading": "Loading...",
@@ -102,7 +115,10 @@
     "stages": "Stages | BrokerCRM",
     "leadSources": "Lead Sources | BrokerCRM",
     "import": "Import | BrokerCRM",
-    "areas": "Areas | BrokerCRM"
+    "areas": "Areas | BrokerCRM",
+    "properties": "Properties | BrokerCRM",
+    "newProperty": "New property | BrokerCRM",
+    "property": "Property {code} | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -721,6 +737,23 @@
       "viber": "Viber",
       "whatsapp": "WhatsApp",
       "other": "Other"
+    },
+    "propertyType": {
+      "apartment": "Apartment",
+      "studio": "Studio",
+      "maisonette": "Maisonette",
+      "house": "House",
+      "house_floor": "Floor of a house",
+      "plot": "Plot",
+      "garage": "Garage"
+    },
+    "propertyRooms": "{rooms}-room apartment",
+    "construction": {
+      "brick": "Brick",
+      "panel": "Panel",
+      "epk": "EPK (cast concrete)",
+      "timber": "Timber",
+      "other": "Other"
     }
   },
   "ContactMethodList": {
@@ -1325,5 +1358,77 @@
       "save": "Save",
       "saving": "Saving…"
     }
+  },
+  "properties": {
+    "errors": {
+      "assigneeNotMember": "This person is not an active member of your agency.",
+      "areaNotInSettlement": "This area is not in the chosen settlement.",
+      "archived": "This property is archived and can't get new listings, links or viewings.",
+      "relationNotAllowed": "This link isn't allowed for this type of deal."
+    }
+  },
+  "PropertiesPage": {
+    "title": "Properties",
+    "newProperty": "New property",
+    "empty": "No properties yet. Add the first one.",
+    "squareMeters": "{value} m²"
+  },
+  "PropertyForm": {
+    "backToList": "Properties",
+    "newTitle": "New property",
+    "attributes": "Attributes",
+    "type": "Type",
+    "rooms": "Rooms",
+    "areaM2": "Built-up area, m²",
+    "plotM2": "Plot area, m²",
+    "floor": "Floor",
+    "floorsTotal": "Floors in building",
+    "yearBuilt": "Year built",
+    "construction": "Construction",
+    "notSet": "Not set",
+    "location": "Location",
+    "settlement": "Settlement",
+    "area": "Area",
+    "noArea": "No area",
+    "pickSettlementFirst": "Pick a settlement first",
+    "noAreasYet": "Your agency has no areas here yet. An owner or manager adds them in Settings.",
+    "address": "Address",
+    "addressPlaceholder": "Street, number, entrance, flat",
+    "locationNote": "Location note",
+    "locationNotePlaceholder": "e.g. next to the metro station",
+    "work": "Work",
+    "assignedTo": "Responsible broker",
+    "description": "Description",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save",
+    "create": "Create property"
+  },
+  "PropertyDetail": {
+    "backToList": "Properties",
+    "title": "{headline}, {place}",
+    "archived": "Archived",
+    "attributes": "Attributes",
+    "location": "Location",
+    "work": "Work",
+    "type": "Type",
+    "rooms": "Rooms",
+    "areaM2": "Built-up area",
+    "plotM2": "Plot area",
+    "floor": "Floor",
+    "floorOfTotal": "{floor} of {total}",
+    "floorsTotal": "Floors in building",
+    "construction": "Construction",
+    "yearBuilt": "Year built",
+    "squareMeters": "{value} m²",
+    "settlement": "Settlement",
+    "settlementWithProvince": "{name} ({province} province)",
+    "area": "Area",
+    "none": "—",
+    "address": "Address",
+    "locationNote": "Note",
+    "assignedTo": "Responsible broker",
+    "unassigned": "None",
+    "createdAt": "Added on"
   }
 }

@@ -8,6 +8,7 @@ import {
   CalendarCheck,
   Users,
   Briefcase,
+  Home,
   Inbox,
   Settings,
   ChevronLeft,
@@ -44,6 +45,11 @@ const navItems: NavItem[] = [
     i18nKey: "contacts",
     href: "/contacts",
     icon: Users,
+  },
+  {
+    i18nKey: "properties",
+    href: "/properties",
+    icon: Home,
   },
   {
     i18nKey: "opportunities",

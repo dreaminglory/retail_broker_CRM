@@ -147,13 +147,15 @@ Routes `/properties/new` and `/properties/[id]` (attributes, responsible broker,
 "Имоти" to the sidebar between Opportunities and Contacts.
 
 **Acceptance criteria:**
-- [ ] A broker creates "Sofia, Lozenets, 2 rooms, 68 m²" and lands on its page showing `#code` and the derived "двустаен" / "2-room"
-- [ ] Invalid combinations show field errors before submit; an inactive assignee is refused
-- [ ] A property of another agency returns 404
+- [x] A broker creates "Sofia, Lozenets, 2 rooms, 68 m²" and lands on its page showing `#code` and the derived "двустаен" / "2-room"
+- [x] Invalid combinations show field errors before submit; an inactive assignee is refused
+- [x] A property of another agency returns 404
 
 **Verification:**
-- [ ] `npx vitest run src/domain/properties`; service suite `PropertyService` in `npm run test:services`
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/properties`; service suite `PropertyService` in `npm run test:services`
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** Rule 3 lives in `propertyFormSchema`: one table says which attributes each type has, the form shows only those, and the schema clears the rest so a hidden value never saves. The settlement is checked in the same refinement, so every field error shows at once, client-side before submit. A wrong area for the settlement maps `fk_properties_area` to `properties.errors.areaNotInSettlement`; trigger keys (`P0001`) pass through as i18n keys. "Имоти" sits between Contacts and Opportunities, the order the sidebar already has. A plain `/properties` list (newest 50, active) stands in until Task 9. Another agency gets 404: `getDetail` returns null (service suite) and the page also refuses a non-uuid id. Browser: broker in BG and EN at 1280 and 390 px; the AC-1 apartment saved as #1011 "Двустаен, Лозенец, София" / "2-room apartment, Лозенец, Sofia".
 
 **Dependencies:** Task 5
 **Files likely touched:** `src/domain/properties/*`, `src/app/(dashboard)/properties/{new,[id]}/*`, `src/app/(dashboard)/properties/actions.ts`, `src/components/domain/properties/{property-form,settlement-combobox}.tsx`, `sidebar.tsx`, `messages/{bg,en}.json`

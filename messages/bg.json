@@ -58,7 +58,19 @@
     "participant_required": "Изберете контакт или член на екипа.",
     "content_required": "Първо напишете текст.",
     "linked_entity_required": "Бележката трябва да е към контакт или сделка.",
-    "settlement_required": "Изберете населено място."
+    "settlement_required": "Изберете населено място.",
+    "property_type_required": "Изберете вид на имота.",
+    "rooms_required": "Въведете броя стаи на апартамента.",
+    "rooms_range": "Стаите са от 1 до 9.",
+    "plot_m2_required": "Въведете площта на парцела.",
+    "floor_above_total": "Етажът не може да е над етажността на сградата.",
+    "floor_range": "Етажът е от -5 до 200.",
+    "floors_total_range": "Етажността е от 1 до 200.",
+    "year_range": "Годината е от 1800 до 2100.",
+    "positive_number": "Въведете число, по-голямо от нула.",
+    "number_invalid": "Въведете число.",
+    "number_too_large": "Числото е твърде голямо.",
+    "text_too_long": "Текстът е твърде дълъг."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -77,7 +89,8 @@
     "collapseSidebar": "Свиване на страничната лента",
     "toggleMenu": "Отваряне на менюто",
     "menuTitle": "Меню за навигация",
-    "menuDescription": "Преминете към различните раздели на BrokerCRM."
+    "menuDescription": "Преминете към различните раздели на BrokerCRM.",
+    "properties": "Имоти"
   },
   "header": {
     "loading": "Зареждане...",
@@ -102,7 +115,10 @@
     "stages": "Етапи | BrokerCRM",
     "leadSources": "Източници | BrokerCRM",
     "import": "Импортиране | BrokerCRM",
-    "areas": "Квартали | BrokerCRM"
+    "areas": "Квартали | BrokerCRM",
+    "properties": "Имоти | BrokerCRM",
+    "newProperty": "Нов имот | BrokerCRM",
+    "property": "Имот {code} | BrokerCRM"
   },
   "SettingsImport": {
     "title": "История на импортиранията",
@@ -721,6 +737,23 @@
       "viber": "Viber",
       "whatsapp": "WhatsApp",
       "other": "Друго"
+    },
+    "propertyType": {
+      "apartment": "Апартамент",
+      "studio": "Студио",
+      "maisonette": "Мезонет",
+      "house": "Къща",
+      "house_floor": "Етаж от къща",
+      "plot": "Парцел",
+      "garage": "Гараж"
+    },
+    "propertyRooms": "{rooms, select, 1 {Едностаен} 2 {Двустаен} 3 {Тристаен} 4 {Четиристаен} other {Многостаен}}",
+    "construction": {
+      "brick": "Тухла",
+      "panel": "Панел",
+      "epk": "ЕПК",
+      "timber": "Дървена",
+      "other": "Друго"
     }
   },
   "ContactMethodList": {
@@ -1325,5 +1358,77 @@
       "save": "Запази",
       "saving": "Запазване…"
     }
+  },
+  "properties": {
+    "errors": {
+      "assigneeNotMember": "Този човек не е активен член на агенцията.",
+      "areaNotInSettlement": "Кварталът не е в избраното населено място.",
+      "archived": "Имотът е архивиран и не може да получава нови обяви, връзки или огледи.",
+      "relationNotAllowed": "Тази връзка не е позволена за вида на сделката."
+    }
+  },
+  "PropertiesPage": {
+    "title": "Имоти",
+    "newProperty": "Нов имот",
+    "empty": "Още няма имоти. Добавете първия.",
+    "squareMeters": "{value} м²"
+  },
+  "PropertyForm": {
+    "backToList": "Имоти",
+    "newTitle": "Нов имот",
+    "attributes": "Характеристики",
+    "type": "Вид",
+    "rooms": "Стаи",
+    "areaM2": "Застроена площ, м²",
+    "plotM2": "Площ на парцела, м²",
+    "floor": "Етаж",
+    "floorsTotal": "Етажност",
+    "yearBuilt": "Година на строителство",
+    "construction": "Строителство",
+    "notSet": "Не е посочено",
+    "location": "Местоположение",
+    "settlement": "Населено място",
+    "area": "Квартал",
+    "noArea": "Без квартал",
+    "pickSettlementFirst": "Първо изберете населено място",
+    "noAreasYet": "Агенцията още няма квартали тук. Собственик или мениджър ги добавя в Настройки.",
+    "address": "Адрес",
+    "addressPlaceholder": "ул., №, вход, апартамент",
+    "locationNote": "Бележка за местоположението",
+    "locationNotePlaceholder": "напр. до метростанцията",
+    "work": "Работа",
+    "assignedTo": "Отговорен брокер",
+    "description": "Описание",
+    "cancel": "Отказ",
+    "saving": "Запазване…",
+    "save": "Запази",
+    "create": "Създай имот"
+  },
+  "PropertyDetail": {
+    "backToList": "Имоти",
+    "title": "{headline}, {place}",
+    "archived": "Архивиран",
+    "attributes": "Характеристики",
+    "location": "Местоположение",
+    "work": "Работа",
+    "type": "Вид",
+    "rooms": "Стаи",
+    "areaM2": "Застроена площ",
+    "plotM2": "Площ на парцела",
+    "floor": "Етаж",
+    "floorOfTotal": "{floor} от {total}",
+    "floorsTotal": "Етажност",
+    "construction": "Строителство",
+    "yearBuilt": "Година на строителство",
+    "squareMeters": "{value} м²",
+    "settlement": "Населено място",
+    "settlementWithProvince": "{name} (обл. {province})",
+    "area": "Квартал",
+    "none": "—",
+    "address": "Адрес",
+    "locationNote": "Бележка",
+    "assignedTo": "Отговорен брокер",
+    "unassigned": "Няма",
+    "createdAt": "Въведен на"
   }
 }
