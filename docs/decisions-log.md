@@ -184,6 +184,15 @@ methods via a cascading trigger), `'simple'` config for Bulgarian, plus `pg_trgm
 **Accepted.** EUR by default in `agencies.settings` and `opportunities.currency`, formatted with
 `useFormatter`. Historical BGN values stay as stored.
 
+### AD-056: Property, listing, parties and opportunity link are separate tables
+**Proposed** (2026-11-03, `spec/properties.md`). `properties` is the physical asset; `listings`
+holds sale or rent, price and status (one open listing per offer type); `property_parties`
+links contacts with a role and an end date; `opportunity_properties` links opportunities as
+`subject` (seller, landlord) or `candidate` (buyer, tenant, with a status). Location is a global
+EKATTE `settlements` table plus agency-managed `areas`. No owner or price column on `properties`.
+**Why:** mandates, syndication and matching attach to listings and exact areas without a split
+migration; several parties and both deal sides stay possible (business brief data rules).
+
 ## Import
 
 ### AD-034: Chunked import pipeline
