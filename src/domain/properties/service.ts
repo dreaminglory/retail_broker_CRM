@@ -7,7 +7,9 @@ import { UNKNOWN_MEMBER_NAME } from '@/domain/members/types';
 import { ProfileRepository } from '@/domain/profiles/repository';
 import { SettlementService } from '@/domain/settlements/service';
 import { PropertyRepository } from './repository';
-import type { Property, PropertyDetail, PropertyListItem } from './types';
+import type { PagedRows } from '@/lib/pagination';
+import type { PropertyListFilters } from './list-filters';
+import type { Property, PropertyDetail, PropertyListItem, PropertyListRow } from './types';
 import { propertyFormSchema, type PropertyFormInput } from './validation';
 
 export class PropertyService {
@@ -46,13 +48,22 @@ export class PropertyService {
     };
   }
 
-  /** The newest active properties with their location names, for the list. */
-  async listRecent(agencyId: string, locale: Locale, limit = 50): Promise<PropertyListItem[]> {
-    const rows = await this.repo.findRecent(agencyId, limit);
-    return this.withLocations(rows, agencyId, locale);
+  /** One page of `/properties` with location names in `locale`. */
+  async listPage(
+    agencyId: string,
+    filters: PropertyListFilters,
+    locale: Locale,
+    page: { limit: number; offset: number },
+  ): Promise<PagedRows<PropertyListRow>> {
+    const { rows, total } = await this.repo.findPage(agencyId, filters, page);
+    return { rows: await this.withLocations(rows, agencyId, locale), total };
   }
 
-  private async withLocations(rows: Property[], agencyId: string, locale: Locale): Promise<PropertyListItem[]> {
+  private async withLocations<T extends Property>(
+    rows: T[],
+    agencyId: string,
+    locale: Locale,
+  ): Promise<(T & PropertyListItem)[]> {
     const [settlements, areas] = await Promise.all([
       new SettlementService(this.db).getByIds(rows.map((row) => row.settlement_id), locale),
       new AreaService(this.db).getByIds(rows.flatMap((row) => (row.area_id ? [row.area_id] : [])), agencyId),

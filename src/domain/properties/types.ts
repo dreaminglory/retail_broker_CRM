@@ -3,6 +3,7 @@
  * A property is the physical asset; price and offer live on listings, owners on parties.
  */
 import type { Area } from '@/domain/areas/types';
+import type { Listing } from '@/domain/listings/types';
 import type { Settlement } from '@/domain/settlements/types';
 
 export type PropertyType = 'apartment' | 'studio' | 'maisonette' | 'house' | 'house_floor' | 'plot' | 'garage';
@@ -37,11 +38,19 @@ export type Property = {
   updated_at: string;
 };
 
-/** A row of the property list, with its location names in the user's locale. */
+/** A property with its open (`active` or `reserved`) listings. */
+export type PropertyWithOpenListings = Property & {
+  open_listings: Pick<Listing, 'id' | 'offer_type' | 'price' | 'status'>[];
+};
+
+/** A property with its location names in the user's locale. */
 export type PropertyListItem = Property & {
   settlement_name: string;
   area_name: string | null;
 };
+
+/** A row of `/properties`. */
+export type PropertyListRow = PropertyWithOpenListings & PropertyListItem;
 
 /** A property with its location names and responsible broker, for its page. */
 export type PropertyDetail = Property & {

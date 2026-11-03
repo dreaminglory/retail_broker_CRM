@@ -1394,7 +1394,20 @@
     "title": "Имоти",
     "newProperty": "Нов имот",
     "empty": "Още няма имоти. Добавете първия.",
-    "squareMeters": "{value} м²"
+    "squareMeters": "{value} м²",
+    "count": "{count, plural, one {# имот} other {# имота}}",
+    "noMatches": "Няма имоти по тези филтри.",
+    "noListing": "Без обява",
+    "perMonth": "{price}/мес.",
+    "archived": "Архивиран",
+    "columns": {
+      "code": "Код",
+      "property": "Имот",
+      "location": "Местоположение",
+      "size": "Площ",
+      "listings": "Обяви",
+      "broker": "Брокер"
+    }
   },
   "PropertyForm": {
     "backToList": "Имоти",
@@ -1517,5 +1530,32 @@
     "empty": "Контактът не е страна по имот.",
     "ended": "Прекратена",
     "archived": "Архивиран"
+  },
+  "PropertyFilters": {
+    "type": "Вид",
+    "allTypes": "Всички видове",
+    "settlement": "Населено място",
+    "area": "Квартал",
+    "allAreas": "Всички квартали",
+    "pickSettlementFirst": "Първо населено място",
+    "rooms": "Стаи",
+    "anyRooms": "Всякакви",
+    "offerType": "Обява",
+    "anyOffer": "Всякакви",
+    "listingStatus": "Статус на обявата",
+    "anyListingStatus": "Всякакъв",
+    "broker": "Брокер",
+    "allBrokers": "Всички брокери",
+    "status": "Имоти",
+    "statuses": {
+      "active": "Активни",
+      "archived": "Архивирани",
+      "all": "Всички"
+    },
+    "priceFrom": "Цена от, €",
+    "priceTo": "Цена до, €",
+    "applyPrice": "Приложи",
+    "clear": "Изчисти филтрите",
+    "listingFilterNote": "Показват се само имоти с обява, която отговаря на филтъра."
   }
 }

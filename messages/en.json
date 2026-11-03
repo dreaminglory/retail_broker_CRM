@@ -1394,7 +1394,20 @@
     "title": "Properties",
     "newProperty": "New property",
     "empty": "No properties yet. Add the first one.",
-    "squareMeters": "{value} m²"
+    "squareMeters": "{value} m²",
+    "count": "{count, plural, one {# property} other {# properties}}",
+    "noMatches": "No properties match these filters.",
+    "noListing": "No listing",
+    "perMonth": "{price}/mo",
+    "archived": "Archived",
+    "columns": {
+      "code": "Code",
+      "property": "Property",
+      "location": "Location",
+      "size": "Size",
+      "listings": "Listings",
+      "broker": "Broker"
+    }
   },
   "PropertyForm": {
     "backToList": "Properties",
@@ -1517,5 +1530,32 @@
     "empty": "This contact is not a party to any property.",
     "ended": "Ended",
     "archived": "Archived"
+  },
+  "PropertyFilters": {
+    "type": "Type",
+    "allTypes": "All types",
+    "settlement": "Settlement",
+    "area": "Area",
+    "allAreas": "All areas",
+    "pickSettlementFirst": "Pick a settlement first",
+    "rooms": "Rooms",
+    "anyRooms": "Any",
+    "offerType": "Listing",
+    "anyOffer": "Any",
+    "listingStatus": "Listing status",
+    "anyListingStatus": "Any",
+    "broker": "Broker",
+    "allBrokers": "All brokers",
+    "status": "Properties",
+    "statuses": {
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All"
+    },
+    "priceFrom": "Price from, €",
+    "priceTo": "Price to, €",
+    "applyPrice": "Apply",
+    "clear": "Clear filters",
+    "listingFilterNote": "Only properties with a listing that matches are shown."
   }
 }

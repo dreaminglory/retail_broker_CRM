@@ -209,13 +209,15 @@ URL. A table on desktop and cards at 390 px; each row shows code, type and rooms
 listing prices and the responsible broker.
 
 **Acceptance criteria:**
-- [ ] Filtering by Лозенец and a price range €150,000–200,000 shows the AC-1 property (AC-1)
-- [ ] Properties without listings appear unless an offer type, status or price filter is set; no duplicates when a property has two listings
-- [ ] Archived properties are hidden by default
+- [x] Filtering by Лозенец and a price range €150,000–200,000 shows the AC-1 property (AC-1)
+- [x] Properties without listings appear unless an offer type, status or price filter is set; no duplicates when a property has two listings
+- [x] Archived properties are hidden by default
 
 **Verification:**
-- [ ] Repository cases with and without listing filters in `npm run test:services`
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] Repository cases with and without listing filters in `npm run test:services`
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** One PostgREST query per page. Each row embeds its open listings for display. A listing filter (offer type, listing status, price) adds a second, aliased `!inner` embed of listings that only filters, so a property with two matching listings shows once and `count: exact` stays right. Price and offer type match open listings unless a listing status is chosen. Filters are parsed from the URL by `parsePropertyListFilters`, and invalid values are ignored. Archived properties show with Properties = Archived or All. Service suite `list.integration.test.ts` runs in an area of its own, so seed rows don't count. Browser: BG and EN; the table at 1280 px, cards at 390 px; Sofia + Лозенец + €150,000–200,000 shows #1011 and seeded #1001 (AC-1) and hides the Лозенец garage that has no listing.
 
 **Dependencies:** Task 7
 **Files likely touched:** `src/app/(dashboard)/properties/{page,properties-page-client}.tsx`, `src/components/domain/properties/{property-list-table,property-filters}.tsx`, `src/domain/properties/repository.ts`, `messages/{bg,en}.json`

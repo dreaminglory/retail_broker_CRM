@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
-import type { Property } from './types';
+import { OPEN_LISTING_STATUSES } from '@/domain/listings/validation';
+import { hasListingFilter, type PropertyListFilters } from './list-filters';
+import type { Property, PropertyWithOpenListings } from './types';
 import type { PropertyFormValues } from './validation';
 
 /**
@@ -30,18 +32,55 @@ export class PropertyRepository {
     return data as Property | null;
   }
 
-  /** The newest active properties. */
-  async findRecent(agencyId: string, limit: number): Promise<Property[]> {
-    const { data, error } = await this.db
+  /**
+   * One page of the list, newest first, with each property's open listings. A listing filter
+   * joins a second, `!inner` copy of listings, so a property shows once however many of its
+   * listings match, and one without a match drops out.
+   */
+  async findPage(
+    agencyId: string,
+    filters: PropertyListFilters,
+    { limit, offset }: { limit: number; offset: number },
+  ): Promise<{ rows: PropertyWithOpenListings[]; total: number }> {
+    const listingFilter = hasListingFilter(filters);
+    const select = [
+      '*',
+      'open_listings:listings!fk_listings_property(id, offer_type, price, status)',
+      ...(listingFilter ? ['matching:listings!fk_listings_property!inner(id)'] : []),
+    ].join(', ');
+
+    let query = this.db
       .from('properties')
-      .select('*')
+      .select(select, { count: 'exact' })
       .eq('agency_id', agencyId)
-      .eq('status', 'active')
+      .in('open_listings.status', OPEN_LISTING_STATUSES);
+
+    if (filters.status !== 'all') query = query.eq('status', filters.status);
+    if (filters.type) query = query.eq('type', filters.type);
+    if (filters.settlementId) query = query.eq('settlement_id', filters.settlementId);
+    if (filters.areaId) query = query.eq('area_id', filters.areaId);
+    if (filters.rooms) query = query.eq('rooms', filters.rooms);
+    if (filters.assignedTo) query = query.eq('assigned_to', filters.assignedTo);
+
+    if (listingFilter) {
+      // Price and offer type match open listings unless a listing status is chosen.
+      query = query.in('matching.status', filters.listingStatus ? [filters.listingStatus] : OPEN_LISTING_STATUSES);
+      if (filters.offerType) query = query.eq('matching.offer_type', filters.offerType);
+      if (filters.priceMin !== undefined) query = query.gte('matching.price', filters.priceMin);
+      if (filters.priceMax !== undefined) query = query.lte('matching.price', filters.priceMax);
+    }
+
+    const { data, error, count } = await query
       .order('code', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch properties: ${error.message}`);
-    return (data ?? []) as Property[];
+    // The `matching` copy only filters; it isn't sent on to the page.
+    const rows = ((data ?? []) as unknown as (PropertyWithOpenListings & { matching?: unknown })[]).map((row) => {
+      delete row.matching;
+      return row as PropertyWithOpenListings;
+    });
+    return { rows, total: count ?? 0 };
   }
 
   async create(

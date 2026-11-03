@@ -92,7 +92,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 - [x] Task 6: Create a property and see its page
 - [x] Task 7: Listings on a property
 - [x] Task 8: Parties on a property and on the contact page
-- [ ] Task 9: Property list with filters and pager
+- [x] Task 9: Property list with filters and pager
 - [ ] Task 10: Edit, reassign, archive and delete a property
 
 **Checkpoint 2:** AC-1, AC-5, AC-6, AC-7 seen in the browser in BG and EN at 1280 and 390 px.
