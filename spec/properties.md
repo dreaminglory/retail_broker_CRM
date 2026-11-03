@@ -1,6 +1,6 @@
 # Spec: properties
 
-> **Status:** Draft (2026-11-03), awaiting founder approval. Decision: AD-056 (Proposed).
+> **Status:** Approved scope (founder, 2026-11-03). Decision: AD-056.
 > **Evidence:** gap analysis §5.1 #6 (every Bulgarian product is property-first), business
 > brief "Future data model direction", AD-039 pilot gate. Assumptions A1–A3 are unvalidated.
 

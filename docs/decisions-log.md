@@ -185,7 +185,7 @@ methods via a cascading trigger), `'simple'` config for Bulgarian, plus `pg_trgm
 `useFormatter`. Historical BGN values stay as stored.
 
 ### AD-056: Property, listing, parties and opportunity link are separate tables
-**Proposed** (2026-11-03, `spec/properties.md`). `properties` is the physical asset; `listings`
+**Accepted** (founder, 2026-11-03, `spec/properties.md`). `properties` is the physical asset; `listings`
 holds sale or rent, price and status (one open listing per offer type); `property_parties`
 links contacts with a role and an end date; `opportunity_properties` links opportunities as
 `subject` (seller, landlord) or `candidate` (buyer, tenant, with a status). Location is a global
