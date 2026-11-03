@@ -88,7 +88,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 **Checkpoint 1:** `db reset` + `test:db` green; founder reviews the model in `docs/domain-model.md`.
 
 ### Phase 2: Inventory
-- [ ] Task 5: Areas in Settings
+- [x] Task 5: Areas in Settings
 - [ ] Task 6: Create a property and see its page
 - [ ] Task 7: Listings on a property
 - [ ] Task 8: Parties on a property and on the contact page

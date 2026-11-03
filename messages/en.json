@@ -57,7 +57,8 @@
     "lost_reason_required": "Enter the reason it was lost.",
     "participant_required": "Choose a contact or a team member.",
     "content_required": "Write something first.",
-    "linked_entity_required": "A note must belong to a contact or an opportunity."
+    "linked_entity_required": "A note must belong to a contact or an opportunity.",
+    "settlement_required": "Choose a settlement."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -100,7 +101,8 @@
     "team": "Team | BrokerCRM",
     "stages": "Stages | BrokerCRM",
     "leadSources": "Lead Sources | BrokerCRM",
-    "import": "Import | BrokerCRM"
+    "import": "Import | BrokerCRM",
+    "areas": "Areas | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -431,7 +433,9 @@
     "pipelineStages": "Pipeline Stages",
     "pipelineStagesDesc": "Configure your opportunity pipeline stages and their ordering.",
     "import": "Import",
-    "importDesc": "Import data into your agency workspace."
+    "importDesc": "Import data into your agency workspace.",
+    "areas": "Areas",
+    "areasDesc": "Your agency's districts per settlement, used in property addresses."
   },
   "search": {
     "placeholder": "Search...",
@@ -1276,6 +1280,50 @@
         "open": "Open Inquiries"
       },
       "footer": "You get this email when someone assigns work to you."
+    }
+  },
+  "areas": {
+    "errors": {
+      "duplicateName": "This settlement already has an area with this name."
+    }
+  },
+  "SettlementCombobox": {
+    "placeholder": "Search settlements…",
+    "clear": "Clear the settlement",
+    "searching": "Searching…",
+    "noResults": "No settlements found",
+    "resultsCount": "{count, plural, one {# settlement found} other {# settlements found}}",
+    "error": "The settlement search failed",
+    "kind": {
+      "city": "{name}",
+      "village": "{name} (village)"
+    },
+    "location": "{municipality} municipality, {province} province"
+  },
+  "SettingsAreas": {
+    "settings": "Settings",
+    "title": "Areas",
+    "description": "The districts brokers choose when they enter a property. Pick a settlement and add its areas.",
+    "settlement": "Settlement",
+    "withAreas": "Settlements with areas",
+    "settlementChip": "{name} ({count})",
+    "pickSettlement": "Pick a settlement to see and add its areas.",
+    "areasIn": "Areas in {name}",
+    "location": "{municipality} municipality, {province} province",
+    "empty": "No areas here yet. Add the first one above.",
+    "inactiveBadge": "Inactive",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "rename": "Rename {name}",
+    "renameTitle": "Rename area",
+    "deactivate": "Deactivate {name}",
+    "reactivate": "Reactivate {name}",
+    "form": {
+      "name": "Area name",
+      "namePlaceholder": "e.g. Lozenets",
+      "add": "Add",
+      "save": "Save",
+      "saving": "Saving…"
     }
   }
 }

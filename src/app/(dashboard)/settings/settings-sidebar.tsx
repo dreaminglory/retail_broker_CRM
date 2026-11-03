@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { User, Users, Radio, Settings as SettingsIcon, Upload } from "lucide-react";
+import { User, Users, Radio, Settings as SettingsIcon, Upload, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 
@@ -40,6 +40,11 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
         i18nKey: "pipelineStages",
         href: "/settings/stages",
         icon: SettingsIcon,
+      },
+      {
+        i18nKey: "areas",
+        href: "/settings/areas",
+        icon: MapPin,
       },
     );
     sidebarNavItems.push({

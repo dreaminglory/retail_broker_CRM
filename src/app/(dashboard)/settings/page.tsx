@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 import { getCurrentMembership } from "@/lib/membership";
-import { Settings, Radio, ChevronRight, User, Users } from "lucide-react";
+import { Settings, Radio, ChevronRight, User, Users, MapPin } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export async function generateMetadata() {
@@ -57,6 +57,14 @@ export default async function SettingsPage() {
       icon: Settings,
       title: t("pipelineStages"),
       description: t("pipelineStagesDesc"),
+      available: true,
+      configOnly: true,
+    },
+    {
+      href: "/settings/areas",
+      icon: MapPin,
+      title: t("areas"),
+      description: t("areasDesc"),
       available: true,
       configOnly: true,
     },

@@ -122,13 +122,15 @@ add, rename, deactivate and reorder its areas. Add an entry to the settings side
 to both locale files.
 
 **Acceptance criteria:**
-- [ ] An owner adds "Лозенец" to София and sees it; a duplicate name (case-insensitive) is refused with a translated error (AC-7)
-- [ ] A broker doesn't see the Areas entry, and the action refuses them
-- [ ] The settlement search finds "плов" → Пловдив and "plov" → Plovdiv
+- [x] An owner adds "Лозенец" to София and sees it; a duplicate name (case-insensitive) is refused with a translated error (AC-7)
+- [x] A broker doesn't see the Areas entry, and the action refuses them
+- [x] The settlement search finds "плов" → Пловдив and "plov" → Plovdiv
 
 **Verification:**
-- [ ] `npx vitest run src/domain/areas src/domain/settlements`
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/areas src/domain/settlements`
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** The settlement search reads the Bulgarian name for Cyrillic input and the transliterated name otherwise, towns first. The search action lives in `src/app/(dashboard)/settlements/actions.ts` and the combobox in `src/components/domain/settlements/`, so Task 6 reuses both. Areas are deactivated, never deleted (a used area is RESTRICT). The page keeps the chosen settlement in `?settlement=` and shows chips for settlements that already have areas. The duplicate-name refusal maps 23505 to `areas.errors.duplicateName`. Browser: owner in BG and EN at 1280 and 390 px (add, duplicate refused, reorder, deactivate, "plov" → Plovdiv); broker sees no entry and is redirected.
 
 **Dependencies:** Task 4
 **Files likely touched:** `src/domain/areas/*`, `src/domain/settlements/*`, `src/app/(dashboard)/settings/areas/*`, `src/components/domain/areas/area-form.tsx`, `settings-sidebar.tsx`, `messages/{bg,en}.json`

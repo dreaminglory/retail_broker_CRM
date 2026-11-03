@@ -57,7 +57,8 @@
     "lost_reason_required": "Въведете причина за загубата.",
     "participant_required": "Изберете контакт или член на екипа.",
     "content_required": "Първо напишете текст.",
-    "linked_entity_required": "Бележката трябва да е към контакт или сделка."
+    "linked_entity_required": "Бележката трябва да е към контакт или сделка.",
+    "settlement_required": "Изберете населено място."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -100,7 +101,8 @@
     "team": "Екип | BrokerCRM",
     "stages": "Етапи | BrokerCRM",
     "leadSources": "Източници | BrokerCRM",
-    "import": "Импортиране | BrokerCRM"
+    "import": "Импортиране | BrokerCRM",
+    "areas": "Квартали | BrokerCRM"
   },
   "SettingsImport": {
     "title": "История на импортиранията",
@@ -431,7 +433,9 @@
     "pipelineStages": "Етапи на фунията",
     "pipelineStagesDesc": "Конфигурирайте етапите на вашата фуния от сделки и тяхната подредба.",
     "import": "Импортиране",
-    "importDesc": "Внасяне на данни във вашето работно пространство."
+    "importDesc": "Внасяне на данни във вашето работно пространство.",
+    "areas": "Квартали",
+    "areasDesc": "Кварталите на агенцията по населени места, за адресите на имотите."
   },
   "search": {
     "placeholder": "Търсене...",
@@ -1276,6 +1280,50 @@
         "open": "Отвори „Запитвания“"
       },
       "footer": "Получавате този имейл, когато някой ви възложи работа."
+    }
+  },
+  "areas": {
+    "errors": {
+      "duplicateName": "В това населено място вече има квартал с това име."
+    }
+  },
+  "SettlementCombobox": {
+    "placeholder": "Търсене на населено място…",
+    "clear": "Изчисти населеното място",
+    "searching": "Търсене…",
+    "noResults": "Няма намерени населени места",
+    "resultsCount": "{count, plural, one {# намерено място} other {# намерени места}}",
+    "error": "Търсенето на населени места не успя",
+    "kind": {
+      "city": "гр. {name}",
+      "village": "с. {name}"
+    },
+    "location": "общ. {municipality}, обл. {province}"
+  },
+  "SettingsAreas": {
+    "settings": "Настройки",
+    "title": "Квартали",
+    "description": "Кварталите, които брокерите избират при въвеждане на имот. Изберете населено място и добавете неговите квартали.",
+    "settlement": "Населено място",
+    "withAreas": "Населени места с квартали",
+    "settlementChip": "{name} ({count})",
+    "pickSettlement": "Изберете населено място, за да видите и добавите кварталите му.",
+    "areasIn": "Квартали в {name}",
+    "location": "общ. {municipality}, обл. {province}",
+    "empty": "Още няма квартали тук. Добавете първия отгоре.",
+    "inactiveBadge": "Неактивен",
+    "moveUp": "Премести {name} нагоре",
+    "moveDown": "Премести {name} надолу",
+    "rename": "Преименувай {name}",
+    "renameTitle": "Преименувай квартал",
+    "deactivate": "Деактивирай {name}",
+    "reactivate": "Активирай отново {name}",
+    "form": {
+      "name": "Име на квартала",
+      "namePlaceholder": "напр. Лозенец",
+      "add": "Добави",
+      "save": "Запази",
+      "saving": "Запазване…"
     }
   }
 }
