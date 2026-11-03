@@ -167,13 +167,15 @@ closed and withdrawn are read-only). A listings section on the property page: ad
 rent listing, change the price, reserve, close, withdraw. Price per m² is shown, not stored.
 
 **Acceptance criteria:**
-- [ ] Add a sale listing at €185,000; change it to €179,000; both values are in `audit_log` (AC-5)
-- [ ] A second open sale listing and editing a closed one are refused with translated errors
-- [ ] A property can have an open sale and an open rent listing together
+- [x] Add a sale listing at €185,000; change it to €179,000; both values are in `audit_log` (AC-5)
+- [x] A second open sale listing and editing a closed one are refused with translated errors
+- [x] A property can have an open sale and an open rent listing together
 
 **Verification:**
-- [ ] `npx vitest run src/domain/listings`; `ListingService` in `npm run test:services`
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/listings`; `ListingService` in `npm run test:services`
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** The service adds no checks of its own: the open-listing index maps to `listings.errors.openExists`, and the triggers raise `listings.errors.readOnly` and `properties.errors.archived`. The form only offers offer types without an open listing. Closing and withdrawing ask first because they are final. Price per m² is computed on screen (plots by plot area; rent with cents). Prices accept "185 000" and a decimal comma. Browser: BG and EN at 1280 and 390 px. On #1011: €185,000 → €179,000, with both values in `audit_log` (checked with psql); rent €900 opened next to the sale listing, then closed and read-only.
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/listings/*`, `src/components/domain/properties/listing-section.tsx`, `listing-form.tsx`, `properties/actions.ts`, `messages/{bg,en}.json`

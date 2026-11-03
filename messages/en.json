@@ -70,7 +70,11 @@
     "positive_number": "Enter a number greater than zero.",
     "number_invalid": "Enter a number.",
     "number_too_large": "The number is too large.",
-    "text_too_long": "The text is too long."
+    "text_too_long": "The text is too long.",
+    "price_required": "Enter a price.",
+    "price_positive": "The price must be greater than zero.",
+    "price_cents": "The price has at most two decimals.",
+    "offer_type_required": "Choose sale or rent."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -754,6 +758,16 @@
       "epk": "EPK (cast concrete)",
       "timber": "Timber",
       "other": "Other"
+    },
+    "offerType": {
+      "sale": "Sale",
+      "rent": "Rent"
+    },
+    "listingStatus": {
+      "active": "Active",
+      "reserved": "Reserved",
+      "closed": "Closed",
+      "withdrawn": "Withdrawn"
     }
   },
   "ContactMethodList": {
@@ -1430,5 +1444,44 @@
     "assignedTo": "Responsible broker",
     "unassigned": "None",
     "createdAt": "Added on"
+  },
+  "listings": {
+    "errors": {
+      "openExists": "This property already has an open listing of this kind. Close or withdraw it first.",
+      "readOnly": "A closed or withdrawn listing can't be changed. Add a new listing instead."
+    }
+  },
+  "ListingSection": {
+    "title": "Listings",
+    "addListing": "Add listing",
+    "empty": "No open listings.",
+    "archivedNoListings": "This property is archived and has no open listings.",
+    "past": "Past listings ({count})",
+    "offerType": "Type",
+    "priceEur": "Price, €",
+    "perMonth": "{price} / month",
+    "perSquareMeter": "{price} / m²",
+    "listedOn": "Listed on {date}",
+    "listedClosed": "Listed on {listed}, ended on {closed}",
+    "changePrice": "Change price",
+    "savePrice": "Save price",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "to": {
+      "active": "Back to active",
+      "reserved": "Reserve",
+      "closed": "Close",
+      "withdrawn": "Withdraw"
+    },
+    "confirm": {
+      "closed": {
+        "title": "Close this listing?",
+        "description": "A closed listing can't be changed. For a new price or to offer it again, add a new listing."
+      },
+      "withdrawn": {
+        "title": "Withdraw this listing?",
+        "description": "A withdrawn listing can't be changed. To offer the property again, add a new listing."
+      }
+    }
   }
 }

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { PropertyService } from "@/domain/properties/service";
 import type { PropertyDetail } from "@/domain/properties/types";
 import { propertyCode, propertyHeadline } from "@/components/domain/properties/property-labels";
+import { ListingSection } from "@/components/domain/properties/listing-section";
+import { ListingService } from "@/domain/listings/service";
 import type { Locale } from "@/i18n/config";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -32,6 +34,9 @@ export async function generateMetadata({ params }: Props) {
 export default async function PropertyPage({ params }: Props) {
   const property = await loadProperty((await params).id);
   if (!property) notFound();
+
+  const supabase = await createSupabaseServer();
+  const listings = await new ListingService(supabase).listForProperty(property.id, property.agency_id);
 
   const t = await getTranslations("PropertyDetail");
   const enums = await getTranslations("Enums");
@@ -91,6 +96,8 @@ export default async function PropertyPage({ params }: Props) {
         <DetailCard title={t("attributes")} rows={attributes} />
         <DetailCard title={t("location")} rows={location} />
       </div>
+
+      <ListingSection property={property} listings={listings} />
 
       <section className="rounded-lg border bg-card p-4" aria-labelledby="property-work">
         <h2 id="property-work" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
