@@ -96,11 +96,13 @@ Write `073-property-triggers.sql`. Add the invariants to `docs/domain-model.md`.
   seller opportunity
 
 **Acceptance criteria:**
-- [ ] `db reset` runs clean and every seeded row satisfies the Task 2–3 constraints
-- [ ] The existing E2E and service suites still pass
+- [x] `db reset` runs clean and every seeded row satisfies the Task 2–3 constraints
+- [x] The existing E2E and service suites still pass
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
+- [x] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
+
+**Log:** Seeded links use the existing deals, so other suites keep their counts: candidates (offered, viewed, candidate, rejected) on Alpha Opp 1 (buyer), and a subject link on Beta Opp 1 (seller). Both agencies have codes #1001–#1008. No `selected` link is seeded. test:db PASS, test:services 483/483, test:e2e 28/28 (on the dev server already running on :3000).
 
 **Dependencies:** Task 3
 **Files likely touched:** `supabase/seed.sql`
