@@ -17,14 +17,16 @@ write policies, adds prefix indexes, and inserts the rows. Add it to `010-rls-ca
 global. Start `072-properties.sql`.
 
 **Acceptance criteria:**
-- [ ] About 5,250 rows; София, Пловдив, Варна and one village present, with `name_en` Sofia, Plovdiv, Varna
-- [ ] Every role can read; no role can insert, update or delete (pgTAP)
-- [ ] The converter rejects an input file with missing or renamed columns, with a clear message
+- [x] About 5,250 rows; София, Пловдив, Варна and one village present, with `name_en` Sofia, Plovdiv, Varna
+- [x] Every role can read; no role can insert, update or delete (pgTAP)
+- [x] The converter rejects an input file with missing or renamed columns, with a clear message
 
 **Verification:**
-- [ ] `npx vitest run scripts/ekatte` (transliteration cases: щ→sht, ъ→a, ю→yu, final ия→ia)
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] Manual: migration file size noted in the task log; stop and ask if the licence is unclear or the file exceeds ~2 MB
+- [x] `npx vitest run scripts/ekatte` (transliteration cases: щ→sht, ъ→a, ю→yu, final ия→ia)
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] Manual: migration file size noted in the task log; stop and ask if the licence is unclear or the file exceeds ~2 MB
+
+**Log:** Source `Ekatte-2025-json.zip` (NSI, data as of 2025-12-23), 5,254 rows (257 towns, 4,997 villages; 2 monasteries skipped), migration 604 KB. The converter is TypeScript (`build-settlements.ts`, run with `node`) like `scripts/seed-volume.ts`; tests in `build-settlements.test.ts`. Our transliteration differs from NSI `name_en` on 4 rows, all NSI typos. Щъркелово is not in the register; pgTAP checks Щърково → Shtarkovo. NSI states no licence on the archive page (founder accepted, 2026-11-03).
 
 **Dependencies:** None
 **Files likely touched:** `SPEC.md`, `scripts/ekatte/build-settlements.mjs`, `scripts/ekatte/transliterate.test.ts`, `supabase/migrations/20261103000001_settlements.sql`, `supabase/tests/database/010-rls-catalog.sql`, `072-properties.sql`

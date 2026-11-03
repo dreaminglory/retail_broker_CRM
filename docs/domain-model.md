@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 43rd migration
-(`20261102000010_notifications.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 44th migration
+(`20261103000001_settlements.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -48,6 +48,9 @@ flowchart LR
   subgraph M[Data import]
     import_jobs --- import_rows
   end
+  subgraph R[Property]
+    settlements
+  end
   subgraph N[Notifications]
     notification_deliveries
   end
@@ -61,7 +64,8 @@ flowchart LR
   opportunities & contacts -->|triggers| audit_log
 ```
 
-Every table except `agencies` and `profiles` carries `agency_id` and is isolated by RLS
+Every table except `agencies`, `profiles` and the global reference table `settlements` carries
+`agency_id` and is isolated by RLS
 (`current_agency_id()`). `profiles` is user-level, visible to self and colleagues
 (`shares_agency_with()`).
 
@@ -297,6 +301,26 @@ Written only by the service role (the digest route and `after()` work); a member
 own rows, an owner or manager the agency's. `pending` is a claim in flight; `sent` and
 `pending` block a repeat, `failed` and `skipped` (an empty digest) can be claimed again.
 
+### 2.7 Property
+
+`spec/properties.md`, AD-056. Built so far: the settlements reference table.
+
+```mermaid
+erDiagram
+  settlements {
+    text ekatte UK "NSI EKATTE code, 5 digits"
+    text kind "city | village"
+    text name_bg
+    text name_en "Transliteration Act 2009"
+    text municipality_bg_en
+    text province_bg_en
+  }
+```
+
+`settlements` is global (no `agency_id`), generated from the NSI EKATTE export by
+`scripts/ekatte/build-settlements.ts` into one data migration: towns and villages only,
+no monasteries. The picker searches by prefix on `lower(name_bg)` / `lower(name_en)`.
+
 ---
 
 ## 3. Lifecycles
@@ -498,6 +522,7 @@ The "Enforced by" column tells you which layer to change and test.
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
 | E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |
 | E2 | Clients never write `notification_deliveries`; members read their own rows, owners and managers the agency's | RLS (no write policy, writes revoked) + `071-notification-deliveries.sql` |
+| L1 | Settlements are read by every signed-in user and written only by migrations | RLS `FORCE` with a `SELECT` policy only, writes revoked from `authenticated`, all access from `anon` + `072-properties.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
@@ -554,6 +579,7 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Revert import | Отмяна на импорта | Undo an import | Възстанови (wrong: means "restore") |
 | Exceptions | Изключения | Manager problem dashboard | |
 | Temperature | Интерес | Hot, warm or cold | |
+| Settlement | Населено място | Town or village from the EKATTE register | |
 
 ---
 

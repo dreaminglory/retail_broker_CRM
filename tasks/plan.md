@@ -80,7 +80,7 @@ T1 settlements ─┐
 Full tasks with acceptance criteria are in `tasks/todo.md`.
 
 ### Phase 1: Data model
-- [ ] Task 1: Settlements reference data (EKATTE)
+- [x] Task 1: Settlements reference data (EKATTE)
 - [ ] Task 2: Property tables, RLS and constraints
 - [ ] Task 3: Property triggers (code, audit, rules 5, 7, 8)
 - [ ] Task 4: Seed properties for both agencies
