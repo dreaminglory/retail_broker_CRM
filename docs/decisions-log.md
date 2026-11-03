@@ -30,6 +30,17 @@ of Done overrides the plugin's.
 Desktop; `npm run stack:up` doesn't start dockerd. CI still runs typecheck, lint, Vitest, pgTAP.
 **Revisit if:** we develop in cloud sessions again.
 
+### AD-054: €15 per broker per month
+**Accepted** (founder, 2026-11-03). Pricing hypothesis is €15 per broker per month, all modules
+included, billed per broker in the agency. Replaces the €20 in AD-039; the rest of AD-039 stands.
+**Why:** below OptiEstate (€22 with website and portals), inside the local €0–32 range.
+**Revisit if:** pilot agencies push back on per-broker pricing (flat per-agency fee, N-12).
+
+### AD-055: alo.bg first for portal syndication
+**Accepted** (founder, 2026-11-03). `syndication` publishes to alo.bg first, on its open import
+spec. imot.bg, homes.bg and OLX follow once prod is live (`go-live` done).
+**Why:** alo.bg is the only portal with a public import format; the others need agreements.
+
 ## Stack and platform
 
 ### AD-002: Next.js + Supabase + Tailwind + shadcn/ui

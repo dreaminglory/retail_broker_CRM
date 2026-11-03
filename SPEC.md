@@ -57,8 +57,9 @@ starts; pilot evidence sets the order.
 | `pwa` | Installable app, mobile search, then push | pilot | Later |
 | `mandates`, `viewings`, `offers`, `syndication`, `action-plans`, `reports` | Remaining committed modules (AD-039) | pilot | Later |
 
-**Founder decisions before `properties`:** the portal syndication approach (alo.bg first; an
-imot.bg call) and pricing (€20 per broker vs a flat fee per agency).
+**Founder decisions before `properties`:** decided 2026-11-03. Pricing is €15 per broker per
+month (AD-054). Syndication starts with alo.bg; imot.bg and the other portals follow once prod is
+live (AD-055).
 
 ## 4. Ideas backlog
 
