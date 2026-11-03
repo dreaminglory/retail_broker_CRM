@@ -109,7 +109,7 @@ Write `073-property-triggers.sql`. Add the invariants to `docs/domain-model.md`.
 **Estimated scope:** S
 
 ## Checkpoint 1: Data model
-- [ ] `db reset`, `test:db`, `typecheck`, `lint`, `test` green
+- [x] `db reset`, `test:db`, `typecheck` (as `tsc --noEmit`), `lint` (0 errors, the 47 existing warnings), `test` green
 - [ ] Founder reviews the Property section of `docs/domain-model.md` and AD-057 before any UI
 
 ## Phase 2: Inventory
