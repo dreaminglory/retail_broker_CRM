@@ -244,8 +244,8 @@ listings or tasks, with a suggestion to archive.
 **Estimated scope:** S
 
 ## Checkpoint 2: Inventory
-- [ ] `typecheck`, `lint`, `test`, `test:services` green
-- [ ] AC-1, AC-5, AC-6, AC-7 seen in the browser in BG and EN at 1280 and 390 px
+- [x] `typecheck` (as `tsc --noEmit`), `lint` (0 errors, the 47 existing warnings), `test` (448 passed), `test:services` (558 passed) green
+- [x] AC-1, AC-5, AC-6, AC-7 seen in the browser in BG and EN at 1280 and 390 px (AC-5 as the listing price change and the audit rows; its timeline view is Task 14. AC-6 as Beta's broker: 404 on Alpha's property, only Beta's rows in the list, redirected from Areas)
 
 ## Phase 3: Opportunities
 
