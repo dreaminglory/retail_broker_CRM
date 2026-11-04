@@ -23,7 +23,7 @@ import { ParticipantList } from "@/components/domain/opportunities/participant-l
 import { TaskList } from "@/components/domain/opportunities/task-list";
 import { CloseOpportunityDialog } from "@/components/domain/opportunities/close-opportunity-dialog";
 import { OpportunityActivity } from "./opportunity-activity";
-import { PropertyLinks } from "@/components/domain/opportunities/property-links";
+import { PropertyLinks, SubjectProperty } from "@/components/domain/opportunities/property-links";
 import type { OpportunityPropertyWithProperty } from "@/domain/opportunity-properties/types";
 import {
   updateOpportunityAction,
@@ -260,8 +260,10 @@ export function OpportunityDetailClient({
             </div>
           </div>
 
-          {(opportunity.type === "buyer" || opportunity.type === "tenant") && (
+          {opportunity.type === "buyer" || opportunity.type === "tenant" ? (
             <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
+          ) : (
+            <SubjectProperty opportunityId={opportunity.id} links={propertyLinks} />
           )}
 
           <ParticipantList

@@ -669,6 +669,10 @@ module that fixes it is named where there is one. Remove a row when the fix land
    formats stored before `trustworthy-loop` stay as typed until edited, though conversion
    still parses them.
 5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+6. **"Create property" from a deal is three writes.** `createSubjectProperty` checks the deal
+   (seller or landlord, no subject yet) and then creates the property, the owner party and the
+   subject link one after another. If a later write fails, the property stays without its owner
+   or link, and the broker links it by hand. An RPC would make it one transaction.
 
 ---
 

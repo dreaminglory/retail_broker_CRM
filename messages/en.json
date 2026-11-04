@@ -1455,7 +1455,10 @@
     "saving": "Saving…",
     "save": "Save",
     "create": "Create property",
-    "editTitle": "Edit {code}"
+    "editTitle": "Edit {code}",
+    "backToOpportunity": "Back to the deal",
+    "forOpportunity": "It will be linked to “{title}” as its subject property.",
+    "ownerFromOpportunity": "{name} will be added as the owner."
   },
   "PropertyDetail": {
     "backToList": "Properties",
@@ -1625,7 +1628,12 @@
     "add": "Add",
     "saving": "Saving…",
     "archived": "Archived",
-    "rejectedBecause": "Rejected: {reason}"
+    "rejectedBecause": "Rejected: {reason}",
+    "subjectTitle": "Subject property",
+    "subjectEmpty": "No subject property yet.",
+    "chooseProperty": "Choose property",
+    "createProperty": "Create property",
+    "removeSubject": "Remove {code} as the subject property"
   },
   "PropertyOpportunities": {
     "title": "Deals",

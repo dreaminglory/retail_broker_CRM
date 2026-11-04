@@ -298,12 +298,14 @@ property: pick an existing one, or "Create property", which opens the property f
 with the opportunity's primary contact as owner and links it on save.
 
 **Acceptance criteria:**
-- [ ] A seller opportunity links one subject property; a buyer opportunity offers no subject option (AC-4)
-- [ ] "Create property" saves the property, its owner party and the link, and returns to the opportunity
+- [x] A seller opportunity links one subject property; a buyer opportunity offers no subject option (AC-4)
+- [x] "Create property" saves the property, its owner party and the link, and returns to the opportunity
 
 **Verification:**
-- [ ] Service suite: subject cases
-- [ ] Browser: BG and EN, 1280 px
+- [x] Service suite: subject cases
+- [x] Browser: BG and EN, 1280 px
+
+**Log:** Seller and landlord deals get a "Subject property" section in place of the candidates. With no subject, it offers "Choose property" (the property picker; `setSubject`) and "Create property" (`/properties/new?opportunity=<id>`). With one, it shows the subject with a remove button. The new-property page names the deal and the primary contact who becomes owner. Saving runs `OpportunityPropertyService.createSubjectProperty` and returns to the deal. That method checks the deal first (seller or landlord, no subject yet; else `relationNotAllowed` / `subjectExists` before anything is written), then creates the property, the owner party and the link. Those are three writes, not one transaction: recorded as known gap 6 in `docs/domain-model.md`. A link to another agency's deal, or one that isn't seller or landlord, is a 404. Service suite `subject.integration.test.ts` (5 cases). Browser as Beta's broker: Beta Opp 1 (seller) shows the subject and no candidates; removed it, created #1009 from the deal in BG (owner Maria Petrova, subject link, back on the deal), then removed #1009 and chose #1001 with the picker in EN at 1280 px. The BG owner line was reworded to be gender-neutral.
 
 **Dependencies:** Task 8, Task 11
 **Files likely touched:** `src/components/domain/opportunities/property-links.tsx`, `properties/new/page.tsx`, `properties/actions.ts`, `messages/{bg,en}.json`

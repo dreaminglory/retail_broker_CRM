@@ -17,6 +17,7 @@ import {
   addCandidatePropertyAction,
   removePropertyLinkAction,
   setPropertyLinkStatusAction,
+  setSubjectPropertyAction,
 } from "@/app/(dashboard)/opportunities/[id]/properties/actions";
 import type { OpportunityPropertyWithProperty, PropertyLinkStatus } from "@/domain/opportunity-properties/types";
 import { PROPERTY_LINK_STATUSES } from "@/domain/opportunity-properties/validation";
@@ -157,17 +158,102 @@ export function PropertyLinks({ opportunityId, links }: PropertyLinksProps) {
   );
 }
 
+/** The one subject property of a seller or landlord deal: pick one, or create it (rule 5). */
+export function SubjectProperty({ opportunityId, links }: PropertyLinksProps) {
+  const t = useTranslations("PropertyLinks");
+  const enums = useTranslations("Enums");
+  const [choosing, setChoosing] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const subject = links.find((link) => link.relation === "subject");
+
+  function remove(link: OpportunityPropertyWithProperty) {
+    startTransition(async () => {
+      const result = await removePropertyLinkAction(link.id);
+      if (!result.success) toast.error(result.error);
+    });
+  }
+
+  return (
+    <section className="rounded-lg border bg-card" aria-labelledby="opportunity-subject">
+      <div className="flex items-center justify-between gap-2 border-b px-5 py-3">
+        <h3 id="opportunity-subject" className="flex items-center gap-2 text-sm font-semibold">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          {t("subjectTitle")}
+        </h3>
+      </div>
+
+      {subject ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <Link href={`/properties/${subject.property.id}`} className="flex flex-wrap items-center gap-2 hover:underline">
+              <span className="font-mono text-xs text-muted-foreground">{propertyCode(subject.property)}</span>
+              <span className="text-sm font-medium">{propertyHeadline(enums, subject.property)}</span>
+              {subject.property.status === "archived" && <Badge variant="outline">{t("archived")}</Badge>}
+            </Link>
+            <p className="truncate text-xs text-muted-foreground">
+              {[subject.property.area_name, subject.property.settlement_name, subject.property.address].filter(Boolean).join(", ")}
+            </p>
+          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8"
+            disabled={pending}
+            onClick={() => remove(subject)}
+            aria-label={t("removeSubject", { code: propertyCode(subject.property) })}
+            title={t("remove")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-3 px-5 py-4 text-center">
+          <p className="text-sm text-muted-foreground">{t("subjectEmpty")}</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setChoosing(true)}>
+              {t("chooseProperty")}
+            </Button>
+            <Button size="sm" render={<Link href={`/properties/new?opportunity=${opportunityId}`} />} nativeButton={false}>
+              <Plus className="mr-1 h-4 w-4" />
+              {t("createProperty")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <Dialog open={choosing} onOpenChange={setChoosing}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("chooseProperty")}</DialogTitle>
+          </DialogHeader>
+          {choosing && (
+            <AddCandidateForm
+              opportunityId={opportunityId}
+              linkedIds={[]}
+              action={setSubjectPropertyAction}
+              onDone={() => setChoosing(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
+/** Picks a property and links it: as a candidate, or with `action` as the subject. */
 function AddCandidateForm({
   opportunityId,
   linkedIds,
+  action = addCandidatePropertyAction,
   onDone,
 }: {
   opportunityId: string;
   linkedIds: string[];
+  action?: typeof addCandidatePropertyAction;
   onDone: () => void;
 }) {
   const t = useTranslations("PropertyLinks");
-  const [state, formAction, pending] = useActionState(addCandidatePropertyAction.bind(null, opportunityId), initialState);
+  const [state, formAction, pending] = useActionState(action.bind(null, opportunityId), initialState);
 
   useEffect(() => {
     if (state.success) onDone();

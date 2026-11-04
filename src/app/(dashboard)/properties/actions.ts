@@ -14,6 +14,7 @@ import {
   updateListingPriceSchema,
 } from '@/domain/listings/validation';
 import { PropertyPartyService } from '@/domain/property-parties/service';
+import { OpportunityPropertyService } from '@/domain/opportunity-properties/service';
 import { addPropertyPartySchema } from '@/domain/property-parties/validation';
 import { PropertyService } from '@/domain/properties/service';
 import { propertyFormSchema } from '@/domain/properties/validation';
@@ -51,6 +52,26 @@ export async function createPropertyAction(
 
     const property = await new PropertyService(supabase).create(agencyId, userId, parsed.data);
     revalidatePath('/properties');
+    return { success: true, data: { id: property.id } };
+  } catch (error) { return toActionError(error); }
+}
+
+/** "Create property" from a seller or landlord deal: owner party and subject link included. */
+export async function createSubjectPropertyAction(
+  opportunityId: string,
+  _prevState: ActionResult<{ id: string }>,
+  formData: FormData,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const id = z.string().uuid().safeParse(opportunityId);
+    if (!id.success) return toActionError(id.error);
+    const { supabase, agencyId, userId } = await getAuthContext();
+    const parsed = propertyFormSchema.safeParse(propertyFormValues(formData));
+    if (!parsed.success) return toActionError(parsed.error);
+
+    const property = await new OpportunityPropertyService(supabase).createSubjectProperty(agencyId, userId, id.data, parsed.data);
+    revalidatePath('/properties');
+    revalidatePath(`/opportunities/${id.data}`);
     return { success: true, data: { id: property.id } };
   } catch (error) { return toActionError(error); }
 }

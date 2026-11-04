@@ -1455,7 +1455,10 @@
     "saving": "Запазване…",
     "save": "Запази",
     "create": "Създай имот",
-    "editTitle": "Редакция на {code}"
+    "editTitle": "Редакция на {code}",
+    "backToOpportunity": "Обратно към сделката",
+    "forOpportunity": "Ще бъде свързан със сделката „{title}“ като имот обект.",
+    "ownerFromOpportunity": "Като собственик ще се добави {name}."
   },
   "PropertyDetail": {
     "backToList": "Имоти",
@@ -1625,7 +1628,12 @@
     "add": "Добави",
     "saving": "Запазване…",
     "archived": "Архивиран",
-    "rejectedBecause": "Отхвърлен: {reason}"
+    "rejectedBecause": "Отхвърлен: {reason}",
+    "subjectTitle": "Имот обект",
+    "subjectEmpty": "Още няма имот обект.",
+    "chooseProperty": "Избери имот",
+    "createProperty": "Създай имот",
+    "removeSubject": "Премахни {code} като имот обект"
   },
   "PropertyOpportunities": {
     "title": "Сделки",
