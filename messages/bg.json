@@ -1155,13 +1155,29 @@
       "assignmentChanged": "Отговорникът е променен",
       "statusChanged": "Статусът е променен",
       "systemUpdate": "Системно обновяване",
-      "newInquiry": "Получено е ново запитване"
+      "newInquiry": "Получено е ново запитване",
+      "propertyCreated": "Добавен е имот {code}",
+      "propertyStatusChanged": "Статусът на имота е променен",
+      "listingCreated": "Добавена е обява",
+      "listingPriceChanged": "Цената е променена",
+      "listingStatusChanged": "Статусът на обявата е променен",
+      "propertyLinkAdded": "Имот {code} е свързан",
+      "propertyLinkChanged": "Имот {code}: статусът е променен",
+      "propertyLinkRemoved": "Имот {code} е премахнат"
     },
     "outcomeLabel": "Резултат",
     "unassigned": "Невъзложен(а)",
     "importedFrom": "Внесен(а) от файл:",
     "csvFile": "CSV файл",
-    "manuallyCreated": "Ръчно създаден(а)"
+    "manuallyCreated": "Ръчно създаден(а)",
+    "propertyStatus": {
+      "active": "Активен",
+      "archived": "Архивиран"
+    },
+    "linkSubject": "Имот обект",
+    "onDeal": "Сделка: {title}",
+    "rejectedReason": "Причина: {reason}",
+    "perMonth": "{price} / месец"
   },
   "NoteCard": {
     "teamMember": "Член на екипа",
@@ -1485,7 +1501,8 @@
     "locationNote": "Бележка",
     "assignedTo": "Отговорен брокер",
     "unassigned": "Няма",
-    "createdAt": "Въведен на"
+    "createdAt": "Въведен на",
+    "history": "История"
   },
   "listings": {
     "errors": {

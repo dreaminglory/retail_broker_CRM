@@ -105,7 +105,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 **Checkpoint 3:** AC-2, AC-3, AC-4 seen in the browser; `/review` of Phases 1–3.
 
 ### Phase 4: History, search and E2E
-- [ ] Task 14: Property timeline
+- [x] Task 14: Property timeline
 - [ ] Task 17: E2E for the property loop
 - [ ] Task 15: Notes on properties (cut 1)
 - [ ] Task 16: ⌘K search for properties (cut 2)

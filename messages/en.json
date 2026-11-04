@@ -1155,13 +1155,29 @@
       "assignmentChanged": "Assignment Changed",
       "statusChanged": "Status Changed",
       "systemUpdate": "System Update",
-      "newInquiry": "New Inquiry Received"
+      "newInquiry": "New Inquiry Received",
+      "propertyCreated": "Property {code} added",
+      "propertyStatusChanged": "Property status changed",
+      "listingCreated": "Listing added",
+      "listingPriceChanged": "Price changed",
+      "listingStatusChanged": "Listing status changed",
+      "propertyLinkAdded": "Property {code} linked",
+      "propertyLinkChanged": "Property {code}: link status changed",
+      "propertyLinkRemoved": "Property {code} unlinked"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",
     "importedFrom": "Imported from file:",
     "csvFile": "CSV File",
-    "manuallyCreated": "Manually created"
+    "manuallyCreated": "Manually created",
+    "propertyStatus": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "linkSubject": "Subject property",
+    "onDeal": "Deal: {title}",
+    "rejectedReason": "Reason: {reason}",
+    "perMonth": "{price} / month"
   },
   "NoteCard": {
     "teamMember": "Team Member",
@@ -1485,7 +1501,8 @@
     "locationNote": "Note",
     "assignedTo": "Responsible broker",
     "unassigned": "None",
-    "createdAt": "Added on"
+    "createdAt": "Added on",
+    "history": "History"
   },
   "listings": {
     "errors": {

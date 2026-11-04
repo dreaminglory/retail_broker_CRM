@@ -252,6 +252,10 @@ erDiagram
 The **timeline** (`src/domain/timeline`) is not a table. It reads `notes`, `tasks`,
 `audit_log` and `inquiries` in parallel and merges them in memory into the
 `TimelineEntry` union.
+The property timeline reads the property's own `property` rows, its `listing` rows (by
+`metadata.property_id`), the `opportunity` rows with `field_name = 'property_link'` for it, and
+tasks with its `property_id`; a link change is one row that both timelines show (AD-057).
+`describeAudit` (`audit-event.ts`) turns a row into the event both timelines render.
 
 ### 2.5 Data import
 

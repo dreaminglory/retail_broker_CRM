@@ -14,7 +14,11 @@ export interface AuthorInfo {
 
 export type TimelineNote = Note & { author?: AuthorInfo | null };
 export type TimelineTask = Task & { author?: AuthorInfo | null };
-export type TimelineAudit = AuditLogEntry & { author?: AuthorInfo | null };
+export type TimelineAudit = AuditLogEntry & {
+  author?: AuthorInfo | null;
+  /** On the property timeline, the deal a `property_link` row belongs to. */
+  opportunity?: { id: string; title: string } | null;
+};
 export type TimelineInquiry = Inquiry;
 
 export interface NoteTimelineEntry {

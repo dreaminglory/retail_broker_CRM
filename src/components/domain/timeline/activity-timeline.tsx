@@ -12,6 +12,8 @@ interface ActivityTimelineProps {
   onUpdateNote?: (noteId: string, content: string, isPinned: boolean) => Promise<void>;
   onDeleteNote?: (noteId: string) => Promise<void>;
   onLoadMore?: (offset: number) => Promise<TimelineEntry[]>;
+  /** On the property timeline, link rows name their deal instead of the property. */
+  showDeal?: boolean;
 }
 
 export function ActivityTimeline({ 
@@ -19,7 +21,8 @@ export function ActivityTimeline({
   currentUserId, 
   onUpdateNote, 
   onDeleteNote,
-  onLoadMore
+  onLoadMore,
+  showDeal,
 }: ActivityTimelineProps) {
   const t = useTranslations("Timeline");
   const [entries, setEntries] = useState<TimelineEntry[]>(initialEntries);
@@ -58,6 +61,7 @@ export function ActivityTimeline({
             currentUserId={currentUserId}
             onUpdateNote={onUpdateNote}
             onDeleteNote={onDeleteNote}
+            showDeal={showDeal}
           />
         ))}
       </div>

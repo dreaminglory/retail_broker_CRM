@@ -19,6 +19,8 @@ import { PropertyOpportunities } from "@/components/domain/properties/property-o
 import { ScheduleViewingButton } from "@/components/domain/properties/schedule-viewing-button";
 import { MemberRepository } from "@/domain/members/repository";
 import type { Locale } from "@/i18n/config";
+import { TimelineService } from "@/domain/timeline/service";
+import { PropertyActivity } from "./property-activity";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -45,11 +47,12 @@ export default async function PropertyPage({ params }: Props) {
 
   const supabase = await createSupabaseServer();
   const membership = await getCurrentMembership();
-  const [listings, parties, opportunityLinks, brokers] = await Promise.all([
+  const [listings, parties, opportunityLinks, brokers, timeline] = await Promise.all([
     new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
     new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
     new MemberRepository(supabase).getActiveBrokers(property.agency_id),
+    new TimelineService(supabase).getPropertyTimeline(property.id, property.agency_id),
   ]);
   // A viewing is scheduled on an active deal this property is a candidate on (rule 8: not when archived).
   const viewingDeals = opportunityLinks
@@ -157,6 +160,13 @@ export default async function PropertyPage({ params }: Props) {
         {property.description && (
           <p className="mt-4 whitespace-pre-line text-sm">{property.description}</p>
         )}
+      </section>
+
+      <section className="rounded-lg border bg-card p-4" aria-labelledby="property-history">
+        <h2 id="property-history" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("history")}
+        </h2>
+        <PropertyActivity initialTimeline={timeline} />
       </section>
     </div>
   );

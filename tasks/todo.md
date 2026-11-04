@@ -325,12 +325,12 @@ with `property_id`. Render it on the property page. Show `property_link` rows on
 timeline with the property code.
 
 **Acceptance criteria:**
-- [ ] The property timeline shows creation, the price change €185,000 → €179,000, a link status change and a viewing task, in order (AC-5)
-- [ ] The opportunity timeline shows the same link change once
+- [x] The property timeline shows creation, the price change €185,000 → €179,000, a link status change and a viewing task, in order (AC-5)
+- [x] The opportunity timeline shows the same link change once
 
 **Verification:**
-- [ ] `npx vitest run src/domain/timeline`; timeline integration suite
-- [ ] Browser: BG and EN
+- [x] `npx vitest run src/domain/timeline`; timeline integration suite
+- [x] Browser: BG and EN
 
 **Dependencies:** Task 7, Task 11
 **Files likely touched:** `src/domain/timeline/{service,types}.ts`, `src/components/domain/timeline/*`, `properties/[id]/property-activity.tsx`, `messages/{bg,en}.json`
