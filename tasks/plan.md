@@ -106,7 +106,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 
 ### Phase 4: History, search and E2E
 - [x] Task 14: Property timeline
-- [ ] Task 17: E2E for the property loop
+- [x] Task 17: E2E for the property loop
 - [ ] Task 15: Notes on properties (cut 1)
 - [ ] Task 16: ⌘K search for properties (cut 2)
 

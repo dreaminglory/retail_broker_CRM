@@ -342,11 +342,11 @@ to the seeded buyer opportunity, schedule and complete a viewing, and see `viewe
 BG and EN, 1280 and 390 px. Add a cross-agency check that Beta can't open Alpha's property URL.
 
 **Acceptance criteria:**
-- [ ] The new spec passes in all four projects (two languages × two widths) (AC-8)
-- [ ] The existing core-loop spec is unchanged and still passes
+- [x] The new spec passes in all four projects (two languages × two widths) (AC-8)
+- [x] The existing core-loop spec is unchanged and still passes
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e`
 
 **Dependencies:** Task 13, Task 14
 **Files likely touched:** `e2e/properties.spec.ts`, `e2e/fixtures.ts`
