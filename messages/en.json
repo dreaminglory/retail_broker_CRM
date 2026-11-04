@@ -1156,14 +1156,14 @@
       "statusChanged": "Status Changed",
       "systemUpdate": "System Update",
       "newInquiry": "New Inquiry Received",
-      "propertyCreated": "Property {code} added",
+      "propertyCreated": "Property added",
       "propertyStatusChanged": "Property status changed",
       "listingCreated": "Listing added",
       "listingPriceChanged": "Price changed",
       "listingStatusChanged": "Listing status changed",
-      "propertyLinkAdded": "Property {code} linked",
-      "propertyLinkChanged": "Property {code}: link status changed",
-      "propertyLinkRemoved": "Property {code} unlinked"
+      "propertyLinkAdded": "Property linked",
+      "propertyLinkChanged": "Link status changed",
+      "propertyLinkRemoved": "Property unlinked"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",

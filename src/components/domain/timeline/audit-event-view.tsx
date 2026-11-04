@@ -37,7 +37,7 @@ export function auditEventTitle(t: Translator, event: AuditEvent): string {
     case "opportunityStatus":
       return t("events.statusChanged");
     case "propertyCreated":
-      return t("events.propertyCreated", { code: code(event.code) });
+      return t("events.propertyCreated");
     case "propertyStatus":
       return t("events.propertyStatusChanged");
     case "listingCreated":
@@ -47,9 +47,10 @@ export function auditEventTitle(t: Translator, event: AuditEvent): string {
     case "listingStatus":
       return t("events.listingStatusChanged");
     case "propertyLink":
-      if (event.from === null) return t("events.propertyLinkAdded", { code: code(event.code) });
-      if (event.to === null) return t("events.propertyLinkRemoved", { code: code(event.code) });
-      return t("events.propertyLinkChanged", { code: code(event.code) });
+      // The line under the title names the other side: the deal, or the property's code.
+      if (event.from === null) return t("events.propertyLinkAdded");
+      if (event.to === null) return t("events.propertyLinkRemoved");
+      return t("events.propertyLinkChanged");
     default:
       return t("events.systemUpdate");
   }

@@ -1156,14 +1156,14 @@
       "statusChanged": "Статусът е променен",
       "systemUpdate": "Системно обновяване",
       "newInquiry": "Получено е ново запитване",
-      "propertyCreated": "Добавен е имот {code}",
+      "propertyCreated": "Имотът е добавен",
       "propertyStatusChanged": "Статусът на имота е променен",
       "listingCreated": "Добавена е обява",
       "listingPriceChanged": "Цената е променена",
       "listingStatusChanged": "Статусът на обявата е променен",
-      "propertyLinkAdded": "Имот {code} е свързан",
-      "propertyLinkChanged": "Имот {code}: статусът е променен",
-      "propertyLinkRemoved": "Имот {code} е премахнат"
+      "propertyLinkAdded": "Имотът е свързан",
+      "propertyLinkChanged": "Статусът на връзката е променен",
+      "propertyLinkRemoved": "Имотът е премахнат от сделката"
     },
     "outcomeLabel": "Резултат",
     "unassigned": "Невъзложен(а)",
