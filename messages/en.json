@@ -57,7 +57,7 @@
     "lost_reason_required": "Enter the reason it was lost.",
     "participant_required": "Choose a contact or a team member.",
     "content_required": "Write something first.",
-    "linked_entity_required": "A note must belong to a contact or an opportunity.",
+    "linked_entity_required": "A note must belong to a contact, an opportunity or a property.",
     "settlement_required": "Choose a settlement.",
     "property_type_required": "Choose the property type.",
     "rooms_required": "Enter the apartment's number of rooms.",
@@ -465,7 +465,7 @@
   },
   "search": {
     "placeholder": "Search...",
-    "inputPlaceholder": "Search contacts, opportunities, and inquiries...",
+    "inputPlaceholder": "Search contacts, opportunities, inquiries and properties...",
     "searching": "Searching...",
     "noResults": "No results found.",
     "results": "Results",
@@ -1155,13 +1155,29 @@
       "assignmentChanged": "Assignment Changed",
       "statusChanged": "Status Changed",
       "systemUpdate": "System Update",
-      "newInquiry": "New Inquiry Received"
+      "newInquiry": "New Inquiry Received",
+      "propertyCreated": "Property added",
+      "propertyStatusChanged": "Property status changed",
+      "listingCreated": "Listing added",
+      "listingPriceChanged": "Price changed",
+      "listingStatusChanged": "Listing status changed",
+      "propertyLinkAdded": "Property linked",
+      "propertyLinkChanged": "Link status changed",
+      "propertyLinkRemoved": "Property unlinked"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",
     "importedFrom": "Imported from file:",
     "csvFile": "CSV File",
-    "manuallyCreated": "Manually created"
+    "manuallyCreated": "Manually created",
+    "propertyStatus": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "linkSubject": "Subject property",
+    "onDeal": "Deal: {title}",
+    "rejectedReason": "Reason: {reason}",
+    "perMonth": "{price} / month"
   },
   "NoteCard": {
     "teamMember": "Team Member",
@@ -1485,7 +1501,8 @@
     "locationNote": "Note",
     "assignedTo": "Responsible broker",
     "unassigned": "None",
-    "createdAt": "Added on"
+    "createdAt": "Added on",
+    "history": "History"
   },
   "listings": {
     "errors": {

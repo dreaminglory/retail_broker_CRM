@@ -24,8 +24,8 @@ import {
   CheckCheck,
   Pencil,
 } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
-import { relativeTimeBase } from "@/lib/time/relative-time";
+import { useTranslations } from "next-intl";
+import { useRelativeTime } from "@/lib/i18n/use-relative-time";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ export function InquiryCard({
   onDismiss,
 }: InquiryCardProps) {
   const t = useTranslations("InquiryCard");
-  const format = useFormatter();
+  const ago = useRelativeTime();
 
   const statusCfg = STATUS_CONFIG[inquiry.status];
   const isTerminal =
@@ -90,7 +90,7 @@ export function InquiryCard({
     : null;
 
   const receivedAt = new Date(inquiry.received_at);
-  const age = format.relativeTime(receivedAt, relativeTimeBase(receivedAt, new Date()));
+  const age = ago(receivedAt);
 
   const assigneeName = inquiry.assigned_to
     ? brokers.find((b) => b.id === inquiry.assigned_to)?.display_name ??

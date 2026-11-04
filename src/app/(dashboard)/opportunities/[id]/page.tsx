@@ -12,6 +12,7 @@ import { getLocale } from "next-intl/server";
 import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
 import type { Locale } from "@/i18n/config";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
+import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 export default async function OpportunityDetailPage({
   params,
@@ -61,20 +62,23 @@ export default async function OpportunityDetailPage({
     new OpportunityPropertyService(supabase).listForOpportunity(id, agencyId, locale),
   ]);
 
+  // A fresh `now` per render: relative times match between the server and hydration.
   return (
-    <div className="mx-auto max-w-5xl">
-      <OpportunityDetailClient
-        opportunity={opportunity}
-        stages={stages}
-        leadSources={leadSources}
-        contacts={contacts}
-        brokers={brokers}
-        tasks={tasks}
-        timeline={timeline}
-        currentUserId={user?.id}
-        timeZone={settings.timezone}
-        propertyLinks={propertyLinks}
-      />
-    </div>
+    <FreshNowProvider now={new Date().toISOString()}>
+      <div className="mx-auto max-w-5xl">
+        <OpportunityDetailClient
+          opportunity={opportunity}
+          stages={stages}
+          leadSources={leadSources}
+          contacts={contacts}
+          brokers={brokers}
+          tasks={tasks}
+          timeline={timeline}
+          currentUserId={user?.id}
+          timeZone={settings.timezone}
+          propertyLinks={propertyLinks}
+        />
+      </div>
+    </FreshNowProvider>
   );
 }

@@ -4,6 +4,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { MemberRepository } from "@/domain/members/repository";
 import { getExceptionDataAction } from "./actions";
 import { ExceptionsPageClient } from "./exceptions-page-client";
+import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -40,5 +41,10 @@ export default async function ExceptionsPage() {
 
   const brokers = await new MemberRepository(supabase).getActiveBrokers(membership.agency_id);
 
-  return <ExceptionsPageClient data={data} brokers={brokers} />;
+  // A fresh `now` per render: relative times match between the server and hydration.
+  return (
+    <FreshNowProvider now={new Date().toISOString()}>
+      <ExceptionsPageClient data={data} brokers={brokers} />
+    </FreshNowProvider>
+  );
 }

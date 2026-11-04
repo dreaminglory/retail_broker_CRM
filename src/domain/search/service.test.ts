@@ -5,7 +5,7 @@ import { createFakeSupabase } from '@/test/fake-supabase';
 import { SearchService } from './service';
 
 describe('SearchService errors', () => {
-  it.each(['contacts', 'opportunities', 'inquiries'])(
+  it.each(['contacts', 'opportunities', 'inquiries', 'properties'])(
     'a failed %s search is errors.loadFailed',
     async (table) => {
       const { client } = createFakeSupabase({ role: 'broker', failingTables: [table] });
@@ -46,5 +46,21 @@ describe('SearchService results', () => {
     const [inquiry] = await search({ inquiries: [{ id: 'i1', caller_name: null, subject: 'Office space' }] });
 
     expect(inquiry).toMatchObject({ title: null, kind: null, subtitle: 'Office space' });
+  });
+});
+
+describe('SearchService property results', () => {
+  it('shows a property by its code, with the address under it', async () => {
+    const { client } = createFakeSupabase({
+      role: 'broker',
+      tables: { properties: [{ id: 'p1', code: 1001, address: 'ул. Кричим 12' }, { id: 'p2', code: 1002, address: null }] },
+    });
+
+    const results = await new SearchService(client as SupabaseClient).globalSearch('a', 'Кричим');
+
+    expect(results.filter((result) => result.type === 'property')).toEqual([
+      { id: 'p1', type: 'property', title: '#1001', subtitle: 'ул. Кричим 12', kind: null, url: '/properties/p1', relevance: 1 },
+      { id: 'p2', type: 'property', title: '#1002', subtitle: null, kind: null, url: '/properties/p2', relevance: 1 },
+    ]);
   });
 });

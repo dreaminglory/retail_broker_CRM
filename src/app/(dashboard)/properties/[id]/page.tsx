@@ -19,6 +19,9 @@ import { PropertyOpportunities } from "@/components/domain/properties/property-o
 import { ScheduleViewingButton } from "@/components/domain/properties/schedule-viewing-button";
 import { MemberRepository } from "@/domain/members/repository";
 import type { Locale } from "@/i18n/config";
+import { TimelineService } from "@/domain/timeline/service";
+import { PropertyActivity } from "./property-activity";
+import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -45,11 +48,12 @@ export default async function PropertyPage({ params }: Props) {
 
   const supabase = await createSupabaseServer();
   const membership = await getCurrentMembership();
-  const [listings, parties, opportunityLinks, brokers] = await Promise.all([
+  const [listings, parties, opportunityLinks, brokers, timeline] = await Promise.all([
     new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
     new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
     new MemberRepository(supabase).getActiveBrokers(property.agency_id),
+    new TimelineService(supabase).getPropertyTimeline(property.id, property.agency_id),
   ]);
   // A viewing is scheduled on an active deal this property is a candidate on (rule 8: not when archived).
   const viewingDeals = opportunityLinks
@@ -89,76 +93,86 @@ export default async function PropertyPage({ params }: Props) {
     ...(property.location_note ? [{ label: t("locationNote"), value: property.location_note }] : []),
   ];
 
+  // A fresh `now` per render: relative times match between the server and hydration.
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <Link
-        href="/properties"
-        className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-        {t("backToList")}
-      </Link>
+    <FreshNowProvider now={new Date().toISOString()}>
+      <div className="mx-auto max-w-5xl space-y-6">
+        <Link
+          href="/properties"
+          className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          {t("backToList")}
+        </Link>
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="font-mono">
-              {propertyCode(property)}
-            </Badge>
-            {property.status === "archived" && <Badge variant="secondary">{t("archived")}</Badge>}
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="font-mono">
+                {propertyCode(property)}
+              </Badge>
+              {property.status === "archived" && <Badge variant="secondary">{t("archived")}</Badge>}
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">{t("title", { headline, place })}</h1>
+            {property.address && <p className="text-sm text-muted-foreground">{property.address}</p>}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title", { headline, place })}</h1>
-          {property.address && <p className="text-sm text-muted-foreground">{property.address}</p>}
+          <PropertyActionsMenu
+            propertyId={property.id}
+            status={property.status}
+            canDelete={hasRole(membership?.role, CONFIG_ROLES)}
+          />
+        </header>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <DetailCard title={t("attributes")} rows={attributes} />
+          <DetailCard title={t("location")} rows={location} />
         </div>
-        <PropertyActionsMenu
-          propertyId={property.id}
-          status={property.status}
-          canDelete={hasRole(membership?.role, CONFIG_ROLES)}
+
+        <ListingSection property={property} listings={listings} />
+
+        <PartySection propertyId={property.id} current={parties.current} past={parties.past} />
+
+        <PropertyOpportunities
+          links={opportunityLinks}
+          action={
+            property.status === "active" ? (
+              <ScheduleViewingButton
+                propertyId={property.id}
+                code={propertyCode(property)}
+                deals={viewingDeals}
+                brokers={brokers}
+              />
+            ) : undefined
+          }
         />
-      </header>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <DetailCard title={t("attributes")} rows={attributes} />
-        <DetailCard title={t("location")} rows={location} />
+        <section className="rounded-lg border bg-card p-4" aria-labelledby="property-work">
+          <h2 id="property-work" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("work")}
+          </h2>
+          <dl className="grid gap-3 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">{t("assignedTo")}</dt>
+              <dd className="font-medium">{property.assignee?.display_name ?? t("unassigned")}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">{t("createdAt")}</dt>
+              <dd>{format.dateTime(new Date(property.created_at), { dateStyle: "medium" })}</dd>
+            </div>
+          </dl>
+          {property.description && (
+            <p className="mt-4 whitespace-pre-line text-sm">{property.description}</p>
+          )}
+        </section>
+
+        <section className="rounded-lg border bg-card p-4" aria-labelledby="property-history">
+          <h2 id="property-history" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("history")}
+          </h2>
+          <PropertyActivity initialTimeline={timeline} propertyId={property.id} currentUserId={membership?.userId} />
+        </section>
       </div>
-
-      <ListingSection property={property} listings={listings} />
-
-      <PartySection propertyId={property.id} current={parties.current} past={parties.past} />
-
-      <PropertyOpportunities
-        links={opportunityLinks}
-        action={
-          property.status === "active" ? (
-            <ScheduleViewingButton
-              propertyId={property.id}
-              code={propertyCode(property)}
-              deals={viewingDeals}
-              brokers={brokers}
-            />
-          ) : undefined
-        }
-      />
-
-      <section className="rounded-lg border bg-card p-4" aria-labelledby="property-work">
-        <h2 id="property-work" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("work")}
-        </h2>
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-muted-foreground">{t("assignedTo")}</dt>
-            <dd className="font-medium">{property.assignee?.display_name ?? t("unassigned")}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{t("createdAt")}</dt>
-            <dd>{format.dateTime(new Date(property.created_at), { dateStyle: "medium" })}</dd>
-          </div>
-        </dl>
-        {property.description && (
-          <p className="mt-4 whitespace-pre-line text-sm">{property.description}</p>
-        )}
-      </section>
-    </div>
+    </FreshNowProvider>
   );
 }
 

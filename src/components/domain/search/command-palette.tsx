@@ -14,7 +14,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Users, Briefcase, Phone, Search } from "lucide-react";
+import { Users, Briefcase, Phone, Search, Home } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -75,6 +75,8 @@ export function CommandPalette() {
         return <Users className="mr-2 h-4 w-4" />;
       case "opportunity":
         return <Briefcase className="mr-2 h-4 w-4" />;
+      case "property":
+        return <Home className="mr-2 h-4 w-4" />;
       case "inquiry":
         return <Phone className="mr-2 h-4 w-4" />;
       default:

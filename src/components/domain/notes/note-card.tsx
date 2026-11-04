@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { relativeTimeBase } from "@/lib/time/relative-time";
+import { useRelativeTime } from "@/lib/i18n/use-relative-time";
 import { MoreVertical, Edit2, Trash2, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +22,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Note, NoteWithAuthor } from "@/domain/notes/types";
 import { cn } from "@/lib/utils";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 interface NoteCardProps {
   note: Note | NoteWithAuthor;
@@ -33,7 +33,7 @@ interface NoteCardProps {
 
 export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardProps) {
   const t = useTranslations("NoteCard");
-  const format = useFormatter();
+  const ago = useRelativeTime();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(note.content);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -99,7 +99,7 @@ export function NoteCard({ note, currentUserId, onUpdate, onDelete }: NoteCardPr
                   t("teamMember")}
               </span>
               <span className="text-muted-foreground text-xs">
-                {format.relativeTime(new Date(note.created_at), relativeTimeBase(new Date(note.created_at), new Date()))}
+                {ago(note.created_at)}
               </span>
               {note.is_pinned && (
                 <Pin className="h-3 w-3 text-primary fill-primary" />

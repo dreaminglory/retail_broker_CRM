@@ -30,3 +30,12 @@ describe('TimelineService errors', () => {
     }
   );
 });
+
+describe('TimelineService property feed errors', () => {
+  it.each(['notes', 'tasks', 'audit_log'])('a failed %s read on a property is a translated error', async (table) => {
+    const error = await failingOn(table).getPropertyTimeline('property-1', 'agency-1').catch((e) => e);
+
+    expect(error).toBeInstanceOf(DomainError);
+    expect(error.code).toBe('errors.loadFailed');
+  });
+});

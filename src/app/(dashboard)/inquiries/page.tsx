@@ -8,6 +8,7 @@ import { ProfileRepository } from "@/domain/profiles/repository";
 import { PAGE_SIZE, loadPage, pageInfo, parsePage } from "@/lib/pagination";
 import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
+import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -86,21 +87,24 @@ export default async function InquiriesPage({
     )
   );
 
+  // A fresh `now` per render: relative times match between the server and hydration.
   return (
-    <div className="mx-auto max-w-4xl">
-      <InquiriesPageClient
-        inquiries={inquiries}
-        pageInfo={paged.info}
-        leadSources={leadSources}
-        stages={stages}
-        brokers={brokers}
-        inactiveAssigneeNames={inactiveAssigneeNames}
-        initialSearch={search}
-        initialStatus={status}
-        initialId={id}
-        userRole={membership?.role}
-      />
-    </div>
+    <FreshNowProvider now={new Date().toISOString()}>
+      <div className="mx-auto max-w-4xl">
+        <InquiriesPageClient
+          inquiries={inquiries}
+          pageInfo={paged.info}
+          leadSources={leadSources}
+          stages={stages}
+          brokers={brokers}
+          inactiveAssigneeNames={inactiveAssigneeNames}
+          initialSearch={search}
+          initialStatus={status}
+          initialId={id}
+          userRole={membership?.role}
+        />
+      </div>
+    </FreshNowProvider>
   );
 }
 

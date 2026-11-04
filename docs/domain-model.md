@@ -252,6 +252,12 @@ erDiagram
 The **timeline** (`src/domain/timeline`) is not a table. It reads `notes`, `tasks`,
 `audit_log` and `inquiries` in parallel and merges them in memory into the
 `TimelineEntry` union.
+The property timeline reads the property's own `property` rows, its `listing` rows (by
+`metadata.property_id`), the `opportunity` rows with `field_name = 'property_link'` for it, and
+tasks with its `property_id`; a link change is one row that both timelines show (AD-057).
+Listing and link rows are the only audit rows with `metadata.property_id`; `idx_audit_property`
+(partial, on `agency_id, metadata->>'property_id', performed_at`) finds them.
+`describeAudit` (`audit-event.ts`) turns a row into the event both timelines render.
 
 ### 2.5 Data import
 
@@ -359,6 +365,7 @@ erDiagram
     uuid assigned_to FK "responsible broker"
     text status "active | archived"
     text external_ref "UK per agency"
+    tsvector search_vector "trigger-kept"
   }
   listings {
     uuid property_id FK
@@ -387,6 +394,13 @@ erDiagram
 `settlements` is global (no `agency_id`), generated from the NSI EKATTE export by
 `scripts/ekatte/build-settlements.ts` into one data migration: towns and villages only,
 no monasteries. The picker searches by prefix on `lower(name_bg)` / `lower(name_en)`.
+
+⌘K finds properties through `properties.search_vector` (AD-026): the code, then the address
+and area name, then the settlement in both languages. `trg_property_search_vector` keeps it on
+insert and on a change of code, address, settlement or area; renaming an area rewrites the
+vectors of its properties (`trg_areas_search_vector_cascade`), which also moves their
+`updated_at`. The 'simple' parser drops a leading `#`, so `#1042`
+finds 1042; `toPrefixQuery` escapes quotes and backslashes so any input parses.
 
 Every reference between agency rows in this area is a composite `(agency_id, x_id)` foreign
 key (AD-057), including `tasks.property_id` (`ON DELETE SET NULL (property_id)`) and
@@ -628,7 +642,7 @@ The "Enforced by" column tells you which layer to change and test.
 | K2 | Next task or stage change on completion | UI prompt only (AD-014, soft) |
 | K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
-| N1 | A note has a contact, opportunity or property parent, and non-blank content | `CHECK` on `notes` |
+| N1 | A note has a contact, opportunity or property parent in its own agency, and non-blank content | `CHECK` on `notes`, composite FK; `createNoteSchema` (trimmed) and `NotesService.createNote` (property in the agency) give the friendly errors |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities, contacts (imported contacts via `audit_imported_contact_created`), properties, listings and opportunity–property links |
 | E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |

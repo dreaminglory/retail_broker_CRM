@@ -1,4 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DomainError } from '@/lib/errors';
+import { PropertyRepository } from '@/domain/properties/repository';
 import { NotesRepository } from './repository';
 import { createNoteSchema, updateNoteSchema } from './validation';
 import type { Note, CreateNoteInput, UpdateNoteInput } from './types';
@@ -6,7 +8,7 @@ import type { Note, CreateNoteInput, UpdateNoteInput } from './types';
 export class NotesService {
   private readonly repository: NotesRepository;
 
-  constructor(db: SupabaseClient) {
+  constructor(private readonly db: SupabaseClient) {
     this.repository = new NotesRepository(db);
   }
 
@@ -20,6 +22,10 @@ export class NotesService {
 
   async createNote(agencyId: string, userId: string, input: CreateNoteInput): Promise<Note> {
     const validated = createNoteSchema.parse(input);
+    // The composite foreign key refuses another agency's property; say so in words first.
+    if (validated.property_id && !(await new PropertyRepository(this.db).findById(validated.property_id, agencyId))) {
+      throw new DomainError('errors.not_found');
+    }
     return this.repository.create(agencyId, userId, validated);
   }
 

@@ -1,31 +1,29 @@
 "use client";
 
-import { relativeTimeBase } from "@/lib/time/relative-time";
-import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRelativeTime } from "@/lib/i18n/use-relative-time";
+import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus, Link2, Tag } from "lucide-react";
 import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
 import type { TimelineEntry } from "@/domain/timeline/types";
-import { cn } from "@/lib/utils";
-import { useFormatter, useTranslations } from "next-intl";
+import { describeAudit } from "@/domain/timeline/audit-event";
+import { useTranslations } from "next-intl";
+import { AuditEventBody, auditEventTitle } from "./audit-event-view";
 
 interface TimelineEntryProps {
   entry: TimelineEntry;
   currentUserId?: string;
   onUpdateNote?: (noteId: string, content: string, isPinned: boolean) => Promise<void>;
   onDeleteNote?: (noteId: string) => Promise<void>;
+  /** On the property timeline, link rows name their deal instead of the property. */
+  showDeal?: boolean;
 }
 
-export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote }: TimelineEntryProps) {
+export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote, showDeal }: TimelineEntryProps) {
   const t = useTranslations("Timeline");
-  const format = useFormatter();
-  const tEnum = useTranslations("Enums");
+  const ago = useRelativeTime();
   const tInquiry = useTranslations("InquiryCard");
-  const statusLabel = (value: string | null | undefined) => {
-    const key = `opportunityStatus.${value}` as never;
-    return tEnum.has(key) ? tEnum(key) : value;
-  };
-  
+  const event = entry.type === 'audit' ? describeAudit(entry.data) : null;
+
   const getIcon = () => {
     switch (entry.type) {
       case 'note': return <MessageSquare className="h-4 w-4 text-blue-500" />;
@@ -34,10 +32,22 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
           ? <CheckCircle2 className="h-4 w-4 text-green-500" />
           : <ClipboardList className="h-4 w-4 text-orange-500" />;
       case 'audit':
-        if (entry.data.action === 'created') return <Plus className="h-4 w-4 text-emerald-500" />;
-        if (entry.data.action === 'stage_change') return <ArrowRightLeft className="h-4 w-4 text-purple-500" />;
-        if (entry.data.action === 'assignment_change') return <UserCircle2 className="h-4 w-4 text-indigo-500" />;
-        return <Flag className="h-4 w-4 text-gray-500" />;
+        switch (event?.kind) {
+          case 'created':
+          case 'propertyCreated':
+          case 'listingCreated':
+            return <Plus className="h-4 w-4 text-emerald-500" />;
+          case 'stage':
+            return <ArrowRightLeft className="h-4 w-4 text-purple-500" />;
+          case 'assignment':
+            return <UserCircle2 className="h-4 w-4 text-indigo-500" />;
+          case 'listingPrice':
+            return <Tag className="h-4 w-4 text-amber-500" />;
+          case 'propertyLink':
+            return <Link2 className="h-4 w-4 text-sky-500" />;
+          default:
+            return <Flag className="h-4 w-4 text-gray-500" />;
+        }
       case 'inquiry': return <Mail className="h-4 w-4 text-cyan-500" />;
       default: return <MessageSquare className="h-4 w-4" />;
     }
@@ -68,16 +78,11 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                 {entry.type === 'task' && (
                   entry.isCompletionEvent ? t("events.taskCompleted") : t("events.taskCreated")
                 )}
-                {entry.type === 'audit' && (
-                  entry.data.action === 'created' ? t("events.created") :
-                  entry.data.action === 'stage_change' ? t("events.stageChanged") :
-                  entry.data.action === 'assignment_change' ? t("events.assignmentChanged") :
-                  entry.data.action === 'status_change' ? t("events.statusChanged") : t("events.systemUpdate")
-                )}
+                {event && auditEventTitle(t, event)}
                 {entry.type === 'inquiry' && t("events.newInquiry")}
               </div>
               <div className="text-xs text-muted-foreground flex flex-col items-end gap-1">
-                <span>{format.relativeTime(new Date(entry.timestamp), relativeTimeBase(new Date(entry.timestamp), new Date()))}</span>
+                <span>{ago(entry.timestamp)}</span>
                 {/* Author Info — uses display_name from profiles (Slice 4.2) */}
                 {'author' in entry.data && entry.data.author && (
                   <span className="text-xs">
@@ -100,38 +105,9 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
               </div>
             )}
 
-            {entry.type === 'audit' && (
+            {entry.type === 'audit' && event && (
               <div className="text-muted-foreground space-y-1">
-                {entry.data.action === 'stage_change' && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{String(entry.data.metadata?.old_stage_name || entry.data.old_value || '')}</Badge>
-                    <ArrowRightLeft className="h-3 w-3" />
-                    <Badge variant="default">{String(entry.data.metadata?.new_stage_name || entry.data.new_value || '')}</Badge>
-                  </div>
-                )}
-                {entry.data.action === 'assignment_change' && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{String(entry.data.metadata?.old_user_email || t("unassigned"))}</Badge>
-                    <ArrowRightLeft className="h-3 w-3" />
-                    <Badge variant="default">{String(entry.data.metadata?.new_user_email || t("unassigned"))}</Badge>
-                  </div>
-                )}
-                {entry.data.action === 'status_change' && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{statusLabel(entry.data.old_value)}</Badge>
-                    <ArrowRightLeft className="h-3 w-3" />
-                    <Badge variant="default">{statusLabel(entry.data.new_value)}</Badge>
-                  </div>
-                )}
-                {entry.data.action === 'created' && (
-                  <div className="text-sm">
-                    {entry.data.metadata?.import_job_id ? (
-                      <span>{t("importedFrom")} <strong>{String(entry.data.metadata.file_name || t("csvFile"))}</strong></span>
-                    ) : (
-                      <span>{t("manuallyCreated")}</span>
-                    )}
-                  </div>
-                )}
+                <AuditEventBody event={event} data={entry.data} showDeal={showDeal} />
               </div>
             )}
 

@@ -57,7 +57,7 @@
     "lost_reason_required": "Въведете причина за загубата.",
     "participant_required": "Изберете контакт или член на екипа.",
     "content_required": "Първо напишете текст.",
-    "linked_entity_required": "Бележката трябва да е към контакт или сделка.",
+    "linked_entity_required": "Бележката трябва да е към контакт, сделка или имот.",
     "settlement_required": "Изберете населено място.",
     "property_type_required": "Изберете вид на имота.",
     "rooms_required": "Въведете броя стаи на апартамента.",
@@ -465,7 +465,7 @@
   },
   "search": {
     "placeholder": "Търсене...",
-    "inputPlaceholder": "Търсене на контакти, сделки и запитвания...",
+    "inputPlaceholder": "Търсене на контакти, сделки, запитвания и имоти...",
     "searching": "Търсене...",
     "noResults": "Няма намерени резултати.",
     "results": "Резултати",
@@ -1155,13 +1155,29 @@
       "assignmentChanged": "Отговорникът е променен",
       "statusChanged": "Статусът е променен",
       "systemUpdate": "Системно обновяване",
-      "newInquiry": "Получено е ново запитване"
+      "newInquiry": "Получено е ново запитване",
+      "propertyCreated": "Имотът е добавен",
+      "propertyStatusChanged": "Статусът на имота е променен",
+      "listingCreated": "Добавена е обява",
+      "listingPriceChanged": "Цената е променена",
+      "listingStatusChanged": "Статусът на обявата е променен",
+      "propertyLinkAdded": "Имотът е свързан",
+      "propertyLinkChanged": "Статусът на връзката е променен",
+      "propertyLinkRemoved": "Имотът е премахнат от сделката"
     },
     "outcomeLabel": "Резултат",
     "unassigned": "Невъзложен(а)",
     "importedFrom": "Внесен(а) от файл:",
     "csvFile": "CSV файл",
-    "manuallyCreated": "Ръчно създаден(а)"
+    "manuallyCreated": "Ръчно създаден(а)",
+    "propertyStatus": {
+      "active": "Активен",
+      "archived": "Архивиран"
+    },
+    "linkSubject": "Имот обект",
+    "onDeal": "Сделка: {title}",
+    "rejectedReason": "Причина: {reason}",
+    "perMonth": "{price} / месец"
   },
   "NoteCard": {
     "teamMember": "Член на екипа",
@@ -1485,7 +1501,8 @@
     "locationNote": "Бележка",
     "assignedTo": "Отговорен брокер",
     "unassigned": "Няма",
-    "createdAt": "Въведен на"
+    "createdAt": "Въведен на",
+    "history": "История"
   },
   "listings": {
     "errors": {

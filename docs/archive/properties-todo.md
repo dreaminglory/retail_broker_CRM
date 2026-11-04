@@ -325,12 +325,12 @@ with `property_id`. Render it on the property page. Show `property_link` rows on
 timeline with the property code.
 
 **Acceptance criteria:**
-- [ ] The property timeline shows creation, the price change €185,000 → €179,000, a link status change and a viewing task, in order (AC-5)
-- [ ] The opportunity timeline shows the same link change once
+- [x] The property timeline shows creation, the price change €185,000 → €179,000, a link status change and a viewing task, in order (AC-5)
+- [x] The opportunity timeline shows the same link change once
 
 **Verification:**
-- [ ] `npx vitest run src/domain/timeline`; timeline integration suite
-- [ ] Browser: BG and EN
+- [x] `npx vitest run src/domain/timeline`; timeline integration suite
+- [x] Browser: BG and EN
 
 **Dependencies:** Task 7, Task 11
 **Files likely touched:** `src/domain/timeline/{service,types}.ts`, `src/components/domain/timeline/*`, `properties/[id]/property-activity.tsx`, `messages/{bg,en}.json`
@@ -342,11 +342,11 @@ to the seeded buyer opportunity, schedule and complete a viewing, and see `viewe
 BG and EN, 1280 and 390 px. Add a cross-agency check that Beta can't open Alpha's property URL.
 
 **Acceptance criteria:**
-- [ ] The new spec passes in all four projects (two languages × two widths) (AC-8)
-- [ ] The existing core-loop spec is unchanged and still passes
+- [x] The new spec passes in all four projects (two languages × two widths) (AC-8)
+- [x] The existing core-loop spec is unchanged and still passes
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e`
 
 **Dependencies:** Task 13, Task 14
 **Files likely touched:** `e2e/properties.spec.ts`, `e2e/fixtures.ts`
@@ -358,12 +358,12 @@ notes appear on the property timeline. Extend the notes Zod schema and service t
 property parent.
 
 **Acceptance criteria:**
-- [ ] A note added on the property shows on its timeline; blank notes are refused
-- [ ] A note can't point at another agency's property
+- [x] A note added on the property shows on its timeline; blank notes are refused
+- [x] A note can't point at another agency's property
 
 **Verification:**
-- [ ] `npx vitest run src/domain/notes`; service suite
-- [ ] Browser: BG and EN
+- [x] `npx vitest run src/domain/notes`; service suite
+- [x] Browser: BG and EN
 
 **Dependencies:** Task 14
 **Files likely touched:** `src/domain/notes/{validation,service,repository}.ts`, `properties/[id]/notes/*`, `src/domain/timeline/service.ts`
@@ -375,18 +375,18 @@ on `properties` (code, address, settlement and area names), kept by trigger (AD-
 `SearchRepository.searchProperties` and the results in the ⌘K dialog.
 
 **Acceptance criteria:**
-- [ ] "1042", "Лозенец" and a street name each find the property; Beta's properties never appear
-- [ ] Renaming an area updates the vectors of its properties
+- [x] "1042", "Лозенец" and a street name each find the property; Beta's properties never appear
+- [x] Renaming an area updates the vectors of its properties
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`; search service suite
-- [ ] Browser: ⌘K in BG and EN
+- [x] `npx supabase db reset`, `npm run test:db`; search service suite
+- [x] Browser: ⌘K in BG and EN
 
 **Dependencies:** Task 6
 **Files likely touched:** `supabase/migrations/20261103000005_property_search.sql`, `src/domain/search/{repository,service,types}.ts`, `src/components/domain/search/*`, `docs/domain-model.md`
 **Estimated scope:** M
 
 ## Checkpoint 4: Complete
-- [ ] AC-1…AC-8 met; full Definition of Done (typecheck, lint, test, test:services, test:db, test:e2e, browser BG/EN)
-- [ ] `docs/domain-model.md` and AD-057 match the code
-- [ ] `/review`, then close: `SPEC.md` Done, `docs/BRD.md` FR-PRP rows, move `tasks/*` to `docs/archive/properties-*.md`
+- [x] AC-1…AC-8 met; full Definition of Done (typecheck, lint, test, test:services, test:db, test:e2e, browser BG/EN)
+- [x] `docs/domain-model.md` and AD-057 match the code
+- [x] `/review`, then close: `SPEC.md` Done, `docs/BRD.md` FR-PRP rows, move `tasks/*` to `docs/archive/properties-*.md`

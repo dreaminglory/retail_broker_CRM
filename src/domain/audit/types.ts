@@ -1,4 +1,4 @@
-export type AuditEntityType = 'opportunity' | 'contact' | 'inquiry';
+export type AuditEntityType = 'opportunity' | 'contact' | 'inquiry' | 'property' | 'listing';
 export type AuditAction = 'field_change' | 'status_change' | 'stage_change' | 'assignment_change' | 'created' | 'merged' | 'archived';
 
 export interface AuditLogEntry {

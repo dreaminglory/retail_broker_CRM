@@ -208,7 +208,83 @@ export class TimelineService {
     );
   }
 
+  /**
+   * A property's history (AD-057): its notes, its own audit rows, its listings' rows
+   * (metadata.property_id), the link changes written on opportunities for it, and tasks with
+   * this property.
+   */
+  async getPropertyTimeline(
+    propertyId: string,
+    agencyId: string,
+    limit = 20,
+    offset = 0
+  ): Promise<TimelineEntry[]> {
+    const { data: notesData, error: notesError } = await this.db
+      .from('notes')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false })
+      .range(0, offset + limit - 1);
+
+    if (notesError) throw new DomainError('errors.loadFailed', `Timeline notes fetch failed: ${notesError.message}`);
+
+    const { data: tasksData, error: tasksError } = await this.db
+      .from('tasks')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false })
+      .range(0, offset + limit - 1);
+
+    if (tasksError) throw new DomainError('errors.loadFailed', `Timeline tasks fetch failed: ${tasksError.message}`);
+
+    const { data: auditData, error: auditError } = await this.db
+      .from('audit_log')
+      .select('*')
+      .eq('agency_id', agencyId)
+      // Only listing rows and link rows store metadata.property_id; idx_audit_property finds them.
+      .or(`and(entity_type.eq.property,entity_id.eq.${propertyId}),metadata->>property_id.eq.${propertyId}`)
+      .order('performed_at', { ascending: false })
+      .range(0, offset + limit - 1);
+
+    if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
+
+    const profilesMap = await this.resolveAuthors(notesData ?? [], tasksData ?? [], auditData ?? []);
+    const audits = await this.withDeals(this.enrichAudits(auditData ?? [], profilesMap), agencyId);
+
+    return this.mergeAndSort(
+      this.enrichNotes(notesData ?? [], profilesMap),
+      this.enrichTasks(tasksData ?? [], profilesMap),
+      audits,
+      [],
+      limit,
+      offset
+    );
+  }
+
   // ── Private helpers ─────────────────────────────────────────────────────────
+
+  /** Adds the deal's title to the opportunity rows of a property timeline. */
+  private async withDeals(audits: TimelineAudit[], agencyId: string): Promise<TimelineAudit[]> {
+    const ids = Array.from(new Set(audits.filter((a) => a.entity_type === 'opportunity').map((a) => a.entity_id)));
+    if (ids.length === 0) return audits;
+
+    const { data, error } = await this.db
+      .from('opportunities')
+      .select('id, title')
+      .eq('agency_id', agencyId)
+      .in('id', ids);
+
+    if (error) throw new DomainError('errors.loadFailed', `Timeline opportunities fetch failed: ${error.message}`);
+
+    const titles = new Map((data ?? []).map((o) => [o.id as string, o.title as string]));
+    return audits.map((a) => {
+      if (a.entity_type !== 'opportunity') return a;
+      const title = titles.get(a.entity_id);
+      return { ...a, opportunity: title === undefined ? null : { id: a.entity_id, title } };
+    });
+  }
 
   /**
    * Collects all unique non-null user UUIDs from all raw timeline rows,

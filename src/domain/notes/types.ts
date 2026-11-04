@@ -3,6 +3,7 @@ export interface Note {
   agency_id: string;
   contact_id: string | null;
   opportunity_id: string | null;
+  property_id: string | null;
   content: string;
   is_pinned: boolean;
   created_by: string | null;
@@ -25,6 +26,7 @@ export interface NoteWithAuthor extends Note {
 export interface CreateNoteInput {
   contact_id?: string;
   opportunity_id?: string;
+  property_id?: string;
   content: string;
   is_pinned?: boolean;
 }
