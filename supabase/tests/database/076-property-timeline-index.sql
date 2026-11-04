@@ -25,8 +25,11 @@ BEGIN
 END;
 $$;
 
--- The seeded table is tiny, so steer the planner away from a sequential scan.
-SET LOCAL enable_seqscan = off;
+-- The case the index is for: an agency with a long history of deal rows. Rolled back at the end.
+INSERT INTO audit_log (agency_id, entity_type, entity_id, action, field_name, old_value, new_value)
+SELECT '11111111-1111-1111-1111-111111111111', 'opportunity', gen_random_uuid(), 'stage_change', 'stage_id', 'a', 'b'
+FROM generate_series(1, 5000);
+ANALYZE audit_log;
 
 SELECT ok(pg_temp.timeline_plan() LIKE '%idx_audit_property%', 'Listing and link rows are found through idx_audit_property');
 SELECT ok(
