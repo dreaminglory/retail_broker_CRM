@@ -1,12 +1,12 @@
 "use client";
 
-import { relativeTimeBase } from "@/lib/time/relative-time";
+import { useRelativeTime } from "@/lib/i18n/use-relative-time";
 import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus, Link2, Tag } from "lucide-react";
 import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import { describeAudit } from "@/domain/timeline/audit-event";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { AuditEventBody, auditEventTitle } from "./audit-event-view";
 
 interface TimelineEntryProps {
@@ -20,7 +20,7 @@ interface TimelineEntryProps {
 
 export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote, showDeal }: TimelineEntryProps) {
   const t = useTranslations("Timeline");
-  const format = useFormatter();
+  const ago = useRelativeTime();
   const tInquiry = useTranslations("InquiryCard");
   const event = entry.type === 'audit' ? describeAudit(entry.data) : null;
 
@@ -82,7 +82,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                 {entry.type === 'inquiry' && t("events.newInquiry")}
               </div>
               <div className="text-xs text-muted-foreground flex flex-col items-end gap-1">
-                <span>{format.relativeTime(new Date(entry.timestamp), relativeTimeBase(new Date(entry.timestamp), new Date()))}</span>
+                <span>{ago(entry.timestamp)}</span>
                 {/* Author Info — uses display_name from profiles (Slice 4.2) */}
                 {'author' in entry.data && entry.data.author && (
                   <span className="text-xs">

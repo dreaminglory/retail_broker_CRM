@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useTranslations, useFormatter } from "next-intl";
 import Link from "next/link";
-import { relativeTimeBase } from "@/lib/time/relative-time";
+import { useRelativeTime } from "@/lib/i18n/use-relative-time";
 import { 
   AlertCircle, 
   Clock, 
@@ -72,6 +72,7 @@ function AssignInquirySelect({ inquiryId, brokers }: { inquiryId: string; broker
 export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProps) {
   const t = useTranslations("ExceptionsPage");
   const formatLoc = useFormatter();
+  const ago = useRelativeTime();
   return (
     <div className="space-y-6">
       <div>
@@ -106,7 +107,7 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
                         {inq.caller_name || t('unassigned.unknownCaller')}
                       </Link>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatLoc.relativeTime(new Date(inq.received_at), relativeTimeBase(new Date(inq.received_at), new Date()))}
+                        {ago(inq.received_at)}
                       </span>
                     </div>
                     <p className="text-muted-foreground truncate">{inq.subject || inq.source_description || t('unassigned.noSubject')}</p>
@@ -140,7 +141,7 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
                     <div>
                       <p className="font-medium">{broker.broker_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: formatLoc.relativeTime(new Date(broker.most_overdue_task!.due_at as string), relativeTimeBase(new Date(broker.most_overdue_task!.due_at as string), new Date())) })}
+                        {t('overdue.mostOverdue', { title: broker.most_overdue_task?.title ?? '', time: ago(broker.most_overdue_task!.due_at as string) })}
                       </p>
                     </div>
                     <Badge variant="outline">{t('overdue.overdueBadge', { count: broker.overdue_count })}</Badge>
