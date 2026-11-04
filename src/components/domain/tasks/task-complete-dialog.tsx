@@ -34,11 +34,15 @@ import type { ActiveBroker } from "@/domain/members/types";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { ChevronDown, ChevronUp, CalendarPlus, ArrowRightCircle } from "lucide-react";
+import { PropertyPicker } from "@/components/domain/properties/property-picker";
+import type { PropertyOption } from "@/domain/properties/types";
 
 interface TaskCompleteDialogProps {
   task: Task | null;
   stages?: Stage[];
   brokers?: ActiveBroker[];
+  /** The deal's linked properties, offered first when the next task is a viewing. */
+  linkedProperties?: PropertyOption[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,6 +53,7 @@ export function TaskCompleteDialog({
   task,
   stages = [],
   brokers = [],
+  linkedProperties = [],
   open,
   onOpenChange,
   completeAction,
@@ -62,6 +67,7 @@ export function TaskCompleteDialog({
   const [nextTitle, setNextTitle] = useState("");
   const [nextType, setNextType] = useState<TaskType | "">("");
   const [nextDueAt, setNextDueAt] = useState("");
+  const [nextProperty, setNextProperty] = useState<PropertyOption | null>(null);
   const [nextAssignedTo, setNextAssignedTo] = useState(task?.assigned_to ?? "none");
   const [newStageId, setNewStageId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -93,6 +99,7 @@ export function TaskCompleteDialog({
         due_at: nextDueAt || null,
         opportunity_id: task.opportunity_id,
         assigned_to: nextAssignedTo === "none" ? null : nextAssignedTo,
+        property_id: nextType === "viewing" ? (nextProperty?.id ?? null) : null,
       };
     }
 
@@ -108,6 +115,7 @@ export function TaskCompleteDialog({
       setNextTitle("");
       setNextType("");
       setNextDueAt("");
+      setNextProperty(null);
       setNewStageId("");
       setShowNextTask(false);
       setShowStageChange(false);
@@ -219,6 +227,19 @@ export function TaskCompleteDialog({
                     />
                   </div>
                 </div>
+
+                {nextType === "viewing" && task?.opportunity_id && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="next-property" className="text-xs">{t("fields.nextTask.property")}</Label>
+                    <PropertyPicker
+                      id="next-property"
+                      name="next_property_id"
+                      defaultValue={nextProperty}
+                      suggestions={linkedProperties}
+                      onChange={setNextProperty}
+                    />
+                  </div>
+                )}
 
                 {brokers.length > 0 && (
                   <div className="space-y-1.5">

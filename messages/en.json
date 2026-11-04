@@ -57,7 +57,29 @@
     "lost_reason_required": "Enter the reason it was lost.",
     "participant_required": "Choose a contact or a team member.",
     "content_required": "Write something first.",
-    "linked_entity_required": "A note must belong to a contact or an opportunity."
+    "linked_entity_required": "A note must belong to a contact or an opportunity.",
+    "settlement_required": "Choose a settlement.",
+    "property_type_required": "Choose the property type.",
+    "rooms_required": "Enter the apartment's number of rooms.",
+    "rooms_range": "Rooms go from 1 to 9.",
+    "plot_m2_required": "Enter the plot area.",
+    "floor_above_total": "The floor can't be above the building's number of floors.",
+    "floor_range": "The floor goes from -5 to 200.",
+    "floors_total_range": "Floors go from 1 to 200.",
+    "year_range": "The year goes from 1800 to 2100.",
+    "positive_number": "Enter a number greater than zero.",
+    "number_invalid": "Enter a number.",
+    "number_too_large": "The number is too large.",
+    "text_too_long": "The text is too long.",
+    "price_required": "Enter a price.",
+    "price_positive": "The price must be greater than zero.",
+    "price_cents": "The price has at most two decimals.",
+    "offer_type_required": "Choose sale or rent.",
+    "contact_required": "Choose a contact.",
+    "party_role_required": "Choose a role.",
+    "property_required": "Choose a property.",
+    "rejected_reason_too_long": "The reason can be at most 500 characters.",
+    "property_needs_opportunity": "A property can only be set on a task for a deal."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -76,7 +98,8 @@
     "collapseSidebar": "Collapse sidebar",
     "toggleMenu": "Toggle menu",
     "menuTitle": "Navigation menu",
-    "menuDescription": "Go to the different sections of BrokerCRM."
+    "menuDescription": "Go to the different sections of BrokerCRM.",
+    "properties": "Properties"
   },
   "header": {
     "loading": "Loading...",
@@ -100,7 +123,12 @@
     "team": "Team | BrokerCRM",
     "stages": "Stages | BrokerCRM",
     "leadSources": "Lead Sources | BrokerCRM",
-    "import": "Import | BrokerCRM"
+    "import": "Import | BrokerCRM",
+    "areas": "Areas | BrokerCRM",
+    "properties": "Properties | BrokerCRM",
+    "newProperty": "New property | BrokerCRM",
+    "property": "Property {code} | BrokerCRM",
+    "editProperty": "Edit property | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -431,7 +459,9 @@
     "pipelineStages": "Pipeline Stages",
     "pipelineStagesDesc": "Configure your opportunity pipeline stages and their ordering.",
     "import": "Import",
-    "importDesc": "Import data into your agency workspace."
+    "importDesc": "Import data into your agency workspace.",
+    "areas": "Areas",
+    "areasDesc": "Your agency's districts per settlement, used in property addresses."
   },
   "search": {
     "placeholder": "Search...",
@@ -622,7 +652,8 @@
         "type": "Type",
         "typePlaceholder": "Select type",
         "dueDate": "Due date",
-        "assignTo": "Assign to"
+        "assignTo": "Assign to",
+        "property": "Property"
       },
       "stage": {
         "advance": "Advance stage",
@@ -717,6 +748,46 @@
       "viber": "Viber",
       "whatsapp": "WhatsApp",
       "other": "Other"
+    },
+    "propertyType": {
+      "apartment": "Apartment",
+      "studio": "Studio",
+      "maisonette": "Maisonette",
+      "house": "House",
+      "house_floor": "Floor of a house",
+      "plot": "Plot",
+      "garage": "Garage"
+    },
+    "propertyRooms": "{rooms}-room apartment",
+    "construction": {
+      "brick": "Brick",
+      "panel": "Panel",
+      "epk": "EPK (cast concrete)",
+      "timber": "Timber",
+      "other": "Other"
+    },
+    "offerType": {
+      "sale": "Sale",
+      "rent": "Rent"
+    },
+    "listingStatus": {
+      "active": "Active",
+      "reserved": "Reserved",
+      "closed": "Closed",
+      "withdrawn": "Withdrawn"
+    },
+    "partyRole": {
+      "owner": "Owner",
+      "co_owner": "Co-owner",
+      "representative": "Representative",
+      "occupant": "Occupant"
+    },
+    "propertyLinkStatus": {
+      "candidate": "Candidate",
+      "viewed": "Viewed",
+      "offered": "Offered",
+      "rejected": "Rejected",
+      "selected": "Selected"
     }
   },
   "ContactMethodList": {
@@ -1018,7 +1089,10 @@
     "noPendingTasks": "No pending tasks.",
     "overdue": "Overdue",
     "completedSection": "Completed",
-    "outcomeLabel": "Outcome"
+    "outcomeLabel": "Outcome",
+    "typeLabel": "Type",
+    "typePlaceholder": "No type",
+    "propertyLabel": "Property"
   },
   "OpportunitiesPage": {
     "title": "Opportunities",
@@ -1239,7 +1313,8 @@
     "notes": "Notes",
     "activityHistory": "Activity history",
     "typePerson": "Person",
-    "typeOrganization": "Organization"
+    "typeOrganization": "Organization",
+    "properties": "Properties"
   },
   "notifications": {
     "unknownCaller": "Unknown caller",
@@ -1277,5 +1352,306 @@
       },
       "footer": "You get this email when someone assigns work to you."
     }
+  },
+  "areas": {
+    "errors": {
+      "duplicateName": "This settlement already has an area with this name."
+    }
+  },
+  "SettlementCombobox": {
+    "placeholder": "Search settlements…",
+    "clear": "Clear the settlement",
+    "searching": "Searching…",
+    "noResults": "No settlements found",
+    "resultsCount": "{count, plural, one {# settlement found} other {# settlements found}}",
+    "error": "The settlement search failed",
+    "kind": {
+      "city": "{name}",
+      "village": "{name} (village)"
+    },
+    "location": "{municipality} municipality, {province} province"
+  },
+  "SettingsAreas": {
+    "settings": "Settings",
+    "title": "Areas",
+    "description": "The districts brokers choose when they enter a property. Pick a settlement and add its areas.",
+    "settlement": "Settlement",
+    "withAreas": "Settlements with areas",
+    "settlementChip": "{name} ({count})",
+    "pickSettlement": "Pick a settlement to see and add its areas.",
+    "areasIn": "Areas in {name}",
+    "location": "{municipality} municipality, {province} province",
+    "empty": "No areas here yet. Add the first one above.",
+    "inactiveBadge": "Inactive",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "rename": "Rename {name}",
+    "renameTitle": "Rename area",
+    "deactivate": "Deactivate {name}",
+    "reactivate": "Reactivate {name}",
+    "form": {
+      "name": "Area name",
+      "namePlaceholder": "e.g. Lozenets",
+      "add": "Add",
+      "save": "Save",
+      "saving": "Saving…"
+    }
+  },
+  "properties": {
+    "errors": {
+      "assigneeNotMember": "This person is not an active member of your agency.",
+      "areaNotInSettlement": "This area is not in the chosen settlement.",
+      "archived": "This property is archived and can't get new listings, links or viewings.",
+      "relationNotAllowed": "This link isn't allowed for this type of deal.",
+      "inUse": "This property has deals, open listings or tasks linked to it and can't be deleted. Archive it instead."
+    }
+  },
+  "PropertiesPage": {
+    "title": "Properties",
+    "newProperty": "New property",
+    "empty": "No properties yet. Add the first one.",
+    "squareMeters": "{value} m²",
+    "count": "{count, plural, one {# property} other {# properties}}",
+    "noMatches": "No properties match these filters.",
+    "noListing": "No listing",
+    "perMonth": "{price}/mo",
+    "archived": "Archived",
+    "columns": {
+      "code": "Code",
+      "property": "Property",
+      "location": "Location",
+      "size": "Size",
+      "listings": "Listings",
+      "broker": "Broker"
+    }
+  },
+  "PropertyForm": {
+    "backToList": "Properties",
+    "newTitle": "New property",
+    "attributes": "Attributes",
+    "type": "Type",
+    "rooms": "Rooms",
+    "areaM2": "Built-up area, m²",
+    "plotM2": "Plot area, m²",
+    "floor": "Floor",
+    "floorsTotal": "Floors in building",
+    "yearBuilt": "Year built",
+    "construction": "Construction",
+    "notSet": "Not set",
+    "location": "Location",
+    "settlement": "Settlement",
+    "area": "Area",
+    "noArea": "No area",
+    "pickSettlementFirst": "Pick a settlement first",
+    "noAreasYet": "Your agency has no areas here yet. An owner or manager adds them in Settings.",
+    "address": "Address",
+    "addressPlaceholder": "Street, number, entrance, flat",
+    "locationNote": "Location note",
+    "locationNotePlaceholder": "e.g. next to the metro station",
+    "work": "Work",
+    "assignedTo": "Responsible broker",
+    "description": "Description",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "save": "Save",
+    "create": "Create property",
+    "editTitle": "Edit {code}",
+    "backToOpportunity": "Back to the deal",
+    "forOpportunity": "It will be linked to “{title}” as its subject property.",
+    "ownerFromOpportunity": "{name} will be added as the owner."
+  },
+  "PropertyDetail": {
+    "backToList": "Properties",
+    "title": "{headline}, {place}",
+    "archived": "Archived",
+    "attributes": "Attributes",
+    "location": "Location",
+    "work": "Work",
+    "type": "Type",
+    "rooms": "Rooms",
+    "areaM2": "Built-up area",
+    "plotM2": "Plot area",
+    "floor": "Floor",
+    "floorOfTotal": "{floor} of {total}",
+    "floorsTotal": "Floors in building",
+    "construction": "Construction",
+    "yearBuilt": "Year built",
+    "squareMeters": "{value} m²",
+    "settlement": "Settlement",
+    "settlementWithProvince": "{name} ({province} province)",
+    "area": "Area",
+    "none": "—",
+    "address": "Address",
+    "locationNote": "Note",
+    "assignedTo": "Responsible broker",
+    "unassigned": "None",
+    "createdAt": "Added on"
+  },
+  "listings": {
+    "errors": {
+      "openExists": "This property already has an open listing of this kind. Close or withdraw it first.",
+      "readOnly": "A closed or withdrawn listing can't be changed. Add a new listing instead."
+    }
+  },
+  "ListingSection": {
+    "title": "Listings",
+    "addListing": "Add listing",
+    "empty": "No open listings.",
+    "archivedNoListings": "This property is archived and has no open listings.",
+    "past": "Past listings ({count})",
+    "offerType": "Type",
+    "priceEur": "Price, €",
+    "perMonth": "{price} / month",
+    "perSquareMeter": "{price} / m²",
+    "listedOn": "Listed on {date}",
+    "listedClosed": "Listed on {listed}, ended on {closed}",
+    "changePrice": "Change price",
+    "savePrice": "Save price",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "to": {
+      "active": "Back to active",
+      "reserved": "Reserve",
+      "closed": "Close",
+      "withdrawn": "Withdraw"
+    },
+    "confirm": {
+      "closed": {
+        "title": "Close this listing?",
+        "description": "A closed listing can't be changed. For a new price or to offer it again, add a new listing."
+      },
+      "withdrawn": {
+        "title": "Withdraw this listing?",
+        "description": "A withdrawn listing can't be changed. To offer the property again, add a new listing."
+      }
+    }
+  },
+  "propertyParties": {
+    "errors": {
+      "alreadyParty": "This contact is already a party to this property.",
+      "alreadyEnded": "This party has already ended."
+    }
+  },
+  "PartySection": {
+    "title": "Parties",
+    "addParty": "Add party",
+    "empty": "No owners or other parties yet.",
+    "past": "Past parties ({count})",
+    "endedOn": "Ended on {date}",
+    "end": "End",
+    "endParty": "End {name} as a party",
+    "role": "Role",
+    "contact": "Contact",
+    "existingContact": "Existing contact",
+    "newContact": "New contact",
+    "saving": "Saving…"
+  },
+  "ContactProperties": {
+    "empty": "This contact is not a party to any property.",
+    "ended": "Ended",
+    "archived": "Archived"
+  },
+  "PropertyFilters": {
+    "type": "Type",
+    "allTypes": "All types",
+    "settlement": "Settlement",
+    "area": "Area",
+    "allAreas": "All areas",
+    "pickSettlementFirst": "Pick a settlement first",
+    "rooms": "Rooms",
+    "anyRooms": "Any",
+    "offerType": "Listing",
+    "anyOffer": "Any",
+    "listingStatus": "Listing status",
+    "anyListingStatus": "Any",
+    "broker": "Broker",
+    "allBrokers": "All brokers",
+    "status": "Properties",
+    "statuses": {
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All"
+    },
+    "priceFrom": "Price from, €",
+    "priceTo": "Price to, €",
+    "applyPrice": "Apply",
+    "clear": "Clear filters",
+    "listingFilterNote": "Only properties with a listing that matches are shown."
+  },
+  "PropertyActions": {
+    "edit": "Edit",
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "archiveTitle": "Archive this property?",
+    "archiveDescription": "Its open listings are withdrawn and it leaves the list and the pickers. You can unarchive it later.",
+    "deleteTitle": "Delete this property?",
+    "deleteDescription": "The property and its past listings, parties and notes are deleted for good. A property linked to deals, open listings or tasks can't be deleted: archive it instead.",
+    "archivedToast": "Property archived.",
+    "unarchivedToast": "Property unarchived.",
+    "deletedToast": "Property deleted."
+  },
+  "opportunities": {
+    "errors": {
+      "typeHasProperties": "This deal has linked properties that don't fit the new type. Remove them first."
+    }
+  },
+  "opportunityProperties": {
+    "errors": {
+      "alreadySelected": "Another property is already selected for this deal. Change its status first.",
+      "alreadyLinked": "This property is already linked to this deal.",
+      "subjectExists": "This deal already has a subject property."
+    }
+  },
+  "PropertyPicker": {
+    "placeholder": "Search by #code or address…",
+    "clear": "Clear the property",
+    "searching": "Searching…",
+    "noResults": "No active properties found",
+    "resultsCount": "{count, plural, one {# property found} other {# properties found}}",
+    "error": "The property search failed"
+  },
+  "PropertyLinks": {
+    "title": "Properties",
+    "addCandidate": "Add candidate",
+    "empty": "No properties proposed yet.",
+    "property": "Property",
+    "status": "Status",
+    "statusOf": "Status of {code}",
+    "remove": "Remove",
+    "removeLink": "Remove {code} from this deal",
+    "rejectTitle": "Reject {code}",
+    "rejectReason": "Reason (optional)",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "add": "Add",
+    "saving": "Saving…",
+    "archived": "Archived",
+    "rejectedBecause": "Rejected: {reason}",
+    "subjectTitle": "Subject property",
+    "subjectEmpty": "No subject property yet.",
+    "chooseProperty": "Choose property",
+    "createProperty": "Create property",
+    "removeSubject": "Remove {code} as the subject property"
+  },
+  "PropertyOpportunities": {
+    "title": "Deals",
+    "empty": "This property isn't linked to any deal yet.",
+    "subject": "Subject property",
+    "closed": "Closed"
+  },
+  "PropertyViewing": {
+    "schedule": "Schedule viewing",
+    "deal": "Deal",
+    "dealPlaceholder": "Choose a deal",
+    "noDeals": "Add this property as a candidate on a buyer or tenant deal first.",
+    "title": "Title",
+    "defaultTitle": "Viewing {code}",
+    "dueAt": "Date and time",
+    "assignedTo": "Assigned to",
+    "submit": "Schedule",
+    "saving": "Saving…",
+    "scheduled": "Viewing scheduled"
   }
 }

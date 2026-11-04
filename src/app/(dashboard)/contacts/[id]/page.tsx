@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/config";
+import { PropertyPartyService } from "@/domain/property-parties/service";
+import { ContactProperties } from "@/components/domain/contacts/contact-properties";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ContactService } from "@/domain/contacts/service";
 import { ContactMethodList } from "@/components/domain/contacts/contact-method-list";
@@ -49,10 +52,11 @@ export default async function ContactDetailPage({
 
   const timelineService = new TimelineService(supabase);
   
-  const [timeline, opportunities, stages] = await Promise.all([
+  const [timeline, opportunities, stages, propertyParties] = await Promise.all([
     timelineService.getContactTimeline(id, agencyId),
     new OpportunityService(supabase).getByContactId(id, agencyId),
-    new StageRepository(supabase).findActive(agencyId)
+    new StageRepository(supabase).findActive(agencyId),
+    new PropertyPartyService(supabase).listForContact(id, agencyId, (await getLocale()) as Locale),
   ]);
 
   const isPerson = contact.type === "person";
@@ -158,6 +162,17 @@ export default async function ContactDetailPage({
           <LinkedOpportunities opportunities={opportunities} stages={stages} />
         </section>
       </div>
+
+      {/* Properties the contact is a party to */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("properties")}
+          </h2>
+          {propertyParties.length > 0 && <Badge variant="secondary">{propertyParties.length}</Badge>}
+        </div>
+        <ContactProperties parties={propertyParties} />
+      </section>
 
       {/* Notes */}
       {contact.notes && (

@@ -26,9 +26,11 @@ async function taskServiceFor(ctx: AuthContext) {
   return { service: new TaskService(ctx.supabase, { timezone }), timezone };
 }
 
-function revalidateTask(task: Pick<Task, 'opportunity_id'>) {
+function revalidateTask(task: Pick<Task, 'opportunity_id' | 'property_id'>) {
   revalidatePath('/today');
   if (task.opportunity_id) revalidatePath(`/opportunities/${task.opportunity_id}`);
+  // A completed viewing changes its link's status on the property page too (rule 7).
+  if (task.property_id) revalidatePath(`/properties/${task.property_id}`);
 }
 
 // ── Task actions ──────────────────────────────────────────────────────────────
@@ -49,6 +51,8 @@ export async function createTaskAction(
       description: formData.get('description') || null,
       due_at: formData.get('due_at') || null,
       assigned_to: formData.get('assigned_to') || null,
+      task_type: formData.get('task_type') || null,
+      property_id: formData.get('property_id') || null,
     };
 
     const parsed = taskSchemas(timezone).create.safeParse(raw);

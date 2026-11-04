@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 43rd migration
-(`20261102000010_notifications.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 47th migration
+(`20261103000004_property_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -48,20 +48,30 @@ flowchart LR
   subgraph M[Data import]
     import_jobs --- import_rows
   end
+  subgraph R[Property]
+    settlements --- areas
+    properties --- listings
+    properties --- property_parties
+    properties --- opportunity_properties
+  end
   subgraph N[Notifications]
     notification_deliveries
   end
 
-  T -->|agency_id on every row| I & P & H & M & N
+  T -->|agency_id on every row| I & P & H & M & N & R
+  contacts -->|party of| property_parties
+  opportunities -->|subject or candidate| opportunity_properties
+  tasks & notes -->|property_id| properties
   inquiries -->|converts to| opportunities
   inquiries -->|matched to| contacts
   contacts -->|primary contact| opportunities
   import_jobs -->|creates| contacts & inquiries
   tasks -->|trigger: next_action_at| opportunities
-  opportunities & contacts -->|triggers| audit_log
+  opportunities & contacts & properties & listings -->|triggers| audit_log
 ```
 
-Every table except `agencies` and `profiles` carries `agency_id` and is isolated by RLS
+Every table except `agencies`, `profiles` and the global reference table `settlements` carries
+`agency_id` and is isolated by RLS
 (`current_agency_id()`). `profiles` is user-level, visible to self and colleagues
 (`shares_agency_with()`).
 
@@ -215,12 +225,13 @@ erDiagram
 
   notes {
     uuid contact_id FK "at least one parent"
+    uuid property_id FK "at least one parent"
     uuid opportunity_id FK "at least one parent"
     text content "non-blank"
     uuid created_by FK
   }
   audit_log {
-    text entity_type "opportunity | contact | inquiry"
+    text entity_type "opportunity | contact | inquiry | property | listing"
     uuid entity_id "polymorphic, no FK"
     text action "field_change | status_change | stage_change | assignment_change | created | merged | archived"
     text field_name
@@ -296,6 +307,93 @@ erDiagram
 Written only by the service role (the digest route and `after()` work); a member reads their
 own rows, an owner or manager the agency's. `pending` is a claim in flight; `sent` and
 `pending` block a repeat, `failed` and `skipped` (an empty digest) can be claimed again.
+
+### 2.7 Property
+
+`spec/properties.md`, AD-056, AD-057. A property is the physical asset; what is offered
+(sale or rent, price) is a listing; who owns or represents it are parties; how it relates to
+a deal is an opportunity link. There is no owner or price column on `properties`.
+
+```mermaid
+erDiagram
+  settlements ||--o{ areas : "has"
+  settlements ||--o{ properties : "located in"
+  areas |o--o{ properties : "in area"
+  properties ||--o{ listings : "offered as"
+  properties ||--o{ property_parties : "has"
+  contacts ||--o{ property_parties : "is"
+  properties ||--o{ opportunity_properties : "linked"
+  opportunities ||--o{ opportunity_properties : "links"
+  properties |o--o{ tasks : "viewing of"
+  properties |o--o{ notes : "about"
+
+  settlements {
+    text ekatte UK "NSI EKATTE code, 5 digits"
+    text kind "city | village"
+    text name_bg
+    text name_en "Transliteration Act 2009"
+    text municipality_bg_en
+    text province_bg_en
+  }
+  areas {
+    uuid agency_id FK
+    uuid settlement_id FK
+    text name "UK lower(name) per agency and settlement"
+    bool is_active
+    int sort_order
+  }
+  properties {
+    uuid agency_id FK
+    int code "UK per agency, shown as #1042"
+    text type "apartment | studio | maisonette | house | house_floor | plot | garage"
+    int rooms "required for apartment, 1-9"
+    numeric area_m2
+    numeric plot_m2 "required for plot"
+    int floor "<= floors_total"
+    int floors_total
+    text construction "brick | panel | epk | timber | other"
+    int year_built
+    uuid settlement_id FK "required"
+    uuid area_id FK "same settlement"
+    text address
+    uuid assigned_to FK "responsible broker"
+    text status "active | archived"
+    text external_ref "UK per agency"
+  }
+  listings {
+    uuid property_id FK
+    text offer_type "sale | rent"
+    numeric price "> 0"
+    text currency "EUR"
+    text status "active | reserved | closed | withdrawn"
+    timestamptz listed_at
+    timestamptz closed_at
+  }
+  property_parties {
+    uuid property_id FK
+    uuid contact_id FK
+    text role "owner | co_owner | representative | occupant"
+    timestamptz ended_at "NULL = open"
+  }
+  opportunity_properties {
+    uuid opportunity_id FK
+    uuid property_id FK "RESTRICT"
+    text relation "subject | candidate"
+    text status "candidate | viewed | offered | rejected | selected; NULL for subject"
+    text rejected_reason "only when rejected"
+  }
+```
+
+`settlements` is global (no `agency_id`), generated from the NSI EKATTE export by
+`scripts/ekatte/build-settlements.ts` into one data migration: towns and villages only,
+no monasteries. The picker searches by prefix on `lower(name_bg)` / `lower(name_en)`.
+
+Every reference between agency rows in this area is a composite `(agency_id, x_id)` foreign
+key (AD-057), including `tasks.property_id` (`ON DELETE SET NULL (property_id)`) and
+`notes.property_id` (`CASCADE`). A property's open listings are those `active` or `reserved`.
+A linked property and a used area can't be deleted (`RESTRICT`); they are archived or
+deactivated. Ending a party keeps the row as ownership history, and a contact with parties,
+ended or open, can't be deleted (`NO ACTION`, so an agency delete still cascades).
 
 ---
 
@@ -411,6 +509,43 @@ A duplicate found only at commit (`match_reason = 'db_recheck'`) is `skipped`, o
 under the `create` strategy. The "update existing" strategy isn't built and isn't offered;
 a job that still has it stored skips.
 
+### 3.6 Property and listing
+
+```mermaid
+stateDiagram-v2
+  state "Property" as P {
+    [*] --> active
+    active --> archived : archive (withdraws open listings)
+    archived --> active : unarchive
+  }
+  state "Listing" as L {
+    [*] --> l_active
+    l_active --> reserved
+    reserved --> l_active
+    l_active --> closed
+    reserved --> closed
+    l_active --> withdrawn
+    reserved --> withdrawn
+  }
+```
+
+`closed` and `withdrawn` are final and read-only (rule 4, trigger `guard_listing_update`, which
+also sets `closed_at`); reopening means a new listing, so the price history stays in the audit
+log. Unarchiving a property doesn't reopen its withdrawn listings. An archived property gets no
+new listing, link or viewing task (rule 8).
+
+### 3.7 Opportunity–property link
+
+A `subject` link has no status. A `candidate` link's status (`candidate | viewed | offered |
+rejected | selected`) can move to any other value, because brokers correct mistakes (rule 6).
+The one automatic move is rule 7: completing a `viewing` task with an opportunity and a
+property sets `candidate → viewed`, or creates the link as `viewed` on a buyer or tenant deal
+when it was missing and the property is active. It never touches `offered`, `rejected`,
+`selected` or `subject`. Every change, including adding and removing a link, is one
+`opportunity` audit row with `field_name = 'property_link'` and `metadata.property_id`, except
+when the whole agency is deleted (its audit log goes with it). A link can't move to another
+property or deal (L17).
+
 ---
 
 ## 4. Derived views: Today and Exceptions
@@ -467,15 +602,15 @@ The "Enforced by" column tells you which layer to change and test.
 | # | Rule | Enforced by |
 |---|---|---|
 | T1 | Every tenant row has `agency_id`; users see only their agency | RLS `ENABLE` and `FORCE` + `010-rls-catalog.sql` |
-| T2 | Hard delete of contacts, inquiries, opportunities, tasks, stages and lead sources only by owner/manager; contact methods, participants and notes by any member | RLS `current_user_role()` on the DELETE policies |
+| T2 | Hard delete of contacts, inquiries, opportunities, tasks, stages, lead sources, areas, properties, listings and property parties only by owner/manager; contact methods, participants, opportunity–property links and notes by any member | RLS `current_user_role()` on the DELETE policies |
 | T3 | One active membership per user | partial unique index `uq_one_active_membership_per_user` |
 | T4 | Membership `user_id`/`agency_id` immutable | trigger `trg_membership_identity` |
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
-| T6 | Creating or editing stages and lead sources, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `merge_history` + `requireRole()` in the actions + role check in RPC `merge_contacts` |
+| T6 | Creating or editing stages, lead sources and areas, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `areas`, `merge_history` + `requireRole()` in the actions + role check in RPC `merge_contacts` |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
 | C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods and inquiry callers; `callerContactMethods()` at conversion |
 | C3 | Duplicate check (phone, email, trigram name) before creating a contact, including at inquiry conversion | `duplicate-detection.ts` (service) |
-| C4 | Merge moves everything to the winner, archives the loser and snapshots it, all or nothing (AD-050) | RPC `merge_contacts` + `070-atomic-convert-and-merge.sql` |
+| C4 | Merge moves everything to the winner, archives the loser and snapshots it, all or nothing (AD-050) | RPC `merge_contacts` (property parties since `properties`: an overlapping open party of the loser is ended) + `070-atomic-convert-and-merge.sql`, `072-properties.sql` |
 | C5 | `external_ref` unique per agency | unique index `uq_contacts_agency_external_ref` |
 | I1 | `raw_payload` is never modified | convention (not in update schema) |
 | I2 | Inquiry idempotent on `(agency_id, source_id, external_ref)` | unique index `uq_inquiries_source_external_ref` |
@@ -493,13 +628,31 @@ The "Enforced by" column tells you which layer to change and test.
 | K2 | Next task or stage change on completion | UI prompt only (AD-014, soft) |
 | K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
-| N1 | A note has a contact or opportunity parent, and non-blank content | `CHECK` on `notes` |
+| N1 | A note has a contact, opportunity or property parent, and non-blank content | `CHECK` on `notes` |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
-| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities and contacts (imported contacts via `audit_imported_contact_created`) |
+| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities, contacts (imported contacts via `audit_imported_contact_created`), properties, listings and opportunity–property links |
 | E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |
 | E2 | Clients never write `notification_deliveries`; members read their own rows, owners and managers the agency's | RLS (no write policy, writes revoked) + `071-notification-deliveries.sql` |
+| L1 | Settlements are read by every signed-in user and written only by migrations | RLS `FORCE` with a `SELECT` policy only, writes revoked from `authenticated`, all access from `anon` + `072-properties.sql` |
+| L2 | A property row points only at its own agency's rows (area, listing, party, link, task, note) | composite `(agency_id, x_id)` foreign keys (AD-057) + `072-properties.sql` |
+| L3 | An apartment has 1–9 rooms; a plot has `plot_m2` and no rooms or floor; `floor ≤ floors_total` (rule 3) | `CHECK`s on `properties` |
+| L4 | An area belongs to the property's settlement; area names are unique per agency and settlement, ignoring case | composite FK `fk_properties_area`, unique index `uq_areas_agency_settlement_name` |
+| L5 | At most one open (`active`/`reserved`) listing per property and offer type; price > 0 in EUR | unique index `uq_listings_open_per_offer_type`, `CHECK`s on `listings` |
+| L6 | One open party row per property and contact | unique index `uq_property_parties_open` |
+| L7 | A link has a status iff it is a `candidate`, a reason only when `rejected`; one `selected` and one `subject` per opportunity | `CHECK`s + unique indexes on `opportunity_properties` |
+| L8 | A linked property can't be deleted, nor an area a property uses | FK `ON DELETE RESTRICT` |
+| L9 | A property `code` is the agency's next number from 1001, never reused within the agency and never changed | trigger `assign_property_code` (row lock on `agencies.property_code_seq`) + `073-property-triggers.sql` |
+| L10 | `subject` links only on seller/landlord deals, `candidate` only on buyer/tenant; an opportunity's type can't change to one its links don't allow (rule 5) | triggers `check_property_link_relation`, `check_opportunity_type_vs_properties` |
+| L11 | A `closed` or `withdrawn` listing is read-only (rule 4) | trigger `guard_listing_update` |
+| L12 | Archiving withdraws open listings; an archived property gets no new listing, link or viewing task (rule 8) | triggers `withdraw_listings_on_archive`, `refuse_archived_property` |
+| L13 | A completed viewing moves its link `candidate → viewed` or creates it as `viewed`, never backwards (rule 7) | trigger `mark_property_viewed` + `073-property-triggers.sql` |
+| L14 | A property with links, open listings or tasks is archived, not deleted (rule 1) | `PropertyService.delete` counts all three first (not atomic: links are also `RESTRICT`, L8, but a task added meanwhile only gets `property_id` set to NULL) + `manage.integration.test.ts` |
+| L15 | A property's responsible broker is an active member; the creator by default (rule 2) | `assertAssignable()` in `PropertyService` create and update, like I4 |
+| L16 | A task's property is set only on a `viewing` with an opportunity; another task type drops it (rule 7) | `taskSchemas().create` (Zod, also the next task of a completion) + `validation.test.ts`; not a `CHECK`, so other writers aren't held to it |
+| L17 | A link and a listing stay on their property: members update only a link's `status` and `rejected_reason`, and a listing's `price` and `status` (AD-058) | column `UPDATE` privileges on `opportunity_properties` and `listings` + `074-property-review-fixes.sql` |
+| L18 | A contact who is a property party, now or in the past, keeps its party rows: it can't be deleted, and an import revert keeps it as worked on | FK `fk_property_parties_contact` (`NO ACTION`), RPC `import_revert` + `074-property-review-fixes.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
-| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
+| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
 
 ---
@@ -521,6 +674,10 @@ module that fixes it is named where there is one. Remove a row when the fix land
    formats stored before `trustworthy-loop` stay as typed until edited, though conversion
    still parses them.
 5. **BG vocabulary is inconsistent** (see the glossary): the same term has several translations.
+6. **"Create property" from a deal is three writes.** `createSubjectProperty` checks the deal
+   (seller or landlord, no subject yet) and then creates the property, the owner party and the
+   subject link one after another. If a later write fails, the property stays without its owner
+   or link, and the broker links it by hand. An RPC would make it one transaction.
 
 ---
 
@@ -554,6 +711,13 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Revert import | Отмяна на импорта | Undo an import | Възстанови (wrong: means "restore") |
 | Exceptions | Изключения | Manager problem dashboard | |
 | Temperature | Интерес | Hot, warm or cold | |
+| Settlement | Населено място | Town or village from the EKATTE register | |
+| Property | Имот | The physical asset | |
+| Listing | Обява | A sale or rent offering of a property, with a price | |
+| Area | Квартал | Agency-defined district of a settlement | |
+| Party | Страна | Contact with a role on a property (owner, co-owner, representative, occupant) | |
+| Candidate | Кандидат | Property proposed on a buyer or tenant deal | |
+| Subject property | Обект на сделката | The property a seller or landlord deal is about | |
 
 ---
 

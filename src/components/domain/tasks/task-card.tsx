@@ -19,6 +19,7 @@ import {
 import type { Task, TaskType } from "@/domain/tasks/types";
 import { todayBucket } from "@/lib/time/agency-day";
 import { cn } from "@/lib/utils";
+import { TaskPropertyLine } from "./task-property-line";
 
 interface TaskCardProps {
   task: Task;
@@ -104,6 +105,7 @@ export function TaskCard({
                 </p>
               )
             )}
+            {task.property && <TaskPropertyLine property={task.property} />}
             {resolvedAssignee && (
               <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
                 <Users className="h-3 w-3" />

@@ -57,7 +57,29 @@
     "lost_reason_required": "Въведете причина за загубата.",
     "participant_required": "Изберете контакт или член на екипа.",
     "content_required": "Първо напишете текст.",
-    "linked_entity_required": "Бележката трябва да е към контакт или сделка."
+    "linked_entity_required": "Бележката трябва да е към контакт или сделка.",
+    "settlement_required": "Изберете населено място.",
+    "property_type_required": "Изберете вид на имота.",
+    "rooms_required": "Въведете броя стаи на апартамента.",
+    "rooms_range": "Стаите са от 1 до 9.",
+    "plot_m2_required": "Въведете площта на парцела.",
+    "floor_above_total": "Етажът не може да е над етажността на сградата.",
+    "floor_range": "Етажът е от -5 до 200.",
+    "floors_total_range": "Етажността е от 1 до 200.",
+    "year_range": "Годината е от 1800 до 2100.",
+    "positive_number": "Въведете число, по-голямо от нула.",
+    "number_invalid": "Въведете число.",
+    "number_too_large": "Числото е твърде голямо.",
+    "text_too_long": "Текстът е твърде дълъг.",
+    "price_required": "Въведете цена.",
+    "price_positive": "Цената трябва да е по-голяма от нула.",
+    "price_cents": "Цената е с най-много два знака след десетичната запетая.",
+    "offer_type_required": "Изберете продажба или наем.",
+    "contact_required": "Изберете контакт.",
+    "party_role_required": "Изберете роля.",
+    "property_required": "Изберете имот.",
+    "rejected_reason_too_long": "Причината може да е най-много 500 знака.",
+    "property_needs_opportunity": "Имот може да се посочи само в задача към сделка."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -76,7 +98,8 @@
     "collapseSidebar": "Свиване на страничната лента",
     "toggleMenu": "Отваряне на менюто",
     "menuTitle": "Меню за навигация",
-    "menuDescription": "Преминете към различните раздели на BrokerCRM."
+    "menuDescription": "Преминете към различните раздели на BrokerCRM.",
+    "properties": "Имоти"
   },
   "header": {
     "loading": "Зареждане...",
@@ -100,7 +123,12 @@
     "team": "Екип | BrokerCRM",
     "stages": "Етапи | BrokerCRM",
     "leadSources": "Източници | BrokerCRM",
-    "import": "Импортиране | BrokerCRM"
+    "import": "Импортиране | BrokerCRM",
+    "areas": "Квартали | BrokerCRM",
+    "properties": "Имоти | BrokerCRM",
+    "newProperty": "Нов имот | BrokerCRM",
+    "property": "Имот {code} | BrokerCRM",
+    "editProperty": "Редакция на имот | BrokerCRM"
   },
   "SettingsImport": {
     "title": "История на импортиранията",
@@ -431,7 +459,9 @@
     "pipelineStages": "Етапи на фунията",
     "pipelineStagesDesc": "Конфигурирайте етапите на вашата фуния от сделки и тяхната подредба.",
     "import": "Импортиране",
-    "importDesc": "Внасяне на данни във вашето работно пространство."
+    "importDesc": "Внасяне на данни във вашето работно пространство.",
+    "areas": "Квартали",
+    "areasDesc": "Кварталите на агенцията по населени места, за адресите на имотите."
   },
   "search": {
     "placeholder": "Търсене...",
@@ -622,7 +652,8 @@
         "type": "Тип",
         "typePlaceholder": "Изберете тип",
         "dueDate": "Краен срок",
-        "assignTo": "Възложи на"
+        "assignTo": "Възложи на",
+        "property": "Имот"
       },
       "stage": {
         "advance": "Смени етап",
@@ -717,6 +748,46 @@
       "viber": "Viber",
       "whatsapp": "WhatsApp",
       "other": "Друго"
+    },
+    "propertyType": {
+      "apartment": "Апартамент",
+      "studio": "Студио",
+      "maisonette": "Мезонет",
+      "house": "Къща",
+      "house_floor": "Етаж от къща",
+      "plot": "Парцел",
+      "garage": "Гараж"
+    },
+    "propertyRooms": "{rooms, select, 1 {Едностаен} 2 {Двустаен} 3 {Тристаен} 4 {Четиристаен} other {Многостаен}}",
+    "construction": {
+      "brick": "Тухла",
+      "panel": "Панел",
+      "epk": "ЕПК",
+      "timber": "Дървена",
+      "other": "Друго"
+    },
+    "offerType": {
+      "sale": "Продажба",
+      "rent": "Наем"
+    },
+    "listingStatus": {
+      "active": "Активна",
+      "reserved": "Резервирана",
+      "closed": "Приключена",
+      "withdrawn": "Оттеглена"
+    },
+    "partyRole": {
+      "owner": "Собственик",
+      "co_owner": "Съсобственик",
+      "representative": "Представител",
+      "occupant": "Обитател"
+    },
+    "propertyLinkStatus": {
+      "candidate": "Кандидат",
+      "viewed": "Огледан",
+      "offered": "Предложен",
+      "rejected": "Отхвърлен",
+      "selected": "Избран"
     }
   },
   "ContactMethodList": {
@@ -1018,7 +1089,10 @@
     "noPendingTasks": "Няма чакащи задачи.",
     "overdue": "Просрочена",
     "completedSection": "Завършени",
-    "outcomeLabel": "Резултат"
+    "outcomeLabel": "Резултат",
+    "typeLabel": "Вид",
+    "typePlaceholder": "Без вид",
+    "propertyLabel": "Имот"
   },
   "OpportunitiesPage": {
     "title": "Сделки",
@@ -1239,7 +1313,8 @@
     "notes": "Бележки",
     "activityHistory": "История на дейността",
     "typePerson": "Лице",
-    "typeOrganization": "Организация"
+    "typeOrganization": "Организация",
+    "properties": "Имоти"
   },
   "notifications": {
     "unknownCaller": "Неизвестен обаждащ се",
@@ -1277,5 +1352,306 @@
       },
       "footer": "Получавате този имейл, когато някой ви възложи работа."
     }
+  },
+  "areas": {
+    "errors": {
+      "duplicateName": "В това населено място вече има квартал с това име."
+    }
+  },
+  "SettlementCombobox": {
+    "placeholder": "Търсене на населено място…",
+    "clear": "Изчисти населеното място",
+    "searching": "Търсене…",
+    "noResults": "Няма намерени населени места",
+    "resultsCount": "{count, plural, one {# намерено място} other {# намерени места}}",
+    "error": "Търсенето на населени места не успя",
+    "kind": {
+      "city": "гр. {name}",
+      "village": "с. {name}"
+    },
+    "location": "общ. {municipality}, обл. {province}"
+  },
+  "SettingsAreas": {
+    "settings": "Настройки",
+    "title": "Квартали",
+    "description": "Кварталите, които брокерите избират при въвеждане на имот. Изберете населено място и добавете неговите квартали.",
+    "settlement": "Населено място",
+    "withAreas": "Населени места с квартали",
+    "settlementChip": "{name} ({count})",
+    "pickSettlement": "Изберете населено място, за да видите и добавите кварталите му.",
+    "areasIn": "Квартали в {name}",
+    "location": "общ. {municipality}, обл. {province}",
+    "empty": "Още няма квартали тук. Добавете първия отгоре.",
+    "inactiveBadge": "Неактивен",
+    "moveUp": "Премести {name} нагоре",
+    "moveDown": "Премести {name} надолу",
+    "rename": "Преименувай {name}",
+    "renameTitle": "Преименувай квартал",
+    "deactivate": "Деактивирай {name}",
+    "reactivate": "Активирай отново {name}",
+    "form": {
+      "name": "Име на квартала",
+      "namePlaceholder": "напр. Лозенец",
+      "add": "Добави",
+      "save": "Запази",
+      "saving": "Запазване…"
+    }
+  },
+  "properties": {
+    "errors": {
+      "assigneeNotMember": "Този човек не е активен член на агенцията.",
+      "areaNotInSettlement": "Кварталът не е в избраното населено място.",
+      "archived": "Имотът е архивиран и не може да получава нови обяви, връзки или огледи.",
+      "relationNotAllowed": "Тази връзка не е позволена за вида на сделката.",
+      "inUse": "Имотът има връзки със сделки, отворени обяви или задачи и не може да се изтрие. Архивирайте го."
+    }
+  },
+  "PropertiesPage": {
+    "title": "Имоти",
+    "newProperty": "Нов имот",
+    "empty": "Още няма имоти. Добавете първия.",
+    "squareMeters": "{value} м²",
+    "count": "{count, plural, one {# имот} other {# имота}}",
+    "noMatches": "Няма имоти по тези филтри.",
+    "noListing": "Без обява",
+    "perMonth": "{price}/мес.",
+    "archived": "Архивиран",
+    "columns": {
+      "code": "Код",
+      "property": "Имот",
+      "location": "Местоположение",
+      "size": "Площ",
+      "listings": "Обяви",
+      "broker": "Брокер"
+    }
+  },
+  "PropertyForm": {
+    "backToList": "Имоти",
+    "newTitle": "Нов имот",
+    "attributes": "Характеристики",
+    "type": "Вид",
+    "rooms": "Стаи",
+    "areaM2": "Застроена площ, м²",
+    "plotM2": "Площ на парцела, м²",
+    "floor": "Етаж",
+    "floorsTotal": "Етажност",
+    "yearBuilt": "Година на строителство",
+    "construction": "Строителство",
+    "notSet": "Не е посочено",
+    "location": "Местоположение",
+    "settlement": "Населено място",
+    "area": "Квартал",
+    "noArea": "Без квартал",
+    "pickSettlementFirst": "Първо изберете населено място",
+    "noAreasYet": "Агенцията още няма квартали тук. Собственик или мениджър ги добавя в Настройки.",
+    "address": "Адрес",
+    "addressPlaceholder": "ул., №, вход, апартамент",
+    "locationNote": "Бележка за местоположението",
+    "locationNotePlaceholder": "напр. до метростанцията",
+    "work": "Работа",
+    "assignedTo": "Отговорен брокер",
+    "description": "Описание",
+    "cancel": "Отказ",
+    "saving": "Запазване…",
+    "save": "Запази",
+    "create": "Създай имот",
+    "editTitle": "Редакция на {code}",
+    "backToOpportunity": "Обратно към сделката",
+    "forOpportunity": "Ще бъде свързан със сделката „{title}“ като имот обект.",
+    "ownerFromOpportunity": "Като собственик ще се добави {name}."
+  },
+  "PropertyDetail": {
+    "backToList": "Имоти",
+    "title": "{headline}, {place}",
+    "archived": "Архивиран",
+    "attributes": "Характеристики",
+    "location": "Местоположение",
+    "work": "Работа",
+    "type": "Вид",
+    "rooms": "Стаи",
+    "areaM2": "Застроена площ",
+    "plotM2": "Площ на парцела",
+    "floor": "Етаж",
+    "floorOfTotal": "{floor} от {total}",
+    "floorsTotal": "Етажност",
+    "construction": "Строителство",
+    "yearBuilt": "Година на строителство",
+    "squareMeters": "{value} м²",
+    "settlement": "Населено място",
+    "settlementWithProvince": "{name} (обл. {province})",
+    "area": "Квартал",
+    "none": "—",
+    "address": "Адрес",
+    "locationNote": "Бележка",
+    "assignedTo": "Отговорен брокер",
+    "unassigned": "Няма",
+    "createdAt": "Въведен на"
+  },
+  "listings": {
+    "errors": {
+      "openExists": "Имотът вече има отворена обява от този вид. Приключете я или я оттеглете първо.",
+      "readOnly": "Приключена или оттеглена обява не може да се променя. Пуснете нова обява."
+    }
+  },
+  "ListingSection": {
+    "title": "Обяви",
+    "addListing": "Добави обява",
+    "empty": "Няма отворени обяви.",
+    "archivedNoListings": "Имотът е архивиран, без отворени обяви.",
+    "past": "Минали обяви ({count})",
+    "offerType": "Вид",
+    "priceEur": "Цена, €",
+    "perMonth": "{price} / месец",
+    "perSquareMeter": "{price} / м²",
+    "listedOn": "Пусната на {date}",
+    "listedClosed": "Пусната на {listed}, затворена на {closed}",
+    "changePrice": "Промени цената",
+    "savePrice": "Запази цената",
+    "saving": "Запазване…",
+    "cancel": "Отказ",
+    "to": {
+      "active": "Върни в активни",
+      "reserved": "Резервирай",
+      "closed": "Приключи",
+      "withdrawn": "Оттегли"
+    },
+    "confirm": {
+      "closed": {
+        "title": "Приключване на обявата?",
+        "description": "Приключена обява не може да се променя. За нова цена или отново в продажба пуснете нова обява."
+      },
+      "withdrawn": {
+        "title": "Оттегляне на обявата?",
+        "description": "Оттеглена обява не може да се променя. За да предложите имота отново, пуснете нова обява."
+      }
+    }
+  },
+  "propertyParties": {
+    "errors": {
+      "alreadyParty": "Този контакт вече е страна по имота.",
+      "alreadyEnded": "Тази страна вече е прекратена."
+    }
+  },
+  "PartySection": {
+    "title": "Страни",
+    "addParty": "Добави страна",
+    "empty": "Още няма собственици или други страни.",
+    "past": "Минали страни ({count})",
+    "endedOn": "Прекратена на {date}",
+    "end": "Прекрати",
+    "endParty": "Прекрати {name} като страна",
+    "role": "Роля",
+    "contact": "Контакт",
+    "existingContact": "Съществуващ контакт",
+    "newContact": "Нов контакт",
+    "saving": "Запазване…"
+  },
+  "ContactProperties": {
+    "empty": "Контактът не е страна по имот.",
+    "ended": "Прекратена",
+    "archived": "Архивиран"
+  },
+  "PropertyFilters": {
+    "type": "Вид",
+    "allTypes": "Всички видове",
+    "settlement": "Населено място",
+    "area": "Квартал",
+    "allAreas": "Всички квартали",
+    "pickSettlementFirst": "Първо населено място",
+    "rooms": "Стаи",
+    "anyRooms": "Всякакви",
+    "offerType": "Обява",
+    "anyOffer": "Всякакви",
+    "listingStatus": "Статус на обявата",
+    "anyListingStatus": "Всякакъв",
+    "broker": "Брокер",
+    "allBrokers": "Всички брокери",
+    "status": "Имоти",
+    "statuses": {
+      "active": "Активни",
+      "archived": "Архивирани",
+      "all": "Всички"
+    },
+    "priceFrom": "Цена от, €",
+    "priceTo": "Цена до, €",
+    "applyPrice": "Приложи",
+    "clear": "Изчисти филтрите",
+    "listingFilterNote": "Показват се само имоти с обява, която отговаря на филтъра."
+  },
+  "PropertyActions": {
+    "edit": "Редактирай",
+    "archive": "Архивирай",
+    "unarchive": "Върни от архива",
+    "delete": "Изтрий",
+    "cancel": "Отказ",
+    "archiveTitle": "Архивиране на имота?",
+    "archiveDescription": "Отворените обяви се оттеглят, а имотът изчезва от списъка и от изборите. Може да го върнете от архива по-късно.",
+    "deleteTitle": "Изтриване на имота?",
+    "deleteDescription": "Имотът, минали обяви, страни и бележки се изтриват завинаги. Имот, свързан със сделки, отворени обяви или задачи, не може да се изтрие: архивирайте го.",
+    "archivedToast": "Имотът е архивиран.",
+    "unarchivedToast": "Имотът е върнат от архива.",
+    "deletedToast": "Имотът е изтрит."
+  },
+  "opportunities": {
+    "errors": {
+      "typeHasProperties": "Сделката има свързани имоти, които не отговарят на новия вид. Първо ги премахнете."
+    }
+  },
+  "opportunityProperties": {
+    "errors": {
+      "alreadySelected": "Друг имот вече е избран за тази сделка. Първо сменете неговия статус.",
+      "alreadyLinked": "Имотът вече е свързан с тази сделка.",
+      "subjectExists": "Сделката вече има имот обект."
+    }
+  },
+  "PropertyPicker": {
+    "placeholder": "Търсене по #код или адрес…",
+    "clear": "Изчисти имота",
+    "searching": "Търсене…",
+    "noResults": "Няма намерени активни имоти",
+    "resultsCount": "{count, plural, one {# намерен имот} other {# намерени имота}}",
+    "error": "Търсенето на имоти не успя"
+  },
+  "PropertyLinks": {
+    "title": "Имоти",
+    "addCandidate": "Добави кандидат",
+    "empty": "Още няма предложени имоти.",
+    "property": "Имот",
+    "status": "Статус",
+    "statusOf": "Статус на {code}",
+    "remove": "Премахни",
+    "removeLink": "Премахни {code} от сделката",
+    "rejectTitle": "Отхвърляне на {code}",
+    "rejectReason": "Причина (по желание)",
+    "reject": "Отхвърли",
+    "cancel": "Отказ",
+    "add": "Добави",
+    "saving": "Запазване…",
+    "archived": "Архивиран",
+    "rejectedBecause": "Отхвърлен: {reason}",
+    "subjectTitle": "Имот обект",
+    "subjectEmpty": "Още няма имот обект.",
+    "chooseProperty": "Избери имот",
+    "createProperty": "Създай имот",
+    "removeSubject": "Премахни {code} като имот обект"
+  },
+  "PropertyOpportunities": {
+    "title": "Сделки",
+    "empty": "Имотът още не е свързан със сделка.",
+    "subject": "Имот обект",
+    "closed": "Затворена"
+  },
+  "PropertyViewing": {
+    "schedule": "Насрочи оглед",
+    "deal": "Сделка",
+    "dealPlaceholder": "Изберете сделка",
+    "noDeals": "Първо добавете имота като кандидат към сделка с купувач или наемател.",
+    "title": "Заглавие",
+    "defaultTitle": "Оглед {code}",
+    "dueAt": "Дата и час",
+    "assignedTo": "Възложена на",
+    "submit": "Насрочи",
+    "saving": "Запазване…",
+    "scheduled": "Огледът е насрочен"
   }
 }

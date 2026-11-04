@@ -5,7 +5,9 @@ SELECT plan(6); -- Update this number as we add tests
 -- Exclude PostGIS or internal tables if any, but in our schema we check all public tables.
 SELECT tables_are(
     'public',
-    ARRAY['agencies', 'profiles', 'agency_memberships', 'contacts', 'inquiries', 'opportunities', 'notes', 'tasks', 'audit_log', 'lead_sources', 'stages', 'opportunity_participants', 'contact_methods', 'merge_history', 'import_jobs', 'import_rows', 'notification_deliveries'],
+    ARRAY['agencies', 'profiles', 'agency_memberships', 'contacts', 'inquiries', 'opportunities', 'notes', 'tasks', 'audit_log', 'lead_sources', 'stages', 'opportunity_participants', 'contact_methods', 'merge_history', 'import_jobs', 'import_rows', 'notification_deliveries',
+          -- global reference data (properties, AD-057)
+          'settlements', 'areas', 'properties', 'listings', 'property_parties', 'opportunity_properties'],
     'All expected tables should exist'
 );
 
@@ -23,7 +25,8 @@ SELECT is_empty(
     'All public tables must have RLS enabled and forced'
 );
 
--- 2. Check that `agency_id` exists on all tables EXCEPT `agencies` and `profiles`
+-- 2. Check that `agency_id` exists on all tables EXCEPT `agencies`, `profiles` and the global
+--    reference table `settlements`
 SELECT is_empty(
     $$
     SELECT t.table_name
@@ -31,7 +34,7 @@ SELECT is_empty(
     LEFT JOIN information_schema.columns c ON t.table_name = c.table_name AND c.column_name = 'agency_id'
     WHERE t.table_schema = 'public'
       AND t.table_type = 'BASE TABLE'
-      AND t.table_name NOT IN ('agencies', 'profiles')
+      AND t.table_name NOT IN ('agencies', 'profiles', 'settlements')
       AND c.column_name IS NULL
     $$,
     'All tenant tables must have an agency_id column'

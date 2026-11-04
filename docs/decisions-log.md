@@ -30,6 +30,17 @@ of Done overrides the plugin's.
 Desktop; `npm run stack:up` doesn't start dockerd. CI still runs typecheck, lint, Vitest, pgTAP.
 **Revisit if:** we develop in cloud sessions again.
 
+### AD-054: €15 per broker per month
+**Accepted** (founder, 2026-11-03). Pricing hypothesis is €15 per broker per month, all modules
+included, billed per broker in the agency. Replaces the €20 in AD-039; the rest of AD-039 stands.
+**Why:** below OptiEstate (€22 with website and portals), inside the local €0–32 range.
+**Revisit if:** pilot agencies push back on per-broker pricing (flat per-agency fee, N-12).
+
+### AD-055: alo.bg first for portal syndication
+**Accepted** (founder, 2026-11-03). `syndication` publishes to alo.bg first, on its open import
+spec. imot.bg, homes.bg and OLX follow once prod is live (`go-live` done).
+**Why:** alo.bg is the only portal with a public import format; the others need agreements.
+
 ## Stack and platform
 
 ### AD-002: Next.js + Supabase + Tailwind + shadcn/ui
@@ -172,6 +183,40 @@ methods via a cascading trigger), `'simple'` config for Bulgarian, plus `pg_trgm
 ### AD-037: EUR is the currency
 **Accepted.** EUR by default in `agencies.settings` and `opportunities.currency`, formatted with
 `useFormatter`. Historical BGN values stay as stored.
+
+### AD-056: Property, listing, parties and opportunity link are separate tables
+**Accepted** (founder, 2026-11-03, `spec/properties.md`). `properties` is the physical asset; `listings`
+holds sale or rent, price and status (one open listing per offer type); `property_parties`
+links contacts with a role and an end date; `opportunity_properties` links opportunities as
+`subject` (seller, landlord) or `candidate` (buyer, tenant, with a status). Location is a global
+EKATTE `settlements` table plus agency-managed `areas`. No owner or price column on `properties`.
+**Why:** mandates, syndication and matching attach to listings and exact areas without a split
+migration; several parties and both deal sides stay possible (business brief data rules).
+
+### AD-057: How the property model is enforced
+**Accepted** (founder, 2026-11-03, Checkpoint 1 of `tasks/plan.md`). Rules sit in the database: `CHECK`s
+for rule 3 and prices, partial unique indexes (one open listing per offer type, one `selected` and
+one `subject` per opportunity, one open party per contact), and triggers for the code, audit and
+rules 5, 7 and 8. Every reference between agency rows is a composite `(agency_id, x_id)` foreign
+key, so a guessed id from another agency is refused (hence `UNIQUE (agency_id, id)` on contacts and
+opportunities). A linked property or a used area can't be deleted (`RESTRICT`): archive or
+deactivate. `code` comes from `agencies.property_code_seq` (first code 1001). A link status change is
+one `opportunity` audit row with `field_name = 'property_link'`, read by both timelines. Settlements
+come from the NSI EKATTE export through `scripts/ekatte/build-settlements.ts` with our own
+Transliteration Act 2009 names; a contact merge moves property parties (C4).
+**Why:** the data model is the module's main risk (`SPEC.md` §7); the strongest layer keeps
+`matching`, `mandates` and imports honest without re-checking in each service.
+
+### AD-058: Links and listings are fixed to their property; party history outlives contact deletes
+**Accepted** (founder asked for the review fixes, 2026-11-04, Checkpoint 3 of `tasks/plan.md`). Members may update only a
+link's `status` and `rejected_reason` and a listing's `price` and `status`: column `UPDATE`
+privileges, not a trigger, so moving a link or listing to another property (past the archived
+check, unaudited) is refused before any rule runs. A contact who is or was a property party
+can't be deleted (`NO ACTION`, so an agency delete still cascades), and `import_revert` counts a
+party as work (AD-036). The link audit trigger skips a removal while its agency is being deleted.
+**Why:** the review found that an agency with links couldn't be deleted, that a plain `UPDATE`
+could re-point links and listings, and that a contact delete erased the ownership history the
+spec keeps.
 
 ## Import
 
