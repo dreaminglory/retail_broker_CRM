@@ -42,6 +42,15 @@ function pendingWriteResult(data: unknown, error: { message: string } | null, ve
   return data as Task;
 }
 
+/** The viewing's property, embedded in task lists (spec: properties). */
+const PROPERTY_EMBED = 'property:properties!fk_tasks_property(id, code, address)';
+
+/** A failed task insert: the i18n keys the task triggers raise (rule 8, AD-032), else saveFailed. */
+function createFailure(error: { code?: string; message: string }): DomainError {
+  if (error.code === 'P0001' && /^[a-z]+\.errors\.\w+$/i.test(error.message)) return new DomainError(error.message);
+  return new DomainError('errors.saveFailed', `Failed to create task: ${error.message}`);
+}
+
 export class TaskRepository {
   constructor(private readonly db: SupabaseClient) {}
 
@@ -58,7 +67,7 @@ export class TaskRepository {
 
     let query = this.db
       .from('tasks')
-      .select('*')
+      .select(`*, ${PROPERTY_EMBED}`)
       .eq('agency_id', agencyId)
       .order('due_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
@@ -113,7 +122,7 @@ export class TaskRepository {
   ): Promise<Task[]> {
     let query = this.db
       .from('tasks')
-      .select('*, opportunities(title, stages(name))')
+      .select(`*, opportunities(title, stages(name)), ${PROPERTY_EMBED}`)
       .eq('agency_id', agencyId)
       .eq('status', 'pending')
       .lt('due_at', range.before)
@@ -188,13 +197,14 @@ export class TaskRepository {
         task_type: input.task_type ?? null,
         due_at: input.due_at ?? null,
         assigned_to: input.assigned_to ?? null,
+        property_id: input.property_id ?? null,
         status: 'pending',
         created_by: userId,
       })
       .select()
       .single();
 
-    if (error) throw new DomainError('errors.saveFailed', `Failed to create task: ${error.message}`);
+    if (error) throw createFailure(error);
     return data as Task;
   }
 

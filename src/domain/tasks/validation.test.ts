@@ -63,3 +63,40 @@ describe('task schemas: assigned_to', () => {
     expect(taskSchemas(SOFIA).update.parse({ assigned_to: 'none' }).assigned_to).toBeNull();
   });
 });
+
+const OPPORTUNITY_ID = '22222222-2222-4222-8222-222222222222';
+const PROPERTY_ID = '33333333-3333-4333-8333-333333333333';
+
+describe('task schemas: property_id on viewings (spec: properties, rule 7)', () => {
+  it('keeps the property of a viewing on an opportunity', () => {
+    const parsed = taskSchemas(SOFIA).create.parse({
+      title: 'Viewing',
+      task_type: 'viewing',
+      opportunity_id: OPPORTUNITY_ID,
+      property_id: PROPERTY_ID,
+    });
+    expect(parsed.property_id).toBe(PROPERTY_ID);
+  });
+
+  it('refuses a property without an opportunity, with an i18n key', () => {
+    const result = taskSchemas(SOFIA).create.safeParse({ title: 'Viewing', task_type: 'viewing', property_id: PROPERTY_ID });
+    expect(result.success).toBe(false);
+    expect(result.error?.flatten().fieldErrors.property_id).toEqual(['validation.property_needs_opportunity']);
+  });
+
+  it('drops the property of any other task type, and treats "" as none', () => {
+    const schemas = taskSchemas(SOFIA);
+    expect(
+      schemas.create.parse({ title: 'Call', task_type: 'call', opportunity_id: OPPORTUNITY_ID, property_id: PROPERTY_ID }).property_id,
+    ).toBeNull();
+    expect(schemas.create.parse({ title: 'Viewing', task_type: 'viewing', property_id: '' }).property_id).toBeNull();
+  });
+
+  it('carries the property through the next task of a completion', () => {
+    const parsed = taskSchemas(SOFIA).completeWithNext.parse({
+      outcome: 'Called',
+      next_task: { title: 'Viewing', task_type: 'viewing', opportunity_id: OPPORTUNITY_ID, property_id: PROPERTY_ID },
+    });
+    expect(parsed.next_task?.property_id).toBe(PROPERTY_ID);
+  });
+});

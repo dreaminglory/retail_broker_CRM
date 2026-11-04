@@ -57,15 +57,25 @@ export const cancelTaskSchema = z.object({
  * AD-014: on complete, next_task and new_stage_id are optional (soft enforcement).
  */
 export function taskSchemas(timezone: string) {
-  const create = z.object({
-    opportunity_id: z.string().uuid().nullable().optional(),
-    contact_id: z.string().uuid().nullable().optional(),
-    title: titleSchema,
-    description: z.string().max(5000).nullable().optional(),
-    task_type: taskTypeSchema,
-    due_at: dueAtSchema(timezone),
-    assigned_to: nullableUuid(),
-  });
+  // A property only on a viewing, and only with an opportunity (spec: properties, rule 7);
+  // another task type drops it, like a hidden form field.
+  const create = z
+    .object({
+      opportunity_id: z.string().uuid().nullable().optional(),
+      contact_id: z.string().uuid().nullable().optional(),
+      title: titleSchema,
+      description: z.string().max(5000).nullable().optional(),
+      task_type: taskTypeSchema,
+      due_at: dueAtSchema(timezone),
+      assigned_to: nullableUuid(),
+      property_id: nullableUuid(),
+    })
+    .transform((task) => ({ ...task, property_id: task.task_type === 'viewing' ? (task.property_id ?? null) : null }))
+    .superRefine((task, ctx) => {
+      if (task.property_id && !task.opportunity_id) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['property_id'], message: 'validation.property_needs_opportunity' });
+      }
+    });
 
   const update = z.object({
     title: titleSchema.optional(),

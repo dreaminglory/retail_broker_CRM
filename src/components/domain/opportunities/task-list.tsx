@@ -22,6 +22,13 @@ import type { Stage } from "@/domain/stages/types";
 import type { ActionResult } from "@/lib/actions";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import { Plus, Calendar, CheckCircle2, Circle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PropertyPicker } from "@/components/domain/properties/property-picker";
+import { TaskPropertyLine } from "../tasks/task-property-line";
+import { TASK_TYPE_CONFIG } from "../tasks/task-card";
+import { TASK_TYPES } from "@/domain/tasks/validation";
+import type { TaskType } from "@/domain/tasks/types";
+import type { PropertyOption } from "@/domain/properties/types";
 import { isPast } from "date-fns";
 import { useTranslations, useFormatter } from "next-intl";
 
@@ -32,6 +39,8 @@ interface TaskListProps {
   stages: Stage[];
   /** The agency's timezone: due times are shown in agency time. */
   timeZone: string;
+  /** The deal's active linked properties, offered first for a viewing. */
+  linkedProperties?: PropertyOption[];
   createAction: (
     opportunityId: string,
     prevState: ActionResult,
@@ -49,6 +58,7 @@ export function TaskList({
   brokers,
   stages,
   timeZone,
+  linkedProperties = [],
   createAction,
   completeAction,
 }: TaskListProps) {
@@ -57,6 +67,10 @@ export function TaskList({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [completeTarget, setCompleteTarget] = useState<Task | null>(null);
+  const tTypes = useTranslations("TaskCompleteDialog");
+  const [taskType, setTaskType] = useState<TaskType | "">("");
+  // Remounts the property picker so a saved form starts empty.
+  const [formKey, setFormKey] = useState(0);
 
   const [state, formAction, pending] = useActionState(
     createAction.bind(null, opportunityId) as (
@@ -72,6 +86,8 @@ export function TaskList({
       setTimeout(() => {
         setOpen(false);
         formRef.current?.reset();
+        setTaskType("");
+        setFormKey((key) => key + 1);
         router.refresh();
       }, 0);
     }
@@ -119,6 +135,45 @@ export function TaskList({
                   <p className="text-xs text-destructive">{fieldErrors.title[0]}</p>
                 )}
               </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="task_type">{t("typeLabel")}</Label>
+                <input type="hidden" name="task_type" value={taskType} />
+                <Select value={taskType} onValueChange={(value) => setTaskType((value as TaskType) ?? "")}>
+                  <SelectTrigger id="task_type" className="w-full">
+                    <SelectValue>{(value: string) => (value ? tTypes(`types.${value}` as never) : t("typePlaceholder"))}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TASK_TYPES.map((type) => {
+                      const Icon = TASK_TYPE_CONFIG[type].icon;
+                      return (
+                        <SelectItem key={type} value={type}>
+                          <span className="flex items-center gap-2">
+                            <Icon className="h-3.5 w-3.5" />
+                            {tTypes(`types.${type}` as never)}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {taskType === "viewing" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="property_id">{t("propertyLabel")}</Label>
+                  <PropertyPicker
+                    key={formKey}
+                    id="property_id"
+                    name="property_id"
+                    suggestions={linkedProperties}
+                    invalid={!!fieldErrors?.property_id}
+                  />
+                  {fieldErrors?.property_id && (
+                    <p className="text-xs text-destructive">{fieldErrors.property_id[0]}</p>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <Label htmlFor="due_at">{t("dueAtLabel")}</Label>
@@ -188,6 +243,7 @@ export function TaskList({
                   </button>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{task.title}</p>
+                    {task.property && <TaskPropertyLine property={task.property} />}
                     {task.description && (
                       <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
                         {task.description}
@@ -242,6 +298,7 @@ export function TaskList({
         task={completeTarget}
         stages={stages}
         brokers={brokers}
+        linkedProperties={linkedProperties}
         completeAction={completeAction}
       />
     </div>

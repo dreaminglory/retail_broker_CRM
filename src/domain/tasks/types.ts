@@ -44,10 +44,19 @@ export interface Task {
   /** FK → auth.users. Task owner (broker). */
   assigned_to: string | null;
 
+  /** FK → properties. The property of a viewing (spec: properties, rule 7). */
+  property_id: string | null;
+
+  /** The viewing's property, when the list query embeds it. */
+  property?: TaskProperty | null;
+
   created_by: string | null;
   created_at: string;
   updated_at: string;
 }
+
+/** What a task card shows of its property. */
+export type TaskProperty = { id: string; code: number; address: string | null };
 
 /** Task with joined opportunity data (for Today Screen). */
 export interface TaskWithOpportunity extends Task {
@@ -73,6 +82,8 @@ export interface CreateTaskInput {
   task_type?: TaskType | null;
   due_at?: string | null;
   assigned_to?: string | null;
+  /** Only on a viewing with an opportunity. */
+  property_id?: string | null;
 }
 
 /** Input for completing a task (AD-014: outcome is required). */

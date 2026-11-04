@@ -78,7 +78,8 @@
     "contact_required": "Изберете контакт.",
     "party_role_required": "Изберете роля.",
     "property_required": "Изберете имот.",
-    "rejected_reason_too_long": "Причината може да е най-много 500 знака."
+    "rejected_reason_too_long": "Причината може да е най-много 500 знака.",
+    "property_needs_opportunity": "Имот може да се посочи само в задача към сделка."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -651,7 +652,8 @@
         "type": "Тип",
         "typePlaceholder": "Изберете тип",
         "dueDate": "Краен срок",
-        "assignTo": "Възложи на"
+        "assignTo": "Възложи на",
+        "property": "Имот"
       },
       "stage": {
         "advance": "Смени етап",
@@ -1087,7 +1089,10 @@
     "noPendingTasks": "Няма чакащи задачи.",
     "overdue": "Просрочена",
     "completedSection": "Завършени",
-    "outcomeLabel": "Резултат"
+    "outcomeLabel": "Резултат",
+    "typeLabel": "Вид",
+    "typePlaceholder": "Без вид",
+    "propertyLabel": "Имот"
   },
   "OpportunitiesPage": {
     "title": "Сделки",
@@ -1627,5 +1632,18 @@
     "empty": "Имотът още не е свързан със сделка.",
     "subject": "Имот обект",
     "closed": "Затворена"
+  },
+  "PropertyViewing": {
+    "schedule": "Насрочи оглед",
+    "deal": "Сделка",
+    "dealPlaceholder": "Изберете сделка",
+    "noDeals": "Първо добавете имота като кандидат към сделка с купувач или наемател.",
+    "title": "Заглавие",
+    "defaultTitle": "Оглед {code}",
+    "dueAt": "Дата и час",
+    "assignedTo": "Възложена на",
+    "submit": "Насрочи",
+    "saving": "Запазване…",
+    "scheduled": "Огледът е насрочен"
   }
 }

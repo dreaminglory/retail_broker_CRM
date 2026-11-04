@@ -78,7 +78,8 @@
     "contact_required": "Choose a contact.",
     "party_role_required": "Choose a role.",
     "property_required": "Choose a property.",
-    "rejected_reason_too_long": "The reason can be at most 500 characters."
+    "rejected_reason_too_long": "The reason can be at most 500 characters.",
+    "property_needs_opportunity": "A property can only be set on a task for a deal."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -651,7 +652,8 @@
         "type": "Type",
         "typePlaceholder": "Select type",
         "dueDate": "Due date",
-        "assignTo": "Assign to"
+        "assignTo": "Assign to",
+        "property": "Property"
       },
       "stage": {
         "advance": "Advance stage",
@@ -1087,7 +1089,10 @@
     "noPendingTasks": "No pending tasks.",
     "overdue": "Overdue",
     "completedSection": "Completed",
-    "outcomeLabel": "Outcome"
+    "outcomeLabel": "Outcome",
+    "typeLabel": "Type",
+    "typePlaceholder": "No type",
+    "propertyLabel": "Property"
   },
   "OpportunitiesPage": {
     "title": "Opportunities",
@@ -1627,5 +1632,18 @@
     "empty": "This property isn't linked to any deal yet.",
     "subject": "Subject property",
     "closed": "Closed"
+  },
+  "PropertyViewing": {
+    "schedule": "Schedule viewing",
+    "deal": "Deal",
+    "dealPlaceholder": "Choose a deal",
+    "noDeals": "Add this property as a candidate on a buyer or tenant deal first.",
+    "title": "Title",
+    "defaultTitle": "Viewing {code}",
+    "dueAt": "Date and time",
+    "assignedTo": "Assigned to",
+    "submit": "Schedule",
+    "saving": "Saving…",
+    "scheduled": "Viewing scheduled"
   }
 }

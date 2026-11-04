@@ -278,13 +278,15 @@ card shows the property code and address. The property page gets "Schedule viewi
 the task relies on the Task 3 trigger; the opportunity page refreshes the link status.
 
 **Acceptance criteria:**
-- [ ] Completing a viewing for candidate A moves A to `viewed` and leaves B alone (AC-3)
-- [ ] Completing a viewing for an `offered` link leaves it `offered` (AC-3)
-- [ ] An archived property can't be chosen
+- [x] Completing a viewing for candidate A moves A to `viewed` and leaves B alone (AC-3)
+- [x] Completing a viewing for an `offered` link leaves it `offered` (AC-3)
+- [x] An archived property can't be chosen
 
 **Verification:**
-- [ ] `npx vitest run src/domain/tasks` (schema accepts `property_id` only with an opportunity); service suite
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/tasks` (schema accepts `property_id` only with an opportunity); service suite
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** The opportunity page's add-task form had no type field; it now has one, and a viewing shows the property picker with the deal's active properties first, then any active property. The next task in the complete dialog gets the same picker (on Today it searches without suggestions). `taskSchemas().create` keeps `property_id` only on a viewing and refuses it without an opportunity (`validation.property_needs_opportunity`); recorded as L16. Task lists embed the property (`fk_tasks_property`), and the task row and the Today card show `#code · address` linking to it. Task inserts pass trigger keys through, so an archived property gives `properties.errors.archived`; the picker never offers one. "Schedule viewing" on the property page lets you pick one of the active buyer or tenant deals the property is a candidate on (title prefilled "Оглед #1001"). With none, it says to add the property to a deal first, because the page has no opportunity search. Completing a viewing revalidates the property page too. Service suite `viewing.integration.test.ts` (5 cases). Browser, BG at 1280 px: a viewing of candidate #1008 on Alpha Opp 1, completed → #1008 Огледан, #1001 stays Предложен; a viewing of offered #1001 scheduled from its property page, completed → still offered (checked with psql). EN at 375 px: viewing form with suggestions, Today card shows "#1003 · ул. Солунска 30".
 
 **Dependencies:** Task 11
 **Files likely touched:** `src/domain/tasks/{validation,repository,types}.ts`, `src/components/domain/tasks/task-card.tsx`, the task form component, `messages/{bg,en}.json`

@@ -4,18 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import type { PropertyOpportunityLink } from "@/domain/opportunity-properties/types";
 
 /** The deals a property is linked to, with the link status; closed deals are muted. */
-export async function PropertyOpportunities({ links }: { links: PropertyOpportunityLink[] }) {
+export async function PropertyOpportunities({
+  links,
+  action,
+}: {
+  links: PropertyOpportunityLink[];
+  /** A header action, e.g. "Schedule viewing". */
+  action?: React.ReactNode;
+}) {
   const t = await getTranslations("PropertyOpportunities");
   const enums = await getTranslations("Enums");
 
   return (
     <section className="rounded-lg border bg-card" aria-labelledby="property-opportunities">
-      <h2
-        id="property-opportunities"
-        className="border-b px-4 py-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground"
-      >
-        {t("title")}
-      </h2>
+      <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
+        <h2 id="property-opportunities" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("title")}
+        </h2>
+        {action}
+      </div>
       {links.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
       ) : (

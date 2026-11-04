@@ -16,6 +16,8 @@ import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 import { PropertyPartyService } from "@/domain/property-parties/service";
 import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
 import { PropertyOpportunities } from "@/components/domain/properties/property-opportunities";
+import { ScheduleViewingButton } from "@/components/domain/properties/schedule-viewing-button";
+import { MemberRepository } from "@/domain/members/repository";
 import type { Locale } from "@/i18n/config";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -43,11 +45,16 @@ export default async function PropertyPage({ params }: Props) {
 
   const supabase = await createSupabaseServer();
   const membership = await getCurrentMembership();
-  const [listings, parties, opportunityLinks] = await Promise.all([
+  const [listings, parties, opportunityLinks, brokers] = await Promise.all([
     new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
     new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
+    new MemberRepository(supabase).getActiveBrokers(property.agency_id),
   ]);
+  // A viewing is scheduled on an active deal this property is a candidate on (rule 8: not when archived).
+  const viewingDeals = opportunityLinks
+    .filter((link) => link.relation === "candidate" && link.opportunity.status === "active")
+    .map((link) => ({ id: link.opportunity.id, title: link.opportunity.title }));
 
   const t = await getTranslations("PropertyDetail");
   const enums = await getTranslations("Enums");
@@ -119,7 +126,19 @@ export default async function PropertyPage({ params }: Props) {
 
       <PartySection propertyId={property.id} current={parties.current} past={parties.past} />
 
-      <PropertyOpportunities links={opportunityLinks} />
+      <PropertyOpportunities
+        links={opportunityLinks}
+        action={
+          property.status === "active" ? (
+            <ScheduleViewingButton
+              propertyId={property.id}
+              code={propertyCode(property)}
+              deals={viewingDeals}
+              brokers={brokers}
+            />
+          ) : undefined
+        }
+      />
 
       <section className="rounded-lg border bg-card p-4" aria-labelledby="property-work">
         <h2 id="property-work" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">

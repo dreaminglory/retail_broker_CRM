@@ -281,6 +281,7 @@ export function OpportunityDetailClient({
             brokers={brokers}
             stages={stages}
             timeZone={timeZone}
+            linkedProperties={propertyLinks.map((link) => link.property).filter((property) => property.status === "active")}
             createAction={createTaskAction}
             completeAction={completeTaskAction}
           />
