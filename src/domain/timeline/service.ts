@@ -243,13 +243,8 @@ export class TimelineService {
       .from('audit_log')
       .select('*')
       .eq('agency_id', agencyId)
-      .or(
-        [
-          `and(entity_type.eq.property,entity_id.eq.${propertyId})`,
-          `and(entity_type.eq.listing,metadata->>property_id.eq.${propertyId})`,
-          `and(entity_type.eq.opportunity,field_name.eq.property_link,metadata->>property_id.eq.${propertyId})`,
-        ].join(',')
-      )
+      // Only listing rows and link rows store metadata.property_id; idx_audit_property finds them.
+      .or(`and(entity_type.eq.property,entity_id.eq.${propertyId}),metadata->>property_id.eq.${propertyId}`)
       .order('performed_at', { ascending: false })
       .range(0, offset + limit - 1);
 

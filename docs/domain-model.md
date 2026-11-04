@@ -255,6 +255,8 @@ The **timeline** (`src/domain/timeline`) is not a table. It reads `notes`, `task
 The property timeline reads the property's own `property` rows, its `listing` rows (by
 `metadata.property_id`), the `opportunity` rows with `field_name = 'property_link'` for it, and
 tasks with its `property_id`; a link change is one row that both timelines show (AD-057).
+Listing and link rows are the only audit rows with `metadata.property_id`; `idx_audit_property`
+(partial, on `agency_id, metadata->>'property_id', performed_at`) finds them.
 `describeAudit` (`audit-event.ts`) turns a row into the event both timelines render.
 
 ### 2.5 Data import
