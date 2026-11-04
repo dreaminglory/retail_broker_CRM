@@ -363,6 +363,7 @@ erDiagram
     uuid assigned_to FK "responsible broker"
     text status "active | archived"
     text external_ref "UK per agency"
+    tsvector search_vector "trigger-kept"
   }
   listings {
     uuid property_id FK
@@ -391,6 +392,12 @@ erDiagram
 `settlements` is global (no `agency_id`), generated from the NSI EKATTE export by
 `scripts/ekatte/build-settlements.ts` into one data migration: towns and villages only,
 no monasteries. The picker searches by prefix on `lower(name_bg)` / `lower(name_en)`.
+
+⌘K finds properties through `properties.search_vector` (AD-026): the code, then the address
+and area name, then the settlement in both languages. `trg_property_search_vector` keeps it on
+insert and on a change of code, address, settlement or area; renaming an area rewrites the
+vectors of its properties (`trg_areas_search_vector_cascade`), which also moves their
+`updated_at`. A leading `#` in the query is dropped, so `#1042` finds 1042.
 
 Every reference between agency rows in this area is a composite `(agency_id, x_id)` foreign
 key (AD-057), including `tasks.property_id` (`ON DELETE SET NULL (property_id)`) and

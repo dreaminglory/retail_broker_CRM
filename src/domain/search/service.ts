@@ -18,14 +18,15 @@ export class SearchService {
     const trimmedQuery = normalizeSearchQuery(query.trim());
 
     // Execute searches in parallel
-    const [contacts, opportunities, inquiries] = await Promise.all([
+    const [contacts, opportunities, inquiries, properties] = await Promise.all([
       this.repo.searchContacts(agencyId, trimmedQuery),
       this.repo.searchOpportunities(agencyId, trimmedQuery),
       this.repo.searchInquiries(agencyId, trimmedQuery),
+      this.repo.searchProperties(agencyId, trimmedQuery),
     ]);
 
     // Combine and sort (we don't have real relevance scores without RPC, so we just group them for now)
-    const results = [...contacts, ...opportunities, ...inquiries];
+    const results = [...contacts, ...opportunities, ...inquiries, ...properties];
 
     return results;
   }

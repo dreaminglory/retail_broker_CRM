@@ -108,7 +108,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 - [x] Task 14: Property timeline
 - [x] Task 17: E2E for the property loop
 - [x] Task 15: Notes on properties (cut 1)
-- [ ] Task 16: ⌘K search for properties (cut 2)
+- [x] Task 16: ⌘K search for properties (cut 2)
 
 **Checkpoint 4:** every AC met, the full Definition of Done, `/review`; then close the module.
 

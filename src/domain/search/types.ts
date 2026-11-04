@@ -1,4 +1,4 @@
-export type SearchEntityType = 'contact' | 'opportunity' | 'inquiry';
+export type SearchEntityType = 'contact' | 'opportunity' | 'inquiry' | 'property';
 
 export type SearchResultKind = 'person' | 'organization' | 'buyer' | 'seller' | 'landlord' | 'tenant';
 

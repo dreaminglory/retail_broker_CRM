@@ -465,7 +465,7 @@
   },
   "search": {
     "placeholder": "Search...",
-    "inputPlaceholder": "Search contacts, opportunities, and inquiries...",
+    "inputPlaceholder": "Search contacts, opportunities, inquiries and properties...",
     "searching": "Searching...",
     "noResults": "No results found.",
     "results": "Results",

@@ -2,19 +2,27 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
 import type { SearchResult } from './types';
 
+/**
+ * Every word as a prefix, all required. A bare number also matches its "+" form, so 359…
+ * finds +359…; a leading "#" is dropped, so "#1042" finds property 1042.
+ */
+function toPrefixQuery(query: string): string {
+  return query
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.replace(/^#/, '').replace(/'/g, "''"))
+    .filter(Boolean)
+    .map((word) => (/^\d+$/.test(word) ? `('+${word}':* | '${word}':*)` : `'${word}':*`))
+    .join(' & ');
+}
+
 export class SearchRepository {
   constructor(private readonly db: SupabaseClient) {}
 
   async searchContacts(agencyId: string, query: string): Promise<SearchResult[]> {
-    const words = query.trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return [];
-    
-    // Add a '+' to numeric searches if it's missing, to allow matching +359 with just 359
-    const tsQuery = words.map(word => {
-      const sanitized = word.replace(/'/g, "''");
-      const isNumeric = /^\d+$/.test(sanitized);
-      return isNumeric ? `('+${sanitized}':* | '${sanitized}':*)` : `'${sanitized}':*`;
-    }).join(' & ');
+    const tsQuery = toPrefixQuery(query);
+    if (!tsQuery) return [];
+
     const { data, error } = await this.db
       .from('contacts')
       .select('id, display_name, type')
@@ -39,14 +47,9 @@ export class SearchRepository {
   }
 
   async searchOpportunities(agencyId: string, query: string): Promise<SearchResult[]> {
-    const words = query.trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return [];
-    
-    const tsQuery = words.map(word => {
-      const sanitized = word.replace(/'/g, "''");
-      const isNumeric = /^\d+$/.test(sanitized);
-      return isNumeric ? `('+${sanitized}':* | '${sanitized}':*)` : `'${sanitized}':*`;
-    }).join(' & ');
+    const tsQuery = toPrefixQuery(query);
+    if (!tsQuery) return [];
+
     const { data, error } = await this.db
       .from('opportunities')
       .select('id, title, type')
@@ -71,14 +74,9 @@ export class SearchRepository {
   }
 
   async searchInquiries(agencyId: string, query: string): Promise<SearchResult[]> {
-    const words = query.trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return [];
-    
-    const tsQuery = words.map(word => {
-      const sanitized = word.replace(/'/g, "''");
-      const isNumeric = /^\d+$/.test(sanitized);
-      return isNumeric ? `('+${sanitized}':* | '${sanitized}':*)` : `'${sanitized}':*`;
-    }).join(' & ');
+    const tsQuery = toPrefixQuery(query);
+    if (!tsQuery) return [];
+
     const { data, error } = await this.db
       .from('inquiries')
       .select('id, caller_name, subject')
@@ -98,6 +96,34 @@ export class SearchRepository {
       subtitle: i.subject || null,
       kind: null,
       url: `/inquiries?search=${encodeURIComponent(i.caller_name || i.subject || '')}`, // Temporary jump using readable text
+      relevance: 1,
+    }));
+  }
+
+  /** By code, address, area or settlement (properties.search_vector). */
+  async searchProperties(agencyId: string, query: string): Promise<SearchResult[]> {
+    const tsQuery = toPrefixQuery(query);
+    if (!tsQuery) return [];
+
+    const { data, error } = await this.db
+      .from('properties')
+      .select('id, code, address')
+      .eq('agency_id', agencyId)
+      .textSearch('search_vector', tsQuery)
+      .order('code', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      throw new DomainError('errors.loadFailed', `Global search failed: ${error.message}`);
+    }
+
+    return (data ?? []).map((p) => ({
+      id: p.id,
+      type: 'property',
+      title: `#${p.code}`,
+      subtitle: p.address || null,
+      kind: null,
+      url: `/properties/${p.id}`,
       relevance: 1,
     }));
   }

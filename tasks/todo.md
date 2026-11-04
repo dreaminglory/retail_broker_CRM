@@ -375,12 +375,12 @@ on `properties` (code, address, settlement and area names), kept by trigger (AD-
 `SearchRepository.searchProperties` and the results in the ⌘K dialog.
 
 **Acceptance criteria:**
-- [ ] "1042", "Лозенец" and a street name each find the property; Beta's properties never appear
-- [ ] Renaming an area updates the vectors of its properties
+- [x] "1042", "Лозенец" and a street name each find the property; Beta's properties never appear
+- [x] Renaming an area updates the vectors of its properties
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`; search service suite
-- [ ] Browser: ⌘K in BG and EN
+- [x] `npx supabase db reset`, `npm run test:db`; search service suite
+- [x] Browser: ⌘K in BG and EN
 
 **Dependencies:** Task 6
 **Files likely touched:** `supabase/migrations/20261103000005_property_search.sql`, `src/domain/search/{repository,service,types}.ts`, `src/components/domain/search/*`, `docs/domain-model.md`
