@@ -166,7 +166,7 @@ export default async function PropertyPage({ params }: Props) {
         <h2 id="property-history" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           {t("history")}
         </h2>
-        <PropertyActivity initialTimeline={timeline} />
+        <PropertyActivity initialTimeline={timeline} propertyId={property.id} currentUserId={membership?.userId} />
       </section>
     </div>
   );

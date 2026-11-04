@@ -38,6 +38,7 @@ export class NotesRepository {
         agency_id: agencyId,
         contact_id: input.contact_id ?? null,
         opportunity_id: input.opportunity_id ?? null,
+        property_id: input.property_id ?? null,
         content: input.content,
         is_pinned: input.is_pinned ?? false,
         created_by: userId,

@@ -57,7 +57,7 @@
     "lost_reason_required": "Въведете причина за загубата.",
     "participant_required": "Изберете контакт или член на екипа.",
     "content_required": "Първо напишете текст.",
-    "linked_entity_required": "Бележката трябва да е към контакт или сделка.",
+    "linked_entity_required": "Бележката трябва да е към контакт, сделка или имот.",
     "settlement_required": "Изберете населено място.",
     "property_type_required": "Изберете вид на имота.",
     "rooms_required": "Въведете броя стаи на апартамента.",

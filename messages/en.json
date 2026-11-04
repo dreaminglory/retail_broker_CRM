@@ -57,7 +57,7 @@
     "lost_reason_required": "Enter the reason it was lost.",
     "participant_required": "Choose a contact or a team member.",
     "content_required": "Write something first.",
-    "linked_entity_required": "A note must belong to a contact or an opportunity.",
+    "linked_entity_required": "A note must belong to a contact, an opportunity or a property.",
     "settlement_required": "Choose a settlement.",
     "property_type_required": "Choose the property type.",
     "rooms_required": "Enter the apartment's number of rooms.",

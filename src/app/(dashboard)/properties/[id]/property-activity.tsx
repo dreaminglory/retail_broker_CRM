@@ -1,9 +1,24 @@
 "use client";
 
-import { ActivityTimeline } from "@/components/domain/timeline/activity-timeline";
+import { NotesActivity } from "@/components/domain/timeline/notes-activity";
 import type { TimelineEntry } from "@/domain/timeline/types";
+import { createPropertyNoteAction } from "./notes/actions";
 
-/** The property's history (AD-057): its own changes, its listings, link changes and viewings. */
-export function PropertyActivity({ initialTimeline }: { initialTimeline: TimelineEntry[] }) {
-  return <ActivityTimeline initialEntries={initialTimeline} showDeal />;
+export function PropertyActivity({
+  initialTimeline,
+  propertyId,
+  currentUserId,
+}: {
+  initialTimeline: TimelineEntry[];
+  propertyId: string;
+  currentUserId?: string;
+}) {
+  return (
+    <NotesActivity
+      initialTimeline={initialTimeline}
+      currentUserId={currentUserId}
+      createNote={(formData) => createPropertyNoteAction(propertyId, { success: true, data: undefined }, formData)}
+      showDeal
+    />
+  );
 }

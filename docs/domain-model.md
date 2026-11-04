@@ -632,7 +632,7 @@ The "Enforced by" column tells you which layer to change and test.
 | K2 | Next task or stage change on completion | UI prompt only (AD-014, soft) |
 | K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
-| N1 | A note has a contact, opportunity or property parent, and non-blank content | `CHECK` on `notes` |
+| N1 | A note has a contact, opportunity or property parent in its own agency, and non-blank content | `CHECK` on `notes`, composite FK; `createNoteSchema` (trimmed) and `NotesService.createNote` (property in the agency) give the friendly errors |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
 | A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities, contacts (imported contacts via `audit_imported_contact_created`), properties, listings and opportunity–property links |
 | E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |

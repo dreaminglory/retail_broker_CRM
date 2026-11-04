@@ -358,12 +358,12 @@ notes appear on the property timeline. Extend the notes Zod schema and service t
 property parent.
 
 **Acceptance criteria:**
-- [ ] A note added on the property shows on its timeline; blank notes are refused
-- [ ] A note can't point at another agency's property
+- [x] A note added on the property shows on its timeline; blank notes are refused
+- [x] A note can't point at another agency's property
 
 **Verification:**
-- [ ] `npx vitest run src/domain/notes`; service suite
-- [ ] Browser: BG and EN
+- [x] `npx vitest run src/domain/notes`; service suite
+- [x] Browser: BG and EN
 
 **Dependencies:** Task 14
 **Files likely touched:** `src/domain/notes/{validation,service,repository}.ts`, `properties/[id]/notes/*`, `src/domain/timeline/service.ts`

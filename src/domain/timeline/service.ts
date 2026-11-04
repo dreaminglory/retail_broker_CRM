@@ -209,8 +209,9 @@ export class TimelineService {
   }
 
   /**
-   * A property's history (AD-057): its own audit rows, its listings' rows (metadata.property_id),
-   * the link changes written on opportunities for it, and tasks with this property.
+   * A property's history (AD-057): its notes, its own audit rows, its listings' rows
+   * (metadata.property_id), the link changes written on opportunities for it, and tasks with
+   * this property.
    */
   async getPropertyTimeline(
     propertyId: string,
@@ -218,6 +219,16 @@ export class TimelineService {
     limit = 20,
     offset = 0
   ): Promise<TimelineEntry[]> {
+    const { data: notesData, error: notesError } = await this.db
+      .from('notes')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false })
+      .range(0, offset + limit - 1);
+
+    if (notesError) throw new DomainError('errors.loadFailed', `Timeline notes fetch failed: ${notesError.message}`);
+
     const { data: tasksData, error: tasksError } = await this.db
       .from('tasks')
       .select('*')
@@ -244,11 +255,11 @@ export class TimelineService {
 
     if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
 
-    const profilesMap = await this.resolveAuthors([], tasksData ?? [], auditData ?? []);
+    const profilesMap = await this.resolveAuthors(notesData ?? [], tasksData ?? [], auditData ?? []);
     const audits = await this.withDeals(this.enrichAudits(auditData ?? [], profilesMap), agencyId);
 
     return this.mergeAndSort(
-      [],
+      this.enrichNotes(notesData ?? [], profilesMap),
       this.enrichTasks(tasksData ?? [], profilesMap),
       audits,
       [],
