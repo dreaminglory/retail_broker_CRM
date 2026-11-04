@@ -46,20 +46,3 @@ export async function deleteNoteAction(
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }
-
-export async function pinNoteAction(
-  noteId: string,
-  isPinned: boolean,
-  pathname?: string
-): Promise<ActionResult> {
-  try {
-    const { supabase, userId, agencyId } = await getAuthContext();
-    const service = new NotesService(supabase);
-    await service.updateNote(noteId, agencyId, userId, { is_pinned: isPinned });
-
-    if (pathname) {
-      revalidatePath(pathname);
-    }
-    return { success: true, data: undefined };
-  } catch (error) { return toActionError(error); }
-}
