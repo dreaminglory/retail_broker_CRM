@@ -99,7 +99,7 @@
   },
   "src/domain/imports/service.ts": {
     "@typescript-eslint/no-explicit-any": {
-      "count": 10
+      "count": 9
     },
     "prefer-const": {
       "count": 1
