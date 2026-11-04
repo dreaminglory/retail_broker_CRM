@@ -10,7 +10,7 @@ import type { TimelineEntry } from "@/domain/timeline/types";
 import {
   updateNoteAction,
   deleteNoteAction,
-} from "@/app/(dashboard)/contacts/[id]/notes/actions";
+} from "@/app/(dashboard)/notes/actions";
 import type { ActionResult } from "@/lib/actions";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
