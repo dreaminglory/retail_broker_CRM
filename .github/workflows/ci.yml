@@ -41,6 +41,14 @@ jobs:
     name: Database and service tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read # pull the Supabase images from GHCR as this workflow
+    env:
+      # The CLI pulls from public.ecr.aws by default, whose anonymous quota is shared by every
+      # GitHub-hosted runner and runs out ("toomanyrequests: Rate exceeded"). Supabase mirrors
+      # the same images to ghcr.io/supabase, where the job's own token authenticates the pulls.
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: ghcr.io
     steps:
       - uses: actions/checkout@v4
 
@@ -55,12 +63,28 @@ jobs:
         with:
           version: 2.122.0
 
-      # Postgres, Auth and the API gateway (the service suites sign in over HTTP). Applies
-      # every migration and supabase/seed.sql, same as `npx supabase start` locally.
+      - name: Sign in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Postgres, Auth, the API gateway (the service suites sign in over HTTP) and Mailpit (the
+      # SMTP mailer test delivers to it, AD-042). Applies every migration and supabase/seed.sql,
+      # same as `npx supabase start` locally. A registry hiccup gets two more tries; anything
+      # else still fails the job, just later.
       - name: Start local Supabase
-        run: >-
-          supabase start -x
-          realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+        run: |
+          for attempt in 1 2 3; do
+            if supabase start -x realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor; then
+              exit 0
+            fi
+            echo "::warning::supabase start failed (attempt $attempt of 3)"
+            supabase stop --no-backup || true
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 30)); fi
+          done
+          exit 1
 
       - name: pgTAP
         run: supabase test db
