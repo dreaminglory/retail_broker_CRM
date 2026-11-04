@@ -247,6 +247,22 @@ active opportunity has an owner, a next action and a complete history.
 | FR-NTF-02 | An immediate email when an inquiry is assigned to you by someone else |
 | FR-NTF-03 | Each user can turn off the digest |
 
+### FR-PRP: Properties (module `properties`)
+
+| ID | Requirement |
+|----|------------|
+| FR-PRP-01 | A property record: type, rooms, built-up and plot m², floor, construction, year, settlement (NSI EKATTE) and area, address, responsible broker, and a per-agency code such as #1042 (AD-056) |
+| FR-PRP-02 | Sale and rent listings with a EUR price, at most one open per offer type; `/properties` lists them with filters (type, settlement, area, offer type, listing status, price, rooms, broker, archived) and a pager |
+| FR-PRP-03 | Listing price and status changes are audited with both values; a closed or withdrawn listing is read-only |
+| FR-PRP-04 | Buyer and tenant opportunities list candidate properties with a status (candidate, viewed, offered, rejected with an optional reason, selected); every change shows once on the opportunity and property timelines (AD-057) |
+| FR-PRP-05 | Completing a viewing task with a property marks that link viewed, or creates it as viewed; it never moves a link back |
+| FR-PRP-06 | Owners and managers keep the agency's areas per settlement; brokers pick them |
+| FR-PRP-07 | Parties (owner, co-owner, representative, occupant) from existing or new contacts; ending a party keeps it as history |
+| FR-PRP-08 | A seller or landlord opportunity has one subject property, picked or created from the deal |
+| FR-PRP-09 | The property page shows its history (changes, listings, link changes, viewings, notes) and takes notes |
+| FR-PRP-10 | ⌘K finds properties by code, address, area and settlement |
+| FR-PRP-11 | A property with links, open listings or tasks is archived, not deleted; archiving withdraws its open listings; hard delete is owner/manager only |
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Priority |

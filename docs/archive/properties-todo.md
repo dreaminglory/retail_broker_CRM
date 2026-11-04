@@ -387,6 +387,6 @@ on `properties` (code, address, settlement and area names), kept by trigger (AD-
 **Estimated scope:** M
 
 ## Checkpoint 4: Complete
-- [ ] AC-1…AC-8 met; full Definition of Done (typecheck, lint, test, test:services, test:db, test:e2e, browser BG/EN)
-- [ ] `docs/domain-model.md` and AD-057 match the code
-- [ ] `/review`, then close: `SPEC.md` Done, `docs/BRD.md` FR-PRP rows, move `tasks/*` to `docs/archive/properties-*.md`
+- [x] AC-1…AC-8 met; full Definition of Done (typecheck, lint, test, test:services, test:db, test:e2e, browser BG/EN)
+- [x] `docs/domain-model.md` and AD-057 match the code
+- [x] `/review`, then close: `SPEC.md` Done, `docs/BRD.md` FR-PRP rows, move `tasks/*` to `docs/archive/properties-*.md`

@@ -98,9 +98,9 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 **Checkpoint 2:** AC-1, AC-5, AC-6, AC-7 seen in the browser in BG and EN at 1280 and 390 px.
 
 ### Phase 3: Opportunities
-- [ ] Task 11: Candidate properties on buyer and tenant opportunities
-- [ ] Task 13: Viewing tasks with a property
-- [ ] Task 12: Subject property on seller and landlord opportunities (cut 3)
+- [x] Task 11: Candidate properties on buyer and tenant opportunities
+- [x] Task 13: Viewing tasks with a property
+- [x] Task 12: Subject property on seller and landlord opportunities (cut 3)
 
 **Checkpoint 3:** AC-2, AC-3, AC-4 seen in the browser; `/review` of Phases 1–3.
 

@@ -1,6 +1,7 @@
 # Spec: properties
 
-> **Status:** Approved scope (founder, 2026-11-03). Decision: AD-056.
+> **Status:** Done (2026-11-04). Approved scope (founder, 2026-11-03). Plan:
+> `docs/archive/properties-plan.md`. Decisions: AD-056, AD-057. Requirements: FR-PRP-01…11.
 > **Evidence:** gap analysis §5.1 #6 (every Bulgarian product is property-first), business
 > brief "Future data model direction", AD-039 pilot gate. Assumptions A1–A3 are unvalidated.
 
