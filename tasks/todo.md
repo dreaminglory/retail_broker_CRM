@@ -312,8 +312,8 @@ with the opportunity's primary contact as owner and links it on save.
 **Estimated scope:** S
 
 ## Checkpoint 3: Opportunities
-- [ ] `typecheck`, `lint`, `test`, `test:services`, `test:db` green
-- [ ] AC-2, AC-3, AC-4 seen in the browser
+- [x] `typecheck` (as `tsc --noEmit`), `lint` (0 errors, the 47 existing warnings), `test` (458 passed), `test:services` (586 passed), `test:db` (256 passed, after `db reset`) green; `test:e2e` 28/28
+- [x] AC-2, AC-3, AC-4 seen in the browser (AC-2 as the status changes on both pages; its timeline view is Task 14)
 - [ ] `/review` of Phases 1–3
 
 ## Phase 4: History, search and E2E
