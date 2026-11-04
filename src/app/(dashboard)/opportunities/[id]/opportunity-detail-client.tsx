@@ -23,6 +23,8 @@ import { ParticipantList } from "@/components/domain/opportunities/participant-l
 import { TaskList } from "@/components/domain/opportunities/task-list";
 import { CloseOpportunityDialog } from "@/components/domain/opportunities/close-opportunity-dialog";
 import { OpportunityActivity } from "./opportunity-activity";
+import { PropertyLinks } from "@/components/domain/opportunities/property-links";
+import type { OpportunityPropertyWithProperty } from "@/domain/opportunity-properties/types";
 import {
   updateOpportunityAction,
   changeOpportunityStageAction,
@@ -54,6 +56,8 @@ interface OpportunityDetailClientProps {
   currentUserId?: string;
   /** The agency's timezone, for task due times. */
   timeZone: string;
+  /** Linked properties (candidates on buyer and tenant deals). */
+  propertyLinks: OpportunityPropertyWithProperty[];
   // inquiry?: Inquiry; // Optionally show inquiry details
 }
 
@@ -67,6 +71,7 @@ export function OpportunityDetailClient({
   timeline,
   currentUserId,
   timeZone,
+  propertyLinks,
 }: OpportunityDetailClientProps) {
   const t = useTranslations("OpportunityDetail");
   const getStageName = useStageTranslation();
@@ -254,6 +259,10 @@ export function OpportunityDetailClient({
               />
             </div>
           </div>
+
+          {(opportunity.type === "buyer" || opportunity.type === "tenant") && (
+            <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
+          )}
 
           <ParticipantList
             opportunityId={opportunity.id}

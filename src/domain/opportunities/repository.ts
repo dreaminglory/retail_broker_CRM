@@ -208,7 +208,13 @@ export class OpportunityRepository {
       .select()
       .single();
 
-    if (error) throw new DomainError('errors.saveFailed', `Failed to update opportunity: ${error.message}`);
+    if (error) {
+      // A type change its property links don't allow (rule 5, trigger key).
+      if (error.code === 'P0001' && error.message === 'opportunities.errors.typeHasProperties') {
+        throw new DomainError(error.message);
+      }
+      throw new DomainError('errors.saveFailed', `Failed to update opportunity: ${error.message}`);
+    }
     return data as Opportunity;
   }
 

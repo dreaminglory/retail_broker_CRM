@@ -9,7 +9,7 @@ import { SettlementService } from '@/domain/settlements/service';
 import { PropertyRepository } from './repository';
 import type { PagedRows } from '@/lib/pagination';
 import type { PropertyListFilters } from './list-filters';
-import type { Property, PropertyDetail, PropertyListItem, PropertyListRow } from './types';
+import type { Property, PropertyDetail, PropertyListItem, PropertyListRow, PropertyOption } from './types';
 import { propertyFormSchema, type PropertyFormInput } from './validation';
 
 export class PropertyService {
@@ -57,6 +57,16 @@ export class PropertyService {
   ): Promise<PagedRows<PropertyListRow>> {
     const { rows, total } = await this.repo.findPage(agencyId, filters, page);
     return { rows: await this.withLocations(rows, agencyId, locale), total };
+  }
+
+  /** At most 20 active properties matching a code or an address, for the pickers. */
+  async searchForPicker(agencyId: string, query: string, locale: Locale): Promise<PropertyOption[]> {
+    const rows = await this.repo.searchActive(agencyId, query.trim(), 20);
+    return (await this.withLocations(rows, agencyId, locale)).map(
+      ({ id, code, type, rooms, area_m2, address, status, settlement_name, area_name }) => ({
+        id, code, type, rooms, area_m2, address, status, settlement_name, area_name,
+      }),
+    );
   }
 
   private async withLocations<T extends Property>(

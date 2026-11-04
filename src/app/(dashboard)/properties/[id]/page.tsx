@@ -14,6 +14,8 @@ import { PartySection } from "@/components/domain/properties/party-section";
 import { PropertyActionsMenu } from "@/components/domain/properties/property-actions-menu";
 import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 import { PropertyPartyService } from "@/domain/property-parties/service";
+import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
+import { PropertyOpportunities } from "@/components/domain/properties/property-opportunities";
 import type { Locale } from "@/i18n/config";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -41,9 +43,10 @@ export default async function PropertyPage({ params }: Props) {
 
   const supabase = await createSupabaseServer();
   const membership = await getCurrentMembership();
-  const [listings, parties] = await Promise.all([
+  const [listings, parties, opportunityLinks] = await Promise.all([
     new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
+    new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
   ]);
 
   const t = await getTranslations("PropertyDetail");
@@ -115,6 +118,8 @@ export default async function PropertyPage({ params }: Props) {
       <ListingSection property={property} listings={listings} />
 
       <PartySection propertyId={property.id} current={parties.current} past={parties.past} />
+
+      <PropertyOpportunities links={opportunityLinks} />
 
       <section className="rounded-lg border bg-card p-4" aria-labelledby="property-work">
         <h2 id="property-work" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">

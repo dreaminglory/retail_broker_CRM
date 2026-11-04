@@ -76,7 +76,9 @@
     "price_cents": "The price has at most two decimals.",
     "offer_type_required": "Choose sale or rent.",
     "contact_required": "Choose a contact.",
-    "party_role_required": "Choose a role."
+    "party_role_required": "Choose a role.",
+    "property_required": "Choose a property.",
+    "rejected_reason_too_long": "The reason can be at most 500 characters."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -777,6 +779,13 @@
       "co_owner": "Co-owner",
       "representative": "Representative",
       "occupant": "Occupant"
+    },
+    "propertyLinkStatus": {
+      "candidate": "Candidate",
+      "viewed": "Viewed",
+      "offered": "Offered",
+      "rejected": "Rejected",
+      "selected": "Selected"
     }
   },
   "ContactMethodList": {
@@ -1574,5 +1583,49 @@
     "archivedToast": "Property archived.",
     "unarchivedToast": "Property unarchived.",
     "deletedToast": "Property deleted."
+  },
+  "opportunities": {
+    "errors": {
+      "typeHasProperties": "This deal has linked properties that don't fit the new type. Remove them first."
+    }
+  },
+  "opportunityProperties": {
+    "errors": {
+      "alreadySelected": "Another property is already selected for this deal. Change its status first.",
+      "alreadyLinked": "This property is already linked to this deal.",
+      "subjectExists": "This deal already has a subject property."
+    }
+  },
+  "PropertyPicker": {
+    "placeholder": "Search by #code or address…",
+    "clear": "Clear the property",
+    "searching": "Searching…",
+    "noResults": "No active properties found",
+    "resultsCount": "{count, plural, one {# property found} other {# properties found}}",
+    "error": "The property search failed"
+  },
+  "PropertyLinks": {
+    "title": "Properties",
+    "addCandidate": "Add candidate",
+    "empty": "No properties proposed yet.",
+    "property": "Property",
+    "status": "Status",
+    "statusOf": "Status of {code}",
+    "remove": "Remove",
+    "removeLink": "Remove {code} from this deal",
+    "rejectTitle": "Reject {code}",
+    "rejectReason": "Reason (optional)",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "add": "Add",
+    "saving": "Saving…",
+    "archived": "Archived",
+    "rejectedBecause": "Rejected: {reason}"
+  },
+  "PropertyOpportunities": {
+    "title": "Deals",
+    "empty": "This property isn't linked to any deal yet.",
+    "subject": "Subject property",
+    "closed": "Closed"
   }
 }

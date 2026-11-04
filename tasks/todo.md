@@ -257,13 +257,15 @@ searched by code or address), change status inline. The property page lists link
 with status. `OpportunityService` translates the type-change refusal from Task 3.
 
 **Acceptance criteria:**
-- [ ] Add two candidates to a buyer opportunity and move one to `offered`; both pages show it (AC-2)
-- [ ] A second `selected` is refused with a translated message (AC-4)
-- [ ] Changing a buyer opportunity with candidates to seller shows a translated refusal
+- [x] Add two candidates to a buyer opportunity and move one to `offered`; both pages show it (AC-2)
+- [x] A second `selected` is refused with a translated message (AC-4)
+- [x] Changing a buyer opportunity with candidates to seller shows a translated refusal
 
 **Verification:**
-- [ ] `npx vitest run src/domain/opportunity-properties`; service suite
-- [ ] Browser: BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/opportunity-properties`; service suite
+- [x] Browser: BG and EN, 1280 and 390 px
+
+**Log:** `OpportunityPropertyService` adds no checks of its own: the triggers raise `properties.errors.relationNotAllowed` and `properties.errors.archived`, and the unique indexes map to `opportunityProperties.errors.alreadySelected` / `alreadyLinked` / `subjectExists`. `OpportunityRepository.update` passes `opportunities.errors.typeHasProperties` through, so the edit form shows it. A link can also be removed (audited as status → NULL). Rejecting opens a dialog for the optional reason, shown under the row. The picker (`property-picker.tsx`) searches active properties by `#code`/code or address (`PropertyService.searchForPicker`, 20 rows) and hides linked ones; it takes `suggestions` for Task 13. The section shows on buyer and tenant deals only; seller and landlord come in Task 12. The property page gets a Deals section (`property-opportunities.tsx`). Browser: broker on Alpha Opp 1, BG at 1280 px and EN at 375 px: #1004 added by code and set to Избран, a second Selected refused (BG and EN toast), #1008 rejected with a reason, buyer → seller refused in the edit form, #1004 and #1001 property pages list the deal with its status. Seen in passing: the timeline's relative time can mismatch on hydration for entries seconds old (existing, Task 14 area).
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/opportunity-properties/*`, `src/components/domain/opportunities/property-links.tsx`, `src/components/domain/properties/property-picker.tsx`, `opportunities/[id]/*`, `messages/{bg,en}.json`

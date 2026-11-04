@@ -58,3 +58,9 @@ export type PropertyDetail = Property & {
   area: Pick<Area, 'id' | 'name'> | null;
   assignee: { id: string; display_name: string } | null;
 };
+
+/** A property in a picker: active only, with its location names. */
+export type PropertyOption = Pick<
+  PropertyListItem,
+  'id' | 'code' | 'type' | 'rooms' | 'area_m2' | 'address' | 'status' | 'settlement_name' | 'area_name'
+>;

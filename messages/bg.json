@@ -76,7 +76,9 @@
     "price_cents": "Цената е с най-много два знака след десетичната запетая.",
     "offer_type_required": "Изберете продажба или наем.",
     "contact_required": "Изберете контакт.",
-    "party_role_required": "Изберете роля."
+    "party_role_required": "Изберете роля.",
+    "property_required": "Изберете имот.",
+    "rejected_reason_too_long": "Причината може да е най-много 500 знака."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -777,6 +779,13 @@
       "co_owner": "Съсобственик",
       "representative": "Представител",
       "occupant": "Обитател"
+    },
+    "propertyLinkStatus": {
+      "candidate": "Кандидат",
+      "viewed": "Огледан",
+      "offered": "Предложен",
+      "rejected": "Отхвърлен",
+      "selected": "Избран"
     }
   },
   "ContactMethodList": {
@@ -1574,5 +1583,49 @@
     "archivedToast": "Имотът е архивиран.",
     "unarchivedToast": "Имотът е върнат от архива.",
     "deletedToast": "Имотът е изтрит."
+  },
+  "opportunities": {
+    "errors": {
+      "typeHasProperties": "Сделката има свързани имоти, които не отговарят на новия вид. Първо ги премахнете."
+    }
+  },
+  "opportunityProperties": {
+    "errors": {
+      "alreadySelected": "Друг имот вече е избран за тази сделка. Първо сменете неговия статус.",
+      "alreadyLinked": "Имотът вече е свързан с тази сделка.",
+      "subjectExists": "Сделката вече има имот обект."
+    }
+  },
+  "PropertyPicker": {
+    "placeholder": "Търсене по #код или адрес…",
+    "clear": "Изчисти имота",
+    "searching": "Търсене…",
+    "noResults": "Няма намерени активни имоти",
+    "resultsCount": "{count, plural, one {# намерен имот} other {# намерени имота}}",
+    "error": "Търсенето на имоти не успя"
+  },
+  "PropertyLinks": {
+    "title": "Имоти",
+    "addCandidate": "Добави кандидат",
+    "empty": "Още няма предложени имоти.",
+    "property": "Имот",
+    "status": "Статус",
+    "statusOf": "Статус на {code}",
+    "remove": "Премахни",
+    "removeLink": "Премахни {code} от сделката",
+    "rejectTitle": "Отхвърляне на {code}",
+    "rejectReason": "Причина (по желание)",
+    "reject": "Отхвърли",
+    "cancel": "Отказ",
+    "add": "Добави",
+    "saving": "Запазване…",
+    "archived": "Архивиран",
+    "rejectedBecause": "Отхвърлен: {reason}"
+  },
+  "PropertyOpportunities": {
+    "title": "Сделки",
+    "empty": "Имотът още не е свързан със сделка.",
+    "subject": "Имот обект",
+    "closed": "Затворена"
   }
 }

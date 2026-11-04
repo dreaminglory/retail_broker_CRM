@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
 import { OPEN_LISTING_STATUSES } from '@/domain/listings/validation';
+import { escapeLikePattern } from '@/domain/contacts/validation';
 import { hasListingFilter, type PropertyListFilters } from './list-filters';
 import type { Property, PropertyWithOpenListings } from './types';
 import type { PropertyFormValues } from './validation';
@@ -30,6 +31,28 @@ export class PropertyRepository {
 
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch property: ${error.message}`);
     return data as Property | null;
+  }
+
+  /**
+   * Active properties for a picker (rule 8), newest first: "#1042" or "1042" matches the code,
+   * anything else the address.
+   */
+  async searchActive(agencyId: string, query: string, limit: number): Promise<Property[]> {
+    let request = this.db
+      .from('properties')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('status', 'active')
+      .order('code', { ascending: false })
+      .limit(limit);
+
+    const code = /^#?(\d{1,9})$/.exec(query)?.[1];
+    if (code) request = request.eq('code', Number(code));
+    else if (query) request = request.ilike('address', `%${escapeLikePattern(query)}%`);
+
+    const { data, error } = await request;
+    if (error) throw new DomainError('errors.loadFailed', `Failed to search properties: ${error.message}`);
+    return (data ?? []) as Property[];
   }
 
   /**

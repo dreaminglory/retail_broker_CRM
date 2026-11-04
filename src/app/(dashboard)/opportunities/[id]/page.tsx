@@ -8,6 +8,9 @@ import { TaskService } from "@/domain/tasks/service";
 import { TimelineService } from "@/domain/timeline/service";
 import { MemberRepository } from "@/domain/members/repository";
 import { getAgencySettings } from "@/domain/agencies/settings";
+import { getLocale } from "next-intl/server";
+import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
+import type { Locale } from "@/i18n/config";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
 
 export default async function OpportunityDetailPage({
@@ -36,7 +39,8 @@ export default async function OpportunityDetailPage({
   if (!opportunity) notFound();
 
   // Fetch parallel dependencies
-  const [stages, leadSources, contacts, tasks, timeline, brokers, settings] = await Promise.all([
+  const locale = (await getLocale()) as Locale;
+  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     // Only the contacts this opportunity links to; pickers search the agency on demand.
@@ -54,6 +58,7 @@ export default async function OpportunityDetailPage({
     new TimelineService(supabase).getOpportunityTimeline(id, agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
     getAgencySettings(agencyId),
+    new OpportunityPropertyService(supabase).listForOpportunity(id, agencyId, locale),
   ]);
 
   return (
@@ -68,6 +73,7 @@ export default async function OpportunityDetailPage({
         timeline={timeline}
         currentUserId={user?.id}
         timeZone={settings.timezone}
+        propertyLinks={propertyLinks}
       />
     </div>
   );

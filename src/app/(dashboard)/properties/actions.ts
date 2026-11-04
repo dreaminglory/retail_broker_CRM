@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from 'next/cache';
+import { getLocale } from 'next-intl/server';
+import type { Locale } from '@/i18n/config';
+import type { PropertyOption } from '@/domain/properties/types';
 import { AreaService } from '@/domain/areas/service';
 import type { Area } from '@/domain/areas/types';
 import { ListingService } from '@/domain/listings/service';
@@ -190,5 +193,16 @@ export async function listAreasForSettlementAction(settlementId: string): Promis
     const { supabase, agencyId } = await getAuthContext();
     const areas = await new AreaService(supabase).listActiveForSettlement(agencyId, parsed.data);
     return { success: true, data: areas.map(({ id, name }) => ({ id, name })) };
+  } catch (error) { return toActionError(error); }
+}
+
+/** The property picker's search: active properties by #code or address (rule 8). */
+export async function searchPropertiesForPicker(query: string): Promise<ActionResult<PropertyOption[]>> {
+  try {
+    const parsed = z.string().trim().max(100).safeParse(query);
+    if (!parsed.success) return toActionError(parsed.error);
+    const { supabase, agencyId } = await getAuthContext();
+    const locale = (await getLocale()) as Locale;
+    return { success: true, data: await new PropertyService(supabase).searchForPicker(agencyId, parsed.data, locale) };
   } catch (error) { return toActionError(error); }
 }
