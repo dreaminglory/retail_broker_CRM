@@ -399,7 +399,8 @@ no monasteries. The picker searches by prefix on `lower(name_bg)` / `lower(name_
 and area name, then the settlement in both languages. `trg_property_search_vector` keeps it on
 insert and on a change of code, address, settlement or area; renaming an area rewrites the
 vectors of its properties (`trg_areas_search_vector_cascade`), which also moves their
-`updated_at`. A leading `#` in the query is dropped, so `#1042` finds 1042.
+`updated_at`. The 'simple' parser drops a leading `#`, so `#1042`
+finds 1042; `toPrefixQuery` escapes quotes and backslashes so any input parses.
 
 Every reference between agency rows in this area is a composite `(agency_id, x_id)` foreign
 key (AD-057), including `tasks.property_id` (`ON DELETE SET NULL (property_id)`) and

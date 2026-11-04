@@ -22,6 +22,12 @@ describeServices('Property search against the local stack', () => {
     expect(results.map((result) => result.id)).toContain(ALPHA_1001);
   });
 
+  it('searches a query ending in a backslash instead of failing', async () => {
+    const results = await properties(alpha, 'Кричим\\');
+
+    expect(results.map((result) => result.id)).toContain(ALPHA_1001);
+  });
+
   it("never shows Beta's properties to Alpha, or Alpha's to Beta", async () => {
     const [alphaIds, betaIds] = await Promise.all([
       properties(alpha, 'Лозенец').then((results) => results.map((result) => result.id)),

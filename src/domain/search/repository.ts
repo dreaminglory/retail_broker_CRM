@@ -1,20 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
+import { toPrefixQuery } from './query';
 import type { SearchResult } from './types';
-
-/**
- * Every word as a prefix, all required. A bare number also matches its "+" form, so 359…
- * finds +359…; a leading "#" is dropped, so "#1042" finds property 1042.
- */
-function toPrefixQuery(query: string): string {
-  return query
-    .trim()
-    .split(/\s+/)
-    .map((word) => word.replace(/^#/, '').replace(/'/g, "''"))
-    .filter(Boolean)
-    .map((word) => (/^\d+$/.test(word) ? `('+${word}':* | '${word}':*)` : `'${word}':*`))
-    .join(' & ');
-}
 
 export class SearchRepository {
   constructor(private readonly db: SupabaseClient) {}

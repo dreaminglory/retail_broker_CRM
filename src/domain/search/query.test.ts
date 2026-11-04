@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeSearchQuery } from './query';
+import { normalizeSearchQuery, toPrefixQuery } from './query';
 
 describe('normalizeSearchQuery', () => {
   it.each([
@@ -23,5 +23,24 @@ describe('normalizeSearchQuery', () => {
     ['2026'],
   ])('leaves %s unchanged', (query) => {
     expect(normalizeSearchQuery(query)).toBe(query);
+  });
+});
+
+describe('toPrefixQuery', () => {
+  it('requires every word as a prefix', () => {
+    expect(toPrefixQuery('  Лозенец  кричим ')).toBe("'Лозенец':* & 'кричим':*");
+  });
+
+  it('lets a bare number match its + form too', () => {
+    expect(toPrefixQuery('359')).toBe("('+359':* | '359':*)");
+  });
+
+  it('escapes quotes and backslashes so the tsquery always parses', () => {
+    expect(toPrefixQuery("O'Neil")).toBe("'O''Neil':*");
+    expect(toPrefixQuery('a\\')).toBe("'a\\\\':*");
+  });
+
+  it('is empty for a blank query', () => {
+    expect(toPrefixQuery('   ')).toBe('');
   });
 });
