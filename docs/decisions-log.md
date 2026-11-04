@@ -207,6 +207,17 @@ Transliteration Act 2009 names; a contact merge moves property parties (C4).
 **Why:** the data model is the module's main risk (`SPEC.md` §7); the strongest layer keeps
 `matching`, `mandates` and imports honest without re-checking in each service.
 
+### AD-058: Links and listings are fixed to their property; party history outlives contact deletes
+**Accepted** (founder asked for the review fixes, 2026-11-04, Checkpoint 3 of `tasks/plan.md`). Members may update only a
+link's `status` and `rejected_reason` and a listing's `price` and `status`: column `UPDATE`
+privileges, not a trigger, so moving a link or listing to another property (past the archived
+check, unaudited) is refused before any rule runs. A contact who is or was a property party
+can't be deleted (`NO ACTION`, so an agency delete still cascades), and `import_revert` counts a
+party as work (AD-036). The link audit trigger skips a removal while its agency is being deleted.
+**Why:** the review found that an agency with links couldn't be deleted, that a plain `UPDATE`
+could re-point links and listings, and that a contact delete erased the ownership history the
+spec keeps.
+
 ## Import
 
 ### AD-034: Chunked import pipeline

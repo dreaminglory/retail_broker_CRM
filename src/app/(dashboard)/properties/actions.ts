@@ -19,7 +19,13 @@ import { addPropertyPartySchema } from '@/domain/property-parties/validation';
 import { PropertyService } from '@/domain/properties/service';
 import { propertyFormSchema } from '@/domain/properties/validation';
 import { CONFIG_ROLES, getAuthContext, requireRole, toActionError, type ActionResult } from '@/lib/actions';
+import { DomainError } from '@/lib/errors';
 import { z } from 'zod';
+
+/** A malformed id names no row: not found, before any query. */
+function assertId(id: string): void {
+  if (!z.string().uuid().safeParse(id).success) throw new DomainError('errors.not_found');
+}
 
 function propertyFormValues(formData: FormData) {
   const field = (name: string) => formData.get(name) ?? undefined;
@@ -82,6 +88,7 @@ export async function updatePropertyAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
   try {
+    assertId(id);
     const { supabase, agencyId } = await getAuthContext();
     const parsed = propertyFormSchema.safeParse(propertyFormValues(formData));
     if (!parsed.success) return toActionError(parsed.error);
@@ -95,6 +102,7 @@ export async function updatePropertyAction(
 /** Any member (rule 1); archiving withdraws open listings. */
 export async function setPropertyArchivedAction(id: string, archived: boolean): Promise<ActionResult> {
   try {
+    assertId(id);
     const { supabase, agencyId } = await getAuthContext();
     await new PropertyService(supabase).setArchived(id, agencyId, archived);
     revalidateProperty(id);
@@ -107,6 +115,7 @@ export async function deletePropertyAction(id: string): Promise<ActionResult> {
   try {
     const ctx = await getAuthContext();
     requireRole(ctx, CONFIG_ROLES);
+    assertId(id);
     await new PropertyService(ctx.supabase).delete(id, ctx.agencyId);
     revalidatePath('/properties');
     return { success: true, data: undefined };
@@ -147,6 +156,8 @@ export async function changeListingPriceAction(
   formData: FormData,
 ): Promise<ActionResult> {
   try {
+    assertId(listingId);
+    assertId(propertyId);
     const { supabase, agencyId } = await getAuthContext();
     const parsed = updateListingPriceSchema.safeParse({ price: formData.get('price') });
     if (!parsed.success) return toActionError(parsed.error);
@@ -163,6 +174,8 @@ export async function setListingStatusAction(
   status: ListingStatus,
 ): Promise<ActionResult> {
   try {
+    assertId(listingId);
+    assertId(propertyId);
     const { supabase, agencyId } = await getAuthContext();
     const parsed = setListingStatusSchema.safeParse({ status });
     if (!parsed.success) return toActionError(parsed.error);
@@ -198,6 +211,8 @@ export async function addPropertyPartyAction(
 
 export async function endPropertyPartyAction(partyId: string, propertyId: string): Promise<ActionResult> {
   try {
+    assertId(partyId);
+    assertId(propertyId);
     const { supabase, agencyId } = await getAuthContext();
     const party = await new PropertyPartyService(supabase).end(partyId, agencyId);
     revalidatePath(`/properties/${propertyId}`);

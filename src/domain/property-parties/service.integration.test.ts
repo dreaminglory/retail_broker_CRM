@@ -8,6 +8,8 @@ import { PropertyPartyService } from './service';
 
 describeServices('PropertyPartyService against the local stack', () => {
   const cleanup = createRowCleanup();
+  // Contacts go after the properties: a party's contact can't be deleted (L18).
+  const contactCleanup = createRowCleanup();
   let broker: TestSession;
   let parties: PropertyPartyService;
   let sofiaId: string;
@@ -18,7 +20,10 @@ describeServices('PropertyPartyService against the local stack', () => {
     [{ id: sofiaId }] = await new SettlementService(broker.db).search('София', 'bg');
   });
 
-  afterAll(() => cleanup.run());
+  afterAll(async () => {
+    await cleanup.run();
+    await contactCleanup.run();
+  });
 
   async function createProperty() {
     const property = await new PropertyService(broker.db).create(broker.agencyId, broker.userId, {
@@ -34,7 +39,7 @@ describeServices('PropertyPartyService against the local stack', () => {
       type: 'person',
       first_name: `${name}${crypto.randomUUID().slice(0, 6)}`,
     });
-    cleanup.track('contacts', contact.id);
+    contactCleanup.track('contacts', contact.id);
     return contact;
   }
 

@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 46th migration
-(`20261103000003_property_triggers.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 47th migration
+(`20261103000004_property_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -392,7 +392,8 @@ Every reference between agency rows in this area is a composite `(agency_id, x_i
 key (AD-057), including `tasks.property_id` (`ON DELETE SET NULL (property_id)`) and
 `notes.property_id` (`CASCADE`). A property's open listings are those `active` or `reserved`.
 A linked property and a used area can't be deleted (`RESTRICT`); they are archived or
-deactivated. Ending a party keeps the row as ownership history.
+deactivated. Ending a party keeps the row as ownership history, and a contact with parties,
+ended or open, can't be deleted (`NO ACTION`, so an agency delete still cascades).
 
 ---
 
@@ -541,7 +542,9 @@ The one automatic move is rule 7: completing a `viewing` task with an opportunit
 property sets `candidate → viewed`, or creates the link as `viewed` on a buyer or tenant deal
 when it was missing and the property is active. It never touches `offered`, `rejected`,
 `selected` or `subject`. Every change, including adding and removing a link, is one
-`opportunity` audit row with `field_name = 'property_link'` and `metadata.property_id`.
+`opportunity` audit row with `field_name = 'property_link'` and `metadata.property_id`, except
+when the whole agency is deleted (its audit log goes with it). A link can't move to another
+property or deal (L17).
 
 ---
 
@@ -646,8 +649,10 @@ The "Enforced by" column tells you which layer to change and test.
 | L14 | A property with links, open listings or tasks is archived, not deleted (rule 1) | `PropertyService.delete` counts all three first (not atomic: links are also `RESTRICT`, L8, but a task added meanwhile only gets `property_id` set to NULL) + `manage.integration.test.ts` |
 | L15 | A property's responsible broker is an active member; the creator by default (rule 2) | `assertAssignable()` in `PropertyService` create and update, like I4 |
 | L16 | A task's property is set only on a `viewing` with an opportunity; another task type drops it (rule 7) | `taskSchemas().create` (Zod, also the next task of a completion) + `validation.test.ts`; not a `CHECK`, so other writers aren't held to it |
+| L17 | A link and a listing stay on their property: members update only a link's `status` and `rejected_reason`, and a listing's `price` and `status` (AD-058) | column `UPDATE` privileges on `opportunity_properties` and `listings` + `074-property-review-fixes.sql` |
+| L18 | A contact who is a property party, now or in the past, keeps its party rows: it can't be deleted, and an import revert keeps it as worked on | FK `fk_property_parties_contact` (`NO ACTION`), RPC `import_revert` + `074-property-review-fixes.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
-| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on | RPC `import_revert` + `063-import-revert.sql` |
+| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
 
 ---
