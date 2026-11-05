@@ -79,7 +79,11 @@
     "party_role_required": "Choose a role.",
     "property_required": "Choose a property.",
     "rejected_reason_too_long": "The reason can be at most 500 characters.",
-    "property_needs_opportunity": "A property can only be set on a task for a deal."
+    "property_needs_opportunity": "A property can only be set on a task for a deal.",
+    "requirement_criterion_required": "Add at least a budget, a location, a property type, rooms or an area.",
+    "min_above_max": "“From” is more than “to”.",
+    "must_without_criterion": "Only a filled-in criterion can be a must-have.",
+    "location_covered": "The whole settlement already covers its areas. Remove one of them."
   },
   "ErrorPage": {
     "title": "This page couldn't load",
@@ -788,6 +792,12 @@
       "offered": "Offered",
       "rejected": "Rejected",
       "selected": "Selected"
+    },
+    "financing": {
+      "cash": "Cash",
+      "mortgage": "Mortgage",
+      "mixed": "Mixed",
+      "unknown": "Unknown"
     }
   },
   "ContactMethodList": {
@@ -1028,6 +1038,8 @@
     "titlePlaceholder": "e.g. Buyer looking for 2-bed in Lozenets",
     "typeLabel": "Type",
     "typePlaceholder": "Select type",
+    "budgetNoticeRent": "The requirements' budget will now be read as the monthly rent.",
+    "budgetNoticePrice": "The requirements' budget will now be read as the purchase price.",
     "stageLabel": "Stage",
     "stagePlaceholder": "Select stage",
     "primaryContactLabel": "Primary Contact",
@@ -1163,7 +1175,10 @@
       "listingStatusChanged": "Listing status changed",
       "propertyLinkAdded": "Property linked",
       "propertyLinkChanged": "Link status changed",
-      "propertyLinkRemoved": "Property unlinked"
+      "propertyLinkRemoved": "Property unlinked",
+      "requirementCreated": "Requirements added",
+      "requirementChanged": "Requirements changed",
+      "requirementRemoved": "Requirements removed"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",
@@ -1177,7 +1192,45 @@
     "linkSubject": "Subject property",
     "onDeal": "Deal: {title}",
     "rejectedReason": "Reason: {reason}",
-    "perMonth": "{price} / month"
+    "perMonth": "{price} / month",
+    "requirement": {
+      "fields": {
+        "budget_min": "Budget from",
+        "budget_max": "Budget up to",
+        "property_types": "Property type",
+        "rooms_min": "Rooms from",
+        "rooms_max": "Rooms up to",
+        "area_m2_min": "Area from",
+        "area_m2_max": "Area up to",
+        "floor_min": "Floor from",
+        "floor_max": "Floor up to",
+        "not_top_floor": "Not the top floor",
+        "construction": "Construction",
+        "financing": "Financing",
+        "wishes": "Other wishes",
+        "locations": "Locations",
+        "budget_must": "Budget: must-have",
+        "location_must": "Locations: must-have",
+        "type_must": "Property type: must-have",
+        "rooms_must": "Rooms: must-have",
+        "area_m2_must": "Area: must-have",
+        "floor_must": "Floor: must-have",
+        "construction_must": "Construction: must-have"
+      },
+      "criteria": {
+        "budget": "budget",
+        "location": "locations",
+        "type": "property type",
+        "rooms": "rooms",
+        "area_m2": "area",
+        "floor": "floor",
+        "construction": "construction"
+      },
+      "mustList": "Must-haves",
+      "yes": "Yes",
+      "no": "No",
+      "none": "—"
+    }
   },
   "NoteCard": {
     "teamMember": "Team Member",
@@ -1318,7 +1371,8 @@
   },
   "ui": {
     "close": "Close",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "floorHint": "Ground floor = floor 1"
   },
   "ContactDetailPage": {
     "back": "Contacts",
@@ -1611,7 +1665,8 @@
   },
   "opportunities": {
     "errors": {
-      "typeHasProperties": "This deal has linked properties that don't fit the new type. Remove them first."
+      "typeHasProperties": "This deal has linked properties that don't fit the new type. Remove them first.",
+      "typeHasRequirement": "This deal has a buyer's or tenant's requirements. Remove them before changing it to seller or landlord."
     }
   },
   "opportunityProperties": {
@@ -1670,5 +1725,94 @@
     "submit": "Schedule",
     "saving": "Saving…",
     "scheduled": "Viewing scheduled"
+  },
+  "requirements": {
+    "range": {
+      "between": "{min}–{max}",
+      "from": "from {min}",
+      "to": "up to {max}"
+    },
+    "rooms": "{value} rooms",
+    "roomsExact": "{count, plural, one {# room} other {# rooms}}",
+    "m2": "{value} m²",
+    "perMonth": "{value} / month",
+    "notTopFloor": "not the top floor",
+    "areaInSettlement": "{area} ({settlement})",
+    "moreLocations": "{count} more",
+    "errors": {
+      "notFound": "The deal or its requirements weren't found.",
+      "wrongOpportunityType": "Only buyer and tenant deals have requirements.",
+      "readOnly": "This deal is closed. Reopen it to change its requirements.",
+      "invalid": "These requirements aren't valid. Check the fields.",
+      "invalidLocation": "An area isn't in the chosen settlement or no longer exists.",
+      "locationCovered": "The whole settlement already covers its areas. Remove one of them.",
+      "inactiveArea": "An area you picked has been deactivated. Remove it and save again."
+    }
+  },
+  "RequirementSection": {
+    "title": "Requirements",
+    "empty": "Add the client's search.",
+    "mustHave": "must-have",
+    "updatedOn": "Updated on {date}",
+    "budgetPrice": "Budget (price)",
+    "budgetRent": "Budget (monthly rent)",
+    "locations": "Locations",
+    "types": "Property type",
+    "rooms": "Rooms",
+    "areaM2": "Area",
+    "floor": "Floor",
+    "construction": "Construction",
+    "financing": "Financing",
+    "wishes": "Other wishes",
+    "inactiveArea": "inactive",
+    "add": "Add",
+    "edit": "Edit",
+    "remove": "Remove",
+    "removeTitle": "Remove the requirements?",
+    "removeDescription": "The criteria will be deleted. The deal's history keeps them.",
+    "removing": "Removing…",
+    "removed": "Requirements removed.",
+    "cancel": "Cancel",
+    "readOnly": "This deal is closed. Reopen it to change its requirements."
+  },
+  "RequirementForm": {
+    "addTitle": "Client's requirements",
+    "editTitle": "Edit requirements",
+    "description": "What the client is looking for. Must-haves will filter the properties when matching.",
+    "budgetGroup": "Budget",
+    "budgetPrice": "Price, €",
+    "budgetRent": "Monthly rent, €",
+    "from": "From",
+    "to": "To",
+    "whereGroup": "Where",
+    "whatGroup": "What",
+    "extraGroup": "Extra",
+    "types": "Property type",
+    "construction": "Construction",
+    "rooms": "Rooms",
+    "areaM2": "Area, m²",
+    "floor": "Floor",
+    "notTopFloor": "Not the top floor",
+    "financing": "Financing",
+    "wishes": "Other wishes",
+    "wishesPlaceholder": "parking, elevator, Act 16, exposure",
+    "mustHave": "Must-have",
+    "mustHaveOf": "{criterion}: must-have",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "saved": "Requirements saved."
+  },
+  "RequirementLocationPicker": {
+    "empty": "No location chosen yet.",
+    "settlement": "Settlement",
+    "pickHint": "Choose a settlement, then its areas.",
+    "wholeSettlement": "The whole settlement",
+    "areas": "Areas in {settlement}",
+    "loadingAreas": "Loading areas…",
+    "noAreas": "The agency has no active areas here. Choose the whole settlement.",
+    "remove": "Remove {name}",
+    "inactiveArea": "inactive",
+    "done": "Done"
   }
 }

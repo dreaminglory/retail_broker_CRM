@@ -4,16 +4,19 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Opportunity, OpportunityWithDetails } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
+import { RequirementSummaryLine } from "@/components/domain/requirements/requirement-summary-line";
 import { StageBadge } from "./stage-badge";
 import { Building2, User, ChevronRight, Briefcase, Calendar } from "lucide-react";
 import { useTranslations, useFormatter } from "next-intl";
 
 interface OpportunityListTableProps {
   opportunities: Opportunity[];
+  /** Buyer and tenant deals' requirement summary lines by opportunity id, shown under the title. */
+  requirementSummaries?: Record<string, string>;
   stages: Stage[];
 }
 
-export function OpportunityListTable({ opportunities, stages }: OpportunityListTableProps) {
+export function OpportunityListTable({ opportunities, requirementSummaries = {}, stages }: OpportunityListTableProps) {
   const t = useTranslations("OpportunityListTable");
 
   if (opportunities.length === 0) {
@@ -35,14 +38,14 @@ export function OpportunityListTable({ opportunities, stages }: OpportunityListT
       {opportunities.map((opp) => {
         const stage = stages.find((s) => s.id === opp.stage_id);
         return (
-          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} />
+          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} requirementSummary={requirementSummaries[opp.id]} />
         );
       })}
     </div>
   );
 }
 
-function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stage?: Stage }) {
+function OpportunityRow({ opportunity, stage, requirementSummary }: { opportunity: Opportunity; stage?: Stage; requirementSummary?: string }) {
   const format = useFormatter();
   const enums = useTranslations("Enums");
 
@@ -59,7 +62,9 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
           {opportunity.temperature === "warm" && <span title={enums("opportunityTemperature.warm")}>⚡</span>}
           {opportunity.temperature === "cold" && <span title={enums("opportunityTemperature.cold")}>❄️</span>}
         </div>
-        
+
+        <RequirementSummaryLine summary={requirementSummary} className="mb-1" />
+
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>{enums(`opportunityType.${opportunity.type}`)}</span>
           

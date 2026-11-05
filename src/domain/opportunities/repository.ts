@@ -209,8 +209,12 @@ export class OpportunityRepository {
       .single();
 
     if (error) {
-      // A type change its property links don't allow (rule 5, trigger key).
-      if (error.code === 'P0001' && error.message === 'opportunities.errors.typeHasProperties') {
+      // A type change its property links (rule 5) or its requirement (requirements rule 1)
+      // don't allow: the trigger keys.
+      if (
+        error.code === 'P0001' &&
+        (error.message === 'opportunities.errors.typeHasProperties' || error.message === 'opportunities.errors.typeHasRequirement')
+      ) {
         throw new DomainError(error.message);
       }
       throw new DomainError('errors.saveFailed', `Failed to update opportunity: ${error.message}`);

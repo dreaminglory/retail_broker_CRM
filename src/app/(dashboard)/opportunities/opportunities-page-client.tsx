@@ -37,6 +37,8 @@ const TYPE_FILTER_KEYS = ["allTypes", "buyer", "seller", "tenant", "landlord"];
 
 interface OpportunitiesPageClientProps {
   opportunities: Opportunity[];
+  /** The requirement summary lines of this page's buyer and tenant deals, by opportunity id. */
+  requirementSummaries: Record<string, string>;
   pageInfo: PageInfo;
   stages: Stage[];
   leadSources: LeadSource[];
@@ -51,6 +53,7 @@ interface OpportunitiesPageClientProps {
 
 export function OpportunitiesPageClient({
   opportunities,
+  requirementSummaries,
   pageInfo,
   stages,
   leadSources,
@@ -277,7 +280,7 @@ export function OpportunitiesPageClient({
 
       {/* ── List ────────────────────────────────────────────────────────────── */}
       <div className={`${isPending ? "opacity-60 pointer-events-none" : ""}`}>
-        <OpportunityListTable opportunities={opportunities} stages={stages} />
+        <OpportunityListTable opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} />
         <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
       </div>
     </>

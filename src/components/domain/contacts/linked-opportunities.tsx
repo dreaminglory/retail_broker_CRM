@@ -5,15 +5,18 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Opportunity } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
+import { RequirementSummaryLine } from "@/components/domain/requirements/requirement-summary-line";
 import { StageBadge } from "@/components/domain/opportunities/stage-badge";
 import { ChevronRight, Briefcase, Calendar } from "lucide-react";
 
 interface LinkedOpportunitiesProps {
   opportunities: Opportunity[];
+  /** Buyer and tenant deals' requirement summary lines by opportunity id, shown under the title. */
+  requirementSummaries?: Record<string, string>;
   stages: Stage[];
 }
 
-export function LinkedOpportunities({ opportunities, stages }: LinkedOpportunitiesProps) {
+export function LinkedOpportunities({ opportunities, requirementSummaries = {}, stages }: LinkedOpportunitiesProps) {
   const t = useTranslations("LinkedOpportunities");
 
   if (opportunities.length === 0) {
@@ -31,14 +34,14 @@ export function LinkedOpportunities({ opportunities, stages }: LinkedOpportuniti
       {opportunities.map((opp) => {
         const stage = stages.find((s) => s.id === opp.stage_id);
         return (
-          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} />
+          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} requirementSummary={requirementSummaries[opp.id]} />
         );
       })}
     </div>
   );
 }
 
-function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stage?: Stage }) {
+function OpportunityRow({ opportunity, stage, requirementSummary }: { opportunity: Opportunity; stage?: Stage; requirementSummary?: string }) {
   const tEnum = useTranslations("Enums");
   const formatLoc = useFormatter();
   const formatter = new Intl.NumberFormat("bg-BG", {
@@ -69,6 +72,8 @@ function OpportunityRow({ opportunity, stage }: { opportunity: Opportunity; stag
           {opportunity.status === "active" && opportunity.temperature === "cold" && <span title={tEnum("opportunityTemperature.cold")}>??</span>}
         </div>
         
+        <RequirementSummaryLine summary={requirementSummary} className="mb-1" />
+
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>{tEnum(`opportunityType.${opportunity.type as "buyer" | "seller" | "tenant" | "landlord"}`)}</span>
           

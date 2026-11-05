@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { TimelineService } from "@/domain/timeline/service";
 import { ContactActivity } from "./contact-activity";
 import { OpportunityService } from "@/domain/opportunities/service";
+import { RequirementService } from "@/domain/requirements/service";
 import { StageRepository } from "@/domain/stages/repository";
 import { LinkedOpportunities } from "@/components/domain/contacts/linked-opportunities";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
@@ -53,11 +54,16 @@ export default async function ContactDetailPage({
 
   const timelineService = new TimelineService(supabase);
   
-  const [timeline, opportunities, stages, propertyParties] = await Promise.all([
+  const locale = (await getLocale()) as Locale;
+  const opportunitiesPromise = new OpportunityService(supabase).getByContactId(id, agencyId);
+
+  // The linked deals' summary lines (FR-REQ-05) load as soon as the deals are in.
+  const [timeline, opportunities, requirementSummaries, stages, propertyParties] = await Promise.all([
     timelineService.getContactTimeline(id, agencyId),
-    new OpportunityService(supabase).getByContactId(id, agencyId),
+    opportunitiesPromise,
+    opportunitiesPromise.then((opportunities) => new RequirementService(supabase).getSummaries(opportunities, agencyId, locale)),
     new StageRepository(supabase).findActive(agencyId),
-    new PropertyPartyService(supabase).listForContact(id, agencyId, (await getLocale()) as Locale),
+    new PropertyPartyService(supabase).listForContact(id, agencyId, locale),
   ]);
 
   const isPerson = contact.type === "person";
@@ -162,7 +168,7 @@ export default async function ContactDetailPage({
                 <Badge variant="secondary">{opportunities.length}</Badge>
               )}
             </div>
-            <LinkedOpportunities opportunities={opportunities} stages={stages} />
+            <LinkedOpportunities opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} />
           </section>
         </div>
 

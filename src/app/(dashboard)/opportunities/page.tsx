@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/config";
+import { RequirementService } from "@/domain/requirements/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { OpportunityService } from "@/domain/opportunities/service";
 import { StageRepository } from "@/domain/stages/repository";
@@ -63,20 +65,24 @@ export default async function OpportunitiesPage({
     );
   }
 
-  // Fetch all required data in parallel
-  const [paged, stages, leadSources, brokers] = await Promise.all([
-    loadPage(page, PAGE_SIZE, (offset, limit) =>
-      new OpportunityService(supabase).listPage(agencyId, {
-        search: search || undefined,
-        status: status === "all" ? "all" : status,
-        stageId: stage === "all" ? undefined : stage,
-        type: type === "all" ? "all" : type,
-        assignedTo,
-        temperature,
-        limit,
-        offset,
-      })
-    ),
+  const locale = (await getLocale()) as Locale;
+  const pagedPromise = loadPage(page, PAGE_SIZE, (offset, limit) =>
+    new OpportunityService(supabase).listPage(agencyId, {
+      search: search || undefined,
+      status: status === "all" ? "all" : status,
+      stageId: stage === "all" ? undefined : stage,
+      type: type === "all" ? "all" : type,
+      assignedTo,
+      temperature,
+      limit,
+      offset,
+    })
+  );
+
+  // Fetch all required data in parallel; the rows' summary lines (FR-REQ-05) as soon as the page is in.
+  const [paged, requirementSummaries, stages, leadSources, brokers] = await Promise.all([
+    pagedPromise,
+    pagedPromise.then((paged) => new RequirementService(supabase).getSummaries(paged.rows, agencyId, locale)),
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
@@ -86,6 +92,7 @@ export default async function OpportunitiesPage({
     <div className="mx-auto max-w-5xl">
       <OpportunitiesPageClient
         opportunities={paged.rows}
+        requirementSummaries={requirementSummaries}
         pageInfo={paged.info}
         stages={stages}
         leadSources={leadSources}

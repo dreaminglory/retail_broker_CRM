@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 47th migration
-(`20261103000004_property_review_fixes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 52nd migration
+(`20261105000003_requirement_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -57,8 +57,13 @@ flowchart LR
   subgraph N[Notifications]
     notification_deliveries
   end
+  subgraph Q[Requirement]
+    requirements --- requirement_locations
+  end
 
-  T -->|agency_id on every row| I & P & H & M & N & R
+  T -->|agency_id on every row| I & P & H & M & N & R & Q
+  opportunities -->|buyer or tenant search| requirements
+  requirement_locations -->|settlement, area| areas
   contacts -->|party of| property_parties
   opportunities -->|subject or candidate| opportunity_properties
   tasks & notes -->|property_id| properties
@@ -67,7 +72,7 @@ flowchart LR
   contacts -->|primary contact| opportunities
   import_jobs -->|creates| contacts & inquiries
   tasks -->|trigger: next_action_at| opportunities
-  opportunities & contacts & properties & listings -->|triggers| audit_log
+  opportunities & contacts & properties & listings & requirements -->|triggers| audit_log
 ```
 
 Every table except `agencies`, `profiles` and the global reference table `settlements` carries
@@ -81,7 +86,7 @@ Every table except `agencies`, `profiles` and the global reference table `settle
 
 Only keys and columns that carry business meaning are shown. `id`, `created_at`,
 `updated_at` exist on every table (except: `opportunity_participants`, `merge_history`,
-`import_rows` have no `updated_at`; `audit_log` uses `performed_at`).
+`import_rows`, `requirement_locations` have no `updated_at`; `audit_log` uses `performed_at`).
 
 ### 2.1 Tenancy & access
 
@@ -257,7 +262,17 @@ The property timeline reads the property's own `property` rows, its `listing` ro
 tasks with its `property_id`; a link change is one row that both timelines show (AD-057).
 Listing and link rows are the only audit rows with `metadata.property_id`; `idx_audit_property`
 (partial, on `agency_id, metadata->>'property_id', performed_at`) finds them.
-`describeAudit` (`audit-event.ts`) turns a row into the event both timelines render.
+A requirement save is one `opportunity` row with `action = 'field_change'` and
+`field_name = 'requirement'` (AD-059), written by `trg_audit_requirement_changes`:
+`metadata = { event: created | changed | removed, changes: [{ field, from, to }] }`. `changes`
+holds only what changed (a created entry: what was set, `from` its empty value; a removed
+entry: what was there, `to` its empty value). The `locations` change lists
+`{ settlement_id, settlement_bg, settlement_en, area_id, area }`, so an entry keeps the names
+it had. A save that changes nothing, and the cascade of a deleted opportunity, write no row.
+The opportunity and contact timelines read these rows with the other opportunity rows.
+`describeAudit` (`audit-event.ts`) turns a row into the event both timelines render; a
+requirement row becomes the `requirement` kind, its changes shown old → new with the location
+names it was saved with, in the reader's language.
 
 ### 2.5 Data import
 
@@ -408,6 +423,55 @@ key (AD-057), including `tasks.property_id` (`ON DELETE SET NULL (property_id)`)
 A linked property and a used area can't be deleted (`RESTRICT`); they are archived or
 deactivated. Ending a party keeps the row as ownership history, and a contact with parties,
 ended or open, can't be deleted (`NO ACTION`, so an agency delete still cascades).
+
+### 2.8 Requirement
+
+`spec/requirements.md`, AD-059. What a buyer or tenant is looking for, on the opportunity
+itself. The offer type is not stored: a buyer's budget is a price, a tenant's a monthly rent.
+
+```mermaid
+erDiagram
+  opportunities ||--o| requirements : "buyer or tenant"
+  requirements ||--o{ requirement_locations : "where"
+  settlements ||--o{ requirement_locations : "settlement"
+  areas |o--o{ requirement_locations : "optional area"
+
+  requirements {
+    uuid agency_id FK
+    uuid opportunity_id FK "UK, CASCADE"
+    numeric budget_min_max "EUR, > 0"
+    text_arr property_types "subset of properties.type; empty = any"
+    int rooms_min_max "1-9"
+    numeric area_m2_min_max "> 0"
+    int floor_min_max "-5..200, партер = 1"
+    bool not_top_floor
+    text_arr construction "subset of properties.construction; empty = any"
+    text financing "cash | mortgage | mixed | unknown; never matched"
+    text wishes "<= 2000 chars; never matched"
+    bool x_must "budget, location, type, rooms, area_m2, floor, construction"
+    text_arr location_keys "sorted snapshot of the locations"
+  }
+  requirement_locations {
+    uuid requirement_id FK "CASCADE"
+    uuid settlement_id FK "RESTRICT"
+    uuid area_id FK "NULL = whole settlement; same settlement, RESTRICT"
+  }
+```
+
+Members read both tables and write neither: `INSERT`, `UPDATE` and `DELETE` are revoked, so the
+only writers are the AD-059 RPCs. `save_requirement(opportunity, fields, locations)` replaces the
+whole requirement (a missing field is empty) and its locations in one transaction;
+`remove_requirement(opportunity)` deletes it, its locations cascading. Both are `SECURITY
+DEFINER`, lock the opportunity, and refuse with `requirements.errors.*` keys: `notFound` (not in
+the caller's agency, or nothing to remove), `wrongOpportunityType`, `readOnly` (won, lost,
+archived), `invalid` (a `CHECK`), `invalidLocation` (a foreign key), `locationCovered` (a whole
+settlement with one of its areas) and `inactiveArea` (a deactivated area not already saved).
+It stores `property_types` and `construction` in the list's order, so re-ordering them is no
+change. `location_keys`
+holds `settlement_id` or `settlement_id:area_id` for each location row, sorted, written with
+them; it is what the `CHECK`s and the audit see of the locations. A min and max pair is shown
+as one line above (`budget_min`, `budget_max`, and so on); `x_must` stands for the seven
+must-have flags. `matching` treats a must-have as a filter and the rest as score.
 
 ---
 
@@ -644,7 +708,7 @@ The "Enforced by" column tells you which layer to change and test.
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact, opportunity or property parent in its own agency, and non-blank content | `CHECK` on `notes`, composite FK; `createNoteSchema` (trimmed) and `NotesService.createNote` (property in the agency) give the friendly errors |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
-| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities, contacts (imported contacts via `audit_imported_contact_created`), properties, listings and opportunity–property links |
+| A1 | `audit_log` is append-only, written by triggers | no insert/update/delete policy for members; SECURITY DEFINER triggers on opportunities, contacts (imported contacts via `audit_imported_contact_created`), properties, listings, opportunity–property links and requirements |
 | E1 | One delivery per `(user_id, kind, period_key)`: a send is claimed by inserting a `pending` row first (AD-051) | unique constraint `uq_notification_deliveries_key` + `071-notification-deliveries.sql` |
 | E2 | Clients never write `notification_deliveries`; members read their own rows, owners and managers the agency's | RLS (no write policy, writes revoked) + `071-notification-deliveries.sql` |
 | L1 | Settlements are read by every signed-in user and written only by migrations | RLS `FORCE` with a `SELECT` policy only, writes revoked from `authenticated`, all access from `anon` + `072-properties.sql` |
@@ -665,6 +729,14 @@ The "Enforced by" column tells you which layer to change and test.
 | L16 | A task's property is set only on a `viewing` with an opportunity; another task type drops it (rule 7) | `taskSchemas().create` (Zod, also the next task of a completion) + `validation.test.ts`; not a `CHECK`, so other writers aren't held to it |
 | L17 | A link and a listing stay on their property: members update only a link's `status` and `rejected_reason`, and a listing's `price` and `status` (AD-058) | column `UPDATE` privileges on `opportunity_properties` and `listings` + `074-property-review-fixes.sql` |
 | L18 | A contact who is a property party, now or in the past, keeps its party rows: it can't be deleted, and an import revert keeps it as worked on | FK `fk_property_parties_contact` (`NO ACTION`), RPC `import_revert` + `074-property-review-fixes.sql` |
+| Q1 | A requirement exists only on a buyer or tenant opportunity, at most one each; a deal with one can't change to seller or landlord (buyer ↔ tenant keeps it) (rule 1) | trigger `check_requirement_opportunity_type`, unique `uq_requirements_opportunity`, trigger `check_opportunity_type_vs_requirement` + `077-requirements.sql` |
+| Q2 | A requirement has a budget bound, a location, a type, a rooms bound or an m² bound; financing and wishes alone don't count (rule 2) | `CHECK requirements_has_criterion` (counts `location_keys`) |
+| Q3 | Every min ≤ max; rooms 1–9; budget and m² > 0; floor −5…200; types and construction are subsets of the property lists; wishes ≤ 2,000 chars (rule 3) | `CHECK`s on `requirements` |
+| Q4 | A must-have flag is on only when its criterion is set (`not_top_floor` counts for floor) (rule 4) | `CHECK requirements_must_has_criterion` |
+| Q5 | A location's area belongs to its settlement and agency; a location is listed once per requirement; a whole settlement isn't listed with one of its areas; a newly added area is active (one deactivated since it was saved stays, rule 6); a used area can't be deleted | composite FK `fk_requirement_locations_area` (`RESTRICT`), `UNIQUE NULLS NOT DISTINCT`, checks in `save_requirement` + `079-requirement-review-fixes.sql` |
+| Q6 | Requirements and their locations point only at their own agency's rows; members read their own agency's and write neither directly (rule 10, AD-059) | composite FKs, RLS `SELECT` only, writes revoked + `077-requirements.sql` |
+| Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
+| Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
@@ -732,6 +804,8 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Party | Страна | Contact with a role on a property (owner, co-owner, representative, occupant) | |
 | Candidate | Кандидат | Property proposed on a buyer or tenant deal | |
 | Subject property | Обект на сделката | The property a seller or landlord deal is about | |
+| Requirement | Изисквания | What a buyer or tenant is looking for, on the opportunity (plural, as brokers say it) | |
+| Must-have | Задължително | A requirement criterion `matching` treats as a filter | |
 
 ---
 

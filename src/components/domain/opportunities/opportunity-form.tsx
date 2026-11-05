@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Opportunity } from "@/domain/opportunities/types";
+import type { Opportunity, OpportunityType } from "@/domain/opportunities/types";
+import { budgetReadAs } from "@/domain/requirements/validation";
 import type { Stage } from "@/domain/stages/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
 import type { ContactOption } from "@/domain/contacts/types";
@@ -21,6 +22,7 @@ import type { ActiveBroker } from "@/domain/members/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
 import type { ActionResult } from "@/lib/actions";
+import { Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface OpportunityFormProps {
@@ -34,6 +36,8 @@ interface OpportunityFormProps {
   updateAction?: (prevState: ActionResult, formData: FormData) => Promise<ActionResult>;
   onSuccess?: (id?: string) => void;
   defaultInquiryId?: string;
+  /** The deal has a requirement: a buyer ↔ tenant change says how its budget is now read. */
+  hasRequirement?: boolean;
 }
 
 const initialState: ActionResult<{ id: string }> = { success: false, error: "" };
@@ -48,12 +52,15 @@ export function OpportunityForm({
   updateAction,
   onSuccess,
   defaultInquiryId,
+  hasRequirement = false,
 }: OpportunityFormProps) {
   const t = useTranslations("OpportunityForm");
   const enums = useTranslations("Enums");
   const getStageName = useStageTranslation();
   
   const isEdit = !!opportunity;
+  const [type, setType] = useState<OpportunityType>(opportunity?.type ?? "buyer");
+  const budgetNotice = opportunity ? budgetReadAs(opportunity.type, type, hasRequirement) : null;
   const action = isEdit && updateAction ? updateAction : createAction;
 
   const [state, formAction, pending] = useActionState(
@@ -116,6 +123,7 @@ export function OpportunityForm({
             key={`type-${opportunity?.type ?? "buyer"}`}
             name="type"
             defaultValue={opportunity?.type ?? "buyer"}
+            onValueChange={(value) => setType(value as OpportunityType)}
             required
           >
             <SelectTrigger id="type">
@@ -165,6 +173,13 @@ export function OpportunityForm({
           </Select>
         </div>
       </div>
+
+      {budgetNotice && (
+        <p role="status" className="flex items-start gap-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          {t(budgetNotice === "rent" ? "budgetNoticeRent" : "budgetNoticePrice")}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">

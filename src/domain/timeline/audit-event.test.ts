@@ -116,3 +116,89 @@ describe('describeAudit', () => {
     expect(describeAudit(row({ action: 'merged' }))).toEqual({ kind: 'other' });
   });
 });
+
+describe('describeAudit: requirement saves (AD-059)', () => {
+  const lozenets = { settlement_id: 's-1', settlement_bg: 'София', settlement_en: 'Sofia', area_id: 'a-1', area: 'Лозенец' };
+  const mladost = { settlement_id: 's-1', settlement_bg: 'София', settlement_en: 'Sofia', area_id: 'a-2', area: 'Младост 1' };
+
+  it('reads AC-2 as one changed entry with both old values', () => {
+    const event = describeAudit(
+      row({
+        field_name: 'requirement',
+        metadata: {
+          event: 'changed',
+          changes: [
+            { field: 'budget_max', from: 200000, to: 220000 },
+            { field: 'locations', from: [lozenets], to: [lozenets, mladost] },
+          ],
+        },
+      })
+    );
+
+    expect(event).toEqual({
+      kind: 'requirement',
+      event: 'changed',
+      changes: [
+        { field: 'budget_max', from: 200000, to: 220000 },
+        {
+          field: 'locations',
+          from: [{ settlementBg: 'София', settlementEn: 'Sofia', area: 'Лозенец' }],
+          to: [
+            { settlementBg: 'София', settlementEn: 'Sofia', area: 'Лозенец' },
+            { settlementBg: 'София', settlementEn: 'Sofia', area: 'Младост 1' },
+          ],
+        },
+      ],
+    });
+  });
+
+  it('reads a created entry with lists, flags and a whole settlement', () => {
+    const event = describeAudit(
+      row({
+        field_name: 'requirement',
+        metadata: {
+          event: 'created',
+          changes: [
+            { field: 'property_types', from: [], to: ['apartment'] },
+            { field: 'budget_must', from: false, to: true },
+            { field: 'financing', from: 'unknown', to: 'cash' },
+            { field: 'locations', from: [], to: [{ settlement_bg: 'Варна', settlement_en: 'Varna', area_id: null, area: null }] },
+          ],
+        },
+      })
+    );
+
+    expect(event).toEqual({
+      kind: 'requirement',
+      event: 'created',
+      changes: [
+        { field: 'property_types', from: [], to: ['apartment'] },
+        { field: 'budget_must', from: false, to: true },
+        { field: 'financing', from: 'unknown', to: 'cash' },
+        { field: 'locations', from: [], to: [{ settlementBg: 'Варна', settlementEn: 'Varna', area: null }] },
+      ],
+    });
+  });
+
+  it('reads a removed entry, and drops a change it does not know or a malformed one', () => {
+    const event = describeAudit(
+      row({
+        field_name: 'requirement',
+        metadata: {
+          event: 'removed',
+          changes: [{ field: 'rooms_min', from: 2, to: null }, { field: 'colour', from: 'red', to: null }, 'nonsense'],
+        },
+      })
+    );
+
+    expect(event).toEqual({ kind: 'requirement', event: 'removed', changes: [{ field: 'rooms_min', from: 2, to: null }] });
+  });
+
+  it('falls back to changed for an unknown event', () => {
+    expect(describeAudit(row({ field_name: 'requirement', metadata: { event: 'x', changes: [] } }))).toEqual({
+      kind: 'requirement',
+      event: 'changed',
+      changes: [],
+    });
+  });
+});

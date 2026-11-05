@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRightLeft } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { RequirementChanges } from "@/components/domain/requirements/requirement-changes";
 import type { AuditEvent } from "@/domain/timeline/audit-event";
 import type { TimelineAudit } from "@/domain/timeline/types";
 
@@ -51,6 +52,10 @@ export function auditEventTitle(t: Translator, event: AuditEvent): string {
       if (event.from === null) return t("events.propertyLinkAdded");
       if (event.to === null) return t("events.propertyLinkRemoved");
       return t("events.propertyLinkChanged");
+    case "requirement":
+      if (event.event === "created") return t("events.requirementCreated");
+      if (event.event === "removed") return t("events.requirementRemoved");
+      return t("events.requirementChanged");
     default:
       return t("events.systemUpdate");
   }
@@ -150,6 +155,8 @@ export function AuditEventBody({ event, data, showDeal }: { event: AuditEvent; d
           {event.reason && <p className="text-sm italic">{t("rejectedReason", { reason: event.reason })}</p>}
         </div>
       );
+    case "requirement":
+      return <RequirementChanges event={event} />;
     default:
       return null;
   }

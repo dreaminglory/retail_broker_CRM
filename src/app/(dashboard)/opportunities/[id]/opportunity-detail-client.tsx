@@ -25,6 +25,9 @@ import { CloseOpportunityDialog } from "@/components/domain/opportunities/close-
 import { OpportunityActivity } from "./opportunity-activity";
 import { PropertyLinks, SubjectProperty } from "@/components/domain/opportunities/property-links";
 import type { OpportunityPropertyWithProperty } from "@/domain/opportunity-properties/types";
+import { RequirementSection } from "@/components/domain/requirements/requirement-section";
+import type { Requirement } from "@/domain/requirements/types";
+import { requirementEditable } from "@/domain/requirements/validation";
 import {
   updateOpportunityAction,
   changeOpportunityStageAction,
@@ -58,6 +61,8 @@ interface OpportunityDetailClientProps {
   timeZone: string;
   /** Linked properties (candidates on buyer and tenant deals). */
   propertyLinks: OpportunityPropertyWithProperty[];
+  /** The client's search; null on a buyer or tenant deal without one, and on seller or landlord deals. */
+  requirement: Requirement | null;
   // inquiry?: Inquiry; // Optionally show inquiry details
 }
 
@@ -72,6 +77,7 @@ export function OpportunityDetailClient({
   currentUserId,
   timeZone,
   propertyLinks,
+  requirement,
 }: OpportunityDetailClientProps) {
   const t = useTranslations("OpportunityDetail");
   const getStageName = useStageTranslation();
@@ -261,7 +267,15 @@ export function OpportunityDetailClient({
           </div>
 
           {opportunity.type === "buyer" || opportunity.type === "tenant" ? (
-            <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
+            <>
+              <RequirementSection
+                opportunityId={opportunity.id}
+                requirement={requirement}
+                opportunityType={opportunity.type}
+                editable={requirementEditable(opportunity.status)}
+              />
+              <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
+            </>
           ) : (
             <SubjectProperty opportunityId={opportunity.id} links={propertyLinks} />
           )}
@@ -303,6 +317,7 @@ export function OpportunityDetailClient({
             brokers={brokers}
             createAction={async () => ({ success: false, error: "Not used" })}
             updateAction={updateOpportunityAction.bind(null, opportunity.id)}
+            hasRequirement={!!requirement}
             onSuccess={() => {
               setEditOpen(false);
               router.refresh();

@@ -263,6 +263,18 @@ active opportunity has an owner, a next action and a complete history.
 | FR-PRP-10 | ⌘K finds properties by code, address, area and settlement |
 | FR-PRP-11 | A property with links, open listings or tasks is archived, not deleted; archiving withdraws its open listings; hard delete is owner/manager only |
 
+### FR-REQ: Requirements (module `requirements`)
+
+| ID | Requirement |
+|----|------------|
+| FR-REQ-01 | ✅ A buyer or tenant opportunity records the client's search: budget in EUR (price or monthly rent), settlements and areas, property types, rooms, m², floor, construction, financing and free-text wishes (AD-059) |
+| FR-REQ-02 | ✅ Each matchable criterion has a must-have flag; budget, location and type default to must-have when filled |
+| FR-REQ-03 | ✅ Only buyer and tenant opportunities have a requirement, at most one each; a deal with one can't change to seller or landlord |
+| FR-REQ-04 | ✅ Creating, changing and removing a requirement is audited; one save is one timeline entry with old and new values |
+| FR-REQ-05 | ✅ A one-line summary of the requirement shows on the opportunity, the opportunities list and the contact |
+| FR-REQ-06 | ✅ A requirement is read-only while its opportunity is won, lost or archived |
+| FR-REQ-07 | ✅ One agency can't see or reference another agency's requirements or their locations |
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Priority |

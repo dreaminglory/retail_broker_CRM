@@ -1,7 +1,7 @@
 "use client";
 
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
-import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus, Link2, Tag } from "lucide-react";
+import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus, Link2, Tag, ListChecks } from "lucide-react";
 import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
 import type { TimelineEntry } from "@/domain/timeline/types";
@@ -45,6 +45,8 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
             return <Tag className="h-4 w-4 text-amber-500" />;
           case 'propertyLink':
             return <Link2 className="h-4 w-4 text-sky-500" />;
+          case 'requirement':
+            return <ListChecks className="h-4 w-4 text-teal-500" />;
           default:
             return <Flag className="h-4 w-4 text-gray-500" />;
         }
@@ -72,7 +74,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
             onDelete={onDeleteNote}
           />
         ) : (
-          <div className="p-4 rounded-lg border bg-card text-sm">
+          <div className="p-4 rounded-lg border bg-card text-sm" data-testid="timeline-entry">
             <div className="flex justify-between items-start mb-2">
               <div className="font-semibold text-foreground">
                 {entry.type === 'task' && (

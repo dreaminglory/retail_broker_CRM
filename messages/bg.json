@@ -79,7 +79,11 @@
     "party_role_required": "Изберете роля.",
     "property_required": "Изберете имот.",
     "rejected_reason_too_long": "Причината може да е най-много 500 знака.",
-    "property_needs_opportunity": "Имот може да се посочи само в задача към сделка."
+    "property_needs_opportunity": "Имот може да се посочи само в задача към сделка.",
+    "requirement_criterion_required": "Посочете поне бюджет, местоположение, вид имот, стаи или площ.",
+    "min_above_max": "„От“ е повече от „до“.",
+    "must_without_criterion": "Задължителен може да е само попълнен критерий.",
+    "location_covered": "Цялото населено място вече включва кварталите си. Махнете едното."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -788,6 +792,12 @@
       "offered": "Предложен",
       "rejected": "Отхвърлен",
       "selected": "Избран"
+    },
+    "financing": {
+      "cash": "В брой",
+      "mortgage": "Ипотечен кредит",
+      "mixed": "Смесено",
+      "unknown": "Не е известно"
     }
   },
   "ContactMethodList": {
@@ -1028,6 +1038,8 @@
     "titlePlaceholder": "напр. Купувач търси 3-стаен в Лозенец",
     "typeLabel": "Тип",
     "typePlaceholder": "Изберете тип",
+    "budgetNoticeRent": "Бюджетът в изискванията вече ще се чете като месечен наем.",
+    "budgetNoticePrice": "Бюджетът в изискванията вече ще се чете като цена за покупка.",
     "stageLabel": "Етап",
     "stagePlaceholder": "Изберете етап",
     "primaryContactLabel": "Основен контакт",
@@ -1163,7 +1175,10 @@
       "listingStatusChanged": "Статусът на обявата е променен",
       "propertyLinkAdded": "Имотът е свързан",
       "propertyLinkChanged": "Статусът на връзката е променен",
-      "propertyLinkRemoved": "Имотът е премахнат от сделката"
+      "propertyLinkRemoved": "Имотът е премахнат от сделката",
+      "requirementCreated": "Изискванията са добавени",
+      "requirementChanged": "Изискванията са променени",
+      "requirementRemoved": "Изискванията са премахнати"
     },
     "outcomeLabel": "Резултат",
     "unassigned": "Невъзложен(а)",
@@ -1177,7 +1192,45 @@
     "linkSubject": "Имот обект",
     "onDeal": "Сделка: {title}",
     "rejectedReason": "Причина: {reason}",
-    "perMonth": "{price} / месец"
+    "perMonth": "{price} / месец",
+    "requirement": {
+      "fields": {
+        "budget_min": "Бюджет от",
+        "budget_max": "Бюджет до",
+        "property_types": "Вид имот",
+        "rooms_min": "Стаи от",
+        "rooms_max": "Стаи до",
+        "area_m2_min": "Площ от",
+        "area_m2_max": "Площ до",
+        "floor_min": "Етаж от",
+        "floor_max": "Етаж до",
+        "not_top_floor": "Не последен етаж",
+        "construction": "Строителство",
+        "financing": "Финансиране",
+        "wishes": "Други желания",
+        "locations": "Местоположение",
+        "budget_must": "Бюджет: задължително",
+        "location_must": "Местоположение: задължително",
+        "type_must": "Вид имот: задължително",
+        "rooms_must": "Стаи: задължително",
+        "area_m2_must": "Площ: задължително",
+        "floor_must": "Етаж: задължително",
+        "construction_must": "Строителство: задължително"
+      },
+      "criteria": {
+        "budget": "бюджет",
+        "location": "местоположение",
+        "type": "вид имот",
+        "rooms": "стаи",
+        "area_m2": "площ",
+        "floor": "етаж",
+        "construction": "строителство"
+      },
+      "mustList": "Задължителни",
+      "yes": "Да",
+      "no": "Не",
+      "none": "—"
+    }
   },
   "NoteCard": {
     "teamMember": "Член на екипа",
@@ -1318,7 +1371,8 @@
   },
   "ui": {
     "close": "Затвори",
-    "notifications": "Известия"
+    "notifications": "Известия",
+    "floorHint": "Партер = етаж 1"
   },
   "ContactDetailPage": {
     "back": "Контакти",
@@ -1611,7 +1665,8 @@
   },
   "opportunities": {
     "errors": {
-      "typeHasProperties": "Сделката има свързани имоти, които не отговарят на новия вид. Първо ги премахнете."
+      "typeHasProperties": "Сделката има свързани имоти, които не отговарят на новия вид. Първо ги премахнете.",
+      "typeHasRequirement": "Сделката има изисквания на купувач или наемател. Премахнете ги, преди да я смените на продавач или наемодател."
     }
   },
   "opportunityProperties": {
@@ -1670,5 +1725,94 @@
     "submit": "Насрочи",
     "saving": "Запазване…",
     "scheduled": "Огледът е насрочен"
+  },
+  "requirements": {
+    "range": {
+      "between": "{min}–{max}",
+      "from": "от {min}",
+      "to": "до {max}"
+    },
+    "rooms": "{value} стаи",
+    "roomsExact": "{count, plural, one {# стая} other {# стаи}}",
+    "m2": "{value} м²",
+    "perMonth": "{value} / месец",
+    "notTopFloor": "не последен",
+    "areaInSettlement": "{area} ({settlement})",
+    "moreLocations": "още {count}",
+    "errors": {
+      "notFound": "Сделката или изискванията ѝ не са намерени.",
+      "wrongOpportunityType": "Изисквания има само сделка с купувач или наемател.",
+      "readOnly": "Сделката е приключена. Активирайте я отново, за да промените изискванията.",
+      "invalid": "Изискванията не са валидни. Проверете полетата.",
+      "invalidLocation": "Квартал не е от избраното населено място или вече не съществува.",
+      "locationCovered": "Цялото населено място вече включва кварталите си. Махнете едното.",
+      "inactiveArea": "Избран квартал е деактивиран. Махнете го и запазете отново."
+    }
+  },
+  "RequirementSection": {
+    "title": "Изисквания",
+    "empty": "Добавете какво търси клиентът.",
+    "mustHave": "задължително",
+    "updatedOn": "Обновени на {date}",
+    "budgetPrice": "Бюджет (цена)",
+    "budgetRent": "Бюджет (наем на месец)",
+    "locations": "Местоположение",
+    "types": "Вид имот",
+    "rooms": "Стаи",
+    "areaM2": "Площ",
+    "floor": "Етаж",
+    "construction": "Строителство",
+    "financing": "Финансиране",
+    "wishes": "Други желания",
+    "inactiveArea": "неактивен",
+    "add": "Добави",
+    "edit": "Редактирай",
+    "remove": "Премахни",
+    "removeTitle": "Да се премахнат ли изискванията?",
+    "removeDescription": "Критериите ще бъдат изтрити. Историята на сделката ги пази.",
+    "removing": "Премахване…",
+    "removed": "Изискванията са премахнати.",
+    "cancel": "Отказ",
+    "readOnly": "Сделката е приключена. Активирайте я отново, за да промените изискванията."
+  },
+  "RequirementForm": {
+    "addTitle": "Изисквания на клиента",
+    "editTitle": "Редакция на изискванията",
+    "description": "Какво търси клиентът. Задължителните критерии ще филтрират имотите при търсене.",
+    "budgetGroup": "Бюджет",
+    "budgetPrice": "Цена, €",
+    "budgetRent": "Наем на месец, €",
+    "from": "От",
+    "to": "До",
+    "whereGroup": "Къде",
+    "whatGroup": "Какво",
+    "extraGroup": "Допълнително",
+    "types": "Вид имот",
+    "construction": "Строителство",
+    "rooms": "Стаи",
+    "areaM2": "Площ, м²",
+    "floor": "Етаж",
+    "notTopFloor": "Не последен етаж",
+    "financing": "Финансиране",
+    "wishes": "Други желания",
+    "wishesPlaceholder": "паркомясто, асансьор, акт 16, изложение",
+    "mustHave": "Задължително",
+    "mustHaveOf": "{criterion}: задължително",
+    "save": "Запази",
+    "saving": "Запазване…",
+    "cancel": "Отказ",
+    "saved": "Изискванията са запазени."
+  },
+  "RequirementLocationPicker": {
+    "empty": "Още няма избрано място.",
+    "settlement": "Населено място",
+    "pickHint": "Изберете населено място, после кварталите му.",
+    "wholeSettlement": "Цялото населено място",
+    "areas": "Квартали в {settlement}",
+    "loadingAreas": "Зареждане на кварталите…",
+    "noAreas": "Агенцията няма активни квартали тук. Изберете цялото населено място.",
+    "remove": "Махни {name}",
+    "inactiveArea": "неактивен",
+    "done": "Готово"
   }
 }

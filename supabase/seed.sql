@@ -306,3 +306,117 @@ BEGIN
   INSERT INTO public.opportunity_properties (agency_id, opportunity_id, property_id, relation) VALUES
   (v_agency_2, '22222222-6666-6666-6666-666666666661', v_p2_1, 'subject');
 END $$;
+
+-- ==============================================================================
+-- Requirements (spec: requirements, Task 3). Buyer and tenant deals with their contacts,
+-- a next task each, and requirements saved through save_requirement as each agency's broker,
+-- so they pass the same checks and audit as the app's saves (AD-059).
+--   Alpha Opp 1 (buyer, Ivan Ivanov): AC-1-like, Лозенец and Център in Sofia
+--   Alpha Opp 2 (tenant, Petar Georgiev): a monthly budget only
+--   Alpha Opp 3 (buyer, Nadezhda Koleva): no requirement (empty state, E2E)
+--   Beta Opp 2 (buyer, Stefan Nikolov): Лозенец in Sofia and the whole of Varna
+--   Beta Opp 3 (tenant, Radka Ilieva): Тракия in Plovdiv, monthly budget
+--   Beta Opp 4 (buyer, Todor Marinov): no requirement
+-- ==============================================================================
+DO $$
+DECLARE
+  v_agency_1 UUID := '11111111-1111-1111-1111-111111111111';
+  v_broker_1 UUID := '11111111-4444-4444-4444-444444444444';
+  v_agency_2 UUID := '22222222-1111-1111-1111-111111111111';
+  v_broker_2 UUID := '22222222-4444-4444-4444-444444444444';
+
+  v_sofia   UUID := (SELECT id FROM public.settlements WHERE ekatte = '68134');
+  v_plovdiv UUID := (SELECT id FROM public.settlements WHERE ekatte = '56784');
+  v_varna   UUID := (SELECT id FROM public.settlements WHERE ekatte = '10135');
+
+  v_stage_1 UUID := (SELECT id FROM public.stages WHERE agency_id = '11111111-1111-1111-1111-111111111111' AND name = 'Active' LIMIT 1);
+  v_stage_2 UUID := (SELECT id FROM public.stages WHERE agency_id = '22222222-1111-1111-1111-111111111111' AND name = 'Active' LIMIT 1);
+
+  v_opp_1_1 UUID := '11111111-6666-6666-6666-666666666661';
+  v_opp_1_2 UUID := '11111111-6666-6666-6666-666666666662';
+  v_opp_1_3 UUID := '11111111-6666-6666-6666-666666666663';
+  v_opp_2_2 UUID := '22222222-6666-6666-6666-666666666662';
+  v_opp_2_3 UUID := '22222222-6666-6666-6666-666666666663';
+  v_opp_2_4 UUID := '22222222-6666-6666-6666-666666666664';
+
+  v_contact_1_3 UUID := '11111111-5555-5555-5555-555555555553';
+  v_contact_1_4 UUID := '11111111-5555-5555-5555-555555555554';
+  v_contact_2_3 UUID := '22222222-5555-5555-5555-555555555553';
+  v_contact_2_4 UUID := '22222222-5555-5555-5555-555555555554';
+  v_contact_2_5 UUID := '22222222-5555-5555-5555-555555555555';
+BEGIN
+  INSERT INTO public.contacts (id, agency_id, first_name, last_name, display_name, type) VALUES
+  (v_contact_1_3, v_agency_1, 'Petar',    'Georgiev', 'Petar Georgiev',  'person'),
+  (v_contact_1_4, v_agency_1, 'Nadezhda', 'Koleva',   'Nadezhda Koleva', 'person'),
+  (v_contact_2_3, v_agency_2, 'Stefan',   'Nikolov',  'Stefan Nikolov',  'person'),
+  (v_contact_2_4, v_agency_2, 'Radka',    'Ilieva',   'Radka Ilieva',    'person'),
+  (v_contact_2_5, v_agency_2, 'Todor',    'Marinov',  'Todor Marinov',   'person');
+
+  INSERT INTO public.contact_methods (agency_id, contact_id, type, value, is_primary) VALUES
+  (v_agency_1, v_contact_1_3, 'phone', '+359888555101', true),
+  (v_agency_1, v_contact_1_4, 'phone', '+359888555102', true),
+  (v_agency_2, v_contact_2_3, 'phone', '+359888555201', true),
+  (v_agency_2, v_contact_2_4, 'phone', '+359888555202', true),
+  (v_agency_2, v_contact_2_5, 'phone', '+359888555203', true);
+
+  INSERT INTO public.opportunities (id, agency_id, title, type, stage_id, primary_contact_id, assigned_to, status, expected_value) VALUES
+  (v_opp_1_2, v_agency_1, 'Alpha Opp 2', 'tenant', v_stage_1, v_contact_1_3, v_broker_1, 'active', 800),
+  (v_opp_1_3, v_agency_1, 'Alpha Opp 3', 'buyer',  v_stage_1, v_contact_1_4, v_broker_1, 'active', 120000),
+  (v_opp_2_2, v_agency_2, 'Beta Opp 2',  'buyer',  v_stage_2, v_contact_2_3, v_broker_2, 'active', 260000),
+  (v_opp_2_3, v_agency_2, 'Beta Opp 3',  'tenant', v_stage_2, v_contact_2_4, v_broker_2, 'active', 550),
+  (v_opp_2_4, v_agency_2, 'Beta Opp 4',  'buyer',  v_stage_2, v_contact_2_5, v_broker_2, 'active', 90000);
+
+  INSERT INTO public.opportunity_participants (opportunity_id, agency_id, contact_id, role) VALUES
+  (v_opp_1_2, v_agency_1, v_contact_1_3, 'tenant'),
+  (v_opp_1_3, v_agency_1, v_contact_1_4, 'buyer'),
+  (v_opp_2_2, v_agency_2, v_contact_2_3, 'buyer'),
+  (v_opp_2_3, v_agency_2, v_contact_2_4, 'tenant'),
+  (v_opp_2_4, v_agency_2, v_contact_2_5, 'buyer');
+
+  -- Every deal has a next action; none of these is overdue or due today.
+  INSERT INTO public.tasks (agency_id, opportunity_id, assigned_to, title, task_type, due_at, status) VALUES
+  (v_agency_1, v_opp_1_2, v_broker_1, 'Send Petar rentals in his budget', 'email', now() + interval '2 days', 'pending'),
+  (v_agency_1, v_opp_1_3, v_broker_1, 'Ask Nadezhda what she is looking for', 'call', now() + interval '4 days', 'pending'),
+  (v_agency_2, v_opp_2_2, v_broker_2, 'Shortlist for Stefan', 'other', now() + interval '2 days', 'pending'),
+  (v_agency_2, v_opp_2_3, v_broker_2, 'Call Radka about Trakia', 'call', now() + interval '3 days', 'pending'),
+  (v_agency_2, v_opp_2_4, v_broker_2, 'First call with Todor', 'call', now() + interval '5 days', 'pending');
+
+  -- Alpha, as its broker
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_broker_1, 'role', 'authenticated')::text, true);
+
+  PERFORM public.save_requirement(v_opp_1_1,
+    '{"budget_min": 150000, "budget_max": 200000, "property_types": ["apartment", "maisonette"],
+      "rooms_min": 2, "rooms_max": 3, "not_top_floor": true, "construction": ["brick"],
+      "financing": "mortgage", "wishes": "Паркомясто или гараж; асансьор.",
+      "budget_must": true, "location_must": true, "type_must": true}'::jsonb,
+    jsonb_build_array(
+      jsonb_build_object('settlement_id', v_sofia, 'area_id', '11111111-8888-0000-0000-000000000001'),
+      jsonb_build_object('settlement_id', v_sofia, 'area_id', '11111111-8888-0000-0000-000000000003')
+    ));
+
+  PERFORM public.save_requirement(v_opp_1_2,
+    '{"budget_max": 800, "budget_must": true}'::jsonb,
+    '[]'::jsonb);
+
+  -- Beta, as its broker
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_broker_2, 'role', 'authenticated')::text, true);
+
+  PERFORM public.save_requirement(v_opp_2_2,
+    '{"budget_min": 200000, "budget_max": 300000, "property_types": ["apartment"],
+      "rooms_min": 3, "rooms_max": 4, "area_m2_min": 80, "floor_min": 2,
+      "construction": ["brick", "epk"], "financing": "cash",
+      "budget_must": true, "location_must": true, "type_must": true, "rooms_must": true}'::jsonb,
+    jsonb_build_array(
+      jsonb_build_object('settlement_id', v_sofia, 'area_id', '22222222-8888-0000-0000-000000000001'),
+      jsonb_build_object('settlement_id', v_varna)
+    ));
+
+  PERFORM public.save_requirement(v_opp_2_3,
+    '{"budget_min": 400, "budget_max": 600, "property_types": ["studio", "apartment"],
+      "rooms_max": 2, "location_must": true, "wishes": "С домашен любимец."}'::jsonb,
+    jsonb_build_array(
+      jsonb_build_object('settlement_id', v_plovdiv, 'area_id', '22222222-8888-0000-0000-000000000005')
+    ));
+
+  PERFORM set_config('request.jwt.claims', '', true);
+END $$;

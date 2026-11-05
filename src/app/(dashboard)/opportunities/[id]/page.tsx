@@ -10,6 +10,7 @@ import { MemberRepository } from "@/domain/members/repository";
 import { getAgencySettings } from "@/domain/agencies/settings";
 import { getLocale } from "next-intl/server";
 import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
+import { RequirementService } from "@/domain/requirements/service";
 import type { Locale } from "@/i18n/config";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
@@ -41,7 +42,8 @@ export default async function OpportunityDetailPage({
 
   // Fetch parallel dependencies
   const locale = (await getLocale()) as Locale;
-  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks] = await Promise.all([
+  const hasRequirement = opportunity.type === "buyer" || opportunity.type === "tenant";
+  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks, requirement] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     // Only the contacts this opportunity links to; pickers search the agency on demand.
@@ -60,6 +62,8 @@ export default async function OpportunityDetailPage({
     new MemberRepository(supabase).getActiveBrokers(agencyId),
     getAgencySettings(agencyId),
     new OpportunityPropertyService(supabase).listForOpportunity(id, agencyId, locale),
+    // Seller and landlord deals have no requirement (rule 1).
+    hasRequirement ? new RequirementService(supabase).getForOpportunity(id, agencyId, locale) : null,
   ]);
 
   // A fresh `now` per render: relative times match between the server and hydration.
@@ -77,6 +81,7 @@ export default async function OpportunityDetailPage({
           currentUserId={user?.id}
           timeZone={settings.timezone}
           propertyLinks={propertyLinks}
+          requirement={requirement}
         />
       </div>
     </FreshNowProvider>
