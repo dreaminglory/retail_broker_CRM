@@ -218,6 +218,21 @@ party as work (AD-036). The link audit trigger skips a removal while its agency 
 could re-point links and listings, and that a contact delete erased the ownership history the
 spec keeps.
 
+### AD-059: Requirements have one write path and one audit row per save
+**Proposed** (plan approved by the founder 2026-11-05; confirm at Checkpoint 1 of `tasks/plan.md`).
+Only two `SECURITY DEFINER` RPCs write `requirements` and `requirement_locations`:
+`save_requirement` (row and locations in one transaction) and `remove_requirement`, each checking
+the agency, the deal type (buyer/tenant) and status (`active`/`nurture`). Members get `SELECT`
+only, as for `notification_deliveries` (E2), departing from AD-050's `SECURITY INVOKER` RPCs. The
+row keeps `location_keys`, a sorted snapshot of its locations, so `CHECK`s count a location (rules
+2, 4) and the audit trigger diffs a save from the row alone. Audit follows the property link
+(AD-057): one `opportunity` row, `field_name = 'requirement'`, `metadata = { event, changes }` with
+location names in both languages; no new `entity_type`. Triggers refuse a requirement on a seller
+or landlord deal and that type change on a deal that has one; composite FKs as in AD-057.
+**Why:** `matching` reads these rows as the truth, and a single writer is what makes "one save,
+one timeline entry" true; direct writes could change locations unaudited.
+**Revisit if:** `matching` needs locations in another shape, or imports need a second writer.
+
 ## Import
 
 ### AD-034: Chunked import pipeline

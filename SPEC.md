@@ -28,7 +28,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Core-loop defects fixed | `trustworthy-loop` | Done |
 | Reminders and daily digest | `reminders` | Done |
 | Light property record linked to opportunities | `properties` | Done |
-| Buyer/tenant requirements | `requirements` | Planned |
+| Buyer/tenant requirements | `requirements` | In progress |
 | Inquiry can create **or join** an opportunity | `conversion-join` | Planned |
 | Requirement ↔ property matching | `matching` | Planned |
 | Smart Lists | `smart-lists` | Planned |
@@ -44,7 +44,7 @@ starts; pilot evidence sets the order.
 | `trustworthy-loop` | International phones (AD-041), inquiry edit and reassign, pagers and contact picker at volume, import revert and i18n fixes, service tests in CI | — | Done |
 | `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | Done |
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Done |
-| `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Planned |
+| `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | In progress |
 | `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Planned |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Planned |

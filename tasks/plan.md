@@ -84,7 +84,7 @@ T1 tables, guards, AD-059 ─ T2 RPCs + audit ─ T3 seed ─┐
 Full tasks with acceptance criteria are in `tasks/todo.md`.
 
 ### Phase 1: Data model
-- [ ] Task 1: Requirement tables, constraints, guards and AD-059
+- [x] Task 1: Requirement tables, constraints, guards and AD-059
 - [ ] Task 2: Save and remove RPCs with the audit trigger
 - [ ] Task 3: Seed requirements for both agencies
 

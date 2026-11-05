@@ -52,11 +52,12 @@ opportunities (buyer | tenant) ──1:0..1── requirements ──< requireme
   (optional; NULL = the whole settlement). The area must belong to the settlement (composite
   FK, like L4). Unique `(requirement_id, settlement_id, area_id)` with NULLs not distinct.
   A join table rather than a `uuid[]`, so every location has a real foreign key.
-- **Audit:** `audit_log.entity_type` gains `requirement`. Created, changed (each changed
-  criterion with its old and new value, locations as names) and removed are recorded and show
-  on the opportunity timeline. One save is one timeline entry. How the location change gets
-  into that one entry (an RPC that saves the row and its locations together, AD-050 style, or
-  another way) is decided in the plan and recorded in AD-059.
+- **Audit:** created, changed (each changed criterion with its old and new value, locations as
+  names) and removed are recorded and show on the opportunity timeline. One save is one
+  timeline entry. Per AD-059 there is no new `entity_type`: each save is one `opportunity` row
+  with `field_name = 'requirement'`, like a property link (AD-057), written by the audit trigger
+  on `requirements`. The only writers are the `save_requirement` and `remove_requirement` RPCs,
+  and the row's `location_keys` snapshot lets the trigger see a location change.
 
 ## Business rules
 

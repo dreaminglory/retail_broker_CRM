@@ -40,12 +40,12 @@ Write AD-059 in `docs/decisions-log.md` with the plan's architecture decisions, 
     - migration count in the header
 
 **Acceptance criteria:**
-- [ ] Every `CHECK` from rules 2–4 refuses a bad row (AC-4, AC-5 at the DB layer)
-- [ ] A requirement on a seller deal, a second requirement on one deal, and a buyer → seller change with a requirement are refused; buyer → tenant passes (AC-3 at the DB layer)
-- [ ] An area of Plovdiv under Sofia and an Alpha area on a Beta requirement are refused by the FKs; members can read their own agency's rows only and can't write either table directly (AC-7 part)
+- [x] Every `CHECK` from rules 2–4 refuses a bad row (AC-4, AC-5 at the DB layer)
+- [x] A requirement on a seller deal, a second requirement on one deal, and a buyer → seller change with a requirement are refused; buyer → tenant passes (AC-3 at the DB layer)
+- [x] An area of Plovdiv under Sofia and an Alpha area on a Beta requirement are refused by the FKs; members can read their own agency's rows only and can't write either table directly (AC-7 part)
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
+- [x] `npx supabase db reset` then `npm run test:db`
 
 **Dependencies:** None
 **Files likely touched:** `SPEC.md`, `docs/decisions-log.md`, `spec/requirements.md`, `supabase/migrations/20261105000001_requirements.sql`, `supabase/tests/database/010-rls-catalog.sql`, `supabase/tests/database/077-requirements.sql`, `docs/domain-model.md`
