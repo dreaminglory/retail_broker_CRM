@@ -203,12 +203,12 @@ Seller/landlord deals show nothing.
   opportunity timeline, also shown on the contact timeline.
 
 **Acceptance criteria:**
-- [ ] AC-2: changing the budget max from €200,000 to €220,000 and adding Mladost 1 shows one entry with both changes and their old values, in BG and EN
-- [ ] Created and removed entries show; a renamed area keeps its name at the time in old entries
+- [x] AC-2: changing the budget max from €200,000 to €220,000 and adding Mladost 1 shows one entry with both changes and their old values, in BG and EN
+- [x] Created and removed entries show; a renamed area keeps its name at the time in old entries (the name comes from the row's metadata: SSR test; not renamed in the browser)
 
 **Verification:**
-- [ ] `npx vitest run src/domain/timeline`, `npm run test:services`
-- [ ] Browser: opportunity and contact timelines, BG and EN, 390 px
+- [x] `npx vitest run src/domain/timeline`, `npm run test:services` (764 after a `db reset`)
+- [x] Browser: the AC-2 edit on Alpha Opp 1 through the form, then the opportunity and contact timelines in BG and EN at 390 px
 
 **Dependencies:** Task 5
 **Files likely touched:** `src/domain/timeline/{audit-event,audit-event.test,service.integration.test}.ts`, `src/components/domain/timeline/timeline-entry.tsx`, `messages/{bg,en}.json`

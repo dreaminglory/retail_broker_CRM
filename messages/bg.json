@@ -1173,7 +1173,10 @@
       "listingStatusChanged": "Статусът на обявата е променен",
       "propertyLinkAdded": "Имотът е свързан",
       "propertyLinkChanged": "Статусът на връзката е променен",
-      "propertyLinkRemoved": "Имотът е премахнат от сделката"
+      "propertyLinkRemoved": "Имотът е премахнат от сделката",
+      "requirementCreated": "Изискванията са добавени",
+      "requirementChanged": "Изискванията са променени",
+      "requirementRemoved": "Изискванията са премахнати"
     },
     "outcomeLabel": "Резултат",
     "unassigned": "Невъзложен(а)",
@@ -1187,7 +1190,45 @@
     "linkSubject": "Имот обект",
     "onDeal": "Сделка: {title}",
     "rejectedReason": "Причина: {reason}",
-    "perMonth": "{price} / месец"
+    "perMonth": "{price} / месец",
+    "requirement": {
+      "fields": {
+        "budget_min": "Бюджет от",
+        "budget_max": "Бюджет до",
+        "property_types": "Вид имот",
+        "rooms_min": "Стаи от",
+        "rooms_max": "Стаи до",
+        "area_m2_min": "Площ от",
+        "area_m2_max": "Площ до",
+        "floor_min": "Етаж от",
+        "floor_max": "Етаж до",
+        "not_top_floor": "Не последен етаж",
+        "construction": "Строителство",
+        "financing": "Финансиране",
+        "wishes": "Други желания",
+        "locations": "Местоположение",
+        "budget_must": "Бюджет: задължително",
+        "location_must": "Местоположение: задължително",
+        "type_must": "Вид имот: задължително",
+        "rooms_must": "Стаи: задължително",
+        "area_m2_must": "Площ: задължително",
+        "floor_must": "Етаж: задължително",
+        "construction_must": "Строителство: задължително"
+      },
+      "criteria": {
+        "budget": "бюджет",
+        "location": "местоположение",
+        "type": "вид имот",
+        "rooms": "стаи",
+        "area_m2": "площ",
+        "floor": "етаж",
+        "construction": "строителство"
+      },
+      "mustList": "Задължителни",
+      "yes": "Да",
+      "no": "Не",
+      "none": "—"
+    }
   },
   "NoteCard": {
     "teamMember": "Член на екипа",

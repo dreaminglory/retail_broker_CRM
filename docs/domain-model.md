@@ -270,7 +270,9 @@ entry: what was there, `to` its empty value). The `locations` change lists
 `{ settlement_id, settlement_bg, settlement_en, area_id, area }`, so an entry keeps the names
 it had. A save that changes nothing, and the cascade of a deleted opportunity, write no row.
 The opportunity and contact timelines read these rows with the other opportunity rows.
-`describeAudit` (`audit-event.ts`) turns a row into the event both timelines render.
+`describeAudit` (`audit-event.ts`) turns a row into the event both timelines render; a
+requirement row becomes the `requirement` kind, its changes shown old → new with the location
+names it was saved with, in the reader's language.
 
 ### 2.5 Data import
 

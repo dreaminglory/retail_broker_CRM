@@ -71,7 +71,7 @@ export function applyDefaultMust(
 function optionalNumber(schema: z.ZodNumber) {
   return z.preprocess((value) => {
     if (!present(value)) return null;
-    return typeof value === 'string' ? Number(value.replace(/[\s  ]/g, '').replace(',', '.')) : value;
+    return typeof value === 'string' ? Number(value.replace(/[\s\u00a0\u202f]/g, '').replace(',', '.')) : value;
   }, schema.nullable().default(null));
 }
 

@@ -24,7 +24,27 @@ export type AuditEvent =
       to: string | null;
       reason: string | null;
     }
+  | { kind: 'requirement'; event: RequirementAuditEvent; changes: RequirementChange[] }
   | { kind: 'other' };
+
+export type RequirementAuditEvent = 'created' | 'changed' | 'removed';
+
+/** A location as the audit trigger saved it: names in both languages at the time (AD-059). */
+export type RequirementAuditLocation = { settlementBg: string; settlementEn: string; area: string | null };
+
+export type RequirementChangeValue = number | string | boolean | string[] | RequirementAuditLocation[] | null;
+
+export type RequirementChange = { field: RequirementField; from: RequirementChangeValue; to: RequirementChangeValue };
+
+/** The fields `audit_requirement_changes` diffs, in its order. */
+export const REQUIREMENT_FIELDS = [
+  'budget_min', 'budget_max', 'property_types', 'rooms_min', 'rooms_max', 'area_m2_min', 'area_m2_max',
+  'floor_min', 'floor_max', 'not_top_floor', 'construction', 'financing', 'wishes',
+  'budget_must', 'location_must', 'type_must', 'rooms_must', 'area_m2_must', 'floor_must', 'construction_must',
+  'locations',
+] as const;
+
+export type RequirementField = (typeof REQUIREMENT_FIELDS)[number];
 
 const text = (value: unknown): string | null => (typeof value === 'string' && value !== '' ? value : null);
 const num = (value: unknown): number | null => {
@@ -33,8 +53,43 @@ const num = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const isField = (value: unknown): value is RequirementField =>
+  typeof value === 'string' && (REQUIREMENT_FIELDS as readonly string[]).includes(value);
+
+function requirementValue(field: RequirementField, value: unknown): RequirementChangeValue {
+  if (field === 'locations') {
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((item) =>
+      item && typeof item === 'object'
+        ? [{
+            settlementBg: String((item as Record<string, unknown>).settlement_bg ?? ''),
+            settlementEn: String((item as Record<string, unknown>).settlement_en ?? ''),
+            area: text((item as Record<string, unknown>).area),
+          }]
+        : [],
+    );
+  }
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
+  if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return value;
+  return null;
+}
+
+/** One save of a requirement: what changed, with the old and new value of each (Q8). */
+function describeRequirement(meta: Record<string, unknown>): AuditEvent {
+  const event: RequirementAuditEvent = meta.event === 'created' || meta.event === 'removed' ? meta.event : 'changed';
+  const changes = (Array.isArray(meta.changes) ? meta.changes : []).flatMap((change): RequirementChange[] => {
+    if (!change || typeof change !== 'object') return [];
+    const { field, from, to } = change as Record<string, unknown>;
+    if (!isField(field)) return [];
+    return [{ field, from: requirementValue(field, from), to: requirementValue(field, to) }];
+  });
+  return { kind: 'requirement', event, changes };
+}
+
 export function describeAudit(row: AuditLogEntry): AuditEvent {
   const meta = row.metadata ?? {};
+
+  if (row.field_name === 'requirement') return describeRequirement(meta);
 
   if (row.field_name === 'property_link') {
     return {

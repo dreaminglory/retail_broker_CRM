@@ -1173,7 +1173,10 @@
       "listingStatusChanged": "Listing status changed",
       "propertyLinkAdded": "Property linked",
       "propertyLinkChanged": "Link status changed",
-      "propertyLinkRemoved": "Property unlinked"
+      "propertyLinkRemoved": "Property unlinked",
+      "requirementCreated": "Requirements added",
+      "requirementChanged": "Requirements changed",
+      "requirementRemoved": "Requirements removed"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",
@@ -1187,7 +1190,45 @@
     "linkSubject": "Subject property",
     "onDeal": "Deal: {title}",
     "rejectedReason": "Reason: {reason}",
-    "perMonth": "{price} / month"
+    "perMonth": "{price} / month",
+    "requirement": {
+      "fields": {
+        "budget_min": "Budget from",
+        "budget_max": "Budget up to",
+        "property_types": "Property type",
+        "rooms_min": "Rooms from",
+        "rooms_max": "Rooms up to",
+        "area_m2_min": "Area from",
+        "area_m2_max": "Area up to",
+        "floor_min": "Floor from",
+        "floor_max": "Floor up to",
+        "not_top_floor": "Not the top floor",
+        "construction": "Construction",
+        "financing": "Financing",
+        "wishes": "Other wishes",
+        "locations": "Locations",
+        "budget_must": "Budget: must-have",
+        "location_must": "Locations: must-have",
+        "type_must": "Property type: must-have",
+        "rooms_must": "Rooms: must-have",
+        "area_m2_must": "Area: must-have",
+        "floor_must": "Floor: must-have",
+        "construction_must": "Construction: must-have"
+      },
+      "criteria": {
+        "budget": "budget",
+        "location": "locations",
+        "type": "property type",
+        "rooms": "rooms",
+        "area_m2": "area",
+        "floor": "floor",
+        "construction": "construction"
+      },
+      "mustList": "Must-haves",
+      "yes": "Yes",
+      "no": "No",
+      "none": "—"
+    }
   },
   "NoteCard": {
     "teamMember": "Team Member",

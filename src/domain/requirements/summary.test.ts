@@ -20,7 +20,7 @@ function tools(locale: 'bg' | 'en'): SummaryTools {
 }
 
 /** Intl puts no-break spaces in "150 000 €"; the assertions read plain spaces. */
-const plain = (text: string) => text.replace(/[  ]/g, ' ');
+const plain = (text: string) => text.replace(/[\u00a0\u202f]/g, ' ');
 
 const sofia = (area: string | null, settlement = { bg: 'София', en: 'Sofia' }) => ({ area, settlement });
 

@@ -50,7 +50,7 @@ function render(locale: "bg" | "en", requirement: Requirement | null, type: Oppo
     </NextIntlClientProvider>,
   )
     .replace(/<!-- -->/g, '')
-    .replace(/[  ]/g, ' ');
+    .replace(/[\u00a0\u202f]/g, ' ');
 }
 
 describe('RequirementSection', () => {
