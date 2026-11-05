@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -37,15 +37,20 @@ export function LocationPicker({ id, value, onChange, invalid, describedBy }: Lo
   const [loading, startLoading] = useTransition();
   // Remounts the combobox to clear it after a settlement is closed.
   const [pickerKey, setPickerKey] = useState(0);
+  // The settlement whose areas are shown, read when its areas arrive.
+  const shown = useRef<string | null>(null);
 
   const chosen = new Set(value.map(keyOf));
 
   function pickSettlement(next: Settlement | null) {
+    shown.current = next?.id ?? null;
     setSettlement(next);
     setAreas([]);
     if (!next) return;
     startLoading(async () => {
       const result = await listAreasForSettlementAction(next.id);
+      // A settlement picked since (or Done) wins: a late answer would list another one's areas.
+      if (shown.current !== next.id) return;
       setAreas(result.success ? result.data : []);
     });
   }
@@ -148,6 +153,7 @@ export function LocationPicker({ id, value, onChange, invalid, describedBy }: Lo
               size="sm"
               variant="ghost"
               onClick={() => {
+                shown.current = null;
                 setSettlement(null);
                 setAreas([]);
                 setPickerKey((key) => key + 1);

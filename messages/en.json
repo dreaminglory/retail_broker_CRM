@@ -1742,7 +1742,9 @@
       "wrongOpportunityType": "Only buyer and tenant deals have requirements.",
       "readOnly": "This deal is closed. Reopen it to change its requirements.",
       "invalid": "These requirements aren't valid. Check the fields.",
-      "invalidLocation": "An area isn't in the chosen settlement or no longer exists."
+      "invalidLocation": "An area isn't in the chosen settlement or no longer exists.",
+      "locationCovered": "The whole settlement already covers its areas. Remove one of them.",
+      "inactiveArea": "An area you picked has been deactivated. Remove it and save again."
     }
   },
   "RequirementSection": {

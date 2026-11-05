@@ -154,10 +154,11 @@ export const requirementInputSchema = z
       seen.add(key);
       return true;
     });
+    // The list's order, not the order they were picked in, as `save_requirement` stores them.
     return {
       ...value,
-      property_types: [...new Set(value.property_types)],
-      construction: [...new Set(value.construction)],
+      property_types: PROPERTY_TYPES.filter((type) => value.property_types.includes(type)),
+      construction: CONSTRUCTIONS.filter((construction) => value.construction.includes(construction)),
       locations,
     };
   });

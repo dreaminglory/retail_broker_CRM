@@ -217,7 +217,14 @@ Seller/landlord deals show nothing.
 ### Checkpoint 2: Opportunity page
 - [x] AC-1 (opportunity part) through AC-6 seen in the browser in BG and EN at 1280 and 390 px. Read through the DOM (the pane's screenshots time out); the form was driven with DOM events, so no pointer click or real select was used, and the form was checked at the pane's desktop width and 390 px, not at 1280; AC-4's Plovdiv-under-Sofia case is a service test, not a browser one.
 - [x] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:services`, `npm run test:db` green (598 unit, 764 with services, 369 pgTAP, 0 lint errors); also `npx playwright test`: 36 existing E2E. `062-import-commit-inquiries.sql` fails if `test:db` runs after `test:services` without a reset: it needs a fresh `db reset`.
-- [ ] `/review` of Phases 1–2
+- [x] `/review` of Phases 1–2 (2026-11-05). Fixed in `20261105000003_requirement_review_fixes.sql`
+  with `079-requirement-review-fixes.sql` (red first): types and construction are stored in the
+  list's order, so re-ordering them writes no timeline entry; `save_requirement` refuses a whole
+  settlement with one of its areas (`locationCovered`) and a newly added inactive area
+  (`inactiveArea`). Zod sorts the same way and gained a min = max test. The location picker drops
+  a late area list; Next.js already runs server actions one at a time, so this guard is a safety
+  net (the race couldn't be reproduced). Checks: 379 pgTAP, 769 unit + services, typecheck, lint;
+  browser BG and EN (summary order, the `inactiveArea` toast).
 
 ## Phase 3: E2E and cut items
 

@@ -72,6 +72,20 @@ describe('requirementInputSchema', () => {
     expect(issues(input)).toContainEqual([`${criterion}_max`, 'validation.min_above_max']);
   });
 
+  it.each(['budget', 'rooms', 'area_m2', 'floor'] as const)('accepts %s_min equal to %s_max ("exactly 3 rooms")', (criterion) => {
+    expect(issues({ budget_max: 3, [`${criterion}_min`]: 3, [`${criterion}_max`]: 3 })).toEqual([]);
+  });
+
+  it('puts types and construction in the list order, whatever order they were picked in', () => {
+    const result = requirementInputSchema.parse({
+      property_types: ['maisonette', 'studio', 'apartment'],
+      construction: ['panel', 'brick'],
+    });
+
+    expect(result.property_types).toEqual(['apartment', 'studio', 'maisonette']);
+    expect(result.construction).toEqual(['brick', 'panel']);
+  });
+
   it.each([
     [{ rooms_min: 0 }, 'rooms_min', 'validation.rooms_range'],
     [{ rooms_max: 10 }, 'rooms_max', 'validation.rooms_range'],

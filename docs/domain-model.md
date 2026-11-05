@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 51st migration
-(`20261105000002_requirement_writes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 52nd migration
+(`20261105000003_requirement_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -464,7 +464,10 @@ whole requirement (a missing field is empty) and its locations in one transactio
 `remove_requirement(opportunity)` deletes it, its locations cascading. Both are `SECURITY
 DEFINER`, lock the opportunity, and refuse with `requirements.errors.*` keys: `notFound` (not in
 the caller's agency, or nothing to remove), `wrongOpportunityType`, `readOnly` (won, lost,
-archived), `invalid` (a `CHECK`) and `invalidLocation` (a foreign key). `location_keys`
+archived), `invalid` (a `CHECK`), `invalidLocation` (a foreign key), `locationCovered` (a whole
+settlement with one of its areas) and `inactiveArea` (a deactivated area not already saved).
+It stores `property_types` and `construction` in the list's order, so re-ordering them is no
+change. `location_keys`
 holds `settlement_id` or `settlement_id:area_id` for each location row, sorted, written with
 them; it is what the `CHECK`s and the audit see of the locations. A min and max pair is shown
 as one line above (`budget_min`, `budget_max`, and so on); `x_must` stands for the seven
@@ -730,10 +733,10 @@ The "Enforced by" column tells you which layer to change and test.
 | Q2 | A requirement has a budget bound, a location, a type, a rooms bound or an m² bound; financing and wishes alone don't count (rule 2) | `CHECK requirements_has_criterion` (counts `location_keys`) |
 | Q3 | Every min ≤ max; rooms 1–9; budget and m² > 0; floor −5…200; types and construction are subsets of the property lists; wishes ≤ 2,000 chars (rule 3) | `CHECK`s on `requirements` |
 | Q4 | A must-have flag is on only when its criterion is set (`not_top_floor` counts for floor) (rule 4) | `CHECK requirements_must_has_criterion` |
-| Q5 | A location's area belongs to its settlement and agency; a location is listed once per requirement; a used area can't be deleted | composite FK `fk_requirement_locations_area` (`RESTRICT`), `UNIQUE NULLS NOT DISTINCT` |
+| Q5 | A location's area belongs to its settlement and agency; a location is listed once per requirement; a whole settlement isn't listed with one of its areas; a newly added area is active (one deactivated since it was saved stays, rule 6); a used area can't be deleted | composite FK `fk_requirement_locations_area` (`RESTRICT`), `UNIQUE NULLS NOT DISTINCT`, checks in `save_requirement` + `079-requirement-review-fixes.sql` |
 | Q6 | Requirements and their locations point only at their own agency's rows; members read their own agency's and write neither directly (rule 10, AD-059) | composite FKs, RLS `SELECT` only, writes revoked + `077-requirements.sql` |
 | Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
-| Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` in `save_requirement` + `078-requirement-writes.sql` |
+| Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
