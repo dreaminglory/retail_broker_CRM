@@ -1,7 +1,7 @@
 # Spec: requirements
 
-> **Status:** Approved scope (founder, 2026-11-05). Decisions to record: AD-059.
-> Requirements: FR-REQ-01…07.
+> **Status:** Done (2026-11-05). Approved scope (founder, 2026-11-05). Plan:
+> `docs/archive/requirements-plan.md`. Decisions: AD-059. Requirements: FR-REQ-01…07.
 > **Evidence:** gap analysis §5.1 #7 (buyer requirements and two-way matching are a core purchase
 > reason in BG), benchmark B-11, business brief "Pilot MVP", AD-039 pilot gate.
 > Scope answers from the founder (2026-11-05): one requirement per opportunity, a must-have

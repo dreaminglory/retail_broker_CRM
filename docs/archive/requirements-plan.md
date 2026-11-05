@@ -86,7 +86,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 ### Phase 1: Data model
 - [x] Task 1: Requirement tables, constraints, guards and AD-059
 - [x] Task 2: Save and remove RPCs with the audit trigger
-- [ ] Task 3: Seed requirements for both agencies
+- [x] Task 3: Seed requirements for both agencies
 
 **Checkpoint 1:** `db reset` + `test:db` green; the founder reviews AD-059 and the model in
 `docs/domain-model.md`.
@@ -101,10 +101,10 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 and 390 px; `/review` of Phases 1–2.
 
 ### Phase 3: E2E and cut items
-- [ ] Task 8: E2E for the requirement loop
-- [ ] Task 9: Buyer ↔ tenant budget notice (cut 3)
-- [ ] Task 10: Summary on the opportunities list (cut 2)
-- [ ] Task 11: Summary on the contact page (cut 1)
+- [x] Task 8: E2E for the requirement loop
+- [x] Task 9: Buyer ↔ tenant budget notice (cut 3)
+- [x] Task 10: Summary on the opportunities list (cut 2)
+- [x] Task 11: Summary on the contact page (cut 1)
 
 **Checkpoint 3:** every AC met, the full Definition of Done, `/review`; then close the module.
 

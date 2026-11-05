@@ -1,6 +1,6 @@
 # Spec: BrokerCRM
 
-> Last updated 2026-11-04. The product spec: what we build, in which order, and where it stands.
+> Last updated 2026-11-05. The product spec: what we build, in which order, and where it stands.
 > Module specs: `spec/<module-id>.md`. Active plan: `tasks/plan.md` + `tasks/todo.md`.
 
 ## 1. Objective
@@ -28,7 +28,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Core-loop defects fixed | `trustworthy-loop` | Done |
 | Reminders and daily digest | `reminders` | Done |
 | Light property record linked to opportunities | `properties` | Done |
-| Buyer/tenant requirements | `requirements` | In progress |
+| Buyer/tenant requirements | `requirements` | Done |
 | Inquiry can create **or join** an opportunity | `conversion-join` | Planned |
 | Requirement ↔ property matching | `matching` | Planned |
 | Smart Lists | `smart-lists` | Planned |
@@ -44,7 +44,7 @@ starts; pilot evidence sets the order.
 | `trustworthy-loop` | International phones (AD-041), inquiry edit and reassign, pagers and contact picker at volume, import revert and i18n fixes, service tests in CI | — | Done |
 | `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | Done |
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Done |
-| `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | In progress |
+| `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Done |
 | `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Planned |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Planned |
@@ -80,14 +80,17 @@ runs typecheck, lint, Vitest, pgTAP and the service integration suites; daily di
 agency counts and an opt-out, and assignment emails (Mailpit locally; Resend and the crons are
 switched on in `go-live`); properties with EKATTE settlements and agency areas, sale and rent
 listings, parties, candidate and subject links on opportunities, viewing tasks that mark a
-property viewed, a property timeline with notes, and ⌘K property search (AD-056, AD-057).
+property viewed, a property timeline with notes, and ⌘K property search (AD-056, AD-057);
+buyer and tenant requirements on opportunities (budget, settlements and areas, types, size, floor,
+construction, financing, wishes, must-haves), audited one entry per save, read-only on closed
+deals, with a summary line on the opportunity, the list and the contact (AD-059).
 
 **Known gaps:** resend invitation (`conversion-join`); five services have no tests yet
 (FR-TST-03). BRD rows marked ⚠️ say where each is handled.
 
 **Production:** Supabase `emflwmivjachbnaqumnn` (eu-west-2); migration history equals the repo
 (AD-040), changes go through migrations only. `main` now holds migrations through
-`20261103000006`: confirm and apply them with `/ship` before deploying this code, which calls the
+`20261103000006` (`20261105000003` once `requirements` merges): confirm and apply them with `/ship` before deploying this code, which calls the
 AD-050 RPCs. Leaked-password protection is still off
 (founder). No app hosting yet.
 
