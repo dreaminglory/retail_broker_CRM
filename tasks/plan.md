@@ -83,7 +83,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 ### Phase 1: Matching engine
 - [x] Task 1: AD-060, `opportunity_properties.source` and the docs
 - [x] Task 2: `match_evaluate`: per-criterion results and score
-- [ ] Task 3: `match_properties` and `match_opportunities`
+- [x] Task 3: `match_properties` and `match_opportunities`
 - [ ] Task 4: Seed every match result and measure the speed target
 
 **Checkpoint 1:** `db reset` + `test:db` green; speed numbers recorded; the founder reviews AD-060

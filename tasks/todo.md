@@ -84,12 +84,12 @@ filtered by `current_agency_id()` on every table, granted to `authenticated` onl
 Write `081-match-lists.sql`.
 
 **Acceptance criteria:**
-- [ ] Closed, withdrawn and wrong-offer-type listings, archived properties, won/lost/archived deals and seller/landlord deals never appear; a nurture deal does (AC-3, AC-5 at the DB layer)
-- [ ] Linked properties are hidden by default and returned with `link_status` when included; `total_count` and `unlinked_count` match; reserved rows come after all active rows; paging is stable (AC-4 at the DB layer)
-- [ ] A Beta broker calling either function with an Alpha id gets no rows; a price change to €230,000 drops the property from a €150–200k must-have buyer at the next call (AC-6, AC-7)
+- [x] Closed, withdrawn and wrong-offer-type listings, archived properties, won/lost/archived deals and seller/landlord deals never appear; a nurture deal does (AC-3, AC-5 at the DB layer)
+- [x] Linked properties are hidden by default and returned with `link_status` when included; `total_count` and `unlinked_count` match; reserved rows come after all active rows; paging is stable (AC-4 at the DB layer)
+- [x] A Beta broker calling either function with an Alpha id gets no rows; a price change to €230,000 drops the property from a €150–200k must-have buyer at the next call (AC-6, AC-7)
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
+- [x] `npx supabase db reset` then `npm run test:db`
 
 **Dependencies:** Task 2
 **Files likely touched:** `supabase/migrations/<ts>_match_lists.sql`, `supabase/tests/database/081-match-lists.sql`, `supabase/tests/database/010-rls-catalog.sql` (only if it lists functions)
