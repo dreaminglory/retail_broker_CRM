@@ -120,6 +120,6 @@ and 390 px; `/review` of Phases 1–2.
 | About 80 new i18n keys | Low | Keys go in with each task; lint `i18next/no-literal-string`; glossary term Изисквания in Task 1 |
 
 ## Open questions
-- None blocking. The two departures from earlier patterns (`SECURITY DEFINER` RPCs and the
+- None blocking. AD-059 accepted by the founder at Checkpoint 1 (2026-11-05). The two departures from earlier patterns (`SECURITY DEFINER` RPCs and the
   property-link audit shape instead of a new `entity_type`) are for the founder to confirm at
   Checkpoint 1, recorded in AD-059.

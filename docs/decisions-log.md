@@ -219,7 +219,7 @@ could re-point links and listings, and that a contact delete erased the ownershi
 spec keeps.
 
 ### AD-059: Requirements have one write path and one audit row per save
-**Proposed** (plan approved by the founder 2026-11-05; confirm at Checkpoint 1 of `tasks/plan.md`).
+**Accepted** (founder, 2026-11-05, Checkpoint 1 of `tasks/plan.md`).
 Only two `SECURITY DEFINER` RPCs write `requirements` and `requirement_locations`:
 `save_requirement` (row and locations in one transaction) and `remove_requirement`, each checking
 the agency, the deal type (buyer/tenant) and status (`active`/`nurture`). Members get `SELECT`

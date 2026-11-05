@@ -111,7 +111,7 @@ Write `078-requirement-writes.sql`.
 ### Checkpoint 1: Data model
 - [x] `npx supabase db reset` and `npm run test:db` green
 - [ ] `npm run typecheck`, `npm run lint`, `npm run test` green — lint (0 errors) and test pass; `tsc --noEmit` passes, but `npm run typecheck`'s `next typegen` step hits the same SWC error
-- [ ] Founder reviews AD-059 (`SECURITY DEFINER` writers, `location_keys`, audit shape) and `docs/domain-model.md` before any UI
+- [x] Founder reviews AD-059 (`SECURITY DEFINER` writers, `location_keys`, audit shape) and `docs/domain-model.md` before any UI — accepted 2026-11-05
 
 ## Phase 2: Opportunity page
 
