@@ -61,4 +61,10 @@ export class RequirementRepository {
     if (error) throw requirementWriteFailure(error);
     return data as string;
   }
+
+  /** `remove_requirement`: `notFound` when the deal has none. */
+  async remove(opportunityId: string): Promise<void> {
+    const { error } = await this.db.rpc('remove_requirement', { p_opportunity_id: opportunityId });
+    if (error) throw requirementWriteFailure(error);
+  }
 }

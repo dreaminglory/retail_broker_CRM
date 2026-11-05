@@ -63,9 +63,20 @@ describe('RequirementSection', () => {
     expect(render(locale, requirement)).toContain(`${button}</button>`);
   });
 
-  it('offers no button on a closed deal (rule 7)', () => {
-    expect(render('en', seeded, 'buyer', false)).not.toContain('</button>');
-    expect(render('en', null, 'buyer', false)).not.toContain('</button>');
+  it('offers no button on a closed deal and says why (rule 7, AC-6)', () => {
+    const html = render('en', seeded, 'buyer', false);
+
+    expect(html).not.toContain('</button>');
+    expect(html).toContain('This deal is closed. Reopen it to change its requirements.');
+    expect(render('bg', null, 'buyer', false)).not.toContain('</button>');
+  });
+
+  it.each([
+    ['bg', 'Премахни'],
+    ['en', 'Remove'],
+  ] as const)('offers remove next to edit (%s)', (locale, label) => {
+    expect(render(locale, seeded)).toContain(`${label}</button>`);
+    expect(render(locale, null)).not.toContain(`${label}</button>`);
   });
 
   it.each([

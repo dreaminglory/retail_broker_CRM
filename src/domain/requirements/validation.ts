@@ -1,6 +1,12 @@
 import { z } from 'zod';
+import type { OpportunityStatus } from '@/domain/opportunities/types';
 import { CONSTRUCTIONS, PROPERTY_TYPES } from '@/domain/properties/validation';
 import type { Financing, MustCriterion } from './types';
+
+/** Rule 7: editable while the deal is active or nurture; won, lost or archived is read-only. */
+export function requirementEditable(status: OpportunityStatus): boolean {
+  return status === 'active' || status === 'nurture';
+}
 
 export const FINANCINGS = ['cash', 'mortgage', 'mixed', 'unknown'] as const satisfies readonly Financing[];
 

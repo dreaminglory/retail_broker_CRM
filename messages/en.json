@@ -1622,7 +1622,8 @@
   },
   "opportunities": {
     "errors": {
-      "typeHasProperties": "This deal has linked properties that don't fit the new type. Remove them first."
+      "typeHasProperties": "This deal has linked properties that don't fit the new type. Remove them first.",
+      "typeHasRequirement": "This deal has a buyer's or tenant's requirements. Remove them before changing it to seller or landlord."
     }
   },
   "opportunityProperties": {
@@ -1720,7 +1721,14 @@
     "wishes": "Other wishes",
     "inactiveArea": "inactive",
     "add": "Add",
-    "edit": "Edit"
+    "edit": "Edit",
+    "remove": "Remove",
+    "removeTitle": "Remove the requirements?",
+    "removeDescription": "The criteria will be deleted. The deal's history keeps them.",
+    "removing": "Removing…",
+    "removed": "Requirements removed.",
+    "cancel": "Cancel",
+    "readOnly": "This deal is closed. Reopen it to change its requirements."
   },
   "RequirementForm": {
     "addTitle": "Client's requirements",

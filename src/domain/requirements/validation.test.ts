@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyDefaultMust, criterionIsSet, requirementInputSchema, toRpcArgs } from './validation';
+import { applyDefaultMust, criterionIsSet, requirementEditable, requirementInputSchema, toRpcArgs } from './validation';
 
 const SOFIA = '11111111-0000-4000-8000-000000000001';
 const PLOVDIV = '11111111-0000-4000-8000-000000000002';
@@ -181,5 +181,17 @@ describe('toRpcArgs', () => {
     expect(locations).toEqual([{ settlement_id: SOFIA, area_id: null }]);
     expect(fields).not.toHaveProperty('locations');
     expect(fields).toMatchObject({ budget_max: 800, financing: 'unknown' });
+  });
+});
+
+describe('requirementEditable', () => {
+  it.each([
+    ['active', true],
+    ['nurture', true],
+    ['won', false],
+    ['lost', false],
+    ['archived', false],
+  ] as const)('%s → %s (rule 7)', (status, expected) => {
+    expect(requirementEditable(status)).toBe(expected);
   });
 });

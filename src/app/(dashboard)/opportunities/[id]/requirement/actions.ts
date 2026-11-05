@@ -22,3 +22,16 @@ export async function saveRequirementAction(opportunityId: string, input: unknow
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }
+
+/** Deletes the requirement; its audit entries stay on the timeline (rule 8). */
+export async function removeRequirementAction(opportunityId: string): Promise<ActionResult> {
+  try {
+    const id = z.string().uuid().safeParse(opportunityId);
+    if (!id.success) return toActionError(id.error);
+
+    const { supabase, agencyId } = await getAuthContext();
+    await new RequirementService(supabase).remove(agencyId, id.data);
+    revalidatePath(`/opportunities/${id.data}`);
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}

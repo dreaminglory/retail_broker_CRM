@@ -94,7 +94,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 ### Phase 2: Opportunity page
 - [x] Task 4: Show the requirement on the opportunity
 - [x] Task 5: Add and edit a requirement
-- [ ] Task 6: Remove, read-only on closed deals, type-change error
+- [x] Task 6: Remove, read-only on closed deals, type-change error
 - [ ] Task 7: Requirement entries on the timelines
 
 **Checkpoint 2:** AC-1 (opportunity part) through AC-6 seen in the browser in BG and EN at 1280

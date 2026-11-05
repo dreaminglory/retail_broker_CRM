@@ -27,6 +27,7 @@ import { PropertyLinks, SubjectProperty } from "@/components/domain/opportunitie
 import type { OpportunityPropertyWithProperty } from "@/domain/opportunity-properties/types";
 import { RequirementSection } from "@/components/domain/requirements/requirement-section";
 import type { Requirement } from "@/domain/requirements/types";
+import { requirementEditable } from "@/domain/requirements/validation";
 import {
   updateOpportunityAction,
   changeOpportunityStageAction,
@@ -271,7 +272,7 @@ export function OpportunityDetailClient({
                 opportunityId={opportunity.id}
                 requirement={requirement}
                 opportunityType={opportunity.type}
-                editable
+                editable={requirementEditable(opportunity.status)}
               />
               <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
             </>

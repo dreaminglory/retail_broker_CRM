@@ -1,10 +1,22 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { ListChecks, Pencil, Plus } from "lucide-react";
+import { toast } from "sonner";
+import { ListChecks, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { removeRequirementAction } from "@/app/(dashboard)/opportunities/[id]/requirement/actions";
 import { RequirementFormSheet } from "./requirement-form";
 import type { OpportunityType } from "@/domain/opportunities/types";
 import type { MustCriterion, Requirement } from "@/domain/requirements/types";
@@ -30,6 +42,20 @@ type RequirementSectionProps = {
 export function RequirementSection({ opportunityId, requirement, opportunityType, editable }: RequirementSectionProps) {
   const t = useTranslations("RequirementSection");
   const [editing, setEditing] = useState(false);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [removing, startRemoving] = useTransition();
+
+  function remove() {
+    startRemoving(async () => {
+      const result = await removeRequirementAction(opportunityId);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      setConfirmingRemove(false);
+      toast.success(t("removed"));
+    });
+  }
 
   return (
     <section className="rounded-lg border bg-card" aria-labelledby="opportunity-requirement">
@@ -39,10 +65,18 @@ export function RequirementSection({ opportunityId, requirement, opportunityType
           {t("title")}
         </h3>
         {editable && (
-          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-            {requirement ? <Pencil className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
-            {t(requirement ? "edit" : "add")}
-          </Button>
+          <div className="flex items-center gap-1">
+            {requirement && (
+              <Button size="sm" variant="ghost" onClick={() => setConfirmingRemove(true)} disabled={removing}>
+                <Trash2 className="mr-1 h-4 w-4" />
+                {t("remove")}
+              </Button>
+            )}
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)} disabled={removing}>
+              {requirement ? <Pencil className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
+              {t(requirement ? "edit" : "add")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -52,6 +86,8 @@ export function RequirementSection({ opportunityId, requirement, opportunityType
         <p className="px-5 py-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
       )}
 
+      {!editable && <p className="border-t px-5 py-3 text-xs text-muted-foreground">{t("readOnly")}</p>}
+
       {editable && (
         <RequirementFormSheet
           open={editing}
@@ -60,6 +96,23 @@ export function RequirementSection({ opportunityId, requirement, opportunityType
           opportunityType={opportunityType}
           requirement={requirement}
         />
+      )}
+
+      {editable && requirement && (
+        <AlertDialog open={confirmingRemove} onOpenChange={setConfirmingRemove}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("removeTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>{t("removeDescription")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={removing}>{t("cancel")}</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" disabled={removing} onClick={remove}>
+                {removing ? t("removing") : t("remove")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </section>
   );

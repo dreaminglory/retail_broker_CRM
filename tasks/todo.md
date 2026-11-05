@@ -182,12 +182,12 @@ Seller/landlord deals show nothing.
   `typeHasProperties`, so changing a buyer deal with a requirement to seller shows a toast.
 
 **Acceptance criteria:**
-- [ ] Removing a requirement brings back the empty state; a won deal shows it read-only and, reopened, editable (AC-6)
-- [ ] Changing a buyer deal with a requirement to seller is refused with a translated message; buyer → tenant keeps it and the budget label says rent (AC-3)
+- [x] Removing a requirement brings back the empty state; a won deal shows it read-only and, reopened, editable (AC-6)
+- [x] Changing a buyer deal with a requirement to seller is refused with a translated message; buyer → tenant keeps it and the budget label says rent (AC-3). The message shows inline in the opportunity form, like `typeHasProperties`, not as a toast.
 
 **Verification:**
-- [ ] `npm run test:services` (remove, closed guard, type-change mapping)
-- [ ] Browser: BG and EN
+- [x] `npm run test:services` (remove, closed guard, type-change mapping): 750 after a `db reset`
+- [x] Browser: remove with confirm and cancel, switching a default must-have off, won → read-only (BG and EN) → reopened → editable, tenant → landlord refused, tenant → buyer keeps it with the price label. The won status was set in the local DB; the type was set on the form's hidden input (the hidden pane's selects don't open).
 
 **Dependencies:** Task 5
 **Files likely touched:** `src/domain/requirements/{service,service.integration.test}.ts`, `src/app/(dashboard)/opportunities/[id]/requirement/actions.ts`, `src/components/domain/requirements/requirement-section.tsx`, `src/domain/opportunities/repository.ts`, `messages/{bg,en}.json`

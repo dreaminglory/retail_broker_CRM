@@ -229,4 +229,73 @@ describeServices('RequirementService against the local stack', () => {
       expect(await new RequirementService(alpha.db).getForOpportunity(opportunity.id, alpha.agencyId, 'bg')).toBeNull();
     });
   });
+
+  describe('remove', () => {
+    it('removes the requirement and its locations (rule 8, AC-6)', async () => {
+      const opportunity = await createOpportunity();
+      const service = new RequirementService(alpha.db);
+      await service.save(alpha.agencyId, opportunity.id, ac1());
+
+      await service.remove(alpha.agencyId, opportunity.id);
+
+      expect(await service.getForOpportunity(opportunity.id, alpha.agencyId, 'bg')).toBeNull();
+      const { data: locations } = await alpha.db.from('requirement_locations').select('id').eq('agency_id', alpha.agencyId);
+      const { data: kept } = await alpha.db.from('requirements').select('id').eq('opportunity_id', opportunity.id);
+      expect(kept).toEqual([]);
+      expect(locations!.length).toBeGreaterThan(0); // the seeded ones stay
+    });
+
+    it('refuses a deal without one as not found', async () => {
+      const opportunity = await createOpportunity();
+
+      expect(await refusal(new RequirementService(alpha.db).remove(alpha.agencyId, opportunity.id))).toBe('requirements.errors.notFound');
+    });
+
+    it('refuses a lost deal and keeps the requirement (rule 7)', async () => {
+      const opportunity = await createOpportunity();
+      const service = new RequirementService(alpha.db);
+      await service.save(alpha.agencyId, opportunity.id, ac1());
+      await new OpportunityService(alpha.db).close(opportunity.id, alpha.agencyId, { outcome: 'lost', lost_reason: 'Bought elsewhere' });
+
+      expect(await refusal(service.remove(alpha.agencyId, opportunity.id))).toBe('requirements.errors.readOnly');
+      expect(await service.getForOpportunity(opportunity.id, alpha.agencyId, 'bg')).not.toBeNull();
+    });
+
+    it('lets a nurture deal be edited and cleared', async () => {
+      const opportunity = await createOpportunity();
+      const service = new RequirementService(alpha.db);
+      await new OpportunityService(alpha.db).close(opportunity.id, alpha.agencyId, { outcome: 'nurture' });
+
+      await service.save(alpha.agencyId, opportunity.id, ac1());
+      await service.remove(alpha.agencyId, opportunity.id);
+
+      expect(await service.getForOpportunity(opportunity.id, alpha.agencyId, 'bg')).toBeNull();
+    });
+
+    it("refuses another agency's deal as not found (AC-7)", async () => {
+      expect(await refusal(new RequirementService(beta.db).remove(beta.agencyId, ALPHA_OPP_1))).toBe('requirements.errors.notFound');
+      expect(await new RequirementService(alpha.db).getForOpportunity(ALPHA_OPP_1, alpha.agencyId, 'bg')).not.toBeNull();
+    });
+  });
+
+  describe('type change with a requirement (AC-3)', () => {
+    it('refuses buyer → seller with the translated key', async () => {
+      const opportunity = await createOpportunity();
+      await new RequirementService(alpha.db).save(alpha.agencyId, opportunity.id, ac1());
+
+      expect(await refusal(new OpportunityService(alpha.db).update(opportunity.id, alpha.agencyId, { type: 'seller' }))).toBe(
+        'opportunities.errors.typeHasRequirement',
+      );
+    });
+
+    it('keeps the requirement on buyer → tenant', async () => {
+      const opportunity = await createOpportunity();
+      const service = new RequirementService(alpha.db);
+      await service.save(alpha.agencyId, opportunity.id, ac1());
+
+      await new OpportunityService(alpha.db).update(opportunity.id, alpha.agencyId, { type: 'tenant' });
+
+      expect(await service.getForOpportunity(opportunity.id, alpha.agencyId, 'bg')).toMatchObject({ budget_max: 200_000 });
+    });
+  });
 });

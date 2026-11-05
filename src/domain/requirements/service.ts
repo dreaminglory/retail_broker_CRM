@@ -6,7 +6,7 @@ import { OpportunityService } from '@/domain/opportunities/service';
 import { SettlementService } from '@/domain/settlements/service';
 import { RequirementRepository } from './repository';
 import type { Requirement, RequirementLocation } from './types';
-import { requirementInputSchema, toRpcArgs, type RequirementInput } from './validation';
+import { requirementEditable, requirementInputSchema, toRpcArgs, type RequirementInput } from './validation';
 
 /**
  * The database owns the rules (AD-059): the RPCs check the agency, the deal type and status,
@@ -66,6 +66,12 @@ export class RequirementService {
     return this.repo.save(opportunityId, fields, locations);
   }
 
+  /** Deletes the requirement and its locations; the timeline keeps its entries (rule 8). */
+  async remove(agencyId: string, opportunityId: string): Promise<void> {
+    await this.assertWritable(agencyId, opportunityId);
+    await this.repo.remove(opportunityId);
+  }
+
   /** The friendly side of the RPC's checks: `notFound`, `wrongOpportunityType`, `readOnly`. */
   private async assertWritable(agencyId: string, opportunityId: string): Promise<void> {
     const opportunity = await new OpportunityService(this.db).getById(opportunityId, agencyId);
@@ -73,8 +79,6 @@ export class RequirementService {
     if (opportunity.type !== 'buyer' && opportunity.type !== 'tenant') {
       throw new DomainError('requirements.errors.wrongOpportunityType');
     }
-    if (opportunity.status !== 'active' && opportunity.status !== 'nurture') {
-      throw new DomainError('requirements.errors.readOnly');
-    }
+    if (!requirementEditable(opportunity.status)) throw new DomainError('requirements.errors.readOnly');
   }
 }

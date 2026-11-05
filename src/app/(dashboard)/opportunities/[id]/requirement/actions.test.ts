@@ -11,7 +11,7 @@ vi.mock('next-intl/server', () => ({
 }));
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
 
-const { saveRequirementAction } = await import('./actions');
+const { removeRequirementAction, saveRequirementAction } = await import('./actions');
 
 const OPP_ID = '22222222-2222-4222-8222-222222222222';
 const SOFIA = '33333333-3333-4333-8333-333333333333';
@@ -74,5 +74,28 @@ describe('saveRequirementAction', () => {
 
     expect((await saveRequirementAction('nope', { budget_max: 1 })).success).toBe(false);
     expect(fake.touchedTables).toEqual([]);
+  });
+});
+
+describe('removeRequirementAction', () => {
+  it('removes through remove_requirement only', async () => {
+    withDeal({ type: 'buyer', status: 'nurture' });
+
+    expect(await removeRequirementAction(OPP_ID)).toEqual({ success: true, data: undefined });
+    expect(fake.touchedTables).toEqual(['opportunities', 'rpc:remove_requirement']);
+    expect(fake.writes).toEqual([]);
+  });
+
+  it('refuses an archived deal without calling the RPC (rule 7)', async () => {
+    withDeal({ type: 'tenant', status: 'archived' });
+
+    expect(await removeRequirementAction(OPP_ID)).toEqual({ success: false, error: 'requirements.errors.readOnly' });
+    expect(fake.touchedTables).not.toContain('rpc:remove_requirement');
+  });
+
+  it("passes on the RPC's notFound", async () => {
+    withDeal({ type: 'buyer', status: 'active' }, { remove_requirement: { code: 'P0001', message: 'requirements.errors.notFound' } });
+
+    expect(await removeRequirementAction(OPP_ID)).toEqual({ success: false, error: 'requirements.errors.notFound' });
   });
 });
