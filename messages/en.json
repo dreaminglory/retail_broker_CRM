@@ -788,6 +788,12 @@
       "offered": "Offered",
       "rejected": "Rejected",
       "selected": "Selected"
+    },
+    "financing": {
+      "cash": "Cash",
+      "mortgage": "Mortgage",
+      "mixed": "Mixed",
+      "unknown": "Unknown"
     }
   },
   "ContactMethodList": {
@@ -1670,5 +1676,36 @@
     "submit": "Schedule",
     "saving": "Saving…",
     "scheduled": "Viewing scheduled"
+  },
+  "requirements": {
+    "range": {
+      "between": "{min}–{max}",
+      "from": "from {min}",
+      "to": "up to {max}"
+    },
+    "rooms": "{value} rooms",
+    "roomsExact": "{count, plural, one {# room} other {# rooms}}",
+    "m2": "{value} m²",
+    "perMonth": "{value} / month",
+    "notTopFloor": "not the top floor",
+    "areaInSettlement": "{area} ({settlement})",
+    "moreLocations": "{count} more"
+  },
+  "RequirementSection": {
+    "title": "Requirements",
+    "empty": "Add the client's search.",
+    "mustHave": "must-have",
+    "updatedOn": "Updated on {date}",
+    "budgetPrice": "Budget (price)",
+    "budgetRent": "Budget (monthly rent)",
+    "locations": "Locations",
+    "types": "Property type",
+    "rooms": "Rooms",
+    "areaM2": "Area",
+    "floor": "Floor",
+    "construction": "Construction",
+    "financing": "Financing",
+    "wishes": "Other wishes",
+    "inactiveArea": "inactive"
   }
 }

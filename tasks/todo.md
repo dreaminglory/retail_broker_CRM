@@ -132,12 +132,13 @@ data in `page.tsx`, `src/components/domain/requirements/requirement-section.tsx`
 Seller/landlord deals show nothing.
 
 **Acceptance criteria:**
-- [ ] The seeded Alpha buyer deal shows its summary and criteria in BG and EN; the deal without a requirement shows the empty state; a seller deal shows no section
-- [ ] `summary.ts` covers every case listed above in both locales
+- [x] The seeded Alpha buyer deal shows its summary and criteria in BG and EN; the deal without a requirement shows the empty state; a seller deal shows no section
+- [x] `summary.ts` covers every case listed above in both locales
 
 **Verification:**
-- [ ] `npx vitest run src/domain/requirements`
-- [ ] Browser: seeded deals, BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/requirements` (summary, plus the read in `service.integration.test.ts` and an SSR test of the section)
+- [x] Browser: seeded deals, BG and EN, 1280 and 390 px (checked through the DOM; the pane's screenshots timed out). The dev server runs with `SWC_NATIVE_BINDING_CACHE` set, as in `.claude/launch.json`.
+- Names come from `SettlementService` and `AreaService`, as for property links; the locations embed over the composite FK resolves.
 
 **Dependencies:** Task 3
 **Files likely touched:** `src/domain/requirements/{types,repository,summary,summary.test}.ts`, `src/components/domain/requirements/requirement-section.tsx`, `src/app/(dashboard)/opportunities/[id]/{page,opportunity-detail-client}.tsx`, `messages/{bg,en}.json`

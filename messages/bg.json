@@ -788,6 +788,12 @@
       "offered": "Предложен",
       "rejected": "Отхвърлен",
       "selected": "Избран"
+    },
+    "financing": {
+      "cash": "В брой",
+      "mortgage": "Ипотечен кредит",
+      "mixed": "Смесено",
+      "unknown": "Не е известно"
     }
   },
   "ContactMethodList": {
@@ -1670,5 +1676,36 @@
     "submit": "Насрочи",
     "saving": "Запазване…",
     "scheduled": "Огледът е насрочен"
+  },
+  "requirements": {
+    "range": {
+      "between": "{min}–{max}",
+      "from": "от {min}",
+      "to": "до {max}"
+    },
+    "rooms": "{value} стаи",
+    "roomsExact": "{count, plural, one {# стая} other {# стаи}}",
+    "m2": "{value} м²",
+    "perMonth": "{value} / месец",
+    "notTopFloor": "не последен",
+    "areaInSettlement": "{area} ({settlement})",
+    "moreLocations": "още {count}"
+  },
+  "RequirementSection": {
+    "title": "Изисквания",
+    "empty": "Добавете какво търси клиентът.",
+    "mustHave": "задължително",
+    "updatedOn": "Обновени на {date}",
+    "budgetPrice": "Бюджет (цена)",
+    "budgetRent": "Бюджет (наем на месец)",
+    "locations": "Местоположение",
+    "types": "Вид имот",
+    "rooms": "Стаи",
+    "areaM2": "Площ",
+    "floor": "Етаж",
+    "construction": "Строителство",
+    "financing": "Финансиране",
+    "wishes": "Други желания",
+    "inactiveArea": "неактивен"
   }
 }

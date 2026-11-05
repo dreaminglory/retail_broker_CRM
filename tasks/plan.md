@@ -92,7 +92,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 `docs/domain-model.md`.
 
 ### Phase 2: Opportunity page
-- [ ] Task 4: Show the requirement on the opportunity
+- [x] Task 4: Show the requirement on the opportunity
 - [ ] Task 5: Add and edit a requirement
 - [ ] Task 6: Remove, read-only on closed deals, type-change error
 - [ ] Task 7: Requirement entries on the timelines
