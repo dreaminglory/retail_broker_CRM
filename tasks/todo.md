@@ -55,12 +55,12 @@ its arguments. It returns `{ score, listed, criteria }`:
 with one assertion per cell of the rule 2 table plus the edges.
 
 **Acceptance criteria:**
-- [ ] Every cell of the rule 2 table is asserted, including exactly 10% over/under (close), just past 10% (miss), ±1 and ±2 rooms, and `n/a` by type (AC-1, AC-2 at the DB layer)
-- [ ] A must-have `close` or `miss` gives `listed = false`; a must-have `unknown` keeps `listed = true` with score lower than the same property with the value recorded (AC-2)
-- [ ] A rooms-only requirement against a house, and a property scoring 0, give `listed = false`; financing and wishes never appear in `criteria`
+- [x] Every cell of the rule 2 table is asserted, including exactly 10% over/under (close), just past 10% (miss), ±1 and ±2 rooms, and `n/a` by type (AC-1, AC-2 at the DB layer)
+- [x] A must-have `close` or `miss` gives `listed = false`; a must-have `unknown` keeps `listed = true` with score lower than the same property with the value recorded (AC-2)
+- [x] A rooms-only requirement against a house, and a property scoring 0, give `listed = false`; financing and wishes never appear in `criteria`
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
+- [x] `npx supabase db reset` then `npm run test:db`
 
 **Dependencies:** Task 1
 **Files likely touched:** `supabase/migrations/<ts>_match_evaluate.sql`, `supabase/tests/database/080-matching.sql`
