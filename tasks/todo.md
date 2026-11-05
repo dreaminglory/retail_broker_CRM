@@ -287,6 +287,6 @@ deals.
 **Estimated scope:** S
 
 ### Checkpoint 3: Complete
-- [ ] AC-1…AC-8 met; the full Definition of Done in `AGENTS.md`
+- [x] AC-1…AC-8 met; the full Definition of Done in `AGENTS.md` (2026-11-05, after a `db reset`): typecheck, lint (0 errors), 618 unit tests, 379 pgTAP, 787 with services, 40 E2E (BG/EN × 1280/390, including `requirements.spec.ts`). Tasks 9–11 checked in a real browser in BG and EN at 1280 and 390 px. No schema or rule change in Phase 3, so `docs/domain-model.md` is unchanged.
 - [ ] `/review`
 - [ ] Close the module: `SPEC.md` Done, FR-REQ rows ✅ in `docs/BRD.md`, `tasks/*` → `docs/archive/requirements-*.md`, spec status Done
