@@ -85,7 +85,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 
 ### Phase 1: Data model
 - [x] Task 1: Requirement tables, constraints, guards and AD-059
-- [ ] Task 2: Save and remove RPCs with the audit trigger
+- [x] Task 2: Save and remove RPCs with the audit trigger
 - [ ] Task 3: Seed requirements for both agencies
 
 **Checkpoint 1:** `db reset` + `test:db` green; the founder reviews AD-059 and the model in

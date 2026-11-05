@@ -73,13 +73,13 @@ Write AD-059 in `docs/decisions-log.md` with the plan's architecture decisions, 
 Write `078-requirement-writes.sql`.
 
 **Acceptance criteria:**
-- [ ] A save that changes the budget max and adds a location writes exactly one audit row with both changes and their old values; a save with no change writes none (AC-2 at the DB layer)
-- [ ] `location_keys` equals the saved locations after create, edit and an edit that clears them; a save on a won deal and on a seller deal is refused with its key; reopening makes it writable (AC-6 at the DB layer)
-- [ ] A Beta broker calling either RPC with an Alpha opportunity id gets `notFound` and no row changes; deleting an opportunity deletes its requirement and locations (AC-7)
+- [x] A save that changes the budget max and adds a location writes exactly one audit row with both changes and their old values; a save with no change writes none (AC-2 at the DB layer)
+- [x] `location_keys` equals the saved locations after create, edit and an edit that clears them; a save on a won deal and on a seller deal is refused with its key; reopening makes it writable (AC-6 at the DB layer)
+- [x] A Beta broker calling either RPC with an Alpha opportunity id gets `notFound` and no row changes; deleting an opportunity deletes its requirement and locations (AC-7)
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `docs/domain-model.md` invariants updated for the RPCs and the audit shape (§2.4 History)
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `docs/domain-model.md` invariants updated for the RPCs and the audit shape (§2.4 History)
 
 **Dependencies:** Task 1
 **Files likely touched:** `supabase/migrations/20261105000002_requirement_writes.sql`, `supabase/tests/database/078-requirement-writes.sql`, `docs/domain-model.md`
