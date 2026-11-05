@@ -100,8 +100,8 @@ opportunities (buyer | tenant) ──1:0..1── requirements ──< requireme
 - **Opportunity timeline:** requirement created, changed (old → new per criterion), removed.
 - **Opportunities list:** the summary line under the title on buyer/tenant rows.
 - **Contact detail:** each buyer/tenant opportunity in the list shows its summary line.
-- **Floor fields:** the requirement form and the property form both say that the ground
-  floor (партер) is floor 1, so brokers enter floors the same way on both sides.
+- **Floor fields:** the property form says that the ground floor (партер) is floor 1. The
+  requirement form doesn't (founder, 2026-11-05: not needed there).
 - **Glossary:** Requirement = **Изисквания** (canonical, plural as brokers say it), added to
   `docs/domain-model.md` §7 in the migration commit.
 

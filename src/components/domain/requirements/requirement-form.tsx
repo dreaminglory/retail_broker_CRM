@@ -208,7 +208,7 @@ export function RequirementForm({ opportunityId, opportunityType, requirement, o
   function rangeField(
     range: Range,
     legend: string,
-    options: { decimal?: boolean; min?: number; max?: number; hint?: ReactNode; extra?: ReactNode },
+    options: { decimal?: boolean; min?: number; max?: number; extra?: ReactNode },
   ) {
     const input = (bound: "min" | "max") => {
       const name = `${range}_${bound}` as const;
@@ -245,7 +245,6 @@ export function RequirementForm({ opportunityId, opportunityType, requirement, o
           {input("max")}
         </div>
         {options.extra}
-        {options.hint}
         {errorFor(`${criterion}_must`)}
       </div>
     );
@@ -273,7 +272,6 @@ export function RequirementForm({ opportunityId, opportunityType, requirement, o
             </ToggleChip>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">{t("anyHint")}</p>
         {errorFor(criterion === "type" ? "property_types" : "construction")}
         {errorFor(`${criterion}_must`)}
       </div>
@@ -334,7 +332,6 @@ export function RequirementForm({ opportunityId, opportunityType, requirement, o
               </span>
             </div>
           ),
-          hint: <p className="text-xs text-muted-foreground">{tRoot("ui.floorHint")}</p>,
         })}
         {chips("construction", t("construction"), CONSTRUCTIONS, values.construction, (value) => enums(`construction.${value}`), (construction) =>
           update({ construction }),
