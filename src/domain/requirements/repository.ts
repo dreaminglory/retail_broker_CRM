@@ -47,6 +47,19 @@ export class RequirementRepository {
     return data ? toRow(data as RequirementWithLocationRows) : null;
   }
 
+  /** The requirements of these opportunities, with their location ids; deals without one are absent. */
+  async findByOpportunities(opportunityIds: string[], agencyId: string): Promise<RequirementWithLocationRows[]> {
+    if (opportunityIds.length === 0) return [];
+    const { data, error } = await this.db
+      .from('requirements')
+      .select('*, locations:requirement_locations!fk_requirement_locations_requirement(settlement_id, area_id)')
+      .eq('agency_id', agencyId)
+      .in('opportunity_id', opportunityIds);
+
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch requirements: ${error.message}`);
+    return (data as RequirementWithLocationRows[]).map(toRow);
+  }
+
   /**
    * `save_requirement`: replaces the whole requirement (a missing field is empty) and its
    * locations in one transaction. Returns the requirement id.

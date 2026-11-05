@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import type { Locale } from "@/i18n/config";
+import { RequirementService } from "@/domain/requirements/service";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { OpportunityService } from "@/domain/opportunities/service";
 import { StageRepository } from "@/domain/stages/repository";
@@ -82,10 +84,19 @@ export default async function OpportunitiesPage({
     new MemberRepository(supabase).getActiveBrokers(agencyId),
   ]);
 
+  // The summary line on buyer and tenant rows (FR-REQ-05): one read for the page, after it.
+  const requirementIds = paged.rows.filter((row) => row.type === "buyer" || row.type === "tenant").map((row) => row.id);
+  const requirements = await new RequirementService(supabase).getForOpportunities(
+    requirementIds,
+    agencyId,
+    (await getLocale()) as Locale,
+  );
+
   return (
     <div className="mx-auto max-w-5xl">
       <OpportunitiesPageClient
         opportunities={paged.rows}
+        requirements={Object.fromEntries(requirements)}
         pageInfo={paged.info}
         stages={stages}
         leadSources={leadSources}

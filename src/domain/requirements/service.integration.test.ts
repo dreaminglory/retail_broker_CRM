@@ -121,6 +121,29 @@ describeServices('RequirementService against the local stack', () => {
     });
   });
 
+  describe('getForOpportunities (the list and the contact page, FR-REQ-05)', () => {
+    it("reads a page's requirements by deal, named as on the opportunity page", async () => {
+      const service = new RequirementService(alpha.db);
+
+      const byDeal = await service.getForOpportunities([ALPHA_OPP_1, ALPHA_OPP_2, ALPHA_OPP_3], alpha.agencyId, 'en');
+
+      expect([...byDeal.keys()].sort()).toEqual([ALPHA_OPP_1, ALPHA_OPP_2]);
+      expect(byDeal.get(ALPHA_OPP_1)).toEqual(await service.getForOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en'));
+      expect(byDeal.get(ALPHA_OPP_2)).toMatchObject({ budget_max: 800, locations: [] });
+    });
+
+    it('is empty for no deals, without a query', async () => {
+      expect((await new RequirementService(alpha.db).getForOpportunities([], alpha.agencyId, 'bg')).size).toBe(0);
+    });
+
+    it("reads none of another agency's deals (AC-7)", async () => {
+      const service = new RequirementService(beta.db);
+
+      expect((await service.getForOpportunities([ALPHA_OPP_1, ALPHA_OPP_2], beta.agencyId, 'bg')).size).toBe(0);
+      expect((await service.getForOpportunities([ALPHA_OPP_1, ALPHA_OPP_2], alpha.agencyId, 'bg')).size).toBe(0);
+    });
+  });
+
   describe('save', () => {
     it('records AC-1 on a buyer deal and reads it back', async () => {
       const opportunity = await createOpportunity();

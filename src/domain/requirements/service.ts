@@ -4,7 +4,7 @@ import { DomainError } from '@/lib/errors';
 import { AreaService } from '@/domain/areas/service';
 import { OpportunityService } from '@/domain/opportunities/service';
 import { SettlementService } from '@/domain/settlements/service';
-import { RequirementRepository } from './repository';
+import { RequirementRepository, type RequirementWithLocationRows } from './repository';
 import type { Requirement, RequirementLocation } from './types';
 import { requirementEditable, requirementInputSchema, toRpcArgs, type RequirementInput } from './validation';
 
@@ -27,10 +27,28 @@ export class RequirementService {
   async getForOpportunity(opportunityId: string, agencyId: string, locale: Locale): Promise<Requirement | null> {
     const row = await this.repo.findByOpportunity(opportunityId, agencyId);
     if (!row) return null;
+    const [requirement] = await this.withNames([row], agencyId, locale);
+    return requirement;
+  }
 
-    const areaIds = row.locations.flatMap((location) => (location.area_id ? [location.area_id] : []));
+  /**
+   * The requirements of a page of deals (the opportunities list, the contact page), named as
+   * on the opportunity page, by opportunity id; deals without one are absent.
+   */
+  async getForOpportunities(opportunityIds: string[], agencyId: string, locale: Locale): Promise<Map<string, Requirement>> {
+    const rows = await this.repo.findByOpportunities(opportunityIds, agencyId);
+    const requirements = await this.withNames(rows, agencyId, locale);
+    return new Map(requirements.map((requirement) => [requirement.opportunity_id, requirement]));
+  }
+
+  /** Location names in `locale` for all the rows at once: one settlement and one area query. */
+  private async withNames(rows: RequirementWithLocationRows[], agencyId: string, locale: Locale): Promise<Requirement[]> {
+    if (rows.length === 0) return [];
+    const all = rows.flatMap((row) => row.locations);
+    const settlementIds = [...new Set(all.map((location) => location.settlement_id))];
+    const areaIds = [...new Set(all.flatMap((location) => (location.area_id ? [location.area_id] : [])))];
     const [settlements, areas] = await Promise.all([
-      new SettlementService(this.db).getByIds(row.locations.map((location) => location.settlement_id), locale),
+      settlementIds.length > 0 ? new SettlementService(this.db).getByIds(settlementIds, locale) : Promise.resolve([]),
       areaIds.length > 0 ? new AreaService(this.db).getByIds(areaIds, agencyId) : Promise.resolve([]),
     ]);
     const settlementName = new Map(settlements.map((settlement) => [settlement.id, settlement.name]));
@@ -38,20 +56,21 @@ export class RequirementService {
 
     // A whole settlement (no area) sorts before its areas.
     const order = (location: RequirementLocation) => (location.area_id ? (areaById.get(location.area_id)?.sort_order ?? 0) : -1);
-    const locations = row.locations
-      .map((location): RequirementLocation => {
-        const area = location.area_id ? areaById.get(location.area_id) : undefined;
-        return {
-          settlement_id: location.settlement_id,
-          settlement_name: settlementName.get(location.settlement_id) ?? '',
-          area_id: location.area_id,
-          area_name: area?.name ?? null,
-          area_active: location.area_id ? (area?.is_active ?? false) : null,
-        };
-      })
-      .sort((a, b) => a.settlement_name.localeCompare(b.settlement_name, locale) || order(a) - order(b));
-
-    return { ...row, locations };
+    return rows.map((row) => {
+      const locations = row.locations
+        .map((location): RequirementLocation => {
+          const area = location.area_id ? areaById.get(location.area_id) : undefined;
+          return {
+            settlement_id: location.settlement_id,
+            settlement_name: settlementName.get(location.settlement_id) ?? '',
+            area_id: location.area_id,
+            area_name: area?.name ?? null,
+            area_active: location.area_id ? (area?.is_active ?? false) : null,
+          };
+        })
+        .sort((a, b) => a.settlement_name.localeCompare(b.settlement_name, locale) || order(a) - order(b));
+      return { ...row, locations };
+    });
   }
 
   /**

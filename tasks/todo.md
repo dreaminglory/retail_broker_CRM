@@ -263,10 +263,10 @@ the list shows the summary line under the title on buyer/tenant rows (table and 
 A repository test checks that the embed doesn't change the row count or the pager total.
 
 **Acceptance criteria:**
-- [ ] Buyer/tenant rows with a requirement show the summary; others show nothing; the pager totals are unchanged
+- [x] Buyer/tenant rows with a requirement show the summary; others show nothing; the pager totals are unchanged. Not an embed: the page reads the requirements of its buyer/tenant rows in one more query (`RequirementService.getForOpportunities`), so the list query and its count are untouched. `OpportunityService` can't call `RequirementService` (that would import in a circle). The list has one row layout for every width.
 
 **Verification:**
-- [ ] `npm run test:services`; browser BG and EN, 1280 and 390 px
+- [x] `npm run test:services -- src/domain/requirements` (110, with `getForOpportunities`: by deal, empty, other agency); SSR test of `RequirementSummaryLine` in BG and EN; `requirements.spec.ts` now also checks the row on the list. Browser BG and EN at 1280 and 390 px: Opp 1 and Opp 2 show their lines, Opp 3 none, the line truncates at 390, no horizontal overflow, the pager reads 1–3 of 3
 
 **Dependencies:** Task 4
 **Files likely touched:** `src/domain/opportunities/{repository,types,service.integration.test}.ts`, `src/components/domain/opportunities/opportunity-list-table.tsx`, `src/app/(dashboard)/opportunities/opportunities-page-client.tsx`

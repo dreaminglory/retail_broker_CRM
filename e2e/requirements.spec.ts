@@ -90,7 +90,14 @@ test('a broker records, edits and removes a buyer requirement', async ({ page, m
   await expect(edits).toContainText(amount(BUDGET_MAX));
   await expect(edits).not.toContainText(m.Timeline.requirement.fields.locations);
 
-  // 4. Remove it: the empty state is back for the next run.
+  // 4. The summary line on the opportunities list (searched, so other specs' deals don't page it out).
+  await page.goto('/opportunities?search=Alpha%20Opp%203');
+  const row = page.getByRole('link', { name: /Alpha Opp 3/ });
+  await expect(row).toContainText('Младост 1');
+  await expect(row).toContainText(amount(newMax));
+  await page.goto(BUYER_DEAL);
+
+  // 5. Remove it: the empty state is back for the next run.
   await section.getByRole('button', { name: m.RequirementSection.remove }).click();
   const confirm = page.getByRole('alertdialog');
   await confirm.getByRole('button', { name: m.RequirementSection.remove }).click();
