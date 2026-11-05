@@ -43,10 +43,10 @@ const seeded: Requirement = {
   ],
 };
 
-function render(locale: 'bg' | 'en', requirement: Requirement | null, type: OpportunityType = 'buyer') {
+function render(locale: "bg" | "en", requirement: Requirement | null, type: OpportunityType = "buyer", editable = true) {
   return renderToString(
     <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]} timeZone="Europe/Sofia">
-      <RequirementSection requirement={requirement} opportunityType={type} />
+      <RequirementSection opportunityId="opp-1" requirement={requirement} opportunityType={type} editable={editable} />
     </NextIntlClientProvider>,
   )
     .replace(/<!-- -->/g, '')
@@ -54,6 +54,20 @@ function render(locale: 'bg' | 'en', requirement: Requirement | null, type: Oppo
 }
 
 describe('RequirementSection', () => {
+  it.each([
+    ['bg', null, 'Добави'],
+    ['bg', seeded, 'Редактирай'],
+    ['en', null, 'Add'],
+    ['en', seeded, 'Edit'],
+  ] as const)('offers %s %s as %s on an editable deal', (locale, requirement, button) => {
+    expect(render(locale, requirement)).toContain(`${button}</button>`);
+  });
+
+  it('offers no button on a closed deal (rule 7)', () => {
+    expect(render('en', seeded, 'buyer', false)).not.toContain('</button>');
+    expect(render('en', null, 'buyer', false)).not.toContain('</button>');
+  });
+
   it.each([
     ['bg', 'Изисквания', 'Добавете какво търси клиентът.'],
     ['en', 'Requirements', 'Add the client&#x27;s search.'],

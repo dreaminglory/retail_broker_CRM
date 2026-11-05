@@ -19,8 +19,17 @@ function toRow(data: RequirementWithLocationRows): RequirementWithLocationRows {
 }
 
 /**
- * Reads only: members can't write either table, so writes go through the AD-059 RPCs in the
- * service.
+ * A refused RPC as a DomainError: the `requirements.errors.*` key it raised (AD-032, AD-059),
+ * else `errors.saveFailed` with the database message as the log-only detail.
+ */
+export function requirementWriteFailure(error: { code?: string; message: string }): DomainError {
+  if (error.code === 'P0001' && /^requirements\.errors\.\w+$/.test(error.message)) return new DomainError(error.message);
+  return new DomainError('errors.saveFailed', `Failed to save requirement: ${error.message}`);
+}
+
+/**
+ * Members can't write either table (AD-059): every write is one of the two RPCs, which check
+ * the agency, the deal type and status themselves.
  */
 export class RequirementRepository {
   constructor(private readonly db: SupabaseClient) {}
@@ -36,5 +45,20 @@ export class RequirementRepository {
 
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch requirement: ${error.message}`);
     return data ? toRow(data as RequirementWithLocationRows) : null;
+  }
+
+  /**
+   * `save_requirement`: replaces the whole requirement (a missing field is empty) and its
+   * locations in one transaction. Returns the requirement id.
+   */
+  async save(opportunityId: string, fields: Record<string, unknown>, locations: RequirementLocationRow[]): Promise<string> {
+    const { data, error } = await this.db.rpc('save_requirement', {
+      p_opportunity_id: opportunityId,
+      p_fields: fields,
+      p_locations: locations,
+    });
+
+    if (error) throw requirementWriteFailure(error);
+    return data as string;
   }
 }

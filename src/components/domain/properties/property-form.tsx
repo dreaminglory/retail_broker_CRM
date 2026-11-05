@@ -113,7 +113,14 @@ export function PropertyForm({
     return { "aria-invalid": invalid, "aria-describedby": invalid ? `property-${name}-error` : undefined };
   }
 
-  function numberField(name: keyof Property, label: string, options: { required?: boolean; step?: string; min?: number; max?: number } = {}) {
+  function numberField(
+    name: keyof Property,
+    label: string,
+    options: { required?: boolean; step?: string; min?: number; max?: number; hint?: string } = {},
+  ) {
+    const invalid = invalidProps(name);
+    const hintId = options.hint ? `property-${name}-hint` : undefined;
+    const describedBy = [invalid["aria-describedby"], hintId].filter(Boolean).join(" ") || undefined;
     return (
       <div className="space-y-1.5">
         <Label htmlFor={`property-${name}`}>
@@ -130,8 +137,14 @@ export function PropertyForm({
           max={options.max}
           required={options.required}
           defaultValue={(property?.[name] as number | null | undefined) ?? ""}
-          {...invalidProps(name)}
+          aria-invalid={invalid["aria-invalid"]}
+          aria-describedby={describedBy}
         />
+        {options.hint && (
+          <p id={hintId} className="text-xs text-muted-foreground">
+            {options.hint}
+          </p>
+        )}
         {errorFor(name)}
       </div>
     );
@@ -165,7 +178,7 @@ export function PropertyForm({
           {fields.rooms && numberField("rooms", t("rooms"), { required: true, min: 1, max: 9 })}
           {fields.area_m2 && numberField("area_m2", t("areaM2"), { step: "0.01", min: 0 })}
           {fields.plot_m2 && numberField("plot_m2", t("plotM2"), { step: "0.01", min: 0, required: type === "plot" })}
-          {fields.floor && numberField("floor", t("floor"), { min: -5, max: 200 })}
+          {fields.floor && numberField("floor", t("floor"), { min: -5, max: 200, hint: tRoot("ui.floorHint") })}
           {fields.floors_total && numberField("floors_total", t("floorsTotal"), { min: 1, max: 200 })}
           {fields.building && numberField("year_built", t("yearBuilt"), { min: 1800, max: 2100 })}
         </div>

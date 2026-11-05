@@ -79,7 +79,11 @@
     "party_role_required": "Изберете роля.",
     "property_required": "Изберете имот.",
     "rejected_reason_too_long": "Причината може да е най-много 500 знака.",
-    "property_needs_opportunity": "Имот може да се посочи само в задача към сделка."
+    "property_needs_opportunity": "Имот може да се посочи само в задача към сделка.",
+    "requirement_criterion_required": "Посочете поне бюджет, местоположение, вид имот, стаи или площ.",
+    "min_above_max": "„От“ е повече от „до“.",
+    "must_without_criterion": "Задължителен може да е само попълнен критерий.",
+    "location_covered": "Цялото населено място вече включва кварталите си. Махнете едното."
   },
   "ErrorPage": {
     "title": "Страницата не можа да се зареди",
@@ -1324,7 +1328,8 @@
   },
   "ui": {
     "close": "Затвори",
-    "notifications": "Известия"
+    "notifications": "Известия",
+    "floorHint": "Партер = етаж 1"
   },
   "ContactDetailPage": {
     "back": "Контакти",
@@ -1689,7 +1694,14 @@
     "perMonth": "{value} / месец",
     "notTopFloor": "не последен",
     "areaInSettlement": "{area} ({settlement})",
-    "moreLocations": "още {count}"
+    "moreLocations": "още {count}",
+    "errors": {
+      "notFound": "Сделката или изискванията ѝ не са намерени.",
+      "wrongOpportunityType": "Изисквания има само сделка с купувач или наемател.",
+      "readOnly": "Сделката е приключена. Активирайте я отново, за да промените изискванията.",
+      "invalid": "Изискванията не са валидни. Проверете полетата.",
+      "invalidLocation": "Квартал не е от избраното населено място или вече не съществува."
+    }
   },
   "RequirementSection": {
     "title": "Изисквания",
@@ -1706,6 +1718,49 @@
     "construction": "Строителство",
     "financing": "Финансиране",
     "wishes": "Други желания",
-    "inactiveArea": "неактивен"
+    "inactiveArea": "неактивен",
+    "add": "Добави",
+    "edit": "Редактирай"
+  },
+  "RequirementForm": {
+    "addTitle": "Изисквания на клиента",
+    "editTitle": "Редакция на изискванията",
+    "description": "Какво търси клиентът. Задължителните критерии ще филтрират имотите при търсене.",
+    "budgetGroup": "Бюджет",
+    "budgetPrice": "Цена, €",
+    "budgetRent": "Наем на месец, €",
+    "from": "От",
+    "to": "До",
+    "whereGroup": "Къде",
+    "whatGroup": "Какво",
+    "extraGroup": "Допълнително",
+    "types": "Вид имот",
+    "construction": "Строителство",
+    "anyHint": "Нищо избрано = без значение",
+    "rooms": "Стаи",
+    "areaM2": "Площ, м²",
+    "floor": "Етаж",
+    "notTopFloor": "Не последен етаж",
+    "financing": "Финансиране",
+    "wishes": "Други желания",
+    "wishesPlaceholder": "паркомясто, асансьор, акт 16, изложение",
+    "mustHave": "Задължително",
+    "mustHaveOf": "{criterion}: задължително",
+    "save": "Запази",
+    "saving": "Запазване…",
+    "cancel": "Отказ",
+    "saved": "Изискванията са запазени."
+  },
+  "RequirementLocationPicker": {
+    "empty": "Още няма избрано място.",
+    "settlement": "Населено място",
+    "pickHint": "Изберете населено място, после кварталите му.",
+    "wholeSettlement": "Цялото населено място",
+    "areas": "Квартали в {settlement}",
+    "loadingAreas": "Зареждане на кварталите…",
+    "noAreas": "Агенцията няма активни квартали тук. Изберете цялото населено място.",
+    "remove": "Махни {name}",
+    "inactiveArea": "неактивен",
+    "done": "Готово"
   }
 }

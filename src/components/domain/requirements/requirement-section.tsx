@@ -1,9 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { ListChecks } from "lucide-react";
+import { ListChecks, Pencil, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { RequirementFormSheet } from "./requirement-form";
 import type { OpportunityType } from "@/domain/opportunities/types";
 import type { MustCriterion, Requirement } from "@/domain/requirements/types";
 import {
@@ -17,15 +19,17 @@ import {
 } from "@/domain/requirements/summary";
 
 type RequirementSectionProps = {
+  opportunityId: string;
   requirement: Requirement | null;
   opportunityType: OpportunityType;
-  /** The add, edit and remove controls, when the deal is editable. */
-  actions?: ReactNode;
+  /** False on a won, lost or archived deal: no add, edit or remove (rule 7). */
+  editable: boolean;
 };
 
 /** The client's search on a buyer or tenant deal (spec: requirements, Screens). */
-export function RequirementSection({ requirement, opportunityType, actions }: RequirementSectionProps) {
+export function RequirementSection({ opportunityId, requirement, opportunityType, editable }: RequirementSectionProps) {
   const t = useTranslations("RequirementSection");
+  const [editing, setEditing] = useState(false);
 
   return (
     <section className="rounded-lg border bg-card" aria-labelledby="opportunity-requirement">
@@ -34,13 +38,28 @@ export function RequirementSection({ requirement, opportunityType, actions }: Re
           <ListChecks className="h-4 w-4 text-muted-foreground" />
           {t("title")}
         </h3>
-        {actions}
+        {editable && (
+          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+            {requirement ? <Pencil className="mr-1 h-4 w-4" /> : <Plus className="mr-1 h-4 w-4" />}
+            {t(requirement ? "edit" : "add")}
+          </Button>
+        )}
       </div>
 
       {requirement ? (
         <RequirementDetails requirement={requirement} opportunityType={opportunityType} />
       ) : (
         <p className="px-5 py-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
+      )}
+
+      {editable && (
+        <RequirementFormSheet
+          open={editing}
+          onOpenChange={setEditing}
+          opportunityId={opportunityId}
+          opportunityType={opportunityType}
+          requirement={requirement}
+        />
       )}
     </section>
   );

@@ -267,7 +267,12 @@ export function OpportunityDetailClient({
 
           {opportunity.type === "buyer" || opportunity.type === "tenant" ? (
             <>
-              <RequirementSection requirement={requirement} opportunityType={opportunity.type} />
+              <RequirementSection
+                opportunityId={opportunity.id}
+                requirement={requirement}
+                opportunityType={opportunity.type}
+                editable
+              />
               <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
             </>
           ) : (

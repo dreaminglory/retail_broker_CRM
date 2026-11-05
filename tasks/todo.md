@@ -162,13 +162,13 @@ Seller/landlord deals show nothing.
 - **Property form:** add the same floor hint to `property-form.tsx`.
 
 **Acceptance criteria:**
-- [ ] A broker records AC-1's requirement on a buyer deal and sees it in the section; budget, location and type are must-haves by default and can be switched off
-- [ ] No criterion, `rooms_min` > `rooms_max`, and a must flag on an empty criterion are refused with translated messages by Zod; the same cases pass Zod in a test and are refused by the RPC (AC-4, AC-5)
-- [ ] Editing keeps unchanged fields and locations; both floor fields show the hint
+- [x] A broker records AC-1's requirement on a buyer deal and sees it in the section; budget, location and type are must-haves by default and can be switched off (switching off: `applyDefaultMust` tests; not clicked in the browser yet, see Task 6)
+- [x] No criterion, `rooms_min` > `rooms_max`, and a must flag on an empty criterion are refused with translated messages by Zod; the same cases pass Zod in a test and are refused by the RPC (AC-4, AC-5)
+- [x] Editing keeps unchanged fields and locations; both floor fields show the hint
 
 **Verification:**
-- [ ] `npx vitest run src/domain/requirements`, `npm run test:services`
-- [ ] Browser: create and edit, BG and EN, 1280 and 390 px
+- [x] `npx vitest run src/domain/requirements`, `npm run test:services` (733, after a `db reset`: the browser check had filled Alpha Opp 3)
+- [x] Browser: create and edit on Alpha Opp 3 in BG at the pane's desktop width, the form in EN at 390 px, the property form's hint in both languages. Driven through DOM events: the hidden pane takes no pointer clicks.
 
 **Dependencies:** Task 4
 **Files likely touched:** `src/domain/requirements/{validation,validation.test,service,service.integration.test}.ts`, `src/app/(dashboard)/opportunities/[id]/requirement/actions.ts`, `src/components/domain/requirements/{requirement-form,location-picker}.tsx`, `src/components/domain/properties/property-form.tsx`, `messages/{bg,en}.json`

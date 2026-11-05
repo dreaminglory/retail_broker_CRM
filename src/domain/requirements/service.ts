@@ -1,9 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Locale } from '@/i18n/config';
+import { DomainError } from '@/lib/errors';
 import { AreaService } from '@/domain/areas/service';
+import { OpportunityService } from '@/domain/opportunities/service';
 import { SettlementService } from '@/domain/settlements/service';
 import { RequirementRepository } from './repository';
 import type { Requirement, RequirementLocation } from './types';
+import { requirementInputSchema, toRpcArgs, type RequirementInput } from './validation';
 
 /**
  * The database owns the rules (AD-059): the RPCs check the agency, the deal type and status,
@@ -49,5 +52,29 @@ export class RequirementService {
       .sort((a, b) => a.settlement_name.localeCompare(b.settlement_name, locale) || order(a) - order(b));
 
     return { ...row, locations };
+  }
+
+  /**
+   * Creates or replaces the deal's requirement (rules 1–4, 7). A seller or landlord deal and a
+   * closed one get their message before the RPC, which checks the same again under a lock.
+   * Returns the requirement id.
+   */
+  async save(agencyId: string, opportunityId: string, input: RequirementInput): Promise<string> {
+    const values = requirementInputSchema.parse(input);
+    await this.assertWritable(agencyId, opportunityId);
+    const { fields, locations } = toRpcArgs(values);
+    return this.repo.save(opportunityId, fields, locations);
+  }
+
+  /** The friendly side of the RPC's checks: `notFound`, `wrongOpportunityType`, `readOnly`. */
+  private async assertWritable(agencyId: string, opportunityId: string): Promise<void> {
+    const opportunity = await new OpportunityService(this.db).getById(opportunityId, agencyId);
+    if (!opportunity) throw new DomainError('requirements.errors.notFound');
+    if (opportunity.type !== 'buyer' && opportunity.type !== 'tenant') {
+      throw new DomainError('requirements.errors.wrongOpportunityType');
+    }
+    if (opportunity.status !== 'active' && opportunity.status !== 'nurture') {
+      throw new DomainError('requirements.errors.readOnly');
+    }
   }
 }
