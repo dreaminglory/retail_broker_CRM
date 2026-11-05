@@ -144,6 +144,31 @@ describeServices('RequirementService against the local stack', () => {
     });
   });
 
+  describe('getSummaries (the summary line on the list and the contact page, FR-REQ-05)', () => {
+    const deals = [
+      { id: ALPHA_OPP_1, type: 'buyer' as const },
+      { id: ALPHA_OPP_2, type: 'tenant' as const },
+      { id: ALPHA_OPP_3, type: 'buyer' as const },
+    ];
+
+    it.each([
+      ['bg', 'Апартамент или мезонет, 2–3 стаи, Лозенец или Център, 150 000 €–200 000 €', 'До 800 € / месец'],
+      ['en', 'Apartment or maisonette, 2–3 rooms, Лозенец or Център, €150,000–€200,000', 'Up to €800 / month'],
+    ] as const)('gives each buyer and tenant deal with a requirement its line in %s', async (locale, buyer, tenant) => {
+      const summaries = await new RequirementService(alpha.db).getSummaries(deals, alpha.agencyId, locale);
+
+      // Intl puts no-break spaces in "150 000 €"; compare with plain ones.
+      const plain = Object.fromEntries(Object.entries(summaries).map(([id, text]) => [id, text.replace(/[  ]/g, ' ')]));
+      expect(plain).toEqual({ [ALPHA_OPP_1]: buyer, [ALPHA_OPP_2]: tenant });
+    });
+
+    it('skips seller and landlord deals without reading them', async () => {
+      const summaries = await new RequirementService(alpha.db).getSummaries([{ id: ALPHA_OPP_1, type: 'seller' }], alpha.agencyId, 'en');
+
+      expect(summaries).toEqual({});
+    });
+  });
+
   describe('save', () => {
     it('records AC-1 on a buyer deal and reads it back', async () => {
       const opportunity = await createOpportunity();

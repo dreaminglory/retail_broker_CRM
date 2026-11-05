@@ -54,19 +54,17 @@ export default async function ContactDetailPage({
 
   const timelineService = new TimelineService(supabase);
   
-  const [timeline, opportunities, stages, propertyParties] = await Promise.all([
-    timelineService.getContactTimeline(id, agencyId),
-    new OpportunityService(supabase).getByContactId(id, agencyId),
-    new StageRepository(supabase).findActive(agencyId),
-    new PropertyPartyService(supabase).listForContact(id, agencyId, (await getLocale()) as Locale),
-  ]);
+  const locale = (await getLocale()) as Locale;
+  const opportunitiesPromise = new OpportunityService(supabase).getByContactId(id, agencyId);
 
-  // The summary line on the linked buyer and tenant deals (FR-REQ-05).
-  const requirements = await new RequirementService(supabase).getForOpportunities(
-    opportunities.filter((opportunity) => opportunity.type === "buyer" || opportunity.type === "tenant").map((opportunity) => opportunity.id),
-    agencyId,
-    (await getLocale()) as Locale,
-  );
+  // The linked deals' summary lines (FR-REQ-05) load as soon as the deals are in.
+  const [timeline, opportunities, requirementSummaries, stages, propertyParties] = await Promise.all([
+    timelineService.getContactTimeline(id, agencyId),
+    opportunitiesPromise,
+    opportunitiesPromise.then((opportunities) => new RequirementService(supabase).getSummaries(opportunities, agencyId, locale)),
+    new StageRepository(supabase).findActive(agencyId),
+    new PropertyPartyService(supabase).listForContact(id, agencyId, locale),
+  ]);
 
   const isPerson = contact.type === "person";
   const initials = contact.display_name
@@ -170,7 +168,7 @@ export default async function ContactDetailPage({
                 <Badge variant="secondary">{opportunities.length}</Badge>
               )}
             </div>
-            <LinkedOpportunities opportunities={opportunities} requirements={Object.fromEntries(requirements)} stages={stages} />
+            <LinkedOpportunities opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} />
           </section>
         </div>
 

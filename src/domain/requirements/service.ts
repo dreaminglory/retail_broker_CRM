@@ -1,12 +1,23 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createFormatter, createTranslator, type AbstractIntlMessages } from 'next-intl';
+import bg from '../../../messages/bg.json';
+import en from '../../../messages/en.json';
 import type { Locale } from '@/i18n/config';
 import { DomainError } from '@/lib/errors';
 import { AreaService } from '@/domain/areas/service';
 import { OpportunityService } from '@/domain/opportunities/service';
 import { SettlementService } from '@/domain/settlements/service';
 import { RequirementRepository, type RequirementWithLocationRows } from './repository';
+import type { Opportunity } from '@/domain/opportunities/types';
+import { summarizeRequirement, summaryText, type SummaryTools } from './summary';
 import type { Requirement, RequirementLocation } from './types';
 import { requirementEditable, requirementInputSchema, toRpcArgs, type RequirementInput } from './validation';
+
+/** Untyped, so the translators take any key like the app's do (as in `summary.test.ts`). */
+const MESSAGES: Record<Locale, AbstractIntlMessages> = { bg, en };
+
+const translator = (locale: Locale, namespace: 'requirements' | 'Enums') =>
+  createTranslator({ locale, messages: MESSAGES[locale], namespace }) as unknown as SummaryTools['t'];
 
 /**
  * The database owns the rules (AD-059): the RPCs check the agency, the deal type and status,
@@ -39,6 +50,28 @@ export class RequirementService {
     const rows = await this.repo.findByOpportunities(opportunityIds, agencyId);
     const requirements = await this.withNames(rows, agencyId, locale);
     return new Map(requirements.map((requirement) => [requirement.opportunity_id, requirement]));
+  }
+
+  /**
+   * The summary line of each buyer and tenant deal that has a requirement, by opportunity id,
+   * in `locale`. Built here rather than in the browser, so a list page sends one string per row
+   * instead of the whole requirement.
+   */
+  async getSummaries(
+    deals: Pick<Opportunity, 'id' | 'type'>[],
+    agencyId: string,
+    locale: Locale,
+  ): Promise<Record<string, string>> {
+    const types = new Map(deals.filter((deal) => deal.type === 'buyer' || deal.type === 'tenant').map((deal) => [deal.id, deal.type]));
+    const requirements = await this.getForOpportunities([...types.keys()], agencyId, locale);
+    const tools: SummaryTools = {
+      t: translator(locale, 'requirements'),
+      enums: translator(locale, 'Enums'),
+      format: createFormatter({ locale }),
+    };
+    return Object.fromEntries(
+      [...requirements].map(([id, requirement]) => [id, summaryText(summarizeRequirement(requirement, types.get(id)!, tools))]),
+    );
   }
 
   /** Location names in `locale` for all the rows at once: one settlement and one area query. */

@@ -24,7 +24,6 @@ import type { PageInfo } from "@/lib/pagination";
 import { OpportunityForm } from "@/components/domain/opportunities/opportunity-form";
 import { createOpportunityAction, searchOpportunitiesQuickAction } from "./actions";
 import type { Opportunity } from "@/domain/opportunities/types";
-import type { Requirement } from "@/domain/requirements/types";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import type { LeadSource } from "@/domain/lead-sources/types";
@@ -38,8 +37,8 @@ const TYPE_FILTER_KEYS = ["allTypes", "buyer", "seller", "tenant", "landlord"];
 
 interface OpportunitiesPageClientProps {
   opportunities: Opportunity[];
-  /** The requirements of this page's buyer and tenant deals, by opportunity id. */
-  requirements: Record<string, Requirement>;
+  /** The requirement summary lines of this page's buyer and tenant deals, by opportunity id. */
+  requirementSummaries: Record<string, string>;
   pageInfo: PageInfo;
   stages: Stage[];
   leadSources: LeadSource[];
@@ -54,7 +53,7 @@ interface OpportunitiesPageClientProps {
 
 export function OpportunitiesPageClient({
   opportunities,
-  requirements,
+  requirementSummaries,
   pageInfo,
   stages,
   leadSources,
@@ -281,7 +280,7 @@ export function OpportunitiesPageClient({
 
       {/* ── List ────────────────────────────────────────────────────────────── */}
       <div className={`${isPending ? "opacity-60 pointer-events-none" : ""}`}>
-        <OpportunityListTable opportunities={opportunities} requirements={requirements} stages={stages} />
+        <OpportunityListTable opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} />
         <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
       </div>
     </>

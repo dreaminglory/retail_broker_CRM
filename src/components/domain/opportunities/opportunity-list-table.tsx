@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import type { Opportunity, OpportunityWithDetails } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
-import type { Requirement } from "@/domain/requirements/types";
 import { RequirementSummaryLine } from "@/components/domain/requirements/requirement-summary-line";
 import { StageBadge } from "./stage-badge";
 import { Building2, User, ChevronRight, Briefcase, Calendar } from "lucide-react";
@@ -12,12 +11,12 @@ import { useTranslations, useFormatter } from "next-intl";
 
 interface OpportunityListTableProps {
   opportunities: Opportunity[];
-  /** Buyer and tenant deals' requirements by opportunity id, shown under the title. */
-  requirements?: Record<string, Requirement>;
+  /** Buyer and tenant deals' requirement summary lines by opportunity id, shown under the title. */
+  requirementSummaries?: Record<string, string>;
   stages: Stage[];
 }
 
-export function OpportunityListTable({ opportunities, requirements = {}, stages }: OpportunityListTableProps) {
+export function OpportunityListTable({ opportunities, requirementSummaries = {}, stages }: OpportunityListTableProps) {
   const t = useTranslations("OpportunityListTable");
 
   if (opportunities.length === 0) {
@@ -39,14 +38,14 @@ export function OpportunityListTable({ opportunities, requirements = {}, stages 
       {opportunities.map((opp) => {
         const stage = stages.find((s) => s.id === opp.stage_id);
         return (
-          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} requirement={requirements[opp.id]} />
+          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} requirementSummary={requirementSummaries[opp.id]} />
         );
       })}
     </div>
   );
 }
 
-function OpportunityRow({ opportunity, stage, requirement }: { opportunity: Opportunity; stage?: Stage; requirement?: Requirement }) {
+function OpportunityRow({ opportunity, stage, requirementSummary }: { opportunity: Opportunity; stage?: Stage; requirementSummary?: string }) {
   const format = useFormatter();
   const enums = useTranslations("Enums");
 
@@ -64,7 +63,7 @@ function OpportunityRow({ opportunity, stage, requirement }: { opportunity: Oppo
           {opportunity.temperature === "cold" && <span title={enums("opportunityTemperature.cold")}>❄️</span>}
         </div>
 
-        <RequirementSummaryLine requirement={requirement} opportunityType={opportunity.type} className="mb-1" />
+        <RequirementSummaryLine summary={requirementSummary} className="mb-1" />
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>{enums(`opportunityType.${opportunity.type}`)}</span>
