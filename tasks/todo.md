@@ -98,19 +98,19 @@ Write `078-requirement-writes.sql`.
 - add requirements for Beta
 
 **Acceptance criteria:**
-- [ ] `db reset` loads the seed; every seeded requirement satisfies the `CHECK`s and `location_keys` matches its locations
-- [ ] Existing service and E2E suites still pass unchanged
+- [x] `db reset` loads the seed; every seeded requirement satisfies the `CHECK`s and `location_keys` matches its locations
+- [ ] Existing service and E2E suites still pass unchanged — services pass (635); **E2E not run** (2026-11-05): `next dev` can't load SWC's native binding on this machine (`ERR_SWC_NATIVE_CACHE`, a folder ACL check), so Playwright's web server never starts
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
+- [ ] `npx supabase db reset`, `npm run test:db`, `npm run test:services` ✓; `npm run test:e2e` blocked as above
 
 **Dependencies:** Task 2
 **Files likely touched:** `supabase/seed.sql`
 **Estimated scope:** S
 
 ### Checkpoint 1: Data model
-- [ ] `npx supabase db reset` and `npm run test:db` green
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test` green
+- [x] `npx supabase db reset` and `npm run test:db` green
+- [ ] `npm run typecheck`, `npm run lint`, `npm run test` green — lint (0 errors) and test pass; `tsc --noEmit` passes, but `npm run typecheck`'s `next typegen` step hits the same SWC error
 - [ ] Founder reviews AD-059 (`SECURITY DEFINER` writers, `location_keys`, audit shape) and `docs/domain-model.md` before any UI
 
 ## Phase 2: Opportunity page

@@ -117,7 +117,8 @@ RESET ROLE;
 
 SELECT is((SELECT count(*)::int FROM requirements WHERE opportunity_id = current_setting('test.opp')::uuid), 1,
   'The requirement exists');
-SELECT is((SELECT count(*)::int FROM requirement_locations), 2, 'With its two locations');
+SELECT is((SELECT count(*)::int FROM requirement_locations WHERE agency_id = current_setting('test.a1')::uuid), 2,
+  'With its two locations');
 SELECT is(
   (SELECT location_keys FROM requirements WHERE opportunity_id = current_setting('test.opp')::uuid),
   pg_temp.keys_of('opp'),
@@ -205,7 +206,8 @@ SELECT is(
   '{}'::text[],
   'location_keys is empty once the locations are cleared'
 );
-SELECT is((SELECT count(*)::int FROM requirement_locations), 0, 'No location rows are left');
+SELECT is((SELECT count(*)::int FROM requirement_locations WHERE agency_id = current_setting('test.a1')::uuid), 0,
+  'No location rows are left');
 
 -- ── Refusals come back as keys (AC-3, AC-4, AC-5, AC-6) ──────────────────────
 
