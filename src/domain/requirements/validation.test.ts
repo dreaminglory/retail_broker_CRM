@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyDefaultMust, criterionIsSet, requirementEditable, requirementInputSchema, toRpcArgs } from './validation';
+import { applyDefaultMust, budgetReadAs, criterionIsSet, requirementEditable, requirementInputSchema, toRpcArgs } from './validation';
 
 const SOFIA = '11111111-0000-4000-8000-000000000001';
 const PLOVDIV = '11111111-0000-4000-8000-000000000002';
@@ -207,5 +207,29 @@ describe('requirementEditable', () => {
     ['archived', false],
   ] as const)('%s → %s (rule 7)', (status, expected) => {
     expect(requirementEditable(status)).toBe(expected);
+  });
+});
+
+describe('budgetReadAs', () => {
+  it.each([
+    ['buyer', 'tenant', 'rent'],
+    ['tenant', 'buyer', 'price'],
+  ] as const)('%s → %s with a requirement: the budget is now read as %s (rule 1)', (from, to, expected) => {
+    expect(budgetReadAs(from, to, true)).toBe(expected);
+  });
+
+  it.each([
+    ['buyer', 'buyer'],
+    ['tenant', 'tenant'],
+    ['buyer', 'seller'],
+    ['tenant', 'landlord'],
+    ['seller', 'buyer'],
+    ['landlord', 'tenant'],
+  ] as const)('%s → %s: no notice', (from, to) => {
+    expect(budgetReadAs(from, to, true)).toBeNull();
+  });
+
+  it('shows nothing on a deal without a requirement', () => {
+    expect(budgetReadAs('buyer', 'tenant', false)).toBeNull();
   });
 });

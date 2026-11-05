@@ -1038,6 +1038,8 @@
     "titlePlaceholder": "напр. Купувач търси 3-стаен в Лозенец",
     "typeLabel": "Тип",
     "typePlaceholder": "Изберете тип",
+    "budgetNoticeRent": "Бюджетът в изискванията вече ще се чете като месечен наем.",
+    "budgetNoticePrice": "Бюджетът в изискванията вече ще се чете като цена за покупка.",
     "stageLabel": "Етап",
     "stagePlaceholder": "Изберете етап",
     "primaryContactLabel": "Основен контакт",

@@ -248,10 +248,10 @@ BG and EN, 1280 and 390 px, using `e2e/fixtures.ts`. It must not depend on the c
 deal with a requirement, show a notice that the budget is now read as rent (or price).
 
 **Acceptance criteria:**
-- [ ] The notice shows only for buyer ↔ tenant on a deal with a requirement, in BG and EN
+- [x] The notice shows only for buyer ↔ tenant on a deal with a requirement, in BG and EN (`budgetReadAs` in `validation.ts`, unit-tested)
 
 **Verification:**
-- [ ] Browser: BG and EN; `npm run lint`
+- [x] Browser: BG and EN at 1280 and 390 px, with real clicks in a Playwright script: buyer → tenant and tenant → buyer show it; buyer → seller, back to buyer, and a deal without a requirement don't; `npm run lint` (0 errors), typecheck, 612 unit tests
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/components/domain/opportunities/opportunity-form.tsx`, `src/app/(dashboard)/opportunities/[id]/opportunity-detail-client.tsx`, `messages/{bg,en}.json`

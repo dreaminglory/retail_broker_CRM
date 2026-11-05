@@ -317,6 +317,7 @@ export function OpportunityDetailClient({
             brokers={brokers}
             createAction={async () => ({ success: false, error: "Not used" })}
             updateAction={updateOpportunityAction.bind(null, opportunity.id)}
+            hasRequirement={!!requirement}
             onSuccess={() => {
               setEditOpen(false);
               router.refresh();

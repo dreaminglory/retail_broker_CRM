@@ -1,11 +1,22 @@
 import { z } from 'zod';
-import type { OpportunityStatus } from '@/domain/opportunities/types';
+import type { OpportunityStatus, OpportunityType } from '@/domain/opportunities/types';
 import { CONSTRUCTIONS, PROPERTY_TYPES } from '@/domain/properties/validation';
 import type { Financing, MustCriterion } from './types';
 
 /** Rule 7: editable while the deal is active or nurture; won, lost or archived is read-only. */
 export function requirementEditable(status: OpportunityStatus): boolean {
   return status === 'active' || status === 'nurture';
+}
+
+/**
+ * Rule 1: a buyer ↔ tenant change keeps the requirement, and its budget is then read as the
+ * monthly rent (to tenant) or the price (to buyer). Null when there is nothing to tell.
+ */
+export function budgetReadAs(from: OpportunityType, to: OpportunityType, hasRequirement: boolean): 'rent' | 'price' | null {
+  if (!hasRequirement) return null;
+  if (from === 'buyer' && to === 'tenant') return 'rent';
+  if (from === 'tenant' && to === 'buyer') return 'price';
+  return null;
 }
 
 export const FINANCINGS = ['cash', 'mortgage', 'mixed', 'unknown'] as const satisfies readonly Financing[];
