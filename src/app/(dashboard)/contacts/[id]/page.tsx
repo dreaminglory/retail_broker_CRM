@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { TimelineService } from "@/domain/timeline/service";
 import { ContactActivity } from "./contact-activity";
 import { OpportunityService } from "@/domain/opportunities/service";
+import { RequirementService } from "@/domain/requirements/service";
 import { StageRepository } from "@/domain/stages/repository";
 import { LinkedOpportunities } from "@/components/domain/contacts/linked-opportunities";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
@@ -59,6 +60,13 @@ export default async function ContactDetailPage({
     new StageRepository(supabase).findActive(agencyId),
     new PropertyPartyService(supabase).listForContact(id, agencyId, (await getLocale()) as Locale),
   ]);
+
+  // The summary line on the linked buyer and tenant deals (FR-REQ-05).
+  const requirements = await new RequirementService(supabase).getForOpportunities(
+    opportunities.filter((opportunity) => opportunity.type === "buyer" || opportunity.type === "tenant").map((opportunity) => opportunity.id),
+    agencyId,
+    (await getLocale()) as Locale,
+  );
 
   const isPerson = contact.type === "person";
   const initials = contact.display_name
@@ -162,7 +170,7 @@ export default async function ContactDetailPage({
                 <Badge variant="secondary">{opportunities.length}</Badge>
               )}
             </div>
-            <LinkedOpportunities opportunities={opportunities} stages={stages} />
+            <LinkedOpportunities opportunities={opportunities} requirements={Object.fromEntries(requirements)} stages={stages} />
           </section>
         </div>
 

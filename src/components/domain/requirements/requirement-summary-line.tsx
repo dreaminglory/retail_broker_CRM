@@ -28,7 +28,8 @@ export function RequirementSummaryLine({ requirement, opportunityType, className
     <p className={cn("flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground", className)}>
       <ListChecks className="h-3 w-3 shrink-0" aria-hidden />
       <span className="sr-only">{label}: </span>
-      <span className="truncate" title={text}>
+      {/* line-clamp, not truncate: nowrap text would widen an auto-sized column (the contact page) to its length. */}
+      <span className="line-clamp-1" title={text}>
         {text}
       </span>
     </p>

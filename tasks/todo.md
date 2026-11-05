@@ -277,10 +277,10 @@ A repository test checks that the embed doesn't change the row count or the page
 deals.
 
 **Acceptance criteria:**
-- [ ] The seeded buyer contact's deal shows its summary in BG and EN
+- [x] The seeded buyer contact's deal shows its summary in BG and EN (Ivan Ivanov → Alpha Opp 1; also Petar Georgiev → Alpha Opp 2, rent). Same `getForOpportunities` read as the list; no change to `OpportunityRepository`.
 
 **Verification:**
-- [ ] Browser BG and EN, 390 px; `npm run test`
+- [x] Browser BG and EN, 1280 and 390 px; `npm run test` (618, with an SSR test of the linked deals). At 390 px the line first widened the contact page's auto-sized column past the screen (`truncate` is nowrap); it now uses `line-clamp-1`, and nothing overflows on either page.
 
 **Dependencies:** Task 4
 **Files likely touched:** `src/app/(dashboard)/contacts/[id]/page.tsx`, `src/components/domain/contacts/linked-opportunities.tsx`, `src/domain/opportunities/repository.ts`
