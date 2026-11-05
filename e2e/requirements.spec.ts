@@ -33,8 +33,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a broker records, edits and removes a buyer requirement', async ({ page, m, signInAs }) => {
-  // A budget max of its own per run, so the timeline check finds this run's entry only.
-  const newMax = BUDGET_MAX + 100 * (1 + (Date.now() % 900));
+  // A budget max of its own per run, so the timeline check finds this run's entry only: the
+  // seed isn't reset between runs, so earlier runs' entries stay on the deal's timeline.
+  const newMax = BUDGET_MAX + 1 + (Date.now() % 1_000_000);
   const section = requirementSection(page);
 
   await signInAs('broker@alpha.bg');
