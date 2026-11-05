@@ -234,10 +234,10 @@ one (two areas, budget, type), edit the budget, see the summary and the single t
 BG and EN, 1280 and 390 px, using `e2e/fixtures.ts`. It must not depend on the cut items.
 
 **Acceptance criteria:**
-- [ ] The spec passes in all four projects (BG/EN × 1280/390) and leaves the seed reusable (or resets what it changed)
+- [x] The spec passes in all four projects (BG/EN × 1280/390) and leaves the seed reusable (or resets what it changed): it removes the requirement at the end and removes a leftover one first. It hides `next dev`'s indicator, which covers the sheet's Save button.
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e`: 40 passed (36 existing + 4), also run twice without a `db reset` between
 
 **Dependencies:** Tasks 5, 7
 **Files likely touched:** `e2e/requirements.spec.ts`, possibly `e2e/fixtures.ts`
