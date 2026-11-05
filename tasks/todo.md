@@ -26,13 +26,13 @@ three functions as planned, `source`), invariant for `source`, glossary (Под�
 купувач / наемател, Съвпадение, Близо), migration count.
 
 **Acceptance criteria:**
-- [ ] A link inserted without `source` is `manual`; an unknown value is refused; a member's `UPDATE` of `source` is refused (privilege)
-- [ ] Completing a viewing task that creates a link sets `source = 'viewing'`; the existing viewing tests still pass
-- [ ] AD-060, the BRD rows, the spec adjustments and the domain-model stub are in the same commit
+- [x] A link inserted without `source` is `manual`; an unknown value is refused; a member's `UPDATE` of `source` is refused (privilege)
+- [x] Completing a viewing task that creates a link sets `source = 'viewing'`; the existing viewing tests still pass
+- [x] AD-060, the BRD rows, the spec adjustments and the domain-model stub are in the same commit
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** None
 **Files likely touched:** `SPEC.md`, `docs/decisions-log.md`, `docs/BRD.md`, `spec/matching.md`, `docs/domain-model.md`, `supabase/migrations/<ts>_matching_source.sql`, `supabase/tests/database/080-matching.sql`, `src/domain/opportunity-properties/{types,validation}.ts`, `messages/{bg,en}.json`

@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import type { PropertyLinkStatus } from './types';
+import type { PropertyLinkSource, PropertyLinkStatus } from './types';
+
+/** Where a link came from (AD-060). `viewing` is set by the database, never by the app. */
+export const LINK_SOURCES = ['manual', 'match', 'viewing'] as const satisfies readonly PropertyLinkSource[];
 
 /** In the order a deal usually moves through them. */
 export const PROPERTY_LINK_STATUSES = [

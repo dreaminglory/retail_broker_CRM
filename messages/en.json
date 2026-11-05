@@ -793,6 +793,11 @@
       "rejected": "Rejected",
       "selected": "Selected"
     },
+    "propertyLinkSource": {
+      "manual": "Added by hand",
+      "match": "From matches",
+      "viewing": "From a viewing"
+    },
     "financing": {
       "cash": "Cash",
       "mortgage": "Mortgage",

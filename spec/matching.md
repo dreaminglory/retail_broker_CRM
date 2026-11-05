@@ -45,6 +45,9 @@ reflected at the next read, with nothing to keep in sync.
   price, status), opportunity (id, title, contact, assigned broker, status) on the reverse side,
   `score` (0–100), `criteria` (jsonb: one entry per set criterion with its result), and
   `link_status` (the existing link's status, or NULL).
+- **Sharpened by the plan (AD-060):** location is read from `requirements.location_keys`, not a
+  join; reserved listings sort after all active ones; each list call also returns
+  `total_count` and `unlinked_count`; names are resolved in the service, not in SQL.
 - **`opportunity_properties.source`**: `manual | match | viewing`, default `manual`, set on
   insert only (no `UPDATE` privilege, AD-058). `match` when a link is created from a match list;
   `viewing` when the viewing trigger creates it (properties rule 7). Lets us measure A1 and

@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 52nd migration
-(`20261105000003_requirement_review_fixes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 53rd migration
+(`20261106000001_matching_source.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -473,6 +473,16 @@ them; it is what the `CHECK`s and the audit see of the locations. A min and max 
 as one line above (`budget_min`, `budget_max`, and so on); `x_must` stands for the seven
 must-have flags. `matching` treats a must-have as a filter and the rest as score.
 
+### 2.9 Matching
+
+`spec/matching.md`, AD-060. No table: a match is computed when it is read from `requirements`
+(with `location_keys`), `properties`, `listings` and `opportunity_properties`. **Planned, being
+built:** `match_evaluate(requirement, property, listing) → jsonb { score, listed, criteria }`
+(the only place the rules live), `match_properties(opportunity, include_linked, limit, offset)`
+and `match_opportunities(property, include_linked, limit, offset)`, both `SECURITY INVOKER`.
+**Built:** `opportunity_properties.source` (`manual | match | viewing`, default `manual`), set
+on insert only; a completed viewing that creates a link writes `viewing`.
+
 ---
 
 ## 3. Lifecycles
@@ -737,6 +747,7 @@ The "Enforced by" column tells you which layer to change and test.
 | Q6 | Requirements and their locations point only at their own agency's rows; members read their own agency's and write neither directly (rule 10, AD-059) | composite FKs, RLS `SELECT` only, writes revoked + `077-requirements.sql` |
 | Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
 | Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
+| L19 | A link's `source` is `manual`, `match` or `viewing`, set on insert and never updated; the app may send `manual` or `match` (a member could send `match`: it only feeds a measurement) (AD-060) | `CHECK opportunity_properties_source_check`, column `UPDATE` privileges (AD-058), trigger `mark_property_viewed` + `080-matching.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
@@ -806,6 +817,10 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Subject property | Обект на сделката | The property a seller or landlord deal is about | |
 | Requirement | Изисквания | What a buyer or tenant is looking for, on the opportunity (plural, as brokers say it) | |
 | Must-have | Задължително | A requirement criterion `matching` treats as a filter | |
+| Match (on a deal) | Подходящ имот | A property that fits a buyer's or tenant's requirement | |
+| Match (on a property) | Подходящ купувач / наемател | A buyer or tenant deal the property fits | |
+| Match score | Съвпадение | Share of the applicable criteria met, shown as "Съвпадение 85%" | |
+| Close | Близо | A criterion missed by a small tolerance; half credit | |
 
 ---
 

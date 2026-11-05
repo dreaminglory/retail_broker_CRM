@@ -81,7 +81,7 @@ T1 AD-060, source column ─ T2 match_evaluate ─ T3 list functions ─┬─ T
 Full tasks with acceptance criteria are in `tasks/todo.md`.
 
 ### Phase 1: Matching engine
-- [ ] Task 1: AD-060, `opportunity_properties.source` and the docs
+- [x] Task 1: AD-060, `opportunity_properties.source` and the docs
 - [ ] Task 2: `match_evaluate`: per-criterion results and score
 - [ ] Task 3: `match_properties` and `match_opportunities`
 - [ ] Task 4: Seed every match result and measure the speed target

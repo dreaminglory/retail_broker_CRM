@@ -30,7 +30,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Light property record linked to opportunities | `properties` | Done |
 | Buyer/tenant requirements | `requirements` | Done |
 | Inquiry can create **or join** an opportunity | `conversion-join` | Planned |
-| Requirement ↔ property matching | `matching` | Planned |
+| Requirement ↔ property matching | `matching` | In progress |
 | Smart Lists | `smart-lists` | Planned |
 | Onboarding dry run with a real agency export | `go-live` | Planned |
 
@@ -47,7 +47,7 @@ starts; pilot evidence sets the order.
 | `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Done |
 | `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Planned |
-| `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Planned |
+| `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | In progress |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Planned |
 | `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Planned |
 | `go-live` | Domain, Resend domain, hosting, crons, prod env; E2E and coverage gate in CI; founder review of `bg.json`; dry run | `reminders`, `smart-lists`, `property-import` | Planned |

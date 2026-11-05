@@ -233,6 +233,33 @@ or landlord deal and that type change on a deal that has one; composite FKs as i
 one timeline entry" true; direct writes could change locations unaudited.
 **Revisit if:** `matching` needs locations in another shape, or imports need a second writer.
 
+### AD-060: Matching is computed on read, by one SQL function
+**Accepted** (founder, 2026-11-06, plan approval of `tasks/plan.md`). Refines `spec/matching.md`.
+- **Read-time, no match table.** A match is computed when it is read from `requirements`,
+  `properties`, `listings` and `opportunity_properties`; nothing is cached or kept in sync.
+- **Rules in `match_evaluate` only.** `match_evaluate(requirements, properties, listings) RETURNS
+  jsonb` is `LANGUAGE sql IMMUTABLE PARALLEL SAFE` and reads only its arguments. It returns
+  `{ score, listed, criteria }`. The tolerances (10% on price and m², ±1 room) are constants in
+  its body. No copy of a rule exists in TypeScript: `criteria.ts` only maps the jsonb to chips.
+- **Two list functions.** `match_properties` (deal → properties) and `match_opportunities`
+  (property → deals) are `LANGUAGE sql STABLE SECURITY INVOKER`, so RLS applies (AD-050), and
+  also filter by `current_agency_id()`. One call returns the page, `total_count` and
+  `unlinked_count`. Names are resolved in the service, so SQL carries no locale.
+- **Location from `requirements.location_keys`** (AD-059): a property matches when its
+  `settlement_id` or `settlement_id:area_id` is a key; `unknown` when the settlement is listed
+  only with areas and the property has none.
+- **Order:** reserved listings after all active ones, then score, then recency, then id (stable
+  paging).
+- **`opportunity_properties.source`** (`manual | match | viewing`, default `manual`) is set on
+  insert only; the column `UPDATE` grant stays `(status, rejected_reason)` (AD-058). A member could
+  send `match` on insert: accepted, because it only feeds a measurement (assumption A1) and no
+  rule depends on it. The viewing trigger writes `viewing`.
+**Why:** the rules are the module's risk; one pure function means one place to review, test and
+tune, and the same call serves both directions and `smart-lists`. Read-time matching can't go
+stale when a price or a requirement changes.
+**Revisit if:** the speed target (300 ms p95 at 2,000 + 2,000 rows) is missed and an index is not
+enough, or `smart-lists` needs counts across all deals.
+
 ## Import
 
 ### AD-034: Chunked import pipeline

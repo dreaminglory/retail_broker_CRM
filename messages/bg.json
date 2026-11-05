@@ -793,6 +793,11 @@
       "rejected": "Отхвърлен",
       "selected": "Избран"
     },
+    "propertyLinkSource": {
+      "manual": "Добавен ръчно",
+      "match": "От подходящи",
+      "viewing": "От оглед"
+    },
     "financing": {
       "cash": "В брой",
       "mortgage": "Ипотечен кредит",
