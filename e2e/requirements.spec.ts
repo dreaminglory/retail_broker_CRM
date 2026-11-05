@@ -41,8 +41,10 @@ test('a broker records, edits and removes a buyer requirement', async ({ page, m
   await signInAs('broker@alpha.bg');
   await page.goto(BUYER_DEAL);
 
-  // A run that failed half way may have left its requirement: remove it first.
+  // A run that failed half way may have left its requirement: remove it first. Wait for the
+  // section to show either state, since isVisible() doesn't wait.
   const leftover = section.getByRole('button', { name: m.RequirementSection.remove });
+  await expect(section.getByText(m.RequirementSection.empty).or(leftover)).toBeVisible();
   if (await leftover.isVisible()) {
     await leftover.click();
     await page.getByRole('alertdialog').getByRole('button', { name: m.RequirementSection.remove }).click();
@@ -80,25 +82,35 @@ test('a broker records, edits and removes a buyer requirement', async ({ page, m
   await expect(summary).toContainText(amount(newMax));
   await expect(summary).toContainText('Младост 1');
 
-  // 3. One timeline entry for the edit, with the old and the new value.
+  // 3. Switching the deal to tenant says the budget is now read as rent (rule 1); not saved.
+  await page.getByRole('button', { name: m.OpportunityDetail.editBtn, exact: true }).first().click();
+  const dealForm = page.getByRole('dialog', { name: m.OpportunityDetail.editTitle });
+  await expect(dealForm.getByText(m.OpportunityForm.budgetNoticeRent)).toHaveCount(0);
+  await dealForm.getByRole('combobox', { name: m.OpportunityForm.typeLabel }).click();
+  await page.getByRole('option', { name: m.Enums.opportunityType.tenant, exact: true }).click();
+  await expect(dealForm.getByRole('status').filter({ hasText: m.OpportunityForm.budgetNoticeRent })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dealForm).toBeHidden();
+
+  // 4. One timeline entry for the edit, with the old and the new value.
   await page.reload();
   const edits = page
-    // A timeline card, not the details card around the timeline.
-    .locator('div.p-4.rounded-lg.border', { hasText: m.Timeline.events.requirementChanged })
+    .getByTestId('timeline-entry')
+    .filter({ hasText: m.Timeline.events.requirementChanged })
     .filter({ hasText: amount(newMax) });
   await expect(edits).toHaveCount(1);
   await expect(edits).toContainText(m.Timeline.requirement.fields.budget_max);
   await expect(edits).toContainText(amount(BUDGET_MAX));
   await expect(edits).not.toContainText(m.Timeline.requirement.fields.locations);
 
-  // 4. The summary line on the opportunities list (searched, so other specs' deals don't page it out).
+  // 5. The summary line on the opportunities list (searched, so other specs' deals don't page it out).
   await page.goto('/opportunities?search=Alpha%20Opp%203');
   const row = page.getByRole('link', { name: /Alpha Opp 3/ });
   await expect(row).toContainText('Младост 1');
   await expect(row).toContainText(amount(newMax));
   await page.goto(BUYER_DEAL);
 
-  // 5. Remove it: the empty state is back for the next run.
+  // 6. Remove it: the empty state is back for the next run.
   await section.getByRole('button', { name: m.RequirementSection.remove }).click();
   const confirm = page.getByRole('alertdialog');
   await confirm.getByRole('button', { name: m.RequirementSection.remove }).click();

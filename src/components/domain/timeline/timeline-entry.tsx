@@ -74,7 +74,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
             onDelete={onDeleteNote}
           />
         ) : (
-          <div className="p-4 rounded-lg border bg-card text-sm">
+          <div className="p-4 rounded-lg border bg-card text-sm" data-testid="timeline-entry">
             <div className="flex justify-between items-start mb-2">
               <div className="font-semibold text-foreground">
                 {entry.type === 'task' && (
