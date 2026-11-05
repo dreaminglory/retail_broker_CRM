@@ -108,21 +108,32 @@ functions; record p95 of 20 runs in this task. Add an index in a new migration o
 (300 ms) is missed.
 
 **Acceptance criteria:**
-- [ ] `select * from match_properties('<Alpha Opp 1>')` as Alpha's broker shows the 100% row first, the `?` row below it, the reserved row last and no rent-only row (AC-1, AC-2, AC-3 data)
-- [ ] Both functions meet 300 ms p95 on the scaled data; the numbers are written under this task
-- [ ] `npm run test:services` and `npm run test:e2e` still pass with the new seed rows
+- [x] `select * from match_properties('<Alpha Opp 1>')` as Alpha's broker shows the 100% row first, the `?` row below it, the reserved row last and no rent-only row (AC-1, AC-2, AC-3 data)
+- [x] Both functions meet 300 ms p95 on the scaled data; the numbers are written under this task
+- [x] `npm run test:services` and `npm run test:e2e` still pass with the new seed rows
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
-- [ ] The scale script run and its numbers recorded here
+- [x] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
+- [x] The scale script run and its numbers recorded here
 
 **Dependencies:** Task 3
 **Files likely touched:** `supabase/seed.sql`, `scripts/matching/scale.sql`, (maybe) `supabase/migrations/<ts>_match_indexes.sql`
 **Estimated scope:** S
 
+**Speed numbers** (`scripts/matching/scale.sql`, local Docker stack, 2,000 properties + 2,000
+requirements in a scratch agency, as its broker with RLS on, 20 different targets each, page of
+20 with linked shown; rolled back afterwards): `match_properties` min 53 / median 126 /
+**p95 149** / max 156 ms; `match_opportunities` min 51 / median 120 / **p95 145** / max 181 ms.
+Target 300 ms: met, so no index migration. Both are a plain function scan evaluating every open
+listing (or requirement) of the agency, about 8,000 buffer hits per call.
+
+**Seed side effect:** the new Лозенец properties filled the 5-result cap of the ⌘K test that
+searched "Лозенец" for #1001; `property.integration.test.ts` now asserts that query finds some
+property, and #1001 is still found by code, street and address.
+
 ## Checkpoint 1: Matching engine
-- [ ] `npx supabase db reset` + `npm run test:db` green; typecheck, lint, test green
-- [ ] Speed numbers recorded in Task 4
+- [x] `npx supabase db reset` + `npm run test:db` green; typecheck, lint, test green
+- [x] Speed numbers recorded in Task 4
 - [ ] Founder reviews AD-060 and the Alpha buyer's matches (scores, chips as SQL output) before any UI
 
 ## Phase 2: Opportunity side

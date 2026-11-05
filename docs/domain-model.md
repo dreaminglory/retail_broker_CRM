@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 53rd migration
-(`20261106000001_matching_source.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 55th migration
+(`20261106000003_match_lists.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -476,12 +476,25 @@ must-have flags. `matching` treats a must-have as a filter and the rest as score
 ### 2.9 Matching
 
 `spec/matching.md`, AD-060. No table: a match is computed when it is read from `requirements`
-(with `location_keys`), `properties`, `listings` and `opportunity_properties`. **Planned, being
-built:** `match_evaluate(requirement, property, listing) → jsonb { score, listed, criteria }`
-(the only place the rules live), `match_properties(opportunity, include_linked, limit, offset)`
-and `match_opportunities(property, include_linked, limit, offset)`, both `SECURITY INVOKER`.
-**Built:** `opportunity_properties.source` (`manual | match | viewing`, default `manual`), set
-on insert only; a completed viewing that creates a link writes `viewing`.
+(with `location_keys`), `properties`, `listings` and `opportunity_properties`.
+
+- **`match_evaluate(requirement, property, listing) → jsonb { score, listed, criteria }`**:
+  `IMMUTABLE`, reads only its arguments, the only place the rules live. `criteria` has one
+  `{ criterion, result, must }` per criterion the requirement sets, in reading order (type,
+  rooms, area_m2, location, budget, floor, construction); `result` is `match | close | miss |
+  unknown | n/a`. `listed` = no must-have is close or miss, at least one applicable criterion,
+  score above 0. Financing and wishes are never matched.
+- **`match_properties(opportunity, include_linked, limit, offset)`** and
+  **`match_opportunities(property, include_linked, limit, offset)`**: `SECURITY INVOKER` plus an
+  explicit `current_agency_id()` filter. Open (`active`/`reserved`) listings of an active
+  property against requirements of `active`/`nurture` buyer (sale) and tenant (rent) deals.
+  Ordered reserved last, then score, then newest listing (deal side) or most recently updated
+  deal (property side), then id. Each row carries `link_status`, `total_count` (rows in this
+  view) and `unlinked_count` (new matches); a page past the end returns no rows. `limit` is
+  capped at 100. Measured at 2,000 properties + 2,000 requirements (`scripts/matching/scale.sql`):
+  p95 about 150 ms each.
+- **`opportunity_properties.source`** (`manual | match | viewing`, default `manual`), set on
+  insert only; a completed viewing that creates a link writes `viewing`.
 
 ---
 
