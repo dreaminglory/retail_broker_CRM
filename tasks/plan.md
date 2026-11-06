@@ -99,7 +99,7 @@ and the seeded Alpha buyer's matches (scores and chips as SQL output) before any
 
 ### Phase 3: E2E and cut items
 - [x] Task 8: E2E for the deal-side match loop
-- [ ] Task 9: Matching deals on the property page (cut 3)
+- [x] Task 9: Matching deals on the property page (cut 3)
 - [ ] Task 10: "from matches" marker on links (cut 2)
 - [ ] Task 11: Not suitable from matches (cut 1)
 

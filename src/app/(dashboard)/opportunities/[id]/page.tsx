@@ -12,7 +12,9 @@ import { getLocale } from "next-intl/server";
 import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
 import { RequirementService } from "@/domain/requirements/service";
 import { MatchingService } from "@/domain/matching/service";
-import { PropertyMatchesSection, MATCH_PREVIEW_SIZE, parseMatchView } from "@/components/domain/matching/property-matches-section";
+import { PropertyMatchesSection } from "@/components/domain/matching/property-matches-section";
+import { MATCH_PREVIEW_SIZE } from "@/components/domain/matching/match-list-controls";
+import { DEAL_MATCH_KEYS, matchBaseParams, parseMatchView } from "@/components/domain/matching/match-params";
 import type { Locale } from "@/i18n/config";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
@@ -82,14 +84,7 @@ export default async function OpportunityDetailPage({
       : null,
   ]);
 
-  const baseParams = Object.fromEntries(
-    Object.entries(query).flatMap(([key, value]) =>
-      typeof value === "string" && !["matches", "matchesPage", "matchesLinked"].includes(key) ? [[key, value]] : []
-    )
-  );
-  if (view.all) baseParams.matches = "all";
-  if (view.linked) baseParams.matchesLinked = "1";
-  if (view.all && matches && matches.page > 1) baseParams.matchesPage = String(matches.page);
+  const baseParams = matchBaseParams(query, DEAL_MATCH_KEYS, view, matches?.page ?? 1);
 
   // A fresh `now` per render: relative times match between the server and hydration.
   return (

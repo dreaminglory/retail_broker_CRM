@@ -54,7 +54,12 @@ export function MatchRow({ opportunityId, match, opportunityType }: MatchRowProp
       </div>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <MatchChips chips={toChips(match.criteria, opportunityType)} />
-        {!match.link_status && <AddCandidateButton opportunityId={opportunityId} propertyId={match.property_id} code={code} />}
+        {!match.link_status && <AddCandidateButton
+            opportunityId={opportunityId}
+            propertyId={match.property_id}
+            label={t("addCandidate")}
+            ariaLabel={t("addCandidateFor", { code })}
+          />}
       </div>
     </li>
   );

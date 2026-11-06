@@ -20,12 +20,19 @@ import { ScheduleViewingButton } from "@/components/domain/properties/schedule-v
 import { MemberRepository } from "@/domain/members/repository";
 import type { Locale } from "@/i18n/config";
 import { TimelineService } from "@/domain/timeline/service";
+import { MatchingService } from "@/domain/matching/service";
+import { OpportunityMatchesSection } from "@/components/domain/matching/opportunity-matches-section";
+import { MATCH_PREVIEW_SIZE } from "@/components/domain/matching/match-list-controls";
+import { PROPERTY_MATCH_KEYS, matchBaseParams, parseMatchView } from "@/components/domain/matching/match-params";
 import { PropertyActivity } from "./property-activity";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 async function loadProperty(id: string): Promise<PropertyDetail | null> {
   if (!UUID.test(id)) return null;
@@ -42,19 +49,33 @@ export async function generateMetadata({ params }: Props) {
   return { title: property ? t("property", { code: propertyCode(property) }) : t("properties") };
 }
 
-export default async function PropertyPage({ params }: Props) {
+export default async function PropertyPage({ params, searchParams }: Props) {
   const property = await loadProperty((await params).id);
   if (!property) notFound();
+  const query = await searchParams;
 
   const supabase = await createSupabaseServer();
   const membership = await getCurrentMembership();
-  const [listings, parties, opportunityLinks, brokers, timeline] = await Promise.all([
-    new ListingService(supabase).listForProperty(property.id, property.agency_id),
+  // Matching deals (spec: matching): only a property with an open listing. Listings are read
+  // first, since they decide whether the section shows and what it is called.
+  const listings = await new ListingService(supabase).listForProperty(property.id, property.agency_id);
+  const openOffers = [...new Set(listings.filter((listing) => listing.status === "active" || listing.status === "reserved").map((listing) => listing.offer_type))];
+  const view = parseMatchView(query, PROPERTY_MATCH_KEYS);
+  const showMatches = property.status === "active" && openOffers.length > 0;
+  const [parties, opportunityLinks, brokers, timeline, matches] = await Promise.all([
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
     new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
     new MemberRepository(supabase).getActiveBrokers(property.agency_id),
     new TimelineService(supabase).getPropertyTimeline(property.id, property.agency_id),
+    showMatches
+      ? new MatchingService(supabase).forProperty(property.id, property.agency_id, {
+          includeLinked: view.linked,
+          page: view.all ? view.page : 1,
+          pageSize: view.all ? undefined : MATCH_PREVIEW_SIZE,
+        })
+      : null,
   ]);
+  const baseParams = matchBaseParams(query, PROPERTY_MATCH_KEYS, view, matches?.page ?? 1);
   // A viewing is scheduled on an active deal this property is a candidate on (rule 8: not when archived).
   const viewingDeals = opportunityLinks
     .filter((link) => link.relation === "candidate" && link.opportunity.status === "active")
@@ -129,6 +150,10 @@ export default async function PropertyPage({ params }: Props) {
         </div>
 
         <ListingSection property={property} listings={listings} />
+
+        {matches && (
+          <OpportunityMatchesSection propertyId={property.id} offerTypes={openOffers} matches={matches} view={view} baseParams={baseParams} />
+        )}
 
         <PartySection propertyId={property.id} current={parties.current} past={parties.past} />
 

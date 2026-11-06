@@ -62,3 +62,55 @@ test('a broker adds the best match as a candidate and sees it under already offe
   await matches.getByRole('link', { name: m.matching.hideLinked }).click();
   await expect(rows.filter({ hasText: BEST_MATCH })).toHaveCount(1);
 });
+
+// matching AC-5: the property side. The €185,000 apartment lists the seeded buyer deal with its
+// broker → "Add to this deal" links it as a candidate → the deal leaves the new matches and the
+// toggle shows it with that status → the link is removed again.
+const BEST_PROPERTY = '/properties/11111111-9999-0000-0000-000000000011'; // #1009
+const DEAL_TITLE = 'Alpha Opp 1';
+
+const dealMatches = (page: Page) => page.locator('section[aria-labelledby="property-matches-title"]');
+
+test('a broker adds a matching buyer deal from the property page', async ({ page, m, signInAs }) => {
+  const matches = dealMatches(page);
+  const rows = matches.getByTestId('match-row');
+  const removeLink = m.PropertyLinks.removeLink.replace('{code}', BEST_MATCH);
+
+  await signInAs('broker@alpha.bg');
+
+  // A run that failed half way may have left the link: remove it from the deal first.
+  await page.goto(BUYER_DEAL);
+  const leftover = propertiesSection(page).getByRole('button', { name: removeLink });
+  await expect(matchesSection(page)).toBeVisible();
+  if (await leftover.isVisible()) {
+    await leftover.click();
+    await expect(leftover).toBeHidden();
+  }
+
+  // 1. The buyer deal is listed with its contact and broker, and 100%.
+  await page.goto(BEST_PROPERTY);
+  await expect(matches.getByRole('heading', { name: m.matching.dealsTitleSale })).toBeVisible();
+  const row = rows.filter({ hasText: DEAL_TITLE });
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText('Ivan Ivanov');
+  await expect(row).toContainText(m.matching.broker.replace('{name}', ''));
+  await expect(row).toContainText(m.matching.score.replace('{score}', '100'));
+  // Seller deals are not matches: every row is a buyer deal, so none shows a type label.
+  await expect(matches.getByText(m.Enums.opportunityType.seller, { exact: true })).toHaveCount(0);
+
+  // 2. Add it to the deal: it leaves the new matches.
+  await row.getByRole('button', { name: m.matching.addToDealFor.replace('{title}', DEAL_TITLE) }).click();
+  await expect(rows.filter({ hasText: DEAL_TITLE })).toHaveCount(0);
+
+  // 3. The toggle shows it with its status.
+  await matches.getByRole('link', { name: m.matching.showLinked }).click();
+  await expect(page).toHaveURL(/dealMatchesLinked=1/);
+  const linked = rows.filter({ hasText: DEAL_TITLE });
+  await expect(linked).toHaveCount(1);
+  await expect(linked).toContainText(m.Enums.propertyLinkStatus.candidate);
+
+  // 4. Clean up from the deal's Properties section.
+  await page.goto(BUYER_DEAL);
+  await propertiesSection(page).getByRole('button', { name: removeLink }).click();
+  await expect(propertiesSection(page).getByRole('button', { name: removeLink })).toBeHidden();
+});

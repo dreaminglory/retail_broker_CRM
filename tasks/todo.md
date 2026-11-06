@@ -242,12 +242,12 @@ pattern with their own params. Extend `e2e/matching.spec.ts`: open the matched p
 Alpha buyer deal, add it.
 
 **Acceptance criteria:**
-- [ ] On the €185,000 property the Alpha buyer deal is listed with its broker; a won deal and a seller deal are not; "Add to this deal" links it with `source = 'match'` (AC-5)
-- [ ] BG and EN at 1280 and 390 px; E2E extended and green (AC-9 part)
+- [x] On the €185,000 property the Alpha buyer deal is listed with its broker; a won deal and a seller deal are not; "Add to this deal" links it with `source = 'match'` (AC-5)
+- [x] BG and EN at 1280 and 390 px; E2E extended and green (AC-9 part)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:e2e`
-- [ ] Browser: the property in `bg` and `en` at 1280 and 390 px
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:e2e`
+- [x] Browser: the property in `bg` and `en` at 1280 and 390 px
 
 **Dependencies:** Tasks 5, 7, 8
 **Files likely touched:** `src/components/domain/matching/{opportunity-matches-section,opportunity-match-row}.tsx`, `src/app/(dashboard)/properties/[id]/page.tsx`, `messages/{bg,en}.json`, `e2e/matching.spec.ts`

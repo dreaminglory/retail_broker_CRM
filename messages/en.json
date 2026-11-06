@@ -1759,7 +1759,15 @@
     "range": "{from}–{to} of {total}",
     "openProperty": "Open property {code}",
     "addCandidate": "Add as candidate",
-    "addCandidateFor": "Add {code} as candidate"
+    "addCandidateFor": "Add {code} as candidate",
+    "dealsTitleSale": "Matching buyers",
+    "dealsTitleRent": "Matching tenants",
+    "dealsTitleBoth": "Matching buyers and tenants",
+    "dealsEmpty": "No buyer or tenant deals fit this property yet.",
+    "dealsEmptyLinked": "No buyer or tenant deals fit this property.",
+    "broker": "Broker: {name}",
+    "addToDeal": "Add to this deal",
+    "addToDealFor": "Add to {title}"
   },
   "PropertyViewing": {
     "schedule": "Schedule viewing",

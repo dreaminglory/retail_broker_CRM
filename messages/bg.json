@@ -1759,7 +1759,15 @@
     "range": "{from}–{to} от {total}",
     "openProperty": "Отвори имот {code}",
     "addCandidate": "Добави като кандидат",
-    "addCandidateFor": "Добави {code} като кандидат"
+    "addCandidateFor": "Добави {code} като кандидат",
+    "dealsTitleSale": "Подходящи купувачи",
+    "dealsTitleRent": "Подходящи наематели",
+    "dealsTitleBoth": "Подходящи купувачи и наематели",
+    "dealsEmpty": "Все още няма сделки на купувачи или наематели, които отговарят на имота.",
+    "dealsEmptyLinked": "Няма сделки на купувачи или наематели, които отговарят на имота.",
+    "broker": "Брокер: {name}",
+    "addToDeal": "Добави към тази сделка",
+    "addToDealFor": "Добави към {title}"
   },
   "PropertyViewing": {
     "schedule": "Насрочи оглед",
