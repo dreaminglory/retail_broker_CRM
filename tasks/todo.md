@@ -223,11 +223,11 @@ candidate. BG and EN, 1280 and 390, with the fixtures and selectors style of
 `e2e/requirements.spec.ts`. The test cleans up or uses its own property so reruns pass.
 
 **Acceptance criteria:**
-- [ ] The spec passes in all four projects (bg/en × 1280/390) and on a rerun without `db reset`
-- [ ] The existing E2E specs still pass
+- [x] The spec passes in all four projects (bg/en × 1280/390) and on a rerun without `db reset`
+- [x] The existing E2E specs still pass
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e`
 
 **Dependencies:** Task 7
 **Files likely touched:** `e2e/matching.spec.ts`, `e2e/fixtures.ts`
