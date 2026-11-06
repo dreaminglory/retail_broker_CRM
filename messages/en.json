@@ -701,6 +701,7 @@
       "name": "Name is similar"
     },
     "viewProfile": "View Profile",
+    "useContact": "Use this contact",
     "actions": {
       "cancel": "Cancel",
       "creating": "Creating...",
@@ -992,7 +993,27 @@
     "assignedTo": "Assigned to",
     "cancel": "Cancel",
     "converting": "Converting…",
-    "convert": "Convert"
+    "convert": "Convert",
+    "modeNew": "New opportunity",
+    "modeJoin": "Join an existing one",
+    "modeLabel": "What should this inquiry become?",
+    "joinSection": "Join an opportunity",
+    "joinPickLabel": "Open opportunities of this contact",
+    "joinOwner": "Owner: {name}",
+    "joinNoOwner": "No owner yet: it goes to the inquiry's assignee",
+    "joinNextAction": "Next action {date}",
+    "joinNoNextAction": "No next action",
+    "joinStatusNurture": "On hold",
+    "joinReactivates": "This opportunity is on hold. Joining makes it active again.",
+    "joinOwnerNote": "The owner of the opportunity gets the inquiry, the email and the call back.",
+    "callBack": "Schedule a call back",
+    "callBackTitle": "Call back {name}",
+    "callBackTitleLabel": "Call back title",
+    "callBackDue": "Call back at",
+    "join": "Join",
+    "joining": "Joining…",
+    "joinNoDeals": "This contact has no open opportunities.",
+    "joinLoadFailed": "The contact's opportunities couldn't be loaded."
   },
   "InquiryCard": {
     "importedBadge": "Imported",
@@ -1002,6 +1023,7 @@
     "dismiss": "Dismiss",
     "assigned": "Assigned",
     "edit": "Edit",
+    "joinedTo": "Joined to {title}",
     "actions": "Inquiry actions",
     "status": {
       "new": "New",

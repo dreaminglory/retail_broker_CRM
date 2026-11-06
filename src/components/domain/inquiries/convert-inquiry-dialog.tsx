@@ -17,7 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Inquiry } from "@/domain/inquiries/types";
+import type { Inquiry, JoinableOpportunity } from "@/domain/inquiries/types";
+import { parseAgencyLocal, toAgencyLocalInput } from "@/lib/time/agency-day";
+import { JoinOpportunityStep, type CallBackDraft } from "./join-opportunity-step";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
@@ -47,6 +49,10 @@ type ConvertResult = ActionResult<{
 
 const INITIAL_STATE: ConvertResult = { success: false, error: "" };
 
+type JoinResult = ActionResult<{ opportunityId: string; reactivated: boolean }>;
+const INITIAL_JOIN_STATE: JoinResult = { success: false, error: "" };
+const HOUR_MS = 3_600_000;
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface ConvertInquiryDialogProps {
@@ -60,6 +66,14 @@ interface ConvertInquiryDialogProps {
     prevState: ActionResult,
     formData: FormData
   ) => Promise<ConvertResult>;
+  joinAction: (
+    id: string,
+    prevState: ActionResult,
+    formData: FormData
+  ) => Promise<JoinResult>;
+  listJoinableAction: (contactId: string) => Promise<ActionResult<JoinableOpportunity[]>>;
+  /** Agency timezone: the call back's time is entered and shown in it. */
+  timeZone: string;
   onSuccess?: (opportunityId: string) => void;
 }
 
@@ -72,6 +86,9 @@ export function ConvertInquiryDialog({
   stages,
   brokers,
   convertAction,
+  joinAction,
+  listJoinableAction,
+  timeZone,
   onSuccess,
 }: ConvertInquiryDialogProps) {
   const t = useTranslations("ConvertInquiryDialog");
@@ -88,6 +105,14 @@ export function ConvertInquiryDialog({
     INITIAL_STATE
   );
   
+  const [joinState, joinFormAction, joinPending] = useActionState(
+    joinAction.bind(null, inquiry.id) as (
+      prevState: JoinResult,
+      formData: FormData
+    ) => Promise<JoinResult>,
+    INITIAL_JOIN_STATE
+  );
+
   const formRef = useRef<HTMLFormElement>(null);
   const [suggestedDuplicates, setSuggestedDuplicates] = useState<PotentialDuplicate[]>([]);
   const [skipDuplicateCheck, setSkipDuplicateCheck] = useState(false);
@@ -105,6 +130,70 @@ export function ConvertInquiryDialog({
   const [newLastName, setNewLastName] = useState(
     inquiry.caller_name?.split(" ").slice(1).join(" ") ?? ""
   );
+
+  // Join (AD-061): offered when the chosen existing contact has open deals.
+  const [oppMode, setOppMode] = useState<"new" | "join">("new");
+  const [deals, setDeals] = useState<JoinableOpportunity[]>([]);
+  const [dealsStatus, setDealsStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [callBack, setCallBack] = useState<CallBackDraft>({ enabled: true, title: "", due: "" });
+  const dealsRequest = useRef(0);
+  const handledJoin = useRef<JoinResult | null>(null);
+  const callerName = inquiry.caller_name ?? inquiry.caller_phone ?? inquiry.caller_email ?? "";
+
+  const joining = oppMode === "join";
+  const callBackDue = callBack.enabled ? parseAgencyLocal(callBack.due, timeZone) : null;
+  const callBackInvalid = joining && callBack.enabled && (!callBackDue || !callBack.title.trim());
+  const taskJson =
+    joining && callBack.enabled && callBackDue
+      ? JSON.stringify({ title: callBack.title.trim(), due_at: callBackDue.toISOString() })
+      : "";
+
+  function pickContact(contact: ContactOption | null) {
+    setExistingContact(contact);
+    setOppMode("new");
+    setDeals([]);
+    setSelectedDealId(null);
+    const request = ++dealsRequest.current;
+    if (!contact) {
+      setDealsStatus("idle");
+      return;
+    }
+    setDealsStatus("loading");
+    listJoinableAction(contact.id)
+      .then((result) => {
+        if (request !== dealsRequest.current) return;
+        setDeals(result.success ? result.data : []);
+        setDealsStatus(result.success ? "ready" : "failed");
+      })
+      .catch(() => {
+        if (request === dealsRequest.current) setDealsStatus("failed");
+      });
+  }
+
+  function chooseTab(tab: "new" | "existing") {
+    setContactTab(tab);
+    if (tab === "new") setOppMode("new");
+  }
+
+  function chooseMode(mode: "new" | "join") {
+    setOppMode(mode);
+    if (mode !== "join") return;
+    setSelectedDealId((current) => current ?? deals[0]?.id ?? null);
+    setCallBack((prev) => ({
+      ...prev,
+      title: prev.title || t("callBackTitle", { name: callerName }),
+      due: prev.due || toAgencyLocalInput(new Date(Date.now() + HOUR_MS).toISOString(), timeZone),
+    }));
+  }
+
+  // The joined deal is the destination, once per result.
+  useEffect(() => {
+    if (!joinState.success || !joinState.data || handledJoin.current === joinState) return;
+    handledJoin.current = joinState;
+    onOpenChange(false);
+    onSuccess?.(joinState.data.opportunityId);
+  }, [joinState, onOpenChange, onSuccess]);
 
   // Redirect on success or handle duplicates
   useEffect(() => {
@@ -142,7 +231,8 @@ export function ConvertInquiryDialog({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(() => {
-      formAction(formData);
+      if (joining) joinFormAction(formData);
+      else formAction(formData);
     });
   };
 
@@ -162,7 +252,7 @@ export function ConvertInquiryDialog({
             <div className="flex rounded-lg border p-0.5 bg-muted/40 gap-0.5">
               <button
                 type="button"
-                onClick={() => setContactTab("new")}
+                onClick={() => chooseTab("new")}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   contactTab === "new"
@@ -176,7 +266,7 @@ export function ConvertInquiryDialog({
               </button>
               <button
                 type="button"
-                onClick={() => setContactTab("existing")}
+                onClick={() => chooseTab("existing")}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   contactTab === "existing"
@@ -268,7 +358,7 @@ export function ConvertInquiryDialog({
                   id="convert-contact-search"
                   name="contact_id"
                   defaultValue={existingContact}
-                  onChange={setExistingContact}
+                  onChange={pickContact}
                   required
                   invalid={!state.success && !!state.fieldErrors?.contact_id}
                 />
@@ -278,11 +368,56 @@ export function ConvertInquiryDialog({
                     {state.fieldErrors.contact_id[0]}
                   </p>
                 )}
+
+                {dealsStatus === "failed" && (
+                  <p className="text-xs text-muted-foreground" role="status">{t("joinLoadFailed")}</p>
+                )}
+                {dealsStatus === "ready" && deals.length > 0 && (
+                  <div className="space-y-1.5 pt-1" role="radiogroup" aria-label={t("modeLabel")}>
+                    <div className="flex rounded-lg border p-0.5 bg-muted/40 gap-0.5">
+                      {(["new", "join"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          role="radio"
+                          aria-checked={oppMode === mode}
+                          onClick={() => chooseMode(mode)}
+                          id={`convert-mode-${mode}`}
+                          className={cn(
+                            "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                            oppMode === mode
+                              ? "bg-background shadow-sm text-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {mode === "new" ? t("modeNew") : t("modeJoin")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
+          {joining && (
+            <>
+              <JoinOpportunityStep
+                deals={deals}
+                selectedId={selectedDealId}
+                onSelect={setSelectedDealId}
+                callBack={callBack}
+                onCallBackChange={setCallBack}
+                timeZone={timeZone}
+                invalidDeal={!joinState.success && !!joinState.fieldErrors?.opportunity_id}
+              />
+              <input type="hidden" name="opportunity_id" value={selectedDealId ?? ""} />
+              <input type="hidden" name="task" value={taskJson} />
+            </>
+          )}
+
           {/* ── Opportunity details ───────────────────────────────────────── */}
+          {!joining && (
           <div className="space-y-3">
             <Label className="text-sm font-semibold">{t("opportunitySection")}</Label>
 
@@ -374,11 +509,17 @@ export function ConvertInquiryDialog({
               )}
             </div>
           </div>
+          )}
 
           {/* Global error */}
-          {!state.success && state.error && !state.fieldErrors && (
+          {!joining && !state.success && state.error && !state.fieldErrors && (
             <p className="text-sm text-destructive" role="alert">
               {state.error}
+            </p>
+          )}
+          {joining && !joinState.success && joinState.error && (
+            <p className="text-sm text-destructive" role="alert">
+              {joinState.error}
             </p>
           )}
           
@@ -390,17 +531,19 @@ export function ConvertInquiryDialog({
               variant="outline"
               className="flex-1"
               onClick={() => onOpenChange(false)}
-              disabled={pending}
+              disabled={pending || joinPending}
             >
               {t("cancel")}
             </Button>
             <Button
               type="submit"
               className="flex-1"
-              disabled={pending}
+              disabled={joining ? joinPending || !selectedDealId || callBackInvalid : pending}
               id="convert-inquiry-submit"
             >
-              {pending ? t("converting") : t("convert")}
+              {joining
+                ? joinPending ? t("joining") : t("join")
+                : pending ? t("converting") : t("convert")}
             </Button>
           </div>
         </form>
@@ -413,6 +556,16 @@ export function ConvertInquiryDialog({
             }}
             duplicates={suggestedDuplicates}
             isSubmitting={pending}
+            onUseContact={(contact) => {
+              setSuggestedDuplicates([]);
+              setContactTab("existing");
+              pickContact({
+                id: contact.id,
+                display_name: contact.display_name,
+                company_name: contact.company_name,
+                type: contact.type,
+              });
+            }}
             onProceedAnyway={() => {
               setSkipDuplicateCheck(true);
               setSuggestedDuplicates([]);

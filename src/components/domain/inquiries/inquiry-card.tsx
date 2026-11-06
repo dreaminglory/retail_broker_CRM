@@ -60,6 +60,8 @@ interface InquiryCardProps {
   brokers: ActiveBroker[];
   /** Names of assignees who are no longer active, by user id. */
   inactiveAssigneeNames: Record<string, string>;
+  /** Set when this converted inquiry joined an existing deal instead of starting one. */
+  joinedDeal?: { id: string; title: string };
   onEdit?: (inquiry: Inquiry) => void;
   onMarkContacted?: (id: string) => void;
   onConvert?: (inquiry: Inquiry) => void;
@@ -73,6 +75,7 @@ export function InquiryCard({
   leadSources,
   brokers,
   inactiveAssigneeNames,
+  joinedDeal,
   onEdit,
   onMarkContacted,
   onConvert,
@@ -226,6 +229,15 @@ export function InquiryCard({
               <User className="h-3 w-3" />
               {assigneeName ?? t("assigned")}
             </span>
+          )}
+          {joinedDeal && (
+            <Link
+              href={`/opportunities/${joinedDeal.id}`}
+              className="flex items-center gap-1 font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              <ArrowUpRight className="h-3 w-3" />
+              {t("joinedTo", { title: joinedDeal.title })}
+            </Link>
           )}
           {inquiry.dismissed_reason && (
             <span className="italic truncate max-w-[200px]">

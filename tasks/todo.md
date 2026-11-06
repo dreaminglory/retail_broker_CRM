@@ -195,16 +195,16 @@ inquiry card, a converted inquiry whose `opportunity_id` isn't the deal's origin
 <deal>". Keys under `inquiries.join.*` in both files.
 
 **Acceptance criteria:**
-- [ ] On a seeded repeat caller: pick the suggested contact, choose Join, keep the call back,
+- [x] On a seeded repeat caller: pick the suggested contact, choose Join, keep the call back,
   join. You land on the deal, and the task is on Today for its owner (AC-1)
-- [ ] The seeded nurture deal shows the notice and is active after joining (AC-2); the won deal
+- [x] The seeded nurture deal shows the notice and is active after joining (AC-2); the won deal
   isn't listed and a new contact sees no join choice (AC-3)
-- [ ] BG and EN at 1280 and 390 px, no hardcoded strings, no synchronous `setState` in
+- [x] BG and EN at 1280 and 390 px, no hardcoded strings, no synchronous `setState` in
   `useEffect` (AC-9 part)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
-- [ ] Browser: Alpha broker, both seeded inquiries, `bg` and `en`, 1280 and 390 px
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] Browser: Alpha broker, both seeded inquiries, `bg` and `en`, 1280 and 390 px
 
 **Dependencies:** Task 5
 **Files:** `src/components/domain/inquiries/{convert-inquiry-dialog,join-opportunity-step,inquiry-card}.tsx`,
