@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
 import bg from '../messages/bg.json' with { type: 'json' };
 import en from '../messages/en.json' with { type: 'json' };
@@ -49,6 +50,30 @@ export function dateTimeLocal(days: number, hour: number): string {
   d.setHours(hour, 0, 0, 0);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
+}
+
+/**
+ * Makes a pending invitation look sent a day ago, so it can be resent now. The 5-minute cooldown
+ * has no other way around it, and a fresh invitation always starts inside it. Local stack only:
+ * it uses the service role key from .env.local.
+ */
+export async function backdateInvitation(email: string): Promise<void> {
+  const env = Object.fromEntries(
+    readFileSync(".env.local", "utf8")
+      .split(/\r?\n/)
+      .filter((line) => line.includes("=") && !line.startsWith("#"))
+      .map((line) => [line.slice(0, line.indexOf("=")), line.slice(line.indexOf("=") + 1)])
+  );
+  const response = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/agency_memberships?invitation_email=eq.${encodeURIComponent(email)}`, {
+    method: "PATCH",
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ invitation_sent_at: new Date(Date.now() - 24 * 3_600_000).toISOString() }),
+  });
+  if (!response.ok) throw new Error(`Could not backdate the invitation: ${response.status}`);
 }
 
 export { expect };

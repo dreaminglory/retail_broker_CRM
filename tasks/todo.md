@@ -293,11 +293,11 @@ separate), `messages/{bg,en}.json`
   - `SPEC.md` §5: remove "resend invitation" from Known gaps.
 
 **Acceptance criteria:**
-- [ ] `npm run test:e2e` passes at both widths and in both languages
-- [ ] The docs match the code (rule 4 of the `crm-domain-model` skill)
+- [x] `npm run test:e2e` passes at both widths and in both languages
+- [x] The docs match the code (rule 4 of the `crm-domain-model` skill)
 
 **Verification:**
-- [ ] Full DoD: `npm run typecheck`, `npm run lint`, `npm run test`, `npx supabase db reset`,
+- [x] Full DoD: `npm run typecheck`, `npm run lint`, `npm run test`, `npx supabase db reset`,
   `npm run test:db`, `npm run test:services`, `npm run test:e2e`
 
 **Dependencies:** Tasks 6, 7, 8

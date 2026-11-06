@@ -110,3 +110,51 @@ test('a broker completes a task with a next action on the opportunity page', asy
   await page.reload();
   await expect(page.getByText(nextTask).first()).toBeVisible({ timeout: 5_000 });
 });
+
+// AC-1, AC-7 (conversion-join): a repeat caller's inquiry joins their open deal instead of
+// creating a second one; the call back lands on Today and the deal timeline shows the inquiry.
+test("a broker joins a repeat caller's inquiry to their open deal", async ({ page, m, signInAs }, testInfo) => {
+  const run = `${testInfo.project.name}-${Date.now()}`;
+  const caller = `E2E Repeat ${run}`;
+  const callBack = `E2E join call ${run}`;
+  const alphaOpp1 = '/opportunities/11111111-6666-6666-6666-666666666661'; // Ivan Ivanov's seeded deal
+
+  await signInAs('broker@alpha.bg');
+
+  // 1. Log an inquiry from Ivan's phone (seeded contact with an open deal).
+  await page.goto('/inquiries');
+  await page.getByRole('button', { name: m.InquiriesPage.logInquiryBtn }).click();
+  const inquiryDialog = page.getByRole('dialog');
+  await inquiryDialog.getByRole('combobox', { name: m.InquiryForm.source }).click();
+  await page.getByRole('option', { name: 'Imot.bg' }).click();
+  await inquiryDialog.getByRole('combobox').nth(1).click();
+  await page.getByRole('option', { name: 'Charlie AlphaBroker', exact: true }).click();
+  await inquiryDialog.getByLabel(m.InquiryForm.callerName).fill(caller);
+  await inquiryDialog.getByLabel(m.InquiryForm.phone).fill('+359888111222');
+  await inquiryDialog.getByLabel(m.InquiryForm.subject).fill('One more question');
+  await inquiryDialog.getByRole('button', { name: m.InquiryForm.submit }).click();
+  await expect(inquiryDialog).toBeHidden();
+
+  // 2. Convert: the duplicate check offers Ivan, who we use, then join his deal.
+  const card = page.locator('div').filter({ has: page.getByText(caller, { exact: true }) })
+    .filter({ has: page.getByRole('button', { name: m.InquiryCard.actions }) }).last();
+  await card.getByRole('button', { name: m.InquiryCard.actions }).click();
+  await page.getByRole('menuitem', { name: m.InquiryCard.convertToOpportunity }).click();
+  const convertDialog = page.getByRole('dialog').filter({ hasText: m.ConvertInquiryDialog.title });
+  await convertDialog.getByRole('button', { name: m.ConvertInquiryDialog.convert, exact: true }).click();
+  await page.getByRole('button', { name: m.DuplicateSuggestionModal.useContact }).first().click();
+  await convertDialog.getByRole('radio', { name: m.ConvertInquiryDialog.modeJoin }).click();
+  await expect(convertDialog.getByText('Alpha Opp 1')).toBeVisible();
+  await convertDialog.getByLabel(m.ConvertInquiryDialog.callBackTitleLabel).fill(callBack);
+  await convertDialog.getByRole('button', { name: m.ConvertInquiryDialog.join, exact: true }).click();
+
+  // 3. We land on the existing deal, and the inquiry is on its timeline as joined.
+  await page.waitForURL(new RegExp(`${alphaOpp1}$`));
+  await expect(page.getByTestId('inquiry-joined-on').first()).toBeVisible();
+
+  // 4. The call back is on Today, and the inquiry card says where it went.
+  await page.goto('/today');
+  await expect(page.getByText(callBack, { exact: true })).toBeVisible();
+  await page.goto('/inquiries');
+  await expect(page.getByText(m.InquiryCard.joinedTo.replace('{title}', 'Alpha Opp 1')).first()).toBeVisible();
+});

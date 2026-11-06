@@ -84,9 +84,9 @@ active opportunity has an owner, a next action and a complete history.
 | FR-INQ-11 | ✅ Inquiry rows show caller, source, status, assigned broker's name and age (module `trustworthy-loop`) |
 | FR-INQ-12 | External reference for portal IDs and other tracking numbers |
 | FR-INQ-13 | ✅ Edit an inquiry and reassign it from the inbox and Exceptions; the card shows the assignee's name (module `trustworthy-loop`) |
-| FR-INQ-15 | Join an existing open deal of the contact when converting an inquiry, instead of creating a second one (module `conversion-join`, not built) |
-| FR-INQ-16 | A joined inquiry appears on the deal timeline, marked as joined (module `conversion-join`, not built) |
-| FR-INQ-17 | Joining can schedule a call back for the deal's owner, who gets the usual assignment email (module `conversion-join`, not built) |
+| FR-INQ-15 | ✅ Join an existing open deal of the contact when converting an inquiry, instead of creating a second one (module `conversion-join`) |
+| FR-INQ-16 | ✅ A joined inquiry appears on the deal timeline, marked as joined (module `conversion-join`) |
+| FR-INQ-17 | ✅ Joining can schedule a call back for the deal's owner, who gets the usual assignment email (module `conversion-join`) |
 | FR-INQ-14 | ✅ Inquiry caller phone and email are normalised, and the conversion duplicate check uses them (module `trustworthy-loop`) |
 
 ### FR-OPP: Opportunities and pipeline (Sprint 1)
@@ -181,7 +181,7 @@ active opportunity has an owner, a next action and a complete history.
 | FR-TEM-04 | Owner can't deactivate themselves; an agency always keeps an owner |
 | FR-TEM-05 | Invite members by email (magic link) |
 | FR-TEM-06 | Accepting an invitation activates the membership |
-| FR-TEM-07 | ⚠️ Pending invitations can be resent or cancelled. Resend is planned in module `conversion-join` (AD-061) |
+| FR-TEM-07 | ✅ Pending invitations can be resent (once per 5 minutes) or cancelled (module `conversion-join`, AD-061) |
 | FR-TEM-08 | No duplicate invitations or re-inviting existing members |
 
 ### FR-SRH: Global search (Sprint 4)

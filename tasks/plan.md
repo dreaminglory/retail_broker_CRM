@@ -100,7 +100,7 @@ Full tasks with acceptance criteria and verification: `tasks/todo.md`.
 
 ### Phase 3: Resend and close-out
 - [x] Task 8: Resend invitation on the team page (M)
-- [ ] Task 9: E2E and the docs as built (S)
+- [x] Task 9: E2E and the docs as built (S)
 
 ### Checkpoint 3: Complete
 - [ ] Every DoD item in `AGENTS.md` seen passing; AC-1…AC-9 met

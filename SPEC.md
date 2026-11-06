@@ -85,7 +85,7 @@ buyer and tenant requirements on opportunities (budget, settlements and areas, t
 construction, financing, wishes, must-haves), audited one entry per save, read-only on closed
 deals, with a summary line on the opportunity, the list and the contact (AD-059).
 
-**Known gaps:** resend invitation (`conversion-join`); five services have no tests yet
+**Known gaps:** five services have no tests yet
 (FR-TST-03). BRD rows marked ⚠️ say where each is handled.
 
 **Production:** Supabase `emflwmivjachbnaqumnn` (eu-west-2); migration history equals the repo
