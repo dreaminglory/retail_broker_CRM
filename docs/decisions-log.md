@@ -254,6 +254,10 @@ one timeline entry" true; direct writes could change locations unaudited.
   insert only; the column `UPDATE` grant stays `(status, rejected_reason)` (AD-058). A member could
   send `match` on insert: accepted, because it only feeds a measurement (assumption A1) and no
   rule depends on it. The viewing trigger writes `viewing`.
+- **Built as:** the property side is one section for all open listings (titled buyers, tenants or
+  both by their offer types), not one per offer type, so the list function needed no type
+  filter. A page past the end of a list returns the first page instead of an empty one.
+  "Not suitable" inserts a `rejected` link (`rejectFromMatch`); no new table or column.
 **Why:** the rules are the module's risk; one pure function means one place to review, test and
 tune, and the same call serves both directions and `smart-lists`. Read-time matching can't go
 stale when a price or a requirement changes.

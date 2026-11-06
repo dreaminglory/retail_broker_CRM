@@ -290,6 +290,6 @@ the optional reason (reusing the reject-reason input of the link status control)
 **Estimated scope:** M
 
 ## Checkpoint 3: Complete
-- [ ] AC-1…AC-9 met; full Definition of Done (typecheck, lint, test, test:services, `db reset` + test:db, test:e2e, browser in bg and en)
-- [ ] `docs/domain-model.md` §2.9 final; AD-060 matches what was built
+- [x] AC-1…AC-9 met; full Definition of Done (typecheck, lint, test, test:services, `db reset` + test:db, test:e2e, browser in bg and en)
+- [x] `docs/domain-model.md` §2.9 final; AD-060 matches what was built
 - [ ] `/review`; then close: `matching` Done in `SPEC.md`, FR-MAT rows ✅ in `docs/BRD.md`, `tasks/*` to `docs/archive/matching-*.md`

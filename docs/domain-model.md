@@ -494,7 +494,16 @@ must-have flags. `matching` treats a must-have as a filter and the rest as score
   capped at 100. Measured at 2,000 properties + 2,000 requirements (`scripts/matching/scale.sql`):
   p95 about 150 ms each.
 - **`opportunity_properties.source`** (`manual | match | viewing`, default `manual`), set on
-  insert only; a completed viewing that creates a link writes `viewing`.
+  insert only; a completed viewing that creates a link writes `viewing`. The app sets `manual`
+  or `match` (`addCandidateSchema` refuses `viewing`).
+- **App side** (`src/domain/matching/`): `MatchingService` pages the two functions (a page past
+  the end returns page 1) and adds names; `toChips` maps `criteria` to chips without computing a
+  result. Writes reuse `OpportunityPropertyService`: **Add as candidate / Add to this deal**
+  creates a `candidate` link with `source = match`; **Not suitable** (`rejectFromMatch`) creates a
+  `rejected` link with the optional reason and `source = match`, so the property leaves the new
+  matches. Links with `source = match` show "From matches" on both pages. Screens: the deal's
+  "Подходящи имоти" section, and the property's "Подходящи купувачи / наематели" section (one
+  section; a property listed for sale and rent shows both kinds of deal with their type).
 
 ---
 
