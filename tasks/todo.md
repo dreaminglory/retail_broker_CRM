@@ -259,17 +259,17 @@ shows success, or the cooldown refusal with the time it is allowed again
 both files.
 
 **Acceptance criteria:**
-- [ ] Unit tests (admin client mocked): the claim and then the send are called in that order, a
+- [x] Unit tests (admin client mocked): the claim and then the send are called in that order, a
   claim refusal never sends, and a send failure returns the error. The action returns
   `ActionResult`
-- [ ] In the browser and Mailpit: an owner resends the seeded invitation, a second email arrives
+- [x] In the browser and Mailpit: an owner resends the seeded invitation, a second email arrives
   with a working link, and an immediate second resend shows the cooldown toast. A manager sees
   Resend on broker rows only (AC-8)
-- [ ] BG and EN at 1280 and 390 px (AC-9 part)
+- [x] BG and EN at 1280 and 390 px (AC-9 part)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/members src/app/(dashboard)/settings/team`
-- [ ] Browser + Mailpit as owner and as manager, `bg` and `en`
+- [x] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/members src/app/(dashboard)/settings/team`
+- [x] Browser + Mailpit as owner and as manager, `bg` and `en`
 
 **Dependencies:** Tasks 3, 4
 **Files:** `src/domain/members/service.ts`, `service.test.ts`,

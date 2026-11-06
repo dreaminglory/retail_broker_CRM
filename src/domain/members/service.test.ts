@@ -58,3 +58,75 @@ describe('MemberService.inviteMember', () => {
     expect(createInvitation).not.toHaveBeenCalled();
   });
 });
+
+describe('MemberService.resendInvitation', () => {
+  const rpc = vi.fn();
+  const membershipId = '11111111-1111-4111-8111-111111111111';
+  const resend = (timeZone?: string) =>
+    new MemberService({ rpc } as unknown as SupabaseClient).resendInvitation(CTX, membershipId, timeZone);
+  const calls: string[] = [];
+
+  beforeEach(() => {
+    calls.length = 0;
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://crm.example.bg');
+    vi.stubEnv('NODE_ENV', 'production');
+    rpc.mockReset().mockImplementation(async () => {
+      calls.push('claim');
+      return { data: { email: 'pending@alpha.bg', role: 'broker', user_id: 'u1' }, error: null };
+    });
+    inviteUserByEmail.mockReset().mockImplementation(async () => {
+      calls.push('send');
+      return { data: { user: { id: 'u1' } }, error: null };
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('claims first, then sends the same invitation again', async () => {
+    await resend();
+
+    expect(calls).toEqual(['claim', 'send']);
+    expect(rpc).toHaveBeenCalledWith('claim_invitation_resend', { p_membership_id: membershipId });
+    expect(inviteUserByEmail).toHaveBeenCalledWith('pending@alpha.bg', {
+      data: { invited_by: 'user-1', agency_id: 'agency-1' },
+      redirectTo: 'https://crm.example.bg/auth/callback?next=/update-password',
+    });
+  });
+
+  it('sends nothing when the claim is refused', async () => {
+    rpc.mockResolvedValue({ data: null, error: { code: 'P0001', message: 'errors.forbidden' } });
+
+    await expect(resend()).rejects.toMatchObject({ code: 'errors.forbidden' });
+
+    expect(inviteUserByEmail).not.toHaveBeenCalled();
+  });
+
+  it('says when it can be resent after a repeat within 5 minutes', async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: 'P0001', message: 'errors.members.resend_too_soon', details: '2026-11-06T14:10:00+00:00' },
+    });
+
+    await expect(resend('Europe/Sofia')).rejects.toMatchObject({
+      code: 'errors.members.resend_too_soon',
+      params: { time: '16:10' },
+    });
+    expect(inviteUserByEmail).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed send and does not hide it', async () => {
+    inviteUserByEmail.mockResolvedValue({ data: { user: null }, error: { message: 'smtp down' } });
+
+    await expect(resend()).rejects.toMatchObject({ code: 'errors.members.invite_failed' });
+  });
+
+  it('does not claim when the app URL is missing, so the cooldown is not used up', async () => {
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', '');
+
+    await expect(resend()).rejects.toMatchObject({ code: 'errors.members.invite_failed' });
+
+    expect(rpc).not.toHaveBeenCalled();
+  });
+});

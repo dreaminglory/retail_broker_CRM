@@ -99,7 +99,7 @@ Full tasks with acceptance criteria and verification: `tasks/todo.md`.
 - [ ] `npm run test:services` green
 
 ### Phase 3: Resend and close-out
-- [ ] Task 8: Resend invitation on the team page (M)
+- [x] Task 8: Resend invitation on the team page (M)
 - [ ] Task 9: E2E and the docs as built (S)
 
 ### Checkpoint 3: Complete

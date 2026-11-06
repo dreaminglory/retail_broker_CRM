@@ -22,6 +22,10 @@ export const reactivateMemberSchema = z.object({
 
 export type ReactivateMemberInput = z.infer<typeof reactivateMemberSchema>;
 
+export const resendInvitationSchema = z.object({
+  membershipId: z.string().uuid(),
+});
+
 export const inviteMemberSchema = z.object({
   email: z.string().email('validation.invalid_email'),
   role: memberRoleSchema,
