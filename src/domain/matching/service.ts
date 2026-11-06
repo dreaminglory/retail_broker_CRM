@@ -12,17 +12,29 @@ export const MATCH_PAGE_SIZE = 20;
 function paging(options: MatchPageOptions) {
   const page = Math.max(1, Math.floor(options.page ?? 1));
   const pageSize = Math.min(100, Math.max(1, Math.floor(options.pageSize ?? MATCH_PAGE_SIZE)));
-  return { page, pageSize, includeLinked: options.includeLinked ?? false, limit: pageSize, offset: (page - 1) * pageSize };
+  return { page, pageSize, includeLinked: options.includeLinked ?? false };
 }
 
-/** A row without the page counts, which move to the page itself. */
-function omitCounts<T extends { total_count: number; unlinked_count: number }>(
-  row: T,
-): Omit<T, 'total_count' | 'unlinked_count'> {
-  const rest: Partial<T> = { ...row };
-  delete rest.total_count;
-  delete rest.unlinked_count;
-  return rest as Omit<T, 'total_count' | 'unlinked_count'>;
+type Counted = { total_count: number; unlinked_count: number };
+
+/** Moves the page counts off the rows: they belong to the page, not to any one match. */
+function splitCounts<T extends Counted>(rows: T[]) {
+  const split = rows.map(({ total_count, unlinked_count, ...row }) => ({ row, total: Number(total_count), unlinked: Number(unlinked_count) }));
+  return { rows: split.map((entry) => entry.row), total: split[0]?.total ?? 0, unlinked: split[0]?.unlinked ?? 0 };
+}
+
+/**
+ * One page of a list function. A page past the end has no rows and so no counts: the first page
+ * is returned instead, so a stale `?matchesPage=` or a deleted last row never shows a false "no matches".
+ */
+async function fetchPage<T extends Counted>(
+  fetch: (offset: number) => Promise<T[]>,
+  page: number,
+  pageSize: number,
+): Promise<{ page: number } & ReturnType<typeof splitCounts<T>>> {
+  const rows = await fetch((page - 1) * pageSize);
+  if (rows.length === 0 && page > 1) return { page: 1, ...splitCounts(await fetch(0)) };
+  return { page, ...splitCounts(rows) };
 }
 
 /**
@@ -44,8 +56,12 @@ export class MatchingService {
     locale: Locale,
     options: MatchPageOptions = {},
   ): Promise<MatchPage<PropertyMatch>> {
-    const { page, pageSize, includeLinked, limit, offset } = paging(options);
-    const rows = await this.repo.propertiesForOpportunity(opportunityId, { includeLinked, limit, offset });
+    const { page: requested, pageSize, includeLinked } = paging(options);
+    const { rows, total, unlinked, page } = await fetchPage(
+      (offset) => this.repo.propertiesForOpportunity(opportunityId, { includeLinked, limit: pageSize, offset }),
+      requested,
+      pageSize,
+    );
 
     const [settlements, areas] = await Promise.all([
       new SettlementService(this.db).getByIds(rows.map((row) => row.settlement_id), locale),
@@ -56,12 +72,12 @@ export class MatchingService {
 
     return {
       rows: rows.map(({ settlement_id, area_id, ...row }) => ({
-        ...omitCounts(row),
+        ...row,
         settlement_name: settlementName.get(settlement_id) ?? '',
         area_name: area_id ? (areaName.get(area_id) ?? null) : null,
       })),
-      total: Number(rows[0]?.total_count ?? 0),
-      unlinked: Number(rows[0]?.unlinked_count ?? 0),
+      total,
+      unlinked,
       page,
       pageSize,
     };
@@ -73,8 +89,12 @@ export class MatchingService {
     agencyId: string,
     options: MatchPageOptions = {},
   ): Promise<MatchPage<OpportunityMatch>> {
-    const { page, pageSize, includeLinked, limit, offset } = paging(options);
-    const rows = await this.repo.opportunitiesForProperty(propertyId, { includeLinked, limit, offset });
+    const { page: requested, pageSize, includeLinked } = paging(options);
+    const { rows, total, unlinked, page } = await fetchPage(
+      (offset) => this.repo.opportunitiesForProperty(propertyId, { includeLinked, limit: pageSize, offset }),
+      requested,
+      pageSize,
+    );
 
     const [contacts, profiles] = await Promise.all([
       new ContactService(this.db).getByIds(rows.flatMap((row) => (row.primary_contact_id ? [row.primary_contact_id] : [])), agencyId),
@@ -84,12 +104,12 @@ export class MatchingService {
 
     return {
       rows: rows.map((row) => ({
-        ...omitCounts(row),
+        ...row,
         contact_name: row.primary_contact_id ? (contactName.get(row.primary_contact_id) ?? null) : null,
         broker_name: row.assigned_to ? (profiles.get(row.assigned_to)?.display_name ?? null) : null,
       })),
-      total: Number(rows[0]?.total_count ?? 0),
-      unlinked: Number(rows[0]?.unlinked_count ?? 0),
+      total,
+      unlinked,
       page,
       pageSize,
     };

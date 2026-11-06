@@ -48,7 +48,11 @@ export default async function OpportunityDetailPage({
   // Fetch parallel dependencies
   const locale = (await getLocale()) as Locale;
   const hasRequirement = opportunity.type === "buyer" || opportunity.type === "tenant";
-  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks, requirement] = await Promise.all([
+  // Matches (spec: matching): only buyer and tenant deals that are still open. A deal without a
+  // requirement has no matches, so the database returns an empty page for it.
+  const view = parseMatchView(query);
+  const showMatches = hasRequirement && (opportunity.status === "active" || opportunity.status === "nurture");
+  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks, requirement, matches] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     // Only the contacts this opportunity links to; pickers search the agency on demand.
@@ -69,18 +73,15 @@ export default async function OpportunityDetailPage({
     new OpportunityPropertyService(supabase).listForOpportunity(id, agencyId, locale),
     // Seller and landlord deals have no requirement (rule 1).
     hasRequirement ? new RequirementService(supabase).getForOpportunity(id, agencyId, locale) : null,
+    showMatches
+      ? new MatchingService(supabase).forOpportunity(id, agencyId, locale, {
+          includeLinked: view.linked,
+          page: view.all ? view.page : 1,
+          pageSize: view.all ? undefined : MATCH_PREVIEW_SIZE,
+        })
+      : null,
   ]);
 
-  // Matches (spec: matching): only buyer and tenant deals that are still open.
-  const view = parseMatchView(query);
-  const showMatches = hasRequirement && (opportunity.status === "active" || opportunity.status === "nurture");
-  const matches = showMatches && requirement
-    ? await new MatchingService(supabase).forOpportunity(id, agencyId, locale, {
-        includeLinked: view.linked,
-        page: view.all ? view.page : 1,
-        pageSize: view.all ? undefined : MATCH_PREVIEW_SIZE,
-      })
-    : { rows: [], total: 0, unlinked: 0, page: 1, pageSize: MATCH_PREVIEW_SIZE };
   const baseParams = Object.fromEntries(
     Object.entries(query).flatMap(([key, value]) =>
       typeof value === "string" && !["matches", "matchesPage", "matchesLinked"].includes(key) ? [[key, value]] : []
@@ -88,7 +89,7 @@ export default async function OpportunityDetailPage({
   );
   if (view.all) baseParams.matches = "all";
   if (view.linked) baseParams.matchesLinked = "1";
-  if (view.all && view.page > 1) baseParams.matchesPage = String(view.page);
+  if (view.all && matches && matches.page > 1) baseParams.matchesPage = String(matches.page);
 
   // A fresh `now` per render: relative times match between the server and hydration.
   return (
@@ -107,7 +108,7 @@ export default async function OpportunityDetailPage({
           propertyLinks={propertyLinks}
           requirement={requirement}
           matchesSection={
-            showMatches ? (
+            matches ? (
               <PropertyMatchesSection
                 opportunityId={id}
                 opportunityType={opportunity.type}

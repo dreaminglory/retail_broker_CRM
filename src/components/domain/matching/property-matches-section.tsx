@@ -36,7 +36,7 @@ type PropertyMatchesSectionProps = {
   baseParams: Record<string, string>;
 };
 
-function hrefWith(baseParams: Record<string, string>, changes: Record<string, string | null>) {
+export function hrefWith(baseParams: Record<string, string>, changes: Record<string, string | null>) {
   const params = new URLSearchParams(baseParams);
   for (const [key, value] of Object.entries(changes)) {
     if (value === null) params.delete(key);

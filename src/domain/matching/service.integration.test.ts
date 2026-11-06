@@ -94,8 +94,10 @@ describeServices('MatchingService against the local stack', () => {
       const ids = [...first.rows, ...second.rows].map((row) => row.property_id);
       expect(new Set(ids).size).toBe(ids.length);
 
+      // A page past the end falls back to the first page, with the real counts.
       const beyond = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en', { pageSize: 2, page: 999 });
-      expect(beyond).toMatchObject({ rows: [], total: 0, unlinked: 0 });
+      expect(beyond).toMatchObject({ page: 1, total: first.total });
+      expect(beyond.rows.map((row) => row.property_id)).toEqual(first.rows.map((row) => row.property_id));
     });
 
     it('returns an empty page for a deal without a requirement', async () => {
