@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 55th migration
-(`20261106000003_match_lists.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 58th migration
+(`20261107000003_join_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -109,6 +109,7 @@ erDiagram
     text status "invited | active | deactivated"
     uuid invited_by FK
     text invitation_email
+    timestamptz invitation_sent_at "last send of an invitation; NULL on signup memberships"
     timestamptz joined_at
   }
   profiles {
@@ -139,7 +140,8 @@ erDiagram
   inquiries {
     uuid source_id FK
     uuid contact_id FK
-    uuid opportunity_id FK "set on conversion"
+    uuid opportunity_id FK "origin or joined deal, set on conversion"
+    timestamptz joined_at "when it joined an existing deal (AD-061); NULL otherwise"
     uuid assigned_to FK
     text status "new | contacted | converted | dismissed"
     text dismissed_reason
@@ -256,7 +258,9 @@ erDiagram
 
 The **timeline** (`src/domain/timeline`) is not a table. It reads `notes`, `tasks`,
 `audit_log` and `inquiries` in parallel and merges them in memory into the
-`TimelineEntry` union.
+`TimelineEntry` union. A deal's timeline shows the inquiry it started from and the ones that joined
+it (`opportunity_id` = the deal); a joined inquiry is marked `joined` and dated by its `joined_at`
+(AD-061). The contact timeline is unchanged.
 The property timeline reads the property's own `property` rows, its `listing` rows (by
 `metadata.property_id`), the `opportunity` rows with `field_name = 'property_link'` for it, and
 tasks with its `property_id`; a link change is one row that both timelines show (AD-057).
@@ -518,8 +522,8 @@ the "Enforced by" note says so; everything else is convention in services.
 stateDiagram-v2
   [*] --> new
   new --> contacted : broker records outreach
-  new --> converted : opportunity created
-  contacted --> converted : opportunity created
+  new --> converted : opportunity created or joined
+  contacted --> converted : opportunity created or joined
   new --> dismissed : dismissed_reason
   contacted --> dismissed : dismissed_reason
   converted --> [*]
@@ -530,6 +534,10 @@ Enforced by: `InquiryService` checks `INQUIRY_STATUS_TRANSITIONS`
 (`src/domain/inquiries/validation.ts`); `converted` and `dismissed` are final. The database
 checks the value list; the RPC `convert_inquiry` also refuses to convert a final inquiry, under a
 row lock, so two simultaneous conversions can't both succeed.
+
+A join (AD-061) also ends in `converted`: `inquiries.opportunity_id` is the joined deal and
+`opportunities.inquiry_id` stays the origin only, so an inquiry is "joined" when the two differ. `inquiries.joined_at` records when (not
+`updated_at`, which a contact merge moves).
 
 ### 3.2 Opportunity: status and stage
 
@@ -589,6 +597,10 @@ stateDiagram-v2
   invited --> active : accept_pending_invitations()
   active --> deactivated
 ```
+
+`invitation_sent_at` is set on invite and on each resend. `claim_invitation_resend` (SECURITY
+DEFINER) lets an owner resend any pending invitation and a manager a broker's, at most once per 5
+minutes, and the service sends the email only after the claim (AD-061).
 
 A user can have at most one `active` membership (partial unique index).
 `user_id` and `agency_id` of a membership can never change (trigger).
@@ -717,6 +729,7 @@ The "Enforced by" column tells you which layer to change and test.
 | T4 | Membership `user_id`/`agency_id` immutable | trigger `trg_membership_identity` |
 | T5 | Agency + owner membership + default seeds created atomically | RPC `create_agency_with_owner` |
 | T6 | Creating or editing stages, lead sources and areas, and merging contacts, is owner/manager only (AD-045) | RLS `current_user_role()` on `stages`, `lead_sources`, `areas`, `merge_history` + `requireRole()` in the actions + role check in RPC `merge_contacts` |
+| T7 | A pending invitation is resent only by whoever may send it (owner any, manager brokers), at most once per 5 minutes; the claim and the cooldown are one conditional `UPDATE` (AD-061) | RPC `claim_invitation_resend` + `083-invitation-resend.sql` |
 | C1 | Person needs a name; organization needs `company_name` | `CHECK` on `contacts` |
 | C2 | Phones E.164 (any country, BG default region, AD-041), emails lowercase | `normalizePhone()` / Zod on contact methods and inquiry callers; `callerContactMethods()` at conversion |
 | C3 | Duplicate check (phone, email, trigram name) before creating a contact, including at inquiry conversion | `duplicate-detection.ts` (service) |
@@ -728,6 +741,7 @@ The "Enforced by" column tells you which layer to change and test.
 | I4 | An inquiry's new assignee is an active member of its agency; any member may assign (AD-001, AD-049) | `assertAssignable()` in `InquiryService` create, update and convert (a CSV import resolves assignees separately) |
 | I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
 | I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
+| I7 | A join closes the inquiry into an open (`active`/`nurture`) deal that has the contact, reactivates a `nurture` deal and may create one `call` task, all or nothing (AD-061) | RPC `join_inquiry` + `082-conversion-join.sql` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
 | O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
@@ -842,6 +856,7 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Match (on a deal) | Подходящ имот | A property that fits a buyer's or tenant's requirement | |
 | Match (on a property) | Подходящ купувач / наемател | A buyer or tenant deal the property fits | |
 | Match score | Съвпадение | Share of the applicable criteria met, shown as "Съвпадение 85%" | |
+| Join (an inquiry to a deal) | Присъединяване | Closing an inquiry into the contact's existing open deal instead of creating a new one | |
 | Close | Близо | A criterion missed by a small tolerance; half credit | |
 
 ---

@@ -17,7 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Inquiry } from "@/domain/inquiries/types";
+import type { Inquiry, JoinableOpportunity } from "@/domain/inquiries/types";
+import { JoinOpportunityStep } from "./join-opportunity-step";
+import { useJoinOpportunity, type JoinAction } from "./use-join-opportunity";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
@@ -60,6 +62,10 @@ interface ConvertInquiryDialogProps {
     prevState: ActionResult,
     formData: FormData
   ) => Promise<ConvertResult>;
+  joinAction: JoinAction;
+  listJoinableAction: (contactId: string) => Promise<ActionResult<JoinableOpportunity[]>>;
+  /** Agency timezone: the call back's time is entered and shown in it. */
+  timeZone: string;
   onSuccess?: (opportunityId: string) => void;
 }
 
@@ -72,6 +78,9 @@ export function ConvertInquiryDialog({
   stages,
   brokers,
   convertAction,
+  joinAction,
+  listJoinableAction,
+  timeZone,
   onSuccess,
 }: ConvertInquiryDialogProps) {
   const t = useTranslations("ConvertInquiryDialog");
@@ -105,6 +114,30 @@ export function ConvertInquiryDialog({
   const [newLastName, setNewLastName] = useState(
     inquiry.caller_name?.split(" ").slice(1).join(" ") ?? ""
   );
+
+  const callerName = inquiry.caller_name ?? inquiry.caller_phone ?? inquiry.caller_email ?? "";
+  const join = useJoinOpportunity({
+    inquiryId: inquiry.id,
+    joinAction,
+    listJoinableAction,
+    timeZone,
+    defaultCallBackTitle: t("callBackTitle", { name: callerName }),
+    onJoined: (opportunityId) => {
+      onOpenChange(false);
+      onSuccess?.(opportunityId);
+    },
+  });
+  const { joining, joinState, joinPending, deals, dealsStatus, selectedDealId, callBack } = join;
+
+  function pickContact(contact: ContactOption | null) {
+    setExistingContact(contact);
+    join.loadDealsFor(contact);
+  }
+
+  function chooseTab(tab: "new" | "existing") {
+    setContactTab(tab);
+    if (tab === "new") join.backToNew();
+  }
 
   // Redirect on success or handle duplicates
   useEffect(() => {
@@ -142,7 +175,8 @@ export function ConvertInquiryDialog({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(() => {
-      formAction(formData);
+      if (joining) join.joinFormAction(formData);
+      else formAction(formData);
     });
   };
 
@@ -162,7 +196,7 @@ export function ConvertInquiryDialog({
             <div className="flex rounded-lg border p-0.5 bg-muted/40 gap-0.5">
               <button
                 type="button"
-                onClick={() => setContactTab("new")}
+                onClick={() => chooseTab("new")}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   contactTab === "new"
@@ -176,7 +210,7 @@ export function ConvertInquiryDialog({
               </button>
               <button
                 type="button"
-                onClick={() => setContactTab("existing")}
+                onClick={() => chooseTab("existing")}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   contactTab === "existing"
@@ -268,7 +302,7 @@ export function ConvertInquiryDialog({
                   id="convert-contact-search"
                   name="contact_id"
                   defaultValue={existingContact}
-                  onChange={setExistingContact}
+                  onChange={pickContact}
                   required
                   invalid={!state.success && !!state.fieldErrors?.contact_id}
                 />
@@ -278,11 +312,56 @@ export function ConvertInquiryDialog({
                     {state.fieldErrors.contact_id[0]}
                   </p>
                 )}
+
+                {dealsStatus === "failed" && (
+                  <p className="text-xs text-muted-foreground" role="status">{t("joinLoadFailed")}</p>
+                )}
+                {dealsStatus === "ready" && deals.length > 0 && (
+                  <div className="space-y-1.5 pt-1" role="radiogroup" aria-label={t("modeLabel")}>
+                    <div className="flex rounded-lg border p-0.5 bg-muted/40 gap-0.5">
+                      {(["new", "join"] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          role="radio"
+                          aria-checked={joining === (mode === "join")}
+                          onClick={() => join.chooseMode(mode)}
+                          id={`convert-mode-${mode}`}
+                          className={cn(
+                            "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                            joining === (mode === "join")
+                              ? "bg-background shadow-sm text-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {mode === "new" ? t("modeNew") : t("modeJoin")}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
+          {joining && (
+            <>
+              <JoinOpportunityStep
+                deals={deals}
+                selectedId={selectedDealId}
+                onSelect={join.setSelectedDealId}
+                callBack={callBack}
+                onCallBackChange={join.setCallBack}
+                timeZone={timeZone}
+                invalidDeal={!joinState.success && !!joinState.fieldErrors?.opportunity_id}
+              />
+              <input type="hidden" name="opportunity_id" value={selectedDealId ?? ""} />
+              <input type="hidden" name="task" value={join.taskJson} />
+            </>
+          )}
+
           {/* ── Opportunity details ───────────────────────────────────────── */}
+          {!joining && (
           <div className="space-y-3">
             <Label className="text-sm font-semibold">{t("opportunitySection")}</Label>
 
@@ -374,14 +453,26 @@ export function ConvertInquiryDialog({
               )}
             </div>
           </div>
+          )}
 
           {/* Global error */}
-          {!state.success && state.error && !state.fieldErrors && (
+          {!joining && !state.success && state.error && !state.fieldErrors && (
             <p className="text-sm text-destructive" role="alert">
               {state.error}
             </p>
           )}
+          {joining && !joinState.success && joinState.error && (
+            <p className="text-sm text-destructive" role="alert">
+              {joinState.error}
+            </p>
+          )}
           
+          {join.blocker && (
+            <p className="text-xs text-muted-foreground" role="status" id="join-blocker">
+              {t(join.blocker)}
+            </p>
+          )}
+
           <input type="hidden" name="skipDuplicateCheck" value={skipDuplicateCheck ? "true" : "false"} />
 
           <div className="flex gap-2 pt-1">
@@ -390,17 +481,19 @@ export function ConvertInquiryDialog({
               variant="outline"
               className="flex-1"
               onClick={() => onOpenChange(false)}
-              disabled={pending}
+              disabled={pending || joinPending}
             >
               {t("cancel")}
             </Button>
             <Button
               type="submit"
               className="flex-1"
-              disabled={pending}
+              disabled={joining ? joinPending || join.blocker !== null : pending}
               id="convert-inquiry-submit"
             >
-              {pending ? t("converting") : t("convert")}
+              {joining
+                ? joinPending ? t("joining") : t("join")
+                : pending ? t("converting") : t("convert")}
             </Button>
           </div>
         </form>
@@ -413,6 +506,16 @@ export function ConvertInquiryDialog({
             }}
             duplicates={suggestedDuplicates}
             isSubmitting={pending}
+            onUseContact={(contact) => {
+              setSuggestedDuplicates([]);
+              setContactTab("existing");
+              pickContact({
+                id: contact.id,
+                display_name: contact.display_name,
+                company_name: contact.company_name,
+                type: contact.type,
+              });
+            }}
             onProceedAnyway={() => {
               setSkipDuplicateCheck(true);
               setSuggestedDuplicates([]);

@@ -8,8 +8,10 @@ import {
   deactivateMemberSchema,
   reactivateMemberSchema,
   inviteMemberSchema,
+  resendInvitationSchema,
 } from "@/domain/members/validation";
 import { DomainError } from "@/lib/errors";
+import { getAgencySettings } from "@/domain/agencies/settings";
 
 export async function updateMemberRole(formData: FormData): Promise<ActionResult> {
   try {
@@ -99,6 +101,21 @@ export async function cancelInvitation(formData: FormData): Promise<ActionResult
     const memberService = new MemberService(ctx.supabase);
     await memberService.cancelInvitation(ctx, membershipId);
     
+    revalidatePath("/settings/team");
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+export async function resendInvitation(formData: FormData): Promise<ActionResult> {
+  try {
+    const ctx = await getAuthContext();
+
+    const parsed = resendInvitationSchema.safeParse({ membershipId: formData.get("membershipId") });
+    if (!parsed.success) return toActionError(parsed.error);
+
+    const { timezone } = await getAgencySettings(ctx.agencyId);
+    await new MemberService(ctx.supabase).resendInvitation(ctx, parsed.data.membershipId, timezone);
+
     revalidatePath("/settings/team");
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }

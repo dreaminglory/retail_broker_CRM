@@ -11,7 +11,10 @@
       "assignee_not_member": "This person is not an active member of your agency.",
       "contact_creation_failed": "The contact could not be created. Please try again.",
       "final_state": "This inquiry is already converted or dismissed and can't be changed.",
-      "invalid_transition": "This inquiry has already moved on. Refresh the page and try again."
+      "invalid_transition": "This inquiry has already moved on. Refresh the page and try again.",
+      "join_closed_opportunity": "This inquiry can't join a deal that is won, lost or archived.",
+      "join_contact_not_on_opportunity": "This contact isn't on that deal.",
+      "join_invalid_task": "Check the call back: it needs a title and a valid date and time."
     },
     "loadFailed": "This data couldn't be loaded. Please try again.",
     "saveFailed": "Your changes couldn't be saved. Please try again.",
@@ -24,6 +27,8 @@
       "invite_failed": "The invitation couldn't be sent. Please try again.",
       "invite_failed_no_user": "The invitation couldn't be sent. Please try again.",
       "last_owner": "An agency must keep at least one active owner.",
+      "resend_too_soon": "This invitation was sent a moment ago. You can resend it after {time}.",
+      "only_pending_resend": "Only pending invitations can be resent.",
       "only_pending_cancel": "Only pending invitations can be cancelled."
     },
     "stages": {
@@ -50,6 +55,10 @@
     "org_name_required": "Enter the company name.",
     "opp_title_required": "Enter a title for the opportunity.",
     "stage_required": "Choose a stage.",
+    "contact_required": "Choose a contact.",
+    "opportunity_required": "Pick a deal to join.",
+    "task_title_required": "Enter a title for the call back.",
+    "due_at_invalid": "Enter a valid date and time.",
     "stages_required": "Choose at least one stage.",
     "invalid_currency": "Choose a valid currency.",
     "invalid_locale": "Choose a supported language.",
@@ -391,6 +400,12 @@
       "invited": "Invited",
       "deactivated": "Deactivated"
     },
+    "resend": {
+      "button": "Resend",
+      "sending": "Sending…",
+      "sent": "Invitation sent again",
+      "sentOn": "Sent {date}"
+    },
     "invited": "Invited {date}",
     "roles": {
       "owner": "Owner",
@@ -695,6 +710,7 @@
       "name": "Name is similar"
     },
     "viewProfile": "View Profile",
+    "useContact": "Use this contact",
     "actions": {
       "cancel": "Cancel",
       "creating": "Creating...",
@@ -986,7 +1002,29 @@
     "assignedTo": "Assigned to",
     "cancel": "Cancel",
     "converting": "Converting…",
-    "convert": "Convert"
+    "convert": "Convert",
+    "modeNew": "New opportunity",
+    "modeJoin": "Join an existing one",
+    "modeLabel": "What should this inquiry become?",
+    "joinSection": "Join an opportunity",
+    "joinPickLabel": "Open opportunities of this contact",
+    "joinOwner": "Owner: {name}",
+    "joinNoOwner": "No owner yet: it goes to the inquiry's assignee",
+    "joinNextAction": "Next action {date}",
+    "joinNoNextAction": "No next action",
+    "joinStatusNurture": "On hold",
+    "joinReactivates": "This opportunity is on hold. Joining makes it active again.",
+    "joinOwnerNote": "The owner of the opportunity gets the inquiry, the email and the call back.",
+    "callBack": "Schedule a call back",
+    "callBackTitle": "Call back {name}",
+    "callBackTitleLabel": "Call back title",
+    "callBackDue": "Call back at",
+    "join": "Join",
+    "joining": "Joining…",
+    "joinNoDeals": "This contact has no open opportunities.",
+    "joinLoadFailed": "The contact's opportunities couldn't be loaded.",
+    "joinNeedsDeal": "Pick the opportunity to join.",
+    "joinNeedsCallBack": "Enter a title and a valid date and time for the call back, or switch it off."
   },
   "InquiryCard": {
     "importedBadge": "Imported",
@@ -996,6 +1034,7 @@
     "dismiss": "Dismiss",
     "assigned": "Assigned",
     "edit": "Edit",
+    "joinedTo": "Joined to {title}",
     "actions": "Inquiry actions",
     "status": {
       "new": "New",
@@ -1164,6 +1203,7 @@
     "noActivity": "No activity history yet.",
     "loading": "Loading...",
     "loadMore": "Load older activity",
+    "inquiryJoinedOn": "Joined on {date}",
     "events": {
       "taskCompleted": "Task Completed",
       "taskCreated": "Task Created",
@@ -1173,6 +1213,7 @@
       "statusChanged": "Status Changed",
       "systemUpdate": "System Update",
       "newInquiry": "New Inquiry Received",
+      "joinedInquiry": "Inquiry Joined This Deal",
       "propertyCreated": "Property added",
       "propertyStatusChanged": "Property status changed",
       "listingCreated": "Listing added",

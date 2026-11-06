@@ -12,6 +12,12 @@ import { ProfileRepository } from '@/domain/profiles/repository';
 import type { Profile } from '@/domain/profiles/types';
 
 /**
+ * Most inquiries read for one deal. A deal has a handful, and they are sorted by each entry's own
+ * date (the join date for a joined one) before the page is cut, so this is a safety cap, not a window.
+ */
+const DEAL_INQUIRY_CAP = 100;
+
+/**
  * Builds a fallback AuthorInfo when a user UUID is present but the
  * profile row cannot be found (e.g., deleted user).
  */
@@ -191,6 +197,8 @@ export class TimelineService {
 
     if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
 
+    const inquiries = await this.getDealInquiries(opportunityId, agencyId);
+
     // Batch-resolve all author UUIDs
     const profilesMap = await this.resolveAuthors(
       notesData ?? [],
@@ -202,7 +210,7 @@ export class TimelineService {
       this.enrichNotes(notesData ?? [], profilesMap),
       this.enrichTasks(tasksData ?? [], profilesMap),
       this.enrichAudits(auditData ?? [], profilesMap),
-      [],
+      inquiries,
       limit,
       offset
     );
@@ -264,6 +272,34 @@ export class TimelineService {
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────
+
+  /**
+   * The inquiry the deal started from and the ones that joined it (AD-061). An inquiry is joined
+   * when it isn't the deal's origin; its date on this timeline is when it joined.
+   */
+  private async getDealInquiries(opportunityId: string, agencyId: string): Promise<TimelineInquiry[]> {
+    const { data: deal, error: dealError } = await this.db
+      .from('opportunities')
+      .select('inquiry_id')
+      .eq('agency_id', agencyId)
+      .eq('id', opportunityId)
+      .maybeSingle();
+
+    if (dealError) throw new DomainError('errors.loadFailed', `Timeline opportunity fetch failed: ${dealError.message}`);
+
+    const originId = (deal?.inquiry_id as string | null | undefined) ?? null;
+    const { data, error } = await this.db
+      .from('inquiries')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .or(originId ? `opportunity_id.eq.${opportunityId},id.eq.${originId}` : `opportunity_id.eq.${opportunityId}`)
+      .order('received_at', { ascending: false })
+      .limit(DEAL_INQUIRY_CAP);
+
+    if (error) throw new DomainError('errors.loadFailed', `Timeline inquiries fetch failed: ${error.message}`);
+
+    return ((data ?? []) as TimelineInquiry[]).map((inquiry) => ({ ...inquiry, joined: inquiry.id !== originId }));
+  }
 
   /** Adds the deal's title to the opportunity rows of a property timeline. */
   private async withDeals(audits: TimelineAudit[], agencyId: string): Promise<TimelineAudit[]> {
@@ -381,7 +417,9 @@ export class TimelineService {
     });
 
     audits.forEach((a) => entries.push({ type: 'audit', timestamp: a.performed_at, data: a }));
-    inquiries.forEach((i) => entries.push({ type: 'inquiry', timestamp: i.received_at, data: i }));
+    inquiries.forEach((i) =>
+      entries.push({ type: 'inquiry', timestamp: i.joined ? (i.joined_at ?? i.updated_at) : i.received_at, data: i })
+    );
 
     // Sort by timestamp DESC
     entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());

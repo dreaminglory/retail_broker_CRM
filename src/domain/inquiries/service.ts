@@ -12,11 +12,13 @@ import {
   updateInquirySchema,
   dismissInquirySchema,
   convertInquirySchema,
+  joinInquirySchema,
   editInquirySchemaFor,
   callerContactMethods,
   INQUIRY_STATUS_TRANSITIONS,
 } from './validation';
-import type { ConvertInquirySchema } from './validation';
+import type { ConvertInquirySchema, JoinInquirySchema } from './validation';
+import type { JoinableOpportunity } from './types';
 import { generateDisplayName } from '../contacts/validation';
 import { findPotentialDuplicates, type PotentialDuplicate } from '../contacts/duplicate-detection';
 import { MemberRepository } from '../members/repository';
@@ -194,6 +196,54 @@ export class InquiryService {
       ownerId,
       previousAssignee: current.assigned_to,
       callerName: current.caller_name,
+    };
+  }
+
+  /** The contact's open deals an inquiry could join (AD-061). */
+  async listJoinable(agencyId: string, contactId: string): Promise<JoinableOpportunity[]> {
+    return this.repo.findJoinableOpportunities(agencyId, contactId);
+  }
+
+  /**
+   * Closes an inquiry into an existing open deal of the contact instead of creating a new one
+   * (FR-INQ-15). A nurture deal is reactivated; an optional call back is scheduled for the
+   * deal's owner. All of it happens in the `join_inquiry` RPC, or none of it does (AD-061).
+   */
+  async join(
+    id: string,
+    agencyId: string,
+    input: JoinInquirySchema
+  ): Promise<{
+    inquiryId: string;
+    opportunityId: string;
+    ownerId: string | null;
+    previousAssignee: string | null;
+    callerName: string | null;
+    reactivated: boolean;
+  }> {
+    const parsed = joinInquirySchema.parse(input);
+
+    const current = await this.repo.findById(id, agencyId);
+    if (!current) throw new DomainError('errors.not_found');
+    this.assertValidTransition(current.status, 'converted');
+
+    const { data, error } = await this.db.rpc('join_inquiry', {
+      p_agency_id: agencyId,
+      p_inquiry_id: id,
+      p_contact_id: parsed.contact_id,
+      p_opportunity_id: parsed.opportunity_id,
+      p_task: parsed.task,
+    });
+    if (error) throw rpcFailure(error);
+
+    const result = data as { opportunity_id: string; owner_id: string | null; reactivated: boolean };
+    return {
+      inquiryId: id,
+      opportunityId: result.opportunity_id,
+      ownerId: result.owner_id,
+      previousAssignee: current.assigned_to,
+      callerName: current.caller_name,
+      reactivated: result.reactivated,
     };
   }
 

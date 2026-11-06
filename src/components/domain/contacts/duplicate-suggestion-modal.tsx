@@ -21,6 +21,8 @@ interface DuplicateSuggestionModalProps {
   onOpenChange: (open: boolean) => void;
   duplicates: PotentialDuplicate[];
   onProceedAnyway: () => void;
+  /** When given, each suggestion offers to use that contact instead of creating a new one. */
+  onUseContact?: (contact: PotentialDuplicate['contact']) => void;
   isSubmitting?: boolean;
 }
 
@@ -29,6 +31,7 @@ export function DuplicateSuggestionModal({
   onOpenChange,
   duplicates,
   onProceedAnyway,
+  onUseContact,
   isSubmitting = false,
 }: DuplicateSuggestionModalProps) {
   const t = useTranslations("DuplicateSuggestionModal");
@@ -94,7 +97,12 @@ export function DuplicateSuggestionModal({
                   </div>
                 </div>
 
-                <div className="flex-shrink-0">
+                <div className="flex flex-wrap gap-2">
+                  {onUseContact && (
+                    <Button onClick={() => onUseContact(dup.contact)} disabled={isSubmitting}>
+                      {t("useContact")}
+                    </Button>
+                  )}
                   <Button variant="secondary" render={<Link href={`/contacts/${dup.contact.id}`} />} nativeButton={false}>
                     {t("viewProfile")} <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>

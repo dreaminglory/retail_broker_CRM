@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import type { AgencyMember } from "@/domain/members/types";
 import { RoleBadge } from "./role-badge";
 import { MemberActions } from "./member-actions";
+import { ResendInvitationButton } from "./resend-invitation-button";
 import { format } from "date-fns";
 import { useTranslations, useFormatter } from "next-intl";
 
@@ -24,6 +25,10 @@ export function MemberList({ members, currentUserId, currentUserRole }: MemberLi
   const t = useTranslations("SettingsTeam");
   const formatLoc = useFormatter();
   const canManage = currentUserRole === "owner";
+  // Whoever may invite a role may resend that invitation: owners any role, managers brokers.
+  const canResend = (member: AgencyMember) =>
+    member.status === "invited" && (currentUserRole === "owner" || (currentUserRole === "manager" && member.role === "broker"));
+  const showActionsColumn = canManage || currentUserRole === "manager";
 
   return (
     <div className="rounded-md border">
@@ -34,7 +39,7 @@ export function MemberList({ members, currentUserId, currentUserRole }: MemberLi
             <TableHead>{t("columns.role")}</TableHead>
             <TableHead>{t("columns.status")}</TableHead>
             <TableHead>{t("columns.joined")}</TableHead>
-            {canManage && <TableHead className="w-[50px]"></TableHead>}
+            {showActionsColumn && <TableHead className="w-[50px]"></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -74,17 +79,22 @@ export function MemberList({ members, currentUserId, currentUserRole }: MemberLi
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {member.joined_at ? formatLoc.dateTime(new Date(member.joined_at), { month: "short", day: "numeric", year: "numeric" }) : 
-                   member.invited_at ? t("invited", { date: formatLoc.dateTime(new Date(member.invited_at), { month: "short", day: "numeric", year: "numeric" }) }) : "-"}
+                   member.status === "invited" && (member.invitation_sent_at ?? member.invited_at)
+                    ? t("resend.sentOn", { date: formatLoc.dateTime(new Date((member.invitation_sent_at ?? member.invited_at)!), { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) })
+                    : member.invited_at ? t("invited", { date: formatLoc.dateTime(new Date(member.invited_at), { month: "short", day: "numeric", year: "numeric" }) }) : "-"}
                 </TableCell>
-                {canManage && (
+                {showActionsColumn && (
                   <TableCell>
-                    <MemberActions 
-                      membershipId={member.id}
-                      currentRole={member.role}
-                      status={member.status}
-                      canManage={canManage}
-                      isSelf={isSelf}
-                    />
+                    <div className="flex items-center justify-end gap-2">
+                      {canResend(member) && <ResendInvitationButton membershipId={member.id} />}
+                      <MemberActions
+                        membershipId={member.id}
+                        currentRole={member.role}
+                        status={member.status}
+                        canManage={canManage}
+                        isSelf={isSelf}
+                      />
+                    </div>
                   </TableCell>
                 )}
               </TableRow>

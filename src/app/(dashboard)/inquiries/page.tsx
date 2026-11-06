@@ -9,6 +9,7 @@ import { PAGE_SIZE, loadPage, pageInfo, parsePage } from "@/lib/pagination";
 import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
+import { getAgencySettings } from "@/domain/agencies/settings";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -60,7 +61,7 @@ export default async function InquiriesPage({
   }
 
   // Fetch all required data in parallel
-  const [paged, leadSources, stages, brokers] = await Promise.all([
+  const [paged, leadSources, stages, brokers, settings] = await Promise.all([
     id ? loadInquiryById(supabase, agencyId, id) : loadPage(page, PAGE_SIZE, (offset, limit) =>
       new InquiryService(supabase).listPage(agencyId, {
         search: search || undefined,
@@ -72,6 +73,7 @@ export default async function InquiriesPage({
     new LeadSourceRepository(supabase).findActive(agencyId),
     new StageRepository(supabase).findActive(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
+    getAgencySettings(agencyId),
   ]);
 
   // Assignees who were deactivated later aren't in the active list, but their inquiries still show them.
@@ -85,6 +87,21 @@ export default async function InquiriesPage({
     [...inactiveProfiles].flatMap(([id, profile]) =>
       profile.display_name ? [[id, profile.display_name]] : []
     )
+  );
+
+  // A converted inquiry "joined" a deal when that deal started from another inquiry (AD-061).
+  const convertedIds = [...new Set(inquiries.flatMap((i) => (i.status === "converted" && i.opportunity_id ? [i.opportunity_id] : [])))];
+  const { data: deals } = convertedIds.length
+    ? await supabase.from("opportunities").select("id, title, inquiry_id").eq("agency_id", agencyId).in("id", convertedIds)
+    : { data: [] };
+  const dealById = new Map((deals ?? []).map((d) => [d.id as string, d]));
+  const joinedDeals = Object.fromEntries(
+    inquiries.flatMap((i) => {
+      const deal = i.opportunity_id ? dealById.get(i.opportunity_id) : undefined;
+      return i.status === "converted" && deal && deal.inquiry_id !== i.id
+        ? [[i.id, { id: deal.id as string, title: deal.title as string }]]
+        : [];
+    })
   );
 
   // A fresh `now` per render: relative times match between the server and hydration.
@@ -102,6 +119,8 @@ export default async function InquiriesPage({
           initialStatus={status}
           initialId={id}
           userRole={membership?.role}
+          timeZone={settings.timezone}
+          joinedDeals={joinedDeals}
         />
       </div>
     </FreshNowProvider>

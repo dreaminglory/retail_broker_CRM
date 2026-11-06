@@ -29,6 +29,8 @@ import {
   markInquiryContactedAction,
   dismissInquiryAction,
   convertInquiryAction,
+  joinInquiryAction,
+  listJoinableOpportunitiesAction,
   searchInquiriesQuickAction,
 } from "./actions";
 import type { Inquiry } from "@/domain/inquiries/types";
@@ -81,6 +83,9 @@ interface InquiriesPageClientProps {
   initialStatus: string;
   initialId?: string;
   userRole?: string;
+  timeZone: string;
+  /** Converted inquiries that joined a deal other than the one they started, by inquiry id. */
+  joinedDeals: Record<string, { id: string; title: string }>;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -96,6 +101,8 @@ export function InquiriesPageClient({
   initialStatus,
   initialId,
   userRole,
+  timeZone,
+  joinedDeals,
 }: InquiriesPageClientProps) {
   const t = useTranslations("InquiriesPage");
   const router = useRouter();
@@ -323,6 +330,7 @@ export function InquiriesPageClient({
               leadSources={leadSources}
               brokers={brokers}
               inactiveAssigneeNames={inactiveAssigneeNames}
+              joinedDeal={joinedDeals[inquiry.id]}
               onEdit={setEditTarget}
               onMarkContacted={handleMarkContacted}
               onConvert={handleOpenConvert}
@@ -423,6 +431,9 @@ export function InquiriesPageClient({
           stages={stages}
           brokers={brokers}
           convertAction={convertInquiryAction}
+          joinAction={joinInquiryAction}
+          listJoinableAction={listJoinableOpportunitiesAction}
+          timeZone={timeZone}
           onSuccess={(opportunityId) => {
             router.push(`/opportunities/${opportunityId}`);
           }}

@@ -358,6 +358,41 @@ sections is easier to trust.
 day keeps a busy reassignment from spamming anyone.
 **Revisit if:** pilot brokers miss a same-day hand-back, or ask to hear about imported history.
 
+### AD-061: An inquiry can join an open deal; an invitation can be resent
+**Accepted** (founder, 2026-11-06, plan approval of `tasks/plan.md`). Refines
+`spec/conversion-join.md`.
+- **`join_inquiry` is its own RPC**, beside `convert_inquiry` (not changed): `plpgsql`,
+  `SECURITY INVOKER` (RLS applies, AD-050), `SET search_path = public`, `authenticated` only.
+  Lock order is the inquiry, then the deal, so two joins can't deadlock. Refusals are i18n keys
+  (`errors.not_found`, `errors.inquiries.invalid_transition`, `join_closed_opportunity`,
+  `join_contact_not_on_opportunity`). A `nurture` deal is reactivated as
+  `OpportunityRepository.reactivate` does; a deal with no owner takes the inquiry's assignee; an
+  optional `call` task is created for the owner, else the caller. The RPC validates the call back
+  itself (JSON null = none; blank title or bad date = `errors.inquiries.join_invalid_task`).
+- **Origin vs joined is derived**: `inquiries.opportunity_id` is origin or joined,
+  `opportunities.inquiry_id` is origin only. The "joined on" date is `inquiries.joined_at`, set by `join_inquiry`
+  (review fix, migration `20261107000003`): `updated_at` moves on a contact merge (C4), so it
+  can't date the join.
+- **The call-back title comes from the form** (RPCs don't see the locale); `due_at` defaults to
+  now + 1 h in agency time.
+- **The notification reuses `notifyIfAssignedToColleague`** with the inquiry's previous assignee
+  and the deal's owner (AD-053).
+- **Resend claims first, then sends.** `claim_invitation_resend(p_membership_id)` is
+  `SECURITY DEFINER` because memberships are owner-only for `UPDATE` while managers resend
+  broker invitations. It checks agency and role (owner: any; manager: brokers only), then does one
+  conditional `UPDATE` of `agency_memberships.invitation_sent_at` (at most once per 5 minutes).
+  Only after a claim does the service send, so two clicks can't both send.
+- **`invitation_sent_at` has no default**: backfilled from `invited_at` for `invited` rows,
+  set by `createInvitation`, `NULL` on signup memberships.
+- **Spike (2026-11-06, local stack):** calling `auth.admin.inviteUserByEmail` again for the same
+  unconfirmed user returns the same user id, sends a second email (Mailpit) with a new `invite`
+  token, and does not refuse. So resend uses `inviteUserByEmail` with the same `data` and
+  `redirectTo` as `inviteMember`; no `generateLink` or own email path.
+**Why:** a repeat caller should land on the deal that already exists, and a lost invitation
+shouldn't need a second account or a database edit.
+**Revisit if:** pilots need to join a deal the contact isn't on, or a failed resend email blocking
+a retry for 5 minutes is felt.
+
 ---
 
 ## Retired

@@ -39,6 +39,9 @@ export interface Inquiry {
   dismissed_reason: string | null;
   received_at: string;
 
+  /** When the inquiry joined an existing deal (AD-061). Null if it never joined one. */
+  joined_at: string | null;
+
   created_by: string | null;
   import_job_id: string | null;
   created_at: string;
@@ -75,3 +78,15 @@ export interface UpdateInquiryInput {
   description?: string | null;
   external_ref?: string | null;
 }
+
+/** An open deal a repeat caller's inquiry can join (AD-061). */
+export type JoinableOpportunity = {
+  id: string;
+  title: string;
+  type: 'buyer' | 'seller' | 'landlord' | 'tenant';
+  status: 'active' | 'nurture';
+  stage_name: string;
+  assigned_to: string | null;
+  owner_name: string | null;
+  next_action_at: string | null;
+};

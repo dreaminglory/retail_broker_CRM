@@ -6,7 +6,7 @@ import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import { describeAudit } from "@/domain/timeline/audit-event";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { AuditEventBody, auditEventTitle } from "./audit-event-view";
 
 interface TimelineEntryProps {
@@ -21,6 +21,7 @@ interface TimelineEntryProps {
 export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote, showDeal }: TimelineEntryProps) {
   const t = useTranslations("Timeline");
   const ago = useRelativeTime();
+  const format = useFormatter();
   const tInquiry = useTranslations("InquiryCard");
   const event = entry.type === 'audit' ? describeAudit(entry.data) : null;
 
@@ -81,7 +82,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                   entry.isCompletionEvent ? t("events.taskCompleted") : t("events.taskCreated")
                 )}
                 {event && auditEventTitle(t, event)}
-                {entry.type === 'inquiry' && t("events.newInquiry")}
+                {entry.type === 'inquiry' && (entry.data.joined ? t("events.joinedInquiry") : t("events.newInquiry"))}
               </div>
               <div className="text-xs text-muted-foreground flex flex-col items-end gap-1">
                 <span>{ago(entry.timestamp)}</span>
@@ -119,6 +120,13 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                   <Badge variant="secondary">{tInquiry(`status.${entry.data.status}` as never)}</Badge>
                   {entry.data.source_description && <Badge variant="outline">{entry.data.source_description}</Badge>}
                 </div>
+                {entry.data.joined && entry.data.joined_at && (
+                  <p className="text-xs" data-testid="inquiry-joined-on">
+                    {t("inquiryJoinedOn", {
+                      date: format.dateTime(new Date(entry.data.joined_at), { dateStyle: "medium", timeStyle: "short" }),
+                    })}
+                  </p>
+                )}
                 {entry.data.subject && <p className="font-medium text-foreground">{entry.data.subject}</p>}
                 {entry.data.description && <p className="text-sm border-l-2 pl-3 py-1 text-muted-foreground/80 italic">{entry.data.description}</p>}
               </div>

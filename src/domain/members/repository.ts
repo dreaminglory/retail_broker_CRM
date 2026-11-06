@@ -93,6 +93,7 @@ export class MemberRepository {
     userId: string,
     invitedBy: string
   ): Promise<AgencyMembership> {
+    const sentAt = new Date().toISOString();
     const { data, error } = await this.db
       .from("agency_memberships")
       .insert({
@@ -102,7 +103,8 @@ export class MemberRepository {
         status: "invited",
         invitation_email: email.toLowerCase(),
         invited_by: invitedBy,
-        invited_at: new Date().toISOString(),
+        invited_at: sentAt,
+        invitation_sent_at: sentAt,
       })
       .select()
       .single();
