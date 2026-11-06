@@ -89,17 +89,17 @@ owner fallback, inquiry closed, optional `call` task). `REVOKE` from `PUBLIC, an
 gets the field. Write `083-invitation-resend.sql`.
 
 **Acceptance criteria:**
-- [ ] An owner claims any pending invitation and a manager claims a broker's; a manager claiming
+- [x] An owner claims any pending invitation and a manager claims a broker's; a manager claiming
   a manager's raises `errors.forbidden`; a broker raises `errors.forbidden`
-- [ ] A second claim within 5 minutes raises `errors.members.resend_too_soon`; an active,
+- [x] A second claim within 5 minutes raises `errors.members.resend_too_soon`; an active,
   deactivated or another agency's membership raises `errors.members.only_pending_resend` or
   `errors.not_found`
-- [ ] The backfill leaves signup memberships `NULL`, and a new invitation from the service has
+- [x] The backfill leaves signup memberships `NULL`, and a new invitation from the service has
   the field set
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/members`
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/members`
 
 **Dependencies:** Task 1 (the spike passed)
 **Files:** `supabase/migrations/20261107000002_invitation_resend.sql`,

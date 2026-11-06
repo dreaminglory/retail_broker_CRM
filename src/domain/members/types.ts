@@ -15,6 +15,7 @@ export interface AgencyMembership {
   invited_by: string | null;
   invitation_email: string | null;
   invited_at: string | null;
+  invitation_sent_at: string | null;
   joined_at: string | null;
   created_at: string;
   updated_at: string;
