@@ -277,13 +277,13 @@ property_id, rejected_reason? })` creates the link as `rejected` with `source = 
 the optional reason (reusing the reject-reason input of the link status control).
 
 **Acceptance criteria:**
-- [ ] Not suitable creates a `rejected` link with the reason and `source = 'match'`; it leaves the new matches, shows with status rejected under the toggle, and the timelines show it (AC-4 not-suitable part)
-- [ ] The service suite covers `rejectFromMatch`, with and without a reason, and refuses a seller deal
-- [ ] BG and EN at 1280 and 390 px
+- [x] Not suitable creates a `rejected` link with the reason and `source = 'match'`; it leaves the new matches, shows with status rejected under the toggle, and the timelines show it (AC-4 not-suitable part)
+- [x] The service suite covers `rejectFromMatch`, with and without a reason, and refuses a seller deal
+- [x] BG and EN at 1280 and 390 px
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:services`
-- [ ] Browser check on the Alpha buyer
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:services`
+- [x] Browser check on the Alpha buyer
 
 **Dependencies:** Task 7
 **Files likely touched:** `src/domain/opportunity-properties/service.ts`, `src/domain/opportunity-properties/service.integration.test.ts`, `src/app/(dashboard)/opportunities/[id]/properties/actions.ts`, `src/components/domain/matching/{match-row,not-suitable-dialog}.tsx`, `messages/{bg,en}.json`

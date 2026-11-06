@@ -1760,6 +1760,8 @@
     "openProperty": "Отвори имот {code}",
     "addCandidate": "Добави като кандидат",
     "addCandidateFor": "Добави {code} като кандидат",
+    "notSuitable": "Не е подходящ",
+    "notSuitableFor": "Маркирай {code} като неподходящ",
     "dealsTitleSale": "Подходящи купувачи",
     "dealsTitleRent": "Подходящи наематели",
     "dealsTitleBoth": "Подходящи купувачи и наематели",

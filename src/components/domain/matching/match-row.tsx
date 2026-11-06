@@ -7,6 +7,7 @@ import type { PropertyMatch } from "@/domain/matching/types";
 import type { OpportunityType } from "@/domain/opportunities/types";
 import { AddCandidateButton } from "./add-candidate-button";
 import { MatchChips } from "./match-chips";
+import { NotSuitableDialog } from "./not-suitable-dialog";
 
 type MatchRowProps = {
   opportunityId: string;
@@ -54,12 +55,17 @@ export function MatchRow({ opportunityId, match, opportunityType }: MatchRowProp
       </div>
       <div className="flex flex-wrap items-end justify-between gap-2">
         <MatchChips chips={toChips(match.criteria, opportunityType)} />
-        {!match.link_status && <AddCandidateButton
-            opportunityId={opportunityId}
-            propertyId={match.property_id}
-            label={t("addCandidate")}
-            ariaLabel={t("addCandidateFor", { code })}
-          />}
+        {!match.link_status && (
+          <div className="flex items-center gap-1">
+            <NotSuitableDialog opportunityId={opportunityId} propertyId={match.property_id} code={code} />
+            <AddCandidateButton
+              opportunityId={opportunityId}
+              propertyId={match.property_id}
+              label={t("addCandidate")}
+              ariaLabel={t("addCandidateFor", { code })}
+            />
+          </div>
+        )}
       </div>
     </li>
   );

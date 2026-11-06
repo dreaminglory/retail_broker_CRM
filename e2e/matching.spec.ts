@@ -119,3 +119,46 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   await propertiesSection(page).getByRole('button', { name: removeLink }).click();
   await expect(propertiesSection(page).getByRole('button', { name: removeLink })).toBeHidden();
 });
+
+// matching, "Not suitable": the best match is marked with a reason → it leaves the new matches,
+// the toggle shows it as rejected and the deal's Properties section shows the reason → the link
+// is removed again.
+test('a broker marks a match as not suitable with a reason', async ({ page, m, signInAs }) => {
+  const matches = matchesSection(page);
+  const properties = propertiesSection(page);
+  const rows = matches.getByTestId('match-row');
+  const removeLink = m.PropertyLinks.removeLink.replace('{code}', BEST_MATCH);
+  const reason = `Too noisy ${Date.now()}`;
+
+  await signInAs('broker@alpha.bg');
+  await page.goto(BUYER_DEAL);
+  await expect(matches).toBeVisible();
+  const leftover = properties.getByRole('button', { name: removeLink });
+  if (await leftover.isVisible()) {
+    await leftover.click();
+    await expect(leftover).toBeHidden();
+  }
+
+  const best = rows.first();
+  await expect(best).toContainText(BEST_MATCH);
+  const newBefore = await rows.count();
+  await best.getByRole('button', { name: m.matching.notSuitableFor.replace('{code}', BEST_MATCH) }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel(m.PropertyLinks.rejectReason).fill(reason);
+  await dialog.getByRole('button', { name: m.PropertyLinks.reject, exact: true }).click();
+  await expect(dialog).toBeHidden();
+
+  // It leaves the new matches and shows under Properties as rejected, with the reason and marker.
+  await expect(rows).toHaveCount(newBefore - 1);
+  await expect(properties.getByText(m.PropertyLinks.rejectedBecause.replace('{reason}', reason))).toBeVisible();
+  await expect(properties.getByText(m.Enums.propertyLinkSource.match)).toBeVisible();
+
+  // The toggle shows it as rejected, without the actions.
+  await matches.getByRole('link', { name: m.matching.showLinked }).click();
+  const linked = rows.filter({ hasText: BEST_MATCH });
+  await expect(linked).toContainText(m.Enums.propertyLinkStatus.rejected);
+  await expect(linked.getByRole('button')).toHaveCount(0);
+
+  await properties.getByRole('button', { name: removeLink }).click();
+  await expect(properties.getByRole('button', { name: removeLink })).toBeHidden();
+});

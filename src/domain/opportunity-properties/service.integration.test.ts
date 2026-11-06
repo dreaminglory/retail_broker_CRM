@@ -98,6 +98,56 @@ describeServices('OpportunityPropertyService against the local stack', () => {
     ).rejects.toThrow();
   });
 
+  it('rejects a property from the matches: a rejected link with the reason and source match, audited', async () => {
+    const opportunity = await createOpportunity();
+    const a = await createProperty();
+    const b = await createProperty();
+
+    const withReason = await links.rejectFromMatch(broker.agencyId, broker.userId, {
+      opportunity_id: opportunity.id,
+      property_id: a.id,
+      rejected_reason: 'Too dark',
+    });
+    const without = await links.rejectFromMatch(broker.agencyId, broker.userId, { opportunity_id: opportunity.id, property_id: b.id });
+    cleanup.track('opportunity_properties', withReason.id);
+    cleanup.track('opportunity_properties', without.id);
+
+    expect(withReason).toMatchObject({ relation: 'candidate', status: 'rejected', rejected_reason: 'Too dark', source: 'match' });
+    expect(without).toMatchObject({ status: 'rejected', rejected_reason: null, source: 'match' });
+
+    const { data } = await broker.db
+      .from('audit_log')
+      .select('old_value, new_value, metadata')
+      .eq('entity_id', opportunity.id)
+      .eq('field_name', 'property_link')
+      .order('performed_at');
+    expect(data?.map((row) => [row.old_value, row.new_value])).toEqual([
+      [null, 'rejected'],
+      [null, 'rejected'],
+    ]);
+    expect(data?.[0].metadata).toMatchObject({ property_id: a.id, rejected_reason: 'Too dark' });
+  });
+
+  it('refuses to reject a match on a seller deal, a linked property and an archived one', async () => {
+    const seller = await createOpportunity('seller');
+    await expect(
+      links.rejectFromMatch(broker.agencyId, broker.userId, { opportunity_id: seller.id, property_id: (await createProperty()).id }),
+    ).rejects.toEqual(new DomainError('properties.errors.relationNotAllowed'));
+
+    const buyer = await createOpportunity();
+    const property = await createProperty();
+    await addCandidate({ opportunity_id: buyer.id, property_id: property.id });
+    await expect(
+      links.rejectFromMatch(broker.agencyId, broker.userId, { opportunity_id: buyer.id, property_id: property.id }),
+    ).rejects.toEqual(new DomainError('opportunityProperties.errors.alreadyLinked'));
+
+    const archived = await createProperty();
+    await properties.setArchived(archived.id, broker.agencyId, true);
+    await expect(
+      links.rejectFromMatch(broker.agencyId, broker.userId, { opportunity_id: buyer.id, property_id: archived.id }),
+    ).rejects.toEqual(new DomainError('properties.errors.archived'));
+  });
+
   it('audits each status change as one property_link row', async () => {
     const opportunity = await createOpportunity();
     const property = await createProperty();

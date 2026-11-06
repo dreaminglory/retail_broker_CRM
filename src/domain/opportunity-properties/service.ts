@@ -12,8 +12,10 @@ import { OpportunityPropertyRepository } from './repository';
 import type { OpportunityProperty, OpportunityPropertyWithProperty, PropertyOpportunityLink } from './types';
 import {
   addCandidateSchema,
+  rejectFromMatchSchema,
   setLinkStatusSchema,
   type AddCandidateInput,
+  type RejectFromMatchInput,
   type SetLinkStatusInput,
 } from './validation';
 
@@ -56,6 +58,12 @@ export class OpportunityPropertyService {
   async addCandidate(agencyId: string, userId: string, input: AddCandidateInput): Promise<OpportunityProperty> {
     const parsed = addCandidateSchema.parse(input);
     return this.repo.create(agencyId, userId, { ...parsed, relation: 'candidate', status: 'candidate' });
+  }
+
+  /** "Not suitable" on a match: the link is created as rejected, so the match leaves the list (AD-060). */
+  async rejectFromMatch(agencyId: string, userId: string, input: RejectFromMatchInput): Promise<OpportunityProperty> {
+    const parsed = rejectFromMatchSchema.parse(input);
+    return this.repo.create(agencyId, userId, { ...parsed, relation: 'candidate', status: 'rejected', source: 'match' });
   }
 
   /** The one subject property of a seller or landlord deal (rule 5, L7, L10). */

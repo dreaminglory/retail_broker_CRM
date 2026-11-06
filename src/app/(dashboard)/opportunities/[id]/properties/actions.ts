@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { OpportunityPropertyService } from '@/domain/opportunity-properties/service';
 import type { OpportunityProperty } from '@/domain/opportunity-properties/types';
-import { addCandidateSchema, setLinkStatusSchema } from '@/domain/opportunity-properties/validation';
+import { addCandidateSchema, rejectFromMatchSchema, setLinkStatusSchema } from '@/domain/opportunity-properties/validation';
 import { getAuthContext, toActionError, type ActionResult } from '@/lib/actions';
 
 function revalidateLink(link: Pick<OpportunityProperty, 'opportunity_id' | 'property_id'>) {
@@ -41,6 +41,27 @@ export async function addMatchCandidateAction(opportunityId: string, propertyId:
     if (!parsed.success) return toActionError(parsed.error);
 
     const link = await new OpportunityPropertyService(supabase).addCandidate(agencyId, userId, parsed.data);
+    revalidateLink(link);
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+/** "Not suitable" on a match row: a rejected link with the optional reason, so the match leaves the list. */
+export async function rejectMatchAction(
+  opportunityId: string,
+  propertyId: string,
+  rejectedReason?: string | null,
+): Promise<ActionResult> {
+  try {
+    const { supabase, agencyId, userId } = await getAuthContext();
+    const parsed = rejectFromMatchSchema.safeParse({
+      opportunity_id: opportunityId,
+      property_id: propertyId,
+      rejected_reason: rejectedReason,
+    });
+    if (!parsed.success) return toActionError(parsed.error);
+
+    const link = await new OpportunityPropertyService(supabase).rejectFromMatch(agencyId, userId, parsed.data);
     revalidateLink(link);
     return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }

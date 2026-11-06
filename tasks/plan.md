@@ -101,7 +101,7 @@ and the seeded Alpha buyer's matches (scores and chips as SQL output) before any
 - [x] Task 8: E2E for the deal-side match loop
 - [x] Task 9: Matching deals on the property page (cut 3)
 - [x] Task 10: "from matches" marker on links (cut 2)
-- [ ] Task 11: Not suitable from matches (cut 1)
+- [x] Task 11: Not suitable from matches (cut 1)
 
 **Checkpoint 3:** every AC met, the full Definition of Done, `/review`; then close the module.
 

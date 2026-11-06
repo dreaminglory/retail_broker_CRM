@@ -282,7 +282,7 @@ function AddCandidateForm({
   );
 }
 
-function RejectForm({
+export function RejectForm({
   code,
   pending,
   onCancel,

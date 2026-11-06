@@ -71,6 +71,8 @@ export class OpportunityPropertyRepository {
       property_id: string;
       relation: PropertyLinkRelation;
       status: PropertyLinkStatus | null;
+      /** Only on a rejected candidate. */
+      rejected_reason?: string | null;
       /** Set on insert only (AD-060); the column is not updatable. */
       source?: PropertyLinkSource;
     },

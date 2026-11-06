@@ -1760,6 +1760,8 @@
     "openProperty": "Open property {code}",
     "addCandidate": "Add as candidate",
     "addCandidateFor": "Add {code} as candidate",
+    "notSuitable": "Not suitable",
+    "notSuitableFor": "Mark {code} as not suitable",
     "dealsTitleSale": "Matching buyers",
     "dealsTitleRent": "Matching tenants",
     "dealsTitleBoth": "Matching buyers and tenants",
