@@ -3,6 +3,9 @@ import { createRowCleanup, describeServices, signInAs, type TestSession } from '
 import { OpportunityService } from '@/domain/opportunities/service';
 import type { OpportunityType } from '@/domain/opportunities/types';
 import { RequirementService } from '@/domain/requirements/service';
+import { ListingService } from '@/domain/listings/service';
+import { OpportunityPropertyService } from '@/domain/opportunity-properties/service';
+import { PropertyService } from '@/domain/properties/service';
 import { SettlementService } from '@/domain/settlements/service';
 import { MatchingService } from './service';
 
@@ -73,31 +76,73 @@ describeServices('MatchingService against the local stack', () => {
       expect(en.rows.map((row) => row.property_id)).toEqual(bg.rows.map((row) => row.property_id));
     });
 
-    it('shows linked properties with their status when asked, and counts both views', async () => {
-      const fresh = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en');
-      const all = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en', { includeLinked: true });
+    // Own deal and own properties at a price no other suite uses, so concurrent suites that add
+    // and remove links on the seeded deal cannot change these counts.
+    describe('on a deal of its own', () => {
+      const PRICE = 777_000;
+      let dealId: string;
+      let linkedId: string;
+      const propertyIds: string[] = [];
 
-      expect(all.rows.find((row) => row.property_id === OFFERED_PROPERTY)?.link_status).toBe('offered');
-      expect(all.total).toBeGreaterThan(fresh.total);
-      expect(all.unlinked).toBe(fresh.total);
-    });
+      beforeAll(async () => {
+        const opportunity = await createOpportunity();
+        dealId = opportunity.id;
+        await new RequirementService(alpha.db).save(alpha.agencyId, dealId, {
+          ...anyRequirement(),
+          budget_min: PRICE - 5_000,
+          budget_max: PRICE + 5_000,
+          budget_must: true,
+        });
+        const properties = new PropertyService(alpha.db);
+        const listings = new ListingService(alpha.db);
+        for (let i = 0; i < 5; i++) {
+          const property = await properties.create(alpha.agencyId, alpha.userId, {
+            type: 'apartment',
+            rooms: 2,
+            settlement_id: sofiaId,
+            address: `ул. Съвпадение ${i + 1}`,
+          });
+          cleanup.track('properties', property.id);
+          await listings.create(alpha.agencyId, alpha.userId, { property_id: property.id, offer_type: 'sale', price: PRICE });
+          propertyIds.push(property.id);
+        }
+        const link = await new OpportunityPropertyService(alpha.db).addCandidate(alpha.agencyId, alpha.userId, {
+          opportunity_id: dealId,
+          property_id: propertyIds[0],
+        });
+        cleanup.track('opportunity_properties', link.id);
+        linkedId = propertyIds[0];
+      });
 
-    it('pages the result with stable totals', async () => {
-      const first = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en', { pageSize: 2 });
-      const second = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en', { pageSize: 2, page: 2 });
+      it('shows linked properties with their status when asked, and counts both views', async () => {
+        const fresh = await matching.forOpportunity(dealId, alpha.agencyId, 'en');
+        const all = await matching.forOpportunity(dealId, alpha.agencyId, 'en', { includeLinked: true });
 
-      expect(first.rows).toHaveLength(2);
-      expect(first).toMatchObject({ page: 1, pageSize: 2 });
-      expect(second.page).toBe(2);
-      expect(second.total).toBe(first.total);
-      expect(first.total).toBeGreaterThan(2);
-      const ids = [...first.rows, ...second.rows].map((row) => row.property_id);
-      expect(new Set(ids).size).toBe(ids.length);
+        expect(fresh).toMatchObject({ total: 4, unlinked: 4 });
+        expect(fresh.rows.map((row) => row.property_id)).not.toContain(linkedId);
+        expect(all).toMatchObject({ total: 5, unlinked: 4 });
+        expect(all.rows.find((row) => row.property_id === linkedId)?.link_status).toBe('candidate');
+      });
 
-      // A page past the end falls back to the first page, with the real counts.
-      const beyond = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en', { pageSize: 2, page: 999 });
-      expect(beyond).toMatchObject({ page: 1, total: first.total });
-      expect(beyond.rows.map((row) => row.property_id)).toEqual(first.rows.map((row) => row.property_id));
+      it('pages the result with stable totals', async () => {
+        const pages = [];
+        for (const page of [1, 2]) {
+          pages.push(await matching.forOpportunity(dealId, alpha.agencyId, 'en', { pageSize: 2, page }));
+        }
+
+        expect(pages.map((page) => page.rows.length)).toEqual([2, 2]);
+        expect(pages.every((page) => page.total === 4 && page.unlinked === 4)).toBe(true);
+        const ids = pages.flatMap((page) => page.rows.map((row) => row.property_id));
+        expect(new Set(ids).size).toBe(4);
+      });
+
+      it('falls back to the first page, with the real counts, for a page past the end', async () => {
+        const first = await matching.forOpportunity(dealId, alpha.agencyId, 'en', { pageSize: 2 });
+        const beyond = await matching.forOpportunity(dealId, alpha.agencyId, 'en', { pageSize: 2, page: 999 });
+
+        expect(beyond).toMatchObject({ page: 1, total: 4 });
+        expect(beyond.rows.map((row) => row.property_id)).toEqual(first.rows.map((row) => row.property_id));
+      });
     });
 
     it('returns an empty page for a deal without a requirement', async () => {
