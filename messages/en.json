@@ -1718,6 +1718,47 @@
     "subject": "Subject property",
     "closed": "Closed"
   },
+  "matching": {
+    "title": "Matching properties",
+    "newCount": "{count, plural, one {# new} other {# new}}",
+    "score": "Match {score}%",
+    "criteria": {
+      "type": "Type",
+      "rooms": "Rooms",
+      "area_m2": "Area",
+      "location": "Location",
+      "budget": "Price",
+      "budgetRent": "Rent",
+      "floor": "Floor",
+      "construction": "Construction"
+    },
+    "result": {
+      "match": "fits",
+      "close": "close",
+      "miss": "doesn't fit",
+      "unknown": "not recorded"
+    },
+    "mustHave": "must-have",
+    "areaNotRecorded": "Area: not recorded",
+    "plotNotRecorded": "Plot area: not recorded",
+    "areaM2": "{value} m²",
+    "plotM2": "{value} m² plot",
+    "showAll": "Show all ({count})",
+    "showFewer": "Show fewer",
+    "showLinked": "Show already offered",
+    "hideLinked": "Hide already offered",
+    "empty": "No properties fit this search yet.",
+    "emptyLinked": "No properties fit this search.",
+    "editRequirement": "Edit the search",
+    "noRequirement": "Add the client's search to see the properties that fit.",
+    "addRequirement": "Add the search",
+    "pagerLabel": "Matching properties pages",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "range": "{from}–{to} of {total}",
+    "openProperty": "Open property {code}"
+  },
   "PropertyViewing": {
     "schedule": "Schedule viewing",
     "deal": "Deal",

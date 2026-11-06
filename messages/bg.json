@@ -1718,6 +1718,47 @@
     "subject": "Имот обект",
     "closed": "Затворена"
   },
+  "matching": {
+    "title": "Подходящи имоти",
+    "newCount": "{count, plural, one {# нов} other {# нови}}",
+    "score": "Съвпадение {score}%",
+    "criteria": {
+      "type": "Вид",
+      "rooms": "Стаи",
+      "area_m2": "Площ",
+      "location": "Местоположение",
+      "budget": "Цена",
+      "budgetRent": "Наем",
+      "floor": "Етаж",
+      "construction": "Строителство"
+    },
+    "result": {
+      "match": "отговаря",
+      "close": "близо",
+      "miss": "не отговаря",
+      "unknown": "не е записано"
+    },
+    "mustHave": "задължително",
+    "areaNotRecorded": "Площ: не е записана",
+    "plotNotRecorded": "Площ на парцела: не е записана",
+    "areaM2": "{value} м²",
+    "plotM2": "{value} м² парцел",
+    "showAll": "Покажи всички ({count})",
+    "showFewer": "Покажи по-малко",
+    "showLinked": "Покажи вече предложените",
+    "hideLinked": "Скрий вече предложените",
+    "empty": "Все още няма имоти, които отговарят на търсенето.",
+    "emptyLinked": "Няма имоти, които отговарят на търсенето.",
+    "editRequirement": "Промени търсенето",
+    "noRequirement": "Добавете търсенето на клиента, за да видите подходящите имоти.",
+    "addRequirement": "Добави търсене",
+    "pagerLabel": "Страници с подходящи имоти",
+    "prev": "Назад",
+    "next": "Напред",
+    "pageOf": "Страница {page} от {pages}",
+    "range": "{from}–{to} от {total}",
+    "openProperty": "Отвори имот {code}"
+  },
   "PropertyViewing": {
     "schedule": "Насрочи оглед",
     "deal": "Сделка",

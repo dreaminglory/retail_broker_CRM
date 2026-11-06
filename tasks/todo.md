@@ -177,13 +177,13 @@ code, type, rooms, m², settlement and area, price and listing status (Reserved 
 `matching.*` in both message files.
 
 **Acceptance criteria:**
-- [ ] On the seeded Alpha buyer the 100% Lozenets row shows first with all chips ✓, the `?` row shows "not recorded" on m², the reserved row is last with its badge (AC-1, -2, -3)
-- [ ] The toggle shows the seeded linked candidates with their statuses; the pager and "Show all" work; a won deal shows no section (AC-4 part, rule 8)
-- [ ] BG and EN at 1280 and 390 px; no hardcoded strings (AC-9 part)
+- [x] On the seeded Alpha buyer the 100% Lozenets row shows first with all chips ✓, the `?` row shows "not recorded" on m², the reserved row is last with its badge (AC-1, -2, -3)
+- [x] The toggle shows the seeded linked candidates with their statuses; the pager and "Show all" work; a won deal shows no section (AC-4 part, rule 8)
+- [x] BG and EN at 1280 and 390 px; no hardcoded strings (AC-9 part)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
-- [ ] Browser: Alpha buyer deal in `bg` and `en` at 1280 and 390 px
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] Browser: Alpha buyer deal in `bg` and `en` at 1280 and 390 px
 
 **Dependencies:** Task 5
 **Files likely touched:** `src/components/domain/matching/{property-matches-section,match-row,match-chips}.tsx`, `src/app/(dashboard)/opportunities/[id]/page.tsx`, `src/app/(dashboard)/opportunities/[id]/opportunity-detail-client.tsx`, `messages/{bg,en}.json`

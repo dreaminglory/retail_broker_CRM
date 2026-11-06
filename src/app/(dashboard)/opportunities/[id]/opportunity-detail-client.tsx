@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,8 @@ interface OpportunityDetailClientProps {
   propertyLinks: OpportunityPropertyWithProperty[];
   /** The client's search; null on a buyer or tenant deal without one, and on seller or landlord deals. */
   requirement: Requirement | null;
+  /** The server-rendered matches section (spec: matching); null on a closed or non-buyer/tenant deal. */
+  matchesSection?: ReactNode;
   // inquiry?: Inquiry; // Optionally show inquiry details
 }
 
@@ -77,6 +79,7 @@ export function OpportunityDetailClient({
   currentUserId,
   timeZone,
   propertyLinks,
+  matchesSection,
   requirement,
 }: OpportunityDetailClientProps) {
   const t = useTranslations("OpportunityDetail");
@@ -274,6 +277,7 @@ export function OpportunityDetailClient({
                 opportunityType={opportunity.type}
                 editable={requirementEditable(opportunity.status)}
               />
+              {matchesSection}
               <PropertyLinks opportunityId={opportunity.id} links={propertyLinks} />
             </>
           ) : (
