@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { PropertyLinkStatus } from './types';
+import type { PropertyLinkSource, PropertyLinkStatus } from './types';
 
 /** In the order a deal usually moves through them. */
 export const PROPERTY_LINK_STATUSES = [
@@ -10,16 +10,31 @@ export const PROPERTY_LINK_STATUSES = [
   'selected',
 ] as const satisfies readonly PropertyLinkStatus[];
 
+/** Where a link came from (AD-060). The app sets `manual` or `match`; `viewing` is set by the database only. */
+export const APP_LINK_SOURCES = ['manual', 'match'] as const satisfies readonly PropertyLinkSource[];
+
 export const addCandidateSchema = z.object({
   opportunity_id: z.string().uuid(),
   property_id: z.string({ required_error: 'validation.property_required' }).uuid('validation.property_required'),
+  source: z.enum(APP_LINK_SOURCES).default('manual'),
 });
+
+const rejectedReason = z.string().trim().max(500, 'validation.rejected_reason_too_long').nullish();
+
+/** "Not suitable" on a match: the link is created as rejected, with an optional reason (AD-060). */
+export const rejectFromMatchSchema = z
+  .object({
+    opportunity_id: z.string().uuid(),
+    property_id: z.string({ required_error: 'validation.property_required' }).uuid('validation.property_required'),
+    rejected_reason: rejectedReason,
+  })
+  .transform(({ rejected_reason, ...link }) => ({ ...link, rejected_reason: rejected_reason || null }));
 
 /** Rule 6: any status may follow any other; a reason only on `rejected`, and optional there. */
 export const setLinkStatusSchema = z
   .object({
     status: z.enum(PROPERTY_LINK_STATUSES),
-    rejected_reason: z.string().trim().max(500, 'validation.rejected_reason_too_long').nullish(),
+    rejected_reason: rejectedReason,
   })
   .transform(({ status, rejected_reason }) => ({
     status,
@@ -27,4 +42,5 @@ export const setLinkStatusSchema = z
   }));
 
 export type AddCandidateInput = z.input<typeof addCandidateSchema>;
+export type RejectFromMatchInput = z.input<typeof rejectFromMatchSchema>;
 export type SetLinkStatusInput = z.input<typeof setLinkStatusSchema>;

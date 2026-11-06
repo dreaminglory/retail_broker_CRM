@@ -420,3 +420,69 @@ BEGIN
 
   PERFORM set_config('request.jwt.claims', '', true);
 END $$;
+
+-- ==============================================================================
+-- Matching (spec: matching, Task 4, AD-060). New properties that hit every match result for
+-- the seeded requirements. Alpha Opp 1 (buyer): apartment or maisonette, 2–3 rooms, Лозенец or
+-- Център, €150–200k, not top floor, brick; type, budget and location are must-haves.
+--   ...9011  exact: 2-room Лозенец at €185,000                    100%
+--   ...9012  3-room Лозенец at €209,000                           budget "close" on a must-have: hidden
+--   ...9013  2-room Лозенец, no m², no construction at €175,000   "?" on construction
+--   ...9014  3-room Център, reserved at €195,000                  100%, listed after the active ones
+--   ...9015  2-room Лозенец, rent only at €750                    never shown to a buyer
+-- Beta Opp 2 (buyer) gets an exact match, a near miss and one with unrecorded values; Beta Opp 3
+-- (tenant, Тракия must-have) the same.
+-- ==============================================================================
+DO $$
+DECLARE
+  v_agency_1 UUID := '11111111-1111-1111-1111-111111111111';
+  v_broker_1 UUID := '11111111-4444-4444-4444-444444444444';
+  v_agency_2 UUID := '22222222-1111-1111-1111-111111111111';
+  v_broker_2 UUID := '22222222-4444-4444-4444-444444444444';
+
+  v_sofia   UUID := (SELECT id FROM public.settlements WHERE ekatte = '68134');
+  v_plovdiv UUID := (SELECT id FROM public.settlements WHERE ekatte = '56784');
+
+  v_a1_lozenets UUID := '11111111-8888-0000-0000-000000000001';
+  v_a1_center   UUID := '11111111-8888-0000-0000-000000000003';
+  v_a2_lozenets UUID := '22222222-8888-0000-0000-000000000001';
+  v_a2_trakia   UUID := '22222222-8888-0000-0000-000000000005';
+BEGIN
+  -- One row per insert so the codes follow this order.
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('11111111-9999-0000-0000-000000000011', v_agency_1, 0, 'apartment', 2, 72,   3, 6, 'brick', 2010, v_sofia, v_a1_lozenets, 'ул. Незабравка 4, ап. 8',   v_broker_1, 'Съвпада напълно с търсенето на Иван.');
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('11111111-9999-0000-0000-000000000012', v_agency_1, 0, 'apartment', 3, 90,   2, 6, 'brick', 2014, v_sofia, v_a1_lozenets, 'ул. Хубча 9, ап. 5',      v_broker_1, NULL);
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('11111111-9999-0000-0000-000000000013', v_agency_1, 0, 'apartment', 2, NULL, 3, 6, NULL,    NULL, v_sofia, v_a1_lozenets, 'ул. Крум Попов 21, ап. 12', v_broker_1, 'Квадратура и строителство още не са вписани.');
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('11111111-9999-0000-0000-000000000014', v_agency_1, 0, 'apartment', 3, 88,   2, 5, 'brick', 2016, v_sofia, v_a1_center,   'ул. Граф Игнатиев 15, ап. 4', v_broker_1, NULL);
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('11111111-9999-0000-0000-000000000015', v_agency_1, 0, 'apartment', 2, 65,   2, 4, 'brick', 2005, v_sofia, v_a1_lozenets, 'ул. Златен рог 3, ап. 6',  v_broker_1, 'Само под наем.');
+
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('22222222-9999-0000-0000-000000000011', v_agency_2, 0, 'apartment', 3, 90,   3, 5, 'brick', 2013, v_sofia, v_a2_lozenets, 'ул. Козяк 7, ап. 10',     v_broker_2, NULL);
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('22222222-9999-0000-0000-000000000012', v_agency_2, 0, 'apartment', 3, 88,   3, 5, 'brick', 2015, v_sofia, v_a2_lozenets, 'ул. Хаджикоцев 2, ап. 3', v_broker_2, NULL);
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('22222222-9999-0000-0000-000000000013', v_agency_2, 0, 'apartment', 3, NULL, NULL, 5, 'brick', 2011, v_sofia, v_a2_lozenets, 'ул. Златовръх 11, ап. 2', v_broker_2, 'Етаж и квадратура не са вписани.');
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('22222222-9999-0000-0000-000000000014', v_agency_2, 0, 'studio',    NULL, 40, 3, 6, 'brick', 2009, v_plovdiv, v_a2_trakia,  'ул. Тракия 17, ап. 9',    v_broker_2, NULL);
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('22222222-9999-0000-0000-000000000015', v_agency_2, 0, 'studio',    NULL, 42, 2, 6, 'brick', 2009, v_plovdiv, v_a2_trakia,  'ул. Тракия 17, ап. 4',    v_broker_2, NULL);
+  INSERT INTO public.properties (id, agency_id, code, type, rooms, area_m2, floor, floors_total, construction, year_built, settlement_id, area_id, address, assigned_to, description) VALUES
+  ('22222222-9999-0000-0000-000000000016', v_agency_2, 0, 'apartment', 2, 55,   2, 4, 'brick', 1999, v_plovdiv, NULL,          'ул. Брезовско шосе 40, ап. 7', v_broker_2, 'Кварталът не е вписан.');
+
+  INSERT INTO public.listings (agency_id, property_id, offer_type, price, status, listed_at) VALUES
+  (v_agency_1, '11111111-9999-0000-0000-000000000011', 'sale', 185000, 'active',   now() - interval '6 days'),
+  (v_agency_1, '11111111-9999-0000-0000-000000000012', 'sale', 209000, 'active',   now() - interval '9 days'),
+  (v_agency_1, '11111111-9999-0000-0000-000000000013', 'sale', 175000, 'active',   now() - interval '4 days'),
+  (v_agency_1, '11111111-9999-0000-0000-000000000014', 'sale', 195000, 'reserved', now() - interval '14 days'),
+  (v_agency_1, '11111111-9999-0000-0000-000000000015', 'rent', 750,    'active',   now() - interval '2 days'),
+  (v_agency_2, '22222222-9999-0000-0000-000000000011', 'sale', 250000, 'active',   now() - interval '8 days'),
+  (v_agency_2, '22222222-9999-0000-0000-000000000012', 'sale', 310000, 'active',   now() - interval '10 days'),
+  (v_agency_2, '22222222-9999-0000-0000-000000000013', 'sale', 230000, 'active',   now() - interval '3 days'),
+  (v_agency_2, '22222222-9999-0000-0000-000000000014', 'rent', 500,    'active',   now() - interval '5 days'),
+  (v_agency_2, '22222222-9999-0000-0000-000000000015', 'rent', 660,    'active',   now() - interval '6 days'),
+  (v_agency_2, '22222222-9999-0000-0000-000000000016', 'rent', 550,    'active',   now() - interval '1 day');
+END $$;

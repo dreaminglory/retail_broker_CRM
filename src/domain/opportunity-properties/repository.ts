@@ -4,6 +4,7 @@ import type { Property } from '@/domain/properties/types';
 import type {
   OpportunityProperty,
   PropertyLinkRelation,
+  PropertyLinkSource,
   PropertyLinkStatus,
   PropertyOpportunityLink,
 } from './types';
@@ -65,7 +66,16 @@ export class OpportunityPropertyRepository {
   async create(
     agencyId: string,
     userId: string,
-    input: { opportunity_id: string; property_id: string; relation: PropertyLinkRelation; status: PropertyLinkStatus | null },
+    input: {
+      opportunity_id: string;
+      property_id: string;
+      relation: PropertyLinkRelation;
+      status: PropertyLinkStatus | null;
+      /** Only on a rejected candidate. */
+      rejected_reason?: string | null;
+      /** Set on insert only (AD-060); the column is not updatable. */
+      source?: PropertyLinkSource;
+    },
   ): Promise<OpportunityProperty> {
     const { data, error } = await this.db
       .from('opportunity_properties')

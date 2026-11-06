@@ -11,16 +11,23 @@ import { getAgencySettings } from "@/domain/agencies/settings";
 import { getLocale } from "next-intl/server";
 import { OpportunityPropertyService } from "@/domain/opportunity-properties/service";
 import { RequirementService } from "@/domain/requirements/service";
+import { MatchingService } from "@/domain/matching/service";
+import { PropertyMatchesSection } from "@/components/domain/matching/property-matches-section";
+import { MATCH_PREVIEW_SIZE } from "@/components/domain/matching/match-list-controls";
+import { DEAL_MATCH_KEYS, matchBaseParams, parseMatchView } from "@/components/domain/matching/match-params";
 import type { Locale } from "@/i18n/config";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 export default async function OpportunityDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const supabase = await createSupabaseServer();
   const {
     data: { user },
@@ -43,7 +50,11 @@ export default async function OpportunityDetailPage({
   // Fetch parallel dependencies
   const locale = (await getLocale()) as Locale;
   const hasRequirement = opportunity.type === "buyer" || opportunity.type === "tenant";
-  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks, requirement] = await Promise.all([
+  // Matches (spec: matching): only buyer and tenant deals that are still open. A deal without a
+  // requirement has no matches, so the database returns an empty page for it.
+  const view = parseMatchView(query);
+  const showMatches = hasRequirement && (opportunity.status === "active" || opportunity.status === "nurture");
+  const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks, requirement, matches] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     // Only the contacts this opportunity links to; pickers search the agency on demand.
@@ -64,7 +75,16 @@ export default async function OpportunityDetailPage({
     new OpportunityPropertyService(supabase).listForOpportunity(id, agencyId, locale),
     // Seller and landlord deals have no requirement (rule 1).
     hasRequirement ? new RequirementService(supabase).getForOpportunity(id, agencyId, locale) : null,
+    showMatches
+      ? new MatchingService(supabase).forOpportunity(id, agencyId, locale, {
+          includeLinked: view.linked,
+          page: view.all ? view.page : 1,
+          pageSize: view.all ? undefined : MATCH_PREVIEW_SIZE,
+        })
+      : null,
   ]);
+
+  const baseParams = matchBaseParams(query, DEAL_MATCH_KEYS, view, matches?.page ?? 1);
 
   // A fresh `now` per render: relative times match between the server and hydration.
   return (
@@ -82,6 +102,18 @@ export default async function OpportunityDetailPage({
           timeZone={settings.timezone}
           propertyLinks={propertyLinks}
           requirement={requirement}
+          matchesSection={
+            matches ? (
+              <PropertyMatchesSection
+                opportunityId={id}
+                opportunityType={opportunity.type}
+                hasRequirement={!!requirement}
+                matches={matches}
+                view={view}
+                baseParams={baseParams}
+              />
+            ) : null
+          }
         />
       </div>
     </FreshNowProvider>

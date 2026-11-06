@@ -39,6 +39,7 @@ export async function PropertyOpportunities({
                     <span className="truncate text-sm font-medium">{link.opportunity.title}</span>
                     <span className="text-xs text-muted-foreground">{enums(`opportunityType.${link.opportunity.type}`)}</span>
                     {closed && <Badge variant="outline">{t("closed")}</Badge>}
+                    {link.source === "match" && <Badge variant="secondary">{enums("propertyLinkSource.match")}</Badge>}
                   </span>
                   <Badge variant="secondary">
                     {link.status ? enums(`propertyLinkStatus.${link.status}`) : t("subject")}

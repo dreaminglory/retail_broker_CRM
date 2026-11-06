@@ -10,6 +10,9 @@ export type PropertyLinkRelation = 'subject' | 'candidate';
 
 export type PropertyLinkStatus = 'candidate' | 'viewed' | 'offered' | 'rejected' | 'selected';
 
+/** How a link came to exist (AD-060): set on insert, never changed. */
+export type PropertyLinkSource = 'manual' | 'match' | 'viewing';
+
 export type OpportunityProperty = {
   id: string;
   agency_id: string;
@@ -20,6 +23,7 @@ export type OpportunityProperty = {
   status: PropertyLinkStatus | null;
   /** Only on a rejected candidate. */
   rejected_reason: string | null;
+  source: PropertyLinkSource;
   created_by: string | null;
   created_at: string;
   updated_at: string;

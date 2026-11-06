@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 52nd migration
-(`20261105000003_requirement_review_fixes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 55th migration
+(`20261106000003_match_lists.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -473,6 +473,38 @@ them; it is what the `CHECK`s and the audit see of the locations. A min and max 
 as one line above (`budget_min`, `budget_max`, and so on); `x_must` stands for the seven
 must-have flags. `matching` treats a must-have as a filter and the rest as score.
 
+### 2.9 Matching
+
+`spec/matching.md`, AD-060. No table: a match is computed when it is read from `requirements`
+(with `location_keys`), `properties`, `listings` and `opportunity_properties`.
+
+- **`match_evaluate(requirement, property, listing) → jsonb { score, listed, criteria }`**:
+  `IMMUTABLE`, reads only its arguments, the only place the rules live. `criteria` has one
+  `{ criterion, result, must }` per criterion the requirement sets, in reading order (type,
+  rooms, area_m2, location, budget, floor, construction); `result` is `match | close | miss |
+  unknown | n/a`. `listed` = no must-have is close or miss, at least one applicable criterion,
+  score above 0. Financing and wishes are never matched.
+- **`match_properties(opportunity, include_linked, limit, offset)`** and
+  **`match_opportunities(property, include_linked, limit, offset)`**: `SECURITY INVOKER` plus an
+  explicit `current_agency_id()` filter. Open (`active`/`reserved`) listings of an active
+  property against requirements of `active`/`nurture` buyer (sale) and tenant (rent) deals.
+  Ordered reserved last, then score, then newest listing (deal side) or most recently updated
+  deal (property side), then id. Each row carries `link_status`, `total_count` (rows in this
+  view) and `unlinked_count` (new matches); a page past the end returns no rows. `limit` is
+  capped at 100. Measured at 2,000 properties + 2,000 requirements (`scripts/matching/scale.sql`):
+  p95 about 150 ms each.
+- **`opportunity_properties.source`** (`manual | match | viewing`, default `manual`), set on
+  insert only; a completed viewing that creates a link writes `viewing`. The app sets `manual`
+  or `match` (`addCandidateSchema` refuses `viewing`).
+- **App side** (`src/domain/matching/`): `MatchingService` pages the two functions (a page past
+  the end returns page 1) and adds names; `toChips` maps `criteria` to chips without computing a
+  result. Writes reuse `OpportunityPropertyService`: **Add as candidate / Add to this deal**
+  creates a `candidate` link with `source = match`; **Not suitable** (`rejectFromMatch`) creates a
+  `rejected` link with the optional reason and `source = match`, so the property leaves the new
+  matches. Links with `source = match` show "From matches" on both pages. Screens: the deal's
+  "Подходящи имоти" section, and the property's "Подходящи купувачи / наематели" section (one
+  section; a property listed for sale and rent shows both kinds of deal with their type).
+
 ---
 
 ## 3. Lifecycles
@@ -737,6 +769,7 @@ The "Enforced by" column tells you which layer to change and test.
 | Q6 | Requirements and their locations point only at their own agency's rows; members read their own agency's and write neither directly (rule 10, AD-059) | composite FKs, RLS `SELECT` only, writes revoked + `077-requirements.sql` |
 | Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
 | Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
+| L19 | A link's `source` is `manual`, `match` or `viewing`, set on insert and never updated; the app may send `manual` or `match` (a member could send `match`: it only feeds a measurement) (AD-060) | `CHECK opportunity_properties_source_check`, column `UPDATE` privileges (AD-058), trigger `mark_property_viewed` + `080-matching.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
@@ -806,6 +839,10 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Subject property | Обект на сделката | The property a seller or landlord deal is about | |
 | Requirement | Изисквания | What a buyer or tenant is looking for, on the opportunity (plural, as brokers say it) | |
 | Must-have | Задължително | A requirement criterion `matching` treats as a filter | |
+| Match (on a deal) | Подходящ имот | A property that fits a buyer's or tenant's requirement | |
+| Match (on a property) | Подходящ купувач / наемател | A buyer or tenant deal the property fits | |
+| Match score | Съвпадение | Share of the applicable criteria met, shown as "Съвпадение 85%" | |
+| Close | Близо | A criterion missed by a small tolerance; half credit | |
 
 ---
 

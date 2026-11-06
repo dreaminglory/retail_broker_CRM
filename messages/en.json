@@ -793,6 +793,11 @@
       "rejected": "Rejected",
       "selected": "Selected"
     },
+    "propertyLinkSource": {
+      "manual": "Added by hand",
+      "match": "From matches",
+      "viewing": "From a viewing"
+    },
     "financing": {
       "cash": "Cash",
       "mortgage": "Mortgage",
@@ -1712,6 +1717,59 @@
     "empty": "This property isn't linked to any deal yet.",
     "subject": "Subject property",
     "closed": "Closed"
+  },
+  "matching": {
+    "title": "Matching properties",
+    "newCount": "{count, plural, one {# new} other {# new}}",
+    "score": "Match {score}%",
+    "criteria": {
+      "type": "Type",
+      "rooms": "Rooms",
+      "area_m2": "Area",
+      "location": "Location",
+      "budget": "Price",
+      "budgetRent": "Rent",
+      "floor": "Floor",
+      "construction": "Construction"
+    },
+    "result": {
+      "match": "fits",
+      "close": "close",
+      "miss": "doesn't fit",
+      "unknown": "not recorded"
+    },
+    "mustHave": "must-have",
+    "areaNotRecorded": "Area: not recorded",
+    "plotNotRecorded": "Plot area: not recorded",
+    "areaM2": "{value} m²",
+    "plotM2": "{value} m² plot",
+    "showAll": "Show all ({count})",
+    "showFewer": "Show fewer",
+    "showLinked": "Show already offered",
+    "hideLinked": "Hide already offered",
+    "empty": "No properties fit this search yet.",
+    "emptyLinked": "No properties fit this search.",
+    "editRequirement": "Edit the search",
+    "noRequirement": "Add the client's search to see the properties that fit.",
+    "addRequirement": "Add the search",
+    "pagerLabel": "Matching properties pages",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "range": "{from}–{to} of {total}",
+    "openProperty": "Open property {code}",
+    "addCandidate": "Add as candidate",
+    "addCandidateFor": "Add {code} as candidate",
+    "notSuitable": "Not suitable",
+    "notSuitableFor": "Mark {code} as not suitable",
+    "dealsTitleSale": "Matching buyers",
+    "dealsTitleRent": "Matching tenants",
+    "dealsTitleBoth": "Matching buyers and tenants",
+    "dealsEmpty": "No buyer or tenant deals fit this property yet.",
+    "dealsEmptyLinked": "No buyer or tenant deals fit this property.",
+    "broker": "Broker: {name}",
+    "addToDeal": "Add to this deal",
+    "addToDealFor": "Add to {title}"
   },
   "PropertyViewing": {
     "schedule": "Schedule viewing",
