@@ -8,6 +8,8 @@ const inquiries = {
   edit: vi.fn(),
   create: vi.fn(),
   convert: vi.fn(),
+  join: vi.fn(),
+  listJoinable: vi.fn(),
   findConversionDuplicates: vi.fn(),
 };
 const notifyInquiryAssigned = vi.fn();
@@ -26,6 +28,8 @@ vi.mock('@/domain/inquiries/service', () => ({
     edit = inquiries.edit;
     create = inquiries.create;
     convert = inquiries.convert;
+    join = inquiries.join;
+    listJoinable = inquiries.listJoinable;
     findConversionDuplicates = inquiries.findConversionDuplicates;
   },
 }));
@@ -35,7 +39,14 @@ vi.mock('../notify-after', () => ({
   },
 }));
 
-const { convertInquiryAction, createInquiryAction, reassignInquiryAction, updateInquiryAction } = await import('./actions');
+const {
+  convertInquiryAction,
+  createInquiryAction,
+  joinInquiryAction,
+  listJoinableOpportunitiesAction,
+  reassignInquiryAction,
+  updateInquiryAction,
+} = await import('./actions');
 
 const ME = 'user-me';
 const COLLEAGUE = '11111111-1111-4111-8111-111111111111';
@@ -266,5 +277,110 @@ describe('convertInquiryAction', () => {
 
     expect(result.success).toBe(false);
     expect(scheduled).toHaveLength(0);
+  });
+});
+
+describe('joinInquiryAction', () => {
+  const CONTACT = '33333333-3333-4333-8333-333333333333';
+  const DEAL = '44444444-4444-4444-8444-444444444444';
+  const joined = {
+    inquiryId: 'inq-1',
+    opportunityId: DEAL,
+    ownerId: COLLEAGUE,
+    previousAssignee: OTHER,
+    callerName: 'Maria',
+    reactivated: false,
+  };
+
+  function joinForm(task: unknown = { title: 'Call back', due_at: '2026-12-01T10:00:00Z' }): FormData {
+    const form = new FormData();
+    form.set('contact_id', CONTACT);
+    form.set('opportunity_id', DEAL);
+    if (task) form.set('task', JSON.stringify(task));
+    return form;
+  }
+
+  beforeEach(() => {
+    inquiries.join.mockReset().mockResolvedValue(joined);
+  });
+
+  it('returns the deal and sends the call back to the service', async () => {
+    const result = await joinInquiryAction('inq-1', { success: true, data: undefined }, joinForm());
+
+    expect(result).toEqual({ success: true, data: { opportunityId: DEAL, reactivated: false } });
+    expect(inquiries.join).toHaveBeenCalledWith('inq-1', 'agency-1', {
+      contact_id: CONTACT,
+      opportunity_id: DEAL,
+      task: { title: 'Call back', due_at: '2026-12-01T10:00:00Z' },
+    });
+  });
+
+  it('joins without a call back when none is sent', async () => {
+    await joinInquiryAction('inq-1', { success: true, data: undefined }, joinForm(null));
+
+    expect(inquiries.join).toHaveBeenCalledWith('inq-1', 'agency-1', expect.objectContaining({ task: null }));
+  });
+
+  it('emails the deal owner when it is a colleague who did not have the inquiry (AC-6)', async () => {
+    await joinInquiryAction('inq-1', { success: true, data: undefined }, joinForm());
+    await runScheduled();
+
+    expect(notifyInquiryAssigned).toHaveBeenCalledWith({
+      agencyId: 'agency-1',
+      assigneeId: COLLEAGUE,
+      inquiryId: 'inq-1',
+      callerName: 'Maria',
+      opportunityId: DEAL,
+    });
+  });
+
+  it.each([
+    ['the owner already had the inquiry', { ownerId: COLLEAGUE, previousAssignee: COLLEAGUE }],
+    ['the owner is the person joining', { ownerId: ME }],
+    ['the deal has no owner', { ownerId: null }],
+  ])('sends nothing when %s', async (_name, override) => {
+    inquiries.join.mockResolvedValue({ ...joined, ...override });
+
+    await joinInquiryAction('inq-1', { success: true, data: undefined }, joinForm());
+
+    expect(scheduled).toHaveLength(0);
+  });
+
+  it('returns a validation error and calls nothing when the deal is missing', async () => {
+    const form = joinForm();
+    form.delete('opportunity_id');
+
+    const result = await joinInquiryAction('inq-1', { success: true, data: undefined }, form);
+
+    expect(result.success).toBe(false);
+    expect(inquiries.join).not.toHaveBeenCalled();
+  });
+
+  it('returns the error and sends nothing when the join is refused', async () => {
+    const { DomainError } = await import('@/lib/errors');
+    inquiries.join.mockRejectedValue(new DomainError('errors.inquiries.join_closed_opportunity'));
+
+    const result = await joinInquiryAction('inq-1', { success: true, data: undefined }, joinForm());
+
+    expect(result.success).toBe(false);
+    expect(scheduled).toHaveLength(0);
+  });
+});
+
+describe('listJoinableOpportunitiesAction', () => {
+  it('returns the contact\'s deals', async () => {
+    inquiries.listJoinable.mockResolvedValue([{ id: 'deal-1' }]);
+
+    const result = await listJoinableOpportunitiesAction('33333333-3333-4333-8333-333333333333');
+
+    expect(result).toEqual({ success: true, data: [{ id: 'deal-1' }] });
+    expect(inquiries.listJoinable).toHaveBeenCalledWith('agency-1', '33333333-3333-4333-8333-333333333333');
+  });
+
+  it('refuses something that is not a contact id', async () => {
+    const result = await listJoinableOpportunitiesAction('nope');
+
+    expect(result.success).toBe(false);
+    expect(inquiries.listJoinable).not.toHaveBeenCalled();
   });
 });

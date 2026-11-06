@@ -4,6 +4,7 @@ import {
   convertInquirySchema,
   createInquirySchema,
   editInquirySchemaFor,
+  joinInquirySchema,
   updateInquirySchema,
 } from './validation';
 
@@ -208,5 +209,33 @@ describe('callerContactMethods', () => {
 
   it('returns nothing when the caller left no details', () => {
     expect(callerContactMethods({ caller_phone: null, caller_email: null })).toEqual([]);
+  });
+});
+
+describe('joinInquirySchema', () => {
+  const CONTACT_ID = '33333333-3333-4333-8333-333333333333';
+  const base = { contact_id: CONTACT_ID, opportunity_id: STAGE_ID };
+
+  it('accepts a join with a call back', () => {
+    const parsed = joinInquirySchema.parse({
+      ...base,
+      task: { title: '  Call Ivan back  ', due_at: '2026-12-01T10:00:00Z' },
+    });
+    expect(parsed.task).toEqual({ title: 'Call Ivan back', due_at: '2026-12-01T10:00:00Z' });
+  });
+
+  it('accepts a join without a call back', () => {
+    expect(joinInquirySchema.parse({ ...base, task: null }).task).toBeNull();
+  });
+
+  it.each([
+    ['a missing contact', { opportunity_id: STAGE_ID, task: null }, 'validation.contact_required'],
+    ['a missing deal', { contact_id: CONTACT_ID, task: null }, 'validation.opportunity_required'],
+    ['an empty title', { ...base, task: { title: '  ', due_at: '2026-12-01T10:00:00Z' } }, 'validation.task_title_required'],
+    ['an invalid due date', { ...base, task: { title: 'Call', due_at: 'tomorrow' } }, 'validation.due_at_invalid'],
+  ])('refuses %s with a key', (_name, input, key) => {
+    const result = joinInquirySchema.safeParse(input);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => i.message)).toContain(key);
   });
 });

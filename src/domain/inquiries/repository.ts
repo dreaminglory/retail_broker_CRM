@@ -4,7 +4,8 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Inquiry, CreateInquiryInput, UpdateInquiryInput } from './types';
+import type { Inquiry, CreateInquiryInput, UpdateInquiryInput, JoinableOpportunity } from './types';
+import { ProfileRepository } from '../profiles/repository';
 import { DomainError } from '@/lib/errors';
 
 export interface InquiryListOptions {
@@ -17,6 +18,55 @@ export interface InquiryListOptions {
 
 export class InquiryRepository {
   constructor(private readonly db: SupabaseClient) {}
+
+  /**
+   * The contact's open deals (active or nurture), as primary contact or participant, newest
+   * first. It only shapes the list: join_inquiry re-checks every rule (AD-061).
+   */
+  async findJoinableOpportunities(agencyId: string, contactId: string): Promise<JoinableOpportunity[]> {
+    const { data: participations, error: participantError } = await this.db
+      .from('opportunity_participants')
+      .select('opportunity_id')
+      .eq('agency_id', agencyId)
+      .eq('contact_id', contactId);
+    if (participantError) {
+      throw new DomainError('errors.loadFailed', `Failed to load participations: ${participantError.message}`);
+    }
+
+    const ids = (participations ?? []).map((p) => p.opportunity_id as string);
+    const match = ids.length > 0
+      ? `primary_contact_id.eq.${contactId},id.in.(${ids.join(',')})`
+      : `primary_contact_id.eq.${contactId}`;
+
+    const { data, error } = await this.db
+      .from('opportunities')
+      .select('id, title, type, status, assigned_to, next_action_at, stages(name)')
+      .eq('agency_id', agencyId)
+      .in('status', ['active', 'nurture'])
+      .or(match)
+      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(20);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to load joinable deals: ${error.message}`);
+
+    const rows = data ?? [];
+    const owners = await new ProfileRepository(this.db).getProfilesByIds(
+      rows.map((r) => r.assigned_to).filter((id): id is string => !!id)
+    );
+    return rows.map((r) => {
+      const stage = r.stages as unknown as { name: string } | { name: string }[] | null;
+      return {
+        id: r.id,
+        title: r.title,
+        type: r.type,
+        status: r.status,
+        stage_name: (Array.isArray(stage) ? stage[0]?.name : stage?.name) ?? '',
+        assigned_to: r.assigned_to,
+        owner_name: r.assigned_to ? owners.get(r.assigned_to)?.display_name ?? null : null,
+        next_action_at: r.next_action_at,
+      } as JoinableOpportunity;
+    });
+  }
 
   async findAll(agencyId: string, opts: InquiryListOptions = {}): Promise<Inquiry[]> {
     const { rows } = await this.findPage(agencyId, opts);

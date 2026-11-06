@@ -90,7 +90,7 @@ Full tasks with acceptance criteria and verification: `tasks/todo.md`.
 - [ ] Founder reviews AD-061 and the spike result before any screen
 
 ### Phase 2: Join
-- [ ] Task 5: Joinable deals, `InquiryService.join` and `joinInquiryAction` (M)
+- [x] Task 5: Joinable deals, `InquiryService.join` and `joinInquiryAction` (M)
 - [ ] Task 6: Join step in the convert dialog and "Joined to" on the inquiry card (M)
 - [ ] Task 7: Inquiries on the opportunity timeline (S)
 

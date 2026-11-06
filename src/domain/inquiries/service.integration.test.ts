@@ -225,3 +225,181 @@ describeServices('InquiryService against the local stack', () => {
     });
   });
 });
+
+describeServices('InquiryService.join against the local stack', () => {
+  const cleanup = createRowCleanup();
+  let broker: TestSession;
+  let manager: TestSession;
+  let inquiries: InquiryService;
+  let stageId: string;
+  let contactId: string;
+
+  beforeAll(async () => {
+    broker = await signInAs('broker@alpha.bg');
+    manager = await signInAs('manager@alpha.bg');
+    inquiries = new InquiryService(broker.db);
+    const { data: stage } = await broker.db
+      .from('stages')
+      .select('id')
+      .eq('agency_id', broker.agencyId)
+      .eq('name', 'New')
+      .single();
+    stageId = stage!.id;
+    const contact = await new ContactService(broker.db).create(broker.agencyId, broker.userId, {
+      type: 'person',
+      first_name: 'Joiner',
+      last_name: 'Test',
+    });
+    cleanup.track('contacts', contact.id);
+    contactId = contact.id;
+  });
+
+  afterAll(() => cleanup.run());
+
+  async function createInquiry(assignedTo: string | null = null) {
+    const inquiry = await inquiries.create(broker.agencyId, broker.userId, {
+      caller_name: 'Join Caller',
+      assigned_to: assignedTo,
+    });
+    cleanup.track('inquiries', inquiry.id);
+    return inquiry;
+  }
+
+  async function createDeal(fields: Record<string, unknown> = {}, primaryContactId: string | null = contactId) {
+    const { data, error } = await broker.db
+      .from('opportunities')
+      .insert({
+        agency_id: broker.agencyId,
+        title: 'Join test deal',
+        type: 'buyer',
+        stage_id: stageId,
+        primary_contact_id: primaryContactId,
+        assigned_to: manager.userId,
+        ...fields,
+      })
+      .select('id')
+      .single();
+    if (error) throw new Error(error.message);
+    cleanup.track('opportunities', data.id);
+    return data.id as string;
+  }
+
+  const callBack = { title: 'Call back', due_at: new Date(Date.now() + 3_600_000).toISOString() };
+
+  it('joins an active deal: no new opportunity, the call back is for the owner (AC-1)', async () => {
+    const dealId = await createDeal();
+    const inquiry = await createInquiry();
+
+    const result = await inquiries.join(inquiry.id, broker.agencyId, {
+      contact_id: contactId,
+      opportunity_id: dealId,
+      task: callBack,
+    });
+
+    expect(result).toMatchObject({
+      opportunityId: dealId,
+      ownerId: manager.userId,
+      previousAssignee: null,
+      reactivated: false,
+    });
+    expect(await inquiries.getById(inquiry.id, broker.agencyId)).toMatchObject({
+      status: 'converted',
+      contact_id: contactId,
+      opportunity_id: dealId,
+    });
+    const { data: tasks } = await broker.db.from('tasks').select('task_type, assigned_to, title').eq('opportunity_id', dealId);
+    expect(tasks).toEqual([{ task_type: 'call', assigned_to: manager.userId, title: 'Call back' }]);
+    const { data: made } = await broker.db.from('opportunities').select('id').eq('inquiry_id', inquiry.id);
+    expect(made).toEqual([]);
+  });
+
+  it('reactivates a nurture deal (AC-2)', async () => {
+    const dealId = await createDeal({ status: 'nurture', closed_at: new Date().toISOString(), lost_reason: 'timing' });
+    const inquiry = await createInquiry();
+
+    const result = await inquiries.join(inquiry.id, broker.agencyId, {
+      contact_id: contactId,
+      opportunity_id: dealId,
+      task: null,
+    });
+
+    expect(result.reactivated).toBe(true);
+    const { data: deal } = await broker.db.from('opportunities').select('status, closed_at, lost_reason').eq('id', dealId).single();
+    expect(deal).toEqual({ status: 'active', closed_at: null, lost_reason: null });
+  });
+
+  it('refuses a closed deal and a converted inquiry, changing nothing (AC-4)', async () => {
+    const won = await createDeal({ status: 'won', closed_at: new Date().toISOString() });
+    const open = await createDeal();
+    const inquiry = await createInquiry();
+
+    await expect(
+      inquiries.join(inquiry.id, broker.agencyId, { contact_id: contactId, opportunity_id: won, task: null })
+    ).rejects.toMatchObject({ code: 'errors.inquiries.join_closed_opportunity' });
+    expect(await inquiries.getById(inquiry.id, broker.agencyId)).toMatchObject({ status: 'new', opportunity_id: null });
+
+    await inquiries.join(inquiry.id, broker.agencyId, { contact_id: contactId, opportunity_id: open, task: null });
+    await expect(
+      inquiries.join(inquiry.id, broker.agencyId, { contact_id: contactId, opportunity_id: open, task: null })
+    ).rejects.toMatchObject({ code: 'errors.inquiries.invalid_transition' });
+  });
+
+  it('refuses a contact who is not on the deal', async () => {
+    const other = await new ContactService(broker.db).create(broker.agencyId, broker.userId, { type: 'person', first_name: 'Other' });
+    cleanup.track('contacts', other.id);
+    const dealId = await createDeal();
+    const inquiry = await createInquiry();
+
+    await expect(
+      inquiries.join(inquiry.id, broker.agencyId, { contact_id: other.id, opportunity_id: dealId, task: null })
+    ).rejects.toMatchObject({ code: 'errors.inquiries.join_contact_not_on_opportunity' });
+  });
+
+  it('lists active and nurture deals, as primary contact or participant, but not won, lost or archived (AC-3)', async () => {
+    const solo = await new ContactService(broker.db).create(broker.agencyId, broker.userId, { type: 'person', first_name: 'Lister' });
+    cleanup.track('contacts', solo.id);
+    const active = await createDeal({ title: 'Active' }, solo.id);
+    const nurture = await createDeal({ title: 'Nurture', status: 'nurture', closed_at: new Date().toISOString() }, solo.id);
+    await createDeal({ title: 'Won', status: 'won', closed_at: new Date().toISOString() }, solo.id);
+    await createDeal({ title: 'Lost', status: 'lost', closed_at: new Date().toISOString(), lost_reason: 'x' }, solo.id);
+    await createDeal({ title: 'Archived', status: 'archived' }, solo.id);
+    const participantDeal = await createDeal({ title: 'Participant' }, contactId);
+    const { data: participation } = await broker.db
+      .from('opportunity_participants')
+      .insert({ agency_id: broker.agencyId, opportunity_id: participantDeal, contact_id: solo.id, role: 'buyer' })
+      .select('id')
+      .single();
+    cleanup.track('opportunity_participants', participation!.id);
+
+    const deals = await inquiries.listJoinable(broker.agencyId, solo.id);
+
+    expect(deals.map((d) => d.title).sort()).toEqual(['Active', 'Nurture', 'Participant']);
+    expect(deals.find((d) => d.id === active)).toMatchObject({ stage_name: 'New', owner_name: expect.any(String), status: 'active' });
+    expect(deals.find((d) => d.id === nurture)?.status).toBe('nurture');
+  });
+
+  it('offers the seeded repeat callers their open deals only', async () => {
+    const { data: nina } = await broker.db
+      .from('contacts')
+      .select('id')
+      .eq('agency_id', broker.agencyId)
+      .eq('display_name', 'Nina Georgieva')
+      .single();
+
+    const deals = await inquiries.listJoinable(broker.agencyId, nina!.id);
+
+    expect(deals.map((d) => [d.title, d.status])).toEqual([['Nina: 2-bedroom, on hold', 'nurture']]);
+  });
+
+  it('keeps another agency from listing or joining the deal', async () => {
+    const dealId = await createDeal();
+    const inquiry = await createInquiry();
+    const outsider = await signInAs('broker@beta.bg');
+    const outsiderInquiries = new InquiryService(outsider.db);
+
+    expect(await outsiderInquiries.listJoinable(outsider.agencyId, contactId)).toEqual([]);
+    await expect(
+      outsiderInquiries.join(inquiry.id, outsider.agencyId, { contact_id: contactId, opportunity_id: dealId, task: null })
+    ).rejects.toMatchObject({ code: 'errors.not_found' });
+  });
+});

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { InquiryService } from '@/domain/inquiries/service';
-import { createInquirySchema, updateInquirySchema, convertInquirySchema } from '@/domain/inquiries/validation';
+import { createInquirySchema, updateInquirySchema, convertInquirySchema, joinInquirySchema } from '@/domain/inquiries/validation';
+import type { JoinableOpportunity } from '@/domain/inquiries/types';
 import type { PotentialDuplicate } from '@/domain/contacts/duplicate-detection';
 import { InquiryRepository } from '@/domain/inquiries/repository';
 import { notifyAfterResponse } from '../notify-after';
@@ -208,6 +209,67 @@ export async function convertInquiryAction(
       success: true,
       data: { opportunityId: result.opportunityId, contactId: result.contactId },
     };
+  } catch (error) { return toActionError(error); }
+}
+
+/** The open deals of a contact that an inquiry could join. */
+export async function listJoinableOpportunitiesAction(
+  contactId: string
+): Promise<ActionResult<JoinableOpportunity[]>> {
+  try {
+    const { supabase, agencyId } = await getAuthContext();
+    const parsed = joinInquirySchema.shape.contact_id.safeParse(contactId);
+    if (!parsed.success) return toActionError(parsed.error);
+    const deals = await new InquiryService(supabase).listJoinable(agencyId, parsed.data);
+    return { success: true, data: deals };
+  } catch (error) { return toActionError(error); }
+}
+
+/**
+ * Joins an inquiry to an existing open deal of the contact (AD-061). `task` is JSON-encoded:
+ * the call back to schedule, or empty for none.
+ */
+export async function joinInquiryAction(
+  id: string,
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult<{ opportunityId: string; reactivated: boolean }>> {
+  try {
+    const { supabase, userId, agencyId } = await getAuthContext();
+
+    let task: unknown = null;
+    const taskRaw = formData.get('task');
+    if (typeof taskRaw === 'string' && taskRaw) {
+      try {
+        task = JSON.parse(taskRaw);
+      } catch {
+        return toActionError(new DomainError('validation.failed'));
+      }
+    }
+
+    const parsed = joinInquirySchema.safeParse({
+      contact_id: formData.get('contact_id'),
+      opportunity_id: formData.get('opportunity_id'),
+      task,
+    });
+    if (!parsed.success) return toActionError(parsed.error);
+
+    const result = await new InquiryService(supabase).join(id, agencyId, parsed.data);
+    // The deal's owner hears about it as they would after a conversion (AD-053).
+    notifyIfAssignedToColleague(
+      agencyId,
+      userId,
+      result.previousAssignee,
+      { id, assigned_to: result.ownerId, caller_name: result.callerName },
+      result.opportunityId
+    );
+
+    revalidatePath('/inquiries');
+    revalidatePath(`/inquiries/${id}`);
+    revalidatePath('/opportunities');
+    revalidatePath(`/opportunities/${result.opportunityId}`);
+    revalidatePath('/today');
+    return { success: true, data: { opportunityId: result.opportunityId, reactivated: result.reactivated } };
   } catch (error) { return toActionError(error); }
 }
 

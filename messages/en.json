@@ -11,7 +11,9 @@
       "assignee_not_member": "This person is not an active member of your agency.",
       "contact_creation_failed": "The contact could not be created. Please try again.",
       "final_state": "This inquiry is already converted or dismissed and can't be changed.",
-      "invalid_transition": "This inquiry has already moved on. Refresh the page and try again."
+      "invalid_transition": "This inquiry has already moved on. Refresh the page and try again.",
+      "join_closed_opportunity": "This inquiry can't join a deal that is won, lost or archived.",
+      "join_contact_not_on_opportunity": "This contact isn't on that deal."
     },
     "loadFailed": "This data couldn't be loaded. Please try again.",
     "saveFailed": "Your changes couldn't be saved. Please try again.",
@@ -50,6 +52,10 @@
     "org_name_required": "Enter the company name.",
     "opp_title_required": "Enter a title for the opportunity.",
     "stage_required": "Choose a stage.",
+    "contact_required": "Choose a contact.",
+    "opportunity_required": "Pick a deal to join.",
+    "task_title_required": "Enter a title for the call back.",
+    "due_at_invalid": "Enter a valid date and time.",
     "stages_required": "Choose at least one stage.",
     "invalid_currency": "Choose a valid currency.",
     "invalid_locale": "Choose a supported language.",

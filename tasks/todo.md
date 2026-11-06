@@ -156,17 +156,17 @@ Keep the existing seeded counts that tests assert on, or update those tests in t
 - Keys `errors.inquiries.join_*` in both message files.
 
 **Acceptance criteria:**
-- [ ] Validation tests: the task on and off, a missing id and an empty title are refused with keys
-- [ ] Service suite: join happy path, nurture `reactivated = true`, a closed deal and a converted
+- [x] Validation tests: the task on and off, a missing id and an empty title are refused with keys
+- [x] Service suite: join happy path, nurture `reactivated = true`, a closed deal and a converted
   inquiry refused with the RPC key (AC-4), and the joinable list excludes won, lost and archived
   deals and includes a participant's deal (AC-3)
-- [ ] Action tests: `ActionResult` on success and on each error. The notification goes to the
+- [x] Action tests: `ActionResult` on success and on each error. The notification goes to the
   deal's owner only when they are neither the previous assignee nor the actor (AC-6, Mailpit in
   the service suite)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/inquiries src/app/(dashboard)/inquiries`
-- [ ] `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/inquiries src/app/(dashboard)/inquiries`
+- [x] `npm run test:services`
 
 **Dependencies:** Tasks 2, 4
 **Files:** `src/domain/inquiries/{repository,validation,service}.ts` and tests,

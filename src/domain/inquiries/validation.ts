@@ -160,7 +160,21 @@ export const convertInquirySchema = z.object({
   assigned_to: nullableUuid(),
 });
 
+/** Schema for joining an inquiry to an existing open opportunity (AD-061). */
+export const joinInquirySchema = z.object({
+  contact_id: z.string({ required_error: 'validation.contact_required', invalid_type_error: 'validation.contact_required' }).uuid('validation.contact_required'),
+  opportunity_id: z.string({ required_error: 'validation.opportunity_required', invalid_type_error: 'validation.opportunity_required' }).uuid('validation.opportunity_required'),
+  /** The call back to schedule for the deal's owner, or null for none. */
+  task: z
+    .object({
+      title: z.string().trim().min(1, 'validation.task_title_required').max(300),
+      due_at: z.string().datetime({ offset: true, message: 'validation.due_at_invalid' }),
+    })
+    .nullable(),
+});
+
 export type CreateInquirySchema = z.infer<typeof createInquirySchema>;
 export type UpdateInquirySchema = z.infer<typeof updateInquirySchema>;
 export type DismissInquirySchema = z.infer<typeof dismissInquirySchema>;
 export type ConvertInquirySchema = z.infer<typeof convertInquirySchema>;
+export type JoinInquirySchema = z.infer<typeof joinInquirySchema>;
