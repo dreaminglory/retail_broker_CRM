@@ -82,7 +82,7 @@ Full tasks with acceptance criteria and verification: `tasks/todo.md`.
 - [ ] Task 1: Resend spike, AD-061, branch and doc stubs (S)
 - [x] Task 2: `join_inquiry` RPC with pgTAP (M)
 - [x] Task 3: `invitation_sent_at` and `claim_invitation_resend` with pgTAP (S)
-- [ ] Task 4: Seed: repeat callers, a nurture deal, a stale invitation (S)
+- [x] Task 4: Seed: repeat callers, a nurture deal, a stale invitation (S)
 
 ### Checkpoint 1: Database
 - [ ] `npx supabase db reset`, `npm run test:db`, typecheck, lint and test green; `test:services`

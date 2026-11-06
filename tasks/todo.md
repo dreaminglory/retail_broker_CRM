@@ -120,12 +120,12 @@ gets the field. Write `083-invitation-resend.sql`.
 Keep the existing seeded counts that tests assert on, or update those tests in the same commit.
 
 **Acceptance criteria:**
-- [ ] After `db reset`, as Alpha's broker, the two inquiries show in the inbox, the duplicate
+- [x] After `db reset`, as Alpha's broker, the two inquiries show in the inbox, the duplicate
   check suggests the right contacts, and `join_inquiry` succeeds on both seeded deals
-- [ ] `npm run test:services` and `npm run test:e2e` still pass with the new rows
+- [x] `npm run test:services` and `npm run test:e2e` still pass with the new rows
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
+- [x] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
 
 **Dependencies:** Tasks 2, 3
 **Files:** `supabase/seed.sql` (plus any test asserting seeded counts)

@@ -486,3 +486,67 @@ BEGIN
   (v_agency_2, '22222222-9999-0000-0000-000000000015', 'rent', 660,    'active',   now() - interval '6 days'),
   (v_agency_2, '22222222-9999-0000-0000-000000000016', 'rent', 550,    'active',   now() - interval '1 day');
 END $$;
+
+-- ==============================================================================
+-- conversion-join (Task 4). Per agency: a new inquiry from a contact who already has an
+-- active deal with an owner (Ivan Ivanov / Maria Petrova), a new inquiry from a contact whose
+-- deal is in nurture and who also has a won deal that must not be offered (Nina Georgieva /
+-- Petar Dimitrov), and a pending invitation sent a day ago.
+-- ==============================================================================
+DO $$
+DECLARE
+  v_agency_1 UUID := '11111111-1111-1111-1111-111111111111';
+  v_owner_1 UUID := '11111111-2222-2222-2222-222222222222';
+  v_broker_1 UUID := '11111111-4444-4444-4444-444444444444';
+  v_agency_2 UUID := '22222222-1111-1111-1111-111111111111';
+  v_owner_2 UUID := '22222222-2222-2222-2222-222222222222';
+  v_broker_2 UUID := '22222222-4444-4444-4444-444444444444';
+
+  v_c1 UUID := '11111111-5555-5555-5555-555555555591';
+  v_c2 UUID := '22222222-5555-5555-5555-555555555591';
+  v_pending_1 UUID := '11111111-2222-2222-2222-aaaaaaaaaaa1';
+  v_pending_2 UUID := '22222222-2222-2222-2222-aaaaaaaaaaa1';
+
+  v_new_1 UUID; v_won_1 UUID; v_portal_1 UUID;
+  v_new_2 UUID; v_won_2 UUID; v_portal_2 UUID;
+BEGIN
+  SELECT id INTO v_new_1 FROM public.stages WHERE agency_id = v_agency_1 AND name = 'New' LIMIT 1;
+  SELECT id INTO v_won_1 FROM public.stages WHERE agency_id = v_agency_1 AND name = 'Won' LIMIT 1;
+  SELECT id INTO v_portal_1 FROM public.lead_sources WHERE agency_id = v_agency_1 AND name = 'Imot.bg' LIMIT 1;
+  SELECT id INTO v_new_2 FROM public.stages WHERE agency_id = v_agency_2 AND name = 'New' LIMIT 1;
+  SELECT id INTO v_won_2 FROM public.stages WHERE agency_id = v_agency_2 AND name = 'Won' LIMIT 1;
+  SELECT id INTO v_portal_2 FROM public.lead_sources WHERE agency_id = v_agency_2 AND name = 'Imot.bg' LIMIT 1;
+
+  INSERT INTO public.contacts (id, agency_id, first_name, last_name, display_name, type) VALUES
+  (v_c1, v_agency_1, 'Nina', 'Georgieva', 'Nina Georgieva', 'person'),
+  (v_c2, v_agency_2, 'Petar', 'Dimitrov', 'Petar Dimitrov', 'person');
+
+  INSERT INTO public.contact_methods (agency_id, contact_id, type, value, is_primary) VALUES
+  (v_agency_1, v_c1, 'phone', '+359888555001', true),
+  (v_agency_2, v_c2, 'phone', '+359888555002', true);
+
+  INSERT INTO public.opportunities (agency_id, title, type, stage_id, primary_contact_id, assigned_to, status, closed_at, lost_reason) VALUES
+  (v_agency_1, 'Nina: 2-bedroom, on hold', 'buyer', v_new_1, v_c1, v_broker_1, 'nurture', now() - interval '20 days', 'timing'),
+  (v_agency_1, 'Nina: studio, bought', 'buyer', v_won_1, v_c1, v_broker_1, 'won', now() - interval '90 days', NULL),
+  (v_agency_2, 'Petar: office, on hold', 'buyer', v_new_2, v_c2, v_broker_2, 'nurture', now() - interval '20 days', 'timing'),
+  (v_agency_2, 'Petar: flat, bought', 'buyer', v_won_2, v_c2, v_broker_2, 'won', now() - interval '90 days', NULL);
+
+  INSERT INTO public.inquiries (agency_id, source_id, assigned_to, status, caller_name, caller_phone, subject, received_at, raw_payload) VALUES
+  (v_agency_1, v_portal_1, v_owner_1, 'new', 'Ivan Ivanov', '+359888111222', 'Another flat in Mladost', now() - interval '20 minutes', '{"message": "I called last week, one more question."}'::jsonb),
+  (v_agency_1, v_portal_1, v_owner_1, 'new', 'Nina Georgieva', '+359888555001', 'Back in the market', now() - interval '10 minutes', '{"message": "We are looking again."}'::jsonb),
+  (v_agency_2, v_portal_2, v_owner_2, 'new', 'Maria Petrova', '+359888333444', 'Selling the garage too', now() - interval '20 minutes', '{"message": "Can you list the garage as well?"}'::jsonb),
+  (v_agency_2, v_portal_2, v_owner_2, 'new', 'Petar Dimitrov', '+359888555002', 'Back in the market', now() - interval '10 minutes', '{"message": "Looking again."}'::jsonb);
+
+  INSERT INTO auth.users (
+    id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data, invited_at, created_at, updated_at,
+    confirmation_token, recovery_token, email_change_token_new, email_change_token_current,
+    email_change, phone_change
+  ) VALUES
+  (v_pending_1, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pending@alpha.bg', '', NULL, '{"provider":"email","providers":["email"]}', '{}', now() - interval '1 day', now() - interval '1 day', now() - interval '1 day', '', '', '', '', '', ''),
+  (v_pending_2, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pending@beta.bg', '', NULL, '{"provider":"email","providers":["email"]}', '{}', now() - interval '1 day', now() - interval '1 day', now() - interval '1 day', '', '', '', '', '', '');
+
+  INSERT INTO public.agency_memberships (user_id, agency_id, role, status, invitation_email, invited_by, invited_at, invitation_sent_at) VALUES
+  (v_pending_1, v_agency_1, 'broker', 'invited', 'pending@alpha.bg', v_owner_1, now() - interval '1 day', now() - interval '1 day'),
+  (v_pending_2, v_agency_2, 'broker', 'invited', 'pending@beta.bg', v_owner_2, now() - interval '1 day', now() - interval '1 day');
+END $$;
