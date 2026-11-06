@@ -1,6 +1,6 @@
 # Business Requirements Document — BrokerCRM
 
-> **Last updated:** 2026-10-29 (Sprint 6 work recorded; planned rows come from `spec/`)
+> **Last updated:** 2026-11-06 (`matching` built; planned rows come from `spec/`)
 > **Purpose:** what the product must do, with stable IDs that plans, code and migrations
 > reference. Product context is in `research/business-description.md`. Entities, states and rules
 > are in `domain-model.md`. Reasons behind decisions are in `decisions-log.md`.
@@ -279,14 +279,14 @@ active opportunity has an owner, a next action and a complete history.
 
 | ID | Requirement |
 |----|------------|
-| FR-MAT-01 | ❌ A buyer deal matches properties with an open sale listing and a tenant deal those with an open rent listing; active and reserved listings, deals that are active or nurture (AD-060) |
-| FR-MAT-02 | ❌ Each criterion of the requirement gets a result (match, close, miss, unknown, n/a) and the match a score, computed when read |
-| FR-MAT-03 | ❌ A must-have that is close or missed excludes the property; an unrecorded one keeps it, marked "?"; near misses on other criteria score half |
-| FR-MAT-04 | ❌ Two-way: matches on the deal, and the buyer or tenant deals a property fits on the property |
-| FR-MAT-05 | ❌ One click adds a match as a candidate from either side; the link is marked as from matches |
-| FR-MAT-06 | ❌ Properties already linked to a deal are hidden by default and can be shown with their status; "not suitable" records a rejected link from a match |
-| FR-MAT-07 | ❌ One agency can't see or match another agency's properties or deals |
-| FR-MAT-08 | ❌ A match list returns in under 300 ms (p95) at 2,000 properties and 2,000 requirements |
+| FR-MAT-01 | ✅ A buyer deal matches properties with an open sale listing and a tenant deal those with an open rent listing; active and reserved listings, deals that are active or nurture (AD-060) |
+| FR-MAT-02 | ✅ Each criterion of the requirement gets a result (match, close, miss, unknown, n/a) and the match a score, computed when read |
+| FR-MAT-03 | ✅ A must-have that is close or missed excludes the property; an unrecorded one keeps it, marked "?"; near misses on other criteria score half |
+| FR-MAT-04 | ✅ Two-way: matches on the deal, and the buyer or tenant deals a property fits on the property |
+| FR-MAT-05 | ✅ One click adds a match as a candidate from either side; the link is marked as from matches |
+| FR-MAT-06 | ✅ Properties already linked to a deal are hidden by default and can be shown with their status; "not suitable" records a rejected link from a match |
+| FR-MAT-07 | ✅ One agency can't see or match another agency's properties or deals |
+| FR-MAT-08 | ✅ A match list returns in under 300 ms (p95) at 2,000 properties and 2,000 requirements |
 
 ## 4. Non-functional requirements
 

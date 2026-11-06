@@ -212,7 +212,7 @@ candidate.
 ## Checkpoint 2: Opportunity side
 - [x] AC-1, AC-2, AC-3, AC-4 (add part) and AC-6 seen in the browser in BG and EN at 1280 and 390 px
 - [x] typecheck, lint, test, test:services, test:db green
-- [ ] `/review` of Phases 1–2
+- [x] `/review` of Phases 1–2
 
 ## Phase 3: E2E and cut items
 
