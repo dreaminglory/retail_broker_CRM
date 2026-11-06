@@ -29,7 +29,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Reminders and daily digest | `reminders` | Done |
 | Light property record linked to opportunities | `properties` | Done |
 | Buyer/tenant requirements | `requirements` | Done |
-| Inquiry can create **or join** an opportunity | `conversion-join` | In progress |
+| Inquiry can create **or join** an opportunity | `conversion-join` | Done |
 | Requirement ↔ property matching | `matching` | Done |
 | Smart Lists | `smart-lists` | Planned |
 | Onboarding dry run with a real agency export | `go-live` | Planned |
@@ -46,7 +46,7 @@ starts; pilot evidence sets the order.
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Done |
 | `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Done |
 | `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
-| `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | In progress |
+| `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Done |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Planned |
 | `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Planned |

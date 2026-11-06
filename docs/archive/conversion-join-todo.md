@@ -308,5 +308,5 @@ separate), `messages/{bg,en}.json`
 ---
 
 ## Checkpoint 3: Complete
-- [ ] Every DoD item seen passing; AC-1…AC-9 met
-- [ ] `/review`, then close the module (SPEC.md Done, BRD rows, archive `tasks/*`)
+- [x] Every DoD item seen passing; AC-1…AC-9 met
+- [x] `/review`, then close the module (SPEC.md Done, BRD rows, archive `tasks/*`)
