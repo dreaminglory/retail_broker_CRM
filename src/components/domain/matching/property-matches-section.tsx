@@ -26,6 +26,7 @@ export function parseMatchView(params: Record<string, string | string[] | undefi
 }
 
 type PropertyMatchesSectionProps = {
+  opportunityId: string;
   opportunityType: OpportunityType;
   /** False when the deal has no requirement yet: the section asks for one. */
   hasRequirement: boolean;
@@ -46,7 +47,7 @@ function hrefWith(baseParams: Record<string, string>, changes: Record<string, st
 }
 
 /** The properties that fit a buyer or tenant deal, best first (spec: matching, Screens). */
-export function PropertyMatchesSection({ opportunityType, hasRequirement, matches, view, baseParams }: PropertyMatchesSectionProps) {
+export function PropertyMatchesSection({ opportunityId, opportunityType, hasRequirement, matches, view, baseParams }: PropertyMatchesSectionProps) {
   const t = useTranslations("matching");
   const format = useFormatter();
   const pager = view.all ? pageInfo(matches.page, matches.pageSize, matches.total) : null;
@@ -90,7 +91,7 @@ export function PropertyMatchesSection({ opportunityType, hasRequirement, matche
         <>
           <ul className="divide-y">
             {rows.map((match) => (
-              <MatchRow key={match.property_id} match={match} opportunityType={opportunityType} />
+              <MatchRow key={match.property_id} opportunityId={opportunityId} match={match} opportunityType={opportunityType} />
             ))}
           </ul>
 

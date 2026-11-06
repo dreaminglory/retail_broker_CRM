@@ -5,11 +5,24 @@ const OPPORTUNITY_ID = '11111111-1111-4111-8111-111111111111';
 const PROPERTY_ID = '22222222-2222-4222-8222-222222222222';
 
 describe('addCandidateSchema', () => {
-  it('accepts an opportunity and a property', () => {
+  it('accepts an opportunity and a property, and the link is manual by default (AD-060)', () => {
     expect(addCandidateSchema.parse({ opportunity_id: OPPORTUNITY_ID, property_id: PROPERTY_ID })).toEqual({
       opportunity_id: OPPORTUNITY_ID,
       property_id: PROPERTY_ID,
+      source: 'manual',
     });
+  });
+
+  it('accepts the match source', () => {
+    expect(
+      addCandidateSchema.parse({ opportunity_id: OPPORTUNITY_ID, property_id: PROPERTY_ID, source: 'match' }).source,
+    ).toBe('match');
+  });
+
+  it('refuses the viewing source and unknown ones: the database sets viewing', () => {
+    for (const source of ['viewing', 'import', '']) {
+      expect(addCandidateSchema.safeParse({ opportunity_id: OPPORTUNITY_ID, property_id: PROPERTY_ID, source }).success).toBe(false);
+    }
   });
 
   it('needs a chosen property, with an i18n key', () => {

@@ -1757,7 +1757,9 @@
     "next": "Напред",
     "pageOf": "Страница {page} от {pages}",
     "range": "{from}–{to} от {total}",
-    "openProperty": "Отвори имот {code}"
+    "openProperty": "Отвори имот {code}",
+    "addCandidate": "Добави като кандидат",
+    "addCandidateFor": "Добави {code} като кандидат"
   },
   "PropertyViewing": {
     "schedule": "Насрочи оглед",

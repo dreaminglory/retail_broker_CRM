@@ -48,7 +48,7 @@ describeServices('OpportunityPropertyService against the local stack', () => {
     return property;
   }
 
-  async function addCandidate(input: { opportunity_id: string; property_id: string }) {
+  async function addCandidate(input: { opportunity_id: string; property_id: string; source?: 'manual' | 'match' }) {
     const link = await links.addCandidate(broker.agencyId, broker.userId, input);
     cleanup.track('opportunity_properties', link.id);
     return link;
@@ -77,6 +77,25 @@ describeServices('OpportunityPropertyService against the local stack', () => {
         opportunity: expect.objectContaining({ id: opportunity.id, title: opportunity.title, type: 'buyer' }),
       }),
     ]);
+  });
+
+  it('records where a candidate came from: manual by default, match when asked (AD-060)', async () => {
+    const opportunity = await createOpportunity();
+    const manual = await addCandidate({ opportunity_id: opportunity.id, property_id: (await createProperty()).id });
+    const fromMatch = await addCandidate({
+      opportunity_id: opportunity.id,
+      property_id: (await createProperty()).id,
+      source: 'match',
+    });
+
+    expect([manual.source, fromMatch.source]).toEqual(['manual', 'match']);
+    await expect(
+      links.addCandidate(broker.agencyId, broker.userId, {
+        opportunity_id: opportunity.id,
+        property_id: (await createProperty()).id,
+        source: 'viewing' as never,
+      }),
+    ).rejects.toThrow();
   });
 
   it('audits each status change as one property_link row', async () => {

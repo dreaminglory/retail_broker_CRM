@@ -13,9 +13,13 @@ export const PROPERTY_LINK_STATUSES = [
   'selected',
 ] as const satisfies readonly PropertyLinkStatus[];
 
+/** The sources the app may set; `viewing` is set by the database only. */
+export const APP_LINK_SOURCES = ['manual', 'match'] as const satisfies readonly PropertyLinkSource[];
+
 export const addCandidateSchema = z.object({
   opportunity_id: z.string().uuid(),
   property_id: z.string({ required_error: 'validation.property_required' }).uuid('validation.property_required'),
+  source: z.enum(APP_LINK_SOURCES).default('manual'),
 });
 
 /** Rule 6: any status may follow any other; a reason only on `rejected`, and optional there. */

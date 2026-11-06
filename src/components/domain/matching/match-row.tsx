@@ -5,15 +5,17 @@ import { propertyCode, propertyHeadline } from "@/components/domain/properties/p
 import { toChips } from "@/domain/matching/criteria";
 import type { PropertyMatch } from "@/domain/matching/types";
 import type { OpportunityType } from "@/domain/opportunities/types";
+import { AddCandidateButton } from "./add-candidate-button";
 import { MatchChips } from "./match-chips";
 
 type MatchRowProps = {
+  opportunityId: string;
   match: PropertyMatch;
   opportunityType: OpportunityType;
 };
 
 /** One property that fits the deal: what it is, what it costs, how well it fits and why. */
-export function MatchRow({ match, opportunityType }: MatchRowProps) {
+export function MatchRow({ opportunityId, match, opportunityType }: MatchRowProps) {
   const t = useTranslations("matching");
   const enums = useTranslations("Enums");
   const format = useFormatter();
@@ -50,7 +52,10 @@ export function MatchRow({ match, opportunityType }: MatchRowProps) {
           <span className="text-xs font-semibold text-primary">{t("score", { score: match.score })}</span>
         </div>
       </div>
-      <MatchChips chips={toChips(match.criteria, opportunityType)} />
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <MatchChips chips={toChips(match.criteria, opportunityType)} />
+        {!match.link_status && <AddCandidateButton opportunityId={opportunityId} propertyId={match.property_id} code={code} />}
+      </div>
     </li>
   );
 }

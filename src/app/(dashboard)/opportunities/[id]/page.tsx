@@ -109,6 +109,7 @@ export default async function OpportunityDetailPage({
           matchesSection={
             showMatches ? (
               <PropertyMatchesSection
+                opportunityId={id}
                 opportunityType={opportunity.type}
                 hasRequirement={!!requirement}
                 matches={matches}

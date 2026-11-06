@@ -92,7 +92,7 @@ and the seeded Alpha buyer's matches (scores and chips as SQL output) before any
 ### Phase 2: Opportunity side
 - [x] Task 5: Matching service and criteria chips
 - [x] Task 6: Matches section on the opportunity page
-- [ ] Task 7: Add as candidate from matches
+- [x] Task 7: Add as candidate from matches
 
 **Checkpoint 2:** AC-1, -2, -3, -4 (add part), -6 seen in the browser in BG and EN at 1280 and
 390 px; `/review` of Phases 1–2.

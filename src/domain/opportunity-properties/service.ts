@@ -61,7 +61,12 @@ export class OpportunityPropertyService {
   /** The one subject property of a seller or landlord deal (rule 5, L7, L10). */
   async setSubject(agencyId: string, userId: string, input: AddCandidateInput): Promise<OpportunityProperty> {
     const parsed = addCandidateSchema.parse(input);
-    return this.repo.create(agencyId, userId, { ...parsed, relation: 'subject', status: null });
+    return this.repo.create(agencyId, userId, {
+      opportunity_id: parsed.opportunity_id,
+      property_id: parsed.property_id,
+      relation: 'subject',
+      status: null,
+    });
   }
 
   /**

@@ -197,13 +197,13 @@ revalidate. After adding, the row leaves the new matches and appears under Prope
 candidate.
 
 **Acceptance criteria:**
-- [ ] Adding from the list creates a `candidate` link with `source = 'match'`, shown on the opportunity and property timelines; the new-match count drops by one (AC-4 add part)
-- [ ] `validation.test.ts` covers the `source` default and refuses `viewing`; the service suite covers `addCandidate` with `source`
-- [ ] Seen in the browser in BG and EN at 1280 and 390 px (button in the card menu on mobile)
+- [x] Adding from the list creates a `candidate` link with `source = 'match'`, shown on the opportunity and property timelines; the new-match count drops by one (AC-4 add part)
+- [x] `validation.test.ts` covers the `source` default and refuses `viewing`; the service suite covers `addCandidate` with `source`
+- [x] Seen in the browser in BG and EN at 1280 and 390 px (button in the card menu on mobile)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:services`
-- [ ] Browser check as in the criteria
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run test:services`
+- [x] Browser check as in the criteria
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/opportunity-properties/{validation,service,repository}.ts`, `src/domain/opportunity-properties/validation.test.ts`, `src/app/(dashboard)/opportunities/[id]/properties/actions.ts`, `src/components/domain/matching/match-row.tsx`

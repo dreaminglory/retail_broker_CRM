@@ -1757,7 +1757,9 @@
     "next": "Next",
     "pageOf": "Page {page} of {pages}",
     "range": "{from}–{to} of {total}",
-    "openProperty": "Open property {code}"
+    "openProperty": "Open property {code}",
+    "addCandidate": "Add as candidate",
+    "addCandidateFor": "Add {code} as candidate"
   },
   "PropertyViewing": {
     "schedule": "Schedule viewing",
