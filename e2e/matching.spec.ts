@@ -47,6 +47,8 @@ test('a broker adds the best match as a candidate and sees it under already offe
   await expect(properties.getByRole('combobox', { name: m.PropertyLinks.statusOf.replace('{code}', BEST_MATCH) })).toContainText(
     m.Enums.propertyLinkStatus.candidate,
   );
+  // The link says where it came from.
+  await expect(properties.getByText(m.Enums.propertyLinkSource.match)).toBeVisible();
 
   // 3. "Show already offered" lists it with its status.
   await matches.getByRole('link', { name: m.matching.showLinked }).click();
@@ -108,6 +110,9 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   const linked = rows.filter({ hasText: DEAL_TITLE });
   await expect(linked).toHaveCount(1);
   await expect(linked).toContainText(m.Enums.propertyLinkStatus.candidate);
+
+  // The property's linked deals mark the link too.
+  await expect(page.locator('section[aria-labelledby="property-opportunities"]').getByText(m.Enums.propertyLinkSource.match)).toBeVisible();
 
   // 4. Clean up from the deal's Properties section.
   await page.goto(BUYER_DEAL);

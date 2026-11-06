@@ -259,12 +259,12 @@ linked deals (`property-opportunities.tsx`) show "from matches" next to links wi
 `source = 'match'`. The link repositories select `source`.
 
 **Acceptance criteria:**
-- [ ] A link added from matches shows the marker on both pages; manual and viewing links don't (AC-4 marker part)
-- [ ] BG and EN at 1280 and 390 px
+- [x] A link added from matches shows the marker on both pages; manual and viewing links don't (AC-4 marker part)
+- [x] BG and EN at 1280 and 390 px
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
-- [ ] Browser check on both pages
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] Browser check on both pages
 
 **Dependencies:** Task 7
 **Files likely touched:** `src/domain/opportunity-properties/{repository,types}.ts`, `src/components/domain/opportunities/property-links.tsx`, `src/components/domain/properties/property-opportunities.tsx`, `messages/{bg,en}.json`

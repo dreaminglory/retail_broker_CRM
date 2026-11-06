@@ -79,6 +79,7 @@ export function PropertyLinks({ opportunityId, links }: PropertyLinksProps) {
                     <span className="font-mono text-xs text-muted-foreground">{code}</span>
                     <span className="text-sm font-medium">{propertyHeadline(enums, link.property)}</span>
                     {link.property.status === "archived" && <Badge variant="outline">{t("archived")}</Badge>}
+                    {link.source === "match" && <Badge variant="secondary">{enums("propertyLinkSource.match")}</Badge>}
                   </Link>
                   <p className="truncate text-xs text-muted-foreground">
                     {[link.property.area_name, link.property.settlement_name, link.property.address].filter(Boolean).join(", ")}
