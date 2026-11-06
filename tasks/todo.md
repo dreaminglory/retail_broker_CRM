@@ -152,12 +152,12 @@ property, and #1001 is still found by code, street and address.
   rent)
 
 **Acceptance criteria:**
-- [ ] `criteria.test.ts` covers every result, must-have marks, `n/a` dropped and the rent/price budget label, from fixture rows copied from the Task 2 function output
-- [ ] `service.integration.test.ts` (service suites): paging and totals, include-linked, names resolved in BG and EN, a closed deal and a deal without a requirement return an empty page
-- [ ] No rule from the spec's rule 2 table is recomputed in TypeScript
+- [x] `criteria.test.ts` covers every result, must-have marks, `n/a` dropped and the rent/price budget label, from fixture rows copied from the Task 2 function output
+- [x] `service.integration.test.ts` (service suites): paging and totals, include-linked, names resolved in BG and EN, a closed deal and a deal without a requirement return an empty page
+- [x] No rule from the spec's rule 2 table is recomputed in TypeScript
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/matching`, `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/matching`, `npm run test:services`
 
 **Dependencies:** Task 3 (Task 4 for the integration fixtures)
 **Files likely touched:** `src/domain/matching/{types,repository,service,criteria}.ts`, `src/domain/matching/criteria.test.ts`, `src/domain/matching/service.integration.test.ts`

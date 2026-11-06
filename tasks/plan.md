@@ -90,7 +90,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 and the seeded Alpha buyer's matches (scores and chips as SQL output) before any UI.
 
 ### Phase 2: Opportunity side
-- [ ] Task 5: Matching service and criteria chips
+- [x] Task 5: Matching service and criteria chips
 - [ ] Task 6: Matches section on the opportunity page
 - [ ] Task 7: Add as candidate from matches
 
