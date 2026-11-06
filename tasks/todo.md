@@ -57,18 +57,18 @@ owner fallback, inquiry closed, optional `call` task). `REVOKE` from `PUBLIC, an
 `authenticated`. `convert_inquiry` is not touched. Write `082-conversion-join.sql`.
 
 **Acceptance criteria:**
-- [ ] A `new` or `contacted` inquiry joins an active deal: the inquiry is `converted` with the
+- [x] A `new` or `contacted` inquiry joins an active deal: the inquiry is `converted` with the
   deal's id and the contact, there is no new opportunity, the `call` task exists for the deal's
   owner, and `next_action_at` = its due date when that is the earliest
-- [ ] A nurture deal becomes `active` with `closed_at` and `lost_reason` cleared, and the audit
+- [x] A nurture deal becomes `active` with `closed_at` and `lost_reason` cleared, and the audit
   row exists. A deal with no owner takes the inquiry's assignee. `p_task = NULL` creates no task
-- [ ] Each refusal raises its key and changes nothing: a converted or dismissed inquiry; a won,
+- [x] Each refusal raises its key and changes nothing: a converted or dismissed inquiry; a won,
   lost or archived deal; a contact not on the deal; a Beta caller with Alpha ids (AC-4, AC-5).
   The grants are as stated, and a `convert_inquiry` assertion from `070` still passes
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 1
 **Files:** `supabase/migrations/20261107000001_join_inquiry.sql`,
