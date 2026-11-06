@@ -43,7 +43,8 @@ opportunities.inquiry_id ──> inquiries          (origin only: the inquiry th
   deal", and I3 (`converted` is final) and every Today, Exceptions and digest count stay right
   without a change. Origin vs joined is derived: `opportunities.inquiry_id = inquiries.id`.
 - `agency_memberships.invitation_sent_at timestamptz`: set when an invitation is sent and on
-  each resend; backfilled from `created_at` for pending invitations. `NULL` on memberships
+  each resend; backfilled from `invited_at` for pending invitations
+  (`invited_at` already exists and is the better source; AD-061). `NULL` on memberships
   created at signup.
 - New RPC `join_inquiry(p_agency_id, p_inquiry_id, p_contact_id, p_opportunity_id, p_task jsonb)`
   next to `convert_inquiry` (which is not changed): locks the inquiry and the opportunity, checks

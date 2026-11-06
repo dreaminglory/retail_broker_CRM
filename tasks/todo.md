@@ -30,13 +30,17 @@ Then:
   - a new invariant I7 for the join, enforced by RPC `join_inquiry`;
   - the glossary entry "Присъединяване".
 
+**Spike result (2026-11-06, local stack): it sends.** A second `inviteUserByEmail` for the same
+unconfirmed user returned the same user id and Mailpit held two invitation emails with different
+`invite` tokens. Resend therefore uses `inviteUserByEmail` (AD-061).
+
 **Acceptance criteria:**
-- [ ] The spike result (sends or refuses, with the Mailpit evidence) is written under this task
-- [ ] AD-061, the BRD rows, the spec adjustments and the domain-model stub are in one commit
-- [ ] No code or migration yet
+- [x] The spike result (sends or refuses, with the Mailpit evidence) is written under this task
+- [x] AD-061, the BRD rows, the spec adjustments and the domain-model stub are in one commit
+- [x] No code or migration yet
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test` (unchanged code, docs only)
+- [x] `npm run typecheck`, `npm run lint`, `npm run test` (unchanged code, docs only)
 
 **Dependencies:** None
 **Files:** `SPEC.md`, `docs/decisions-log.md`, `docs/BRD.md`, `docs/domain-model.md`,

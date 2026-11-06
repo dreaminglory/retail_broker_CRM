@@ -139,7 +139,7 @@ erDiagram
   inquiries {
     uuid source_id FK
     uuid contact_id FK
-    uuid opportunity_id FK "set on conversion"
+    uuid opportunity_id FK "origin or joined deal, set on conversion"
     uuid assigned_to FK
     text status "new | contacted | converted | dismissed"
     text dismissed_reason
@@ -518,8 +518,8 @@ the "Enforced by" note says so; everything else is convention in services.
 stateDiagram-v2
   [*] --> new
   new --> contacted : broker records outreach
-  new --> converted : opportunity created
-  contacted --> converted : opportunity created
+  new --> converted : opportunity created or joined
+  contacted --> converted : opportunity created or joined
   new --> dismissed : dismissed_reason
   contacted --> dismissed : dismissed_reason
   converted --> [*]
@@ -530,6 +530,9 @@ Enforced by: `InquiryService` checks `INQUIRY_STATUS_TRANSITIONS`
 (`src/domain/inquiries/validation.ts`); `converted` and `dismissed` are final. The database
 checks the value list; the RPC `convert_inquiry` also refuses to convert a final inquiry, under a
 row lock, so two simultaneous conversions can't both succeed.
+
+A join (AD-061) also ends in `converted`: `inquiries.opportunity_id` is the joined deal and
+`opportunities.inquiry_id` stays the origin only, so an inquiry is "joined" when the two differ.
 
 ### 3.2 Opportunity: status and stage
 
@@ -728,6 +731,7 @@ The "Enforced by" column tells you which layer to change and test.
 | I4 | An inquiry's new assignee is an active member of its agency; any member may assign (AD-001, AD-049) | `assertAssignable()` in `InquiryService` create, update and convert (a CSV import resolves assignees separately) |
 | I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
 | I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
+| I7 | A join closes the inquiry into an open (`active`/`nurture`) deal that has the contact, reactivates a `nurture` deal and may create one `call` task, all or nothing (AD-061) | RPC `join_inquiry` + `082-conversion-join.sql` (planned) |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
 | O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
@@ -842,6 +846,7 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Match (on a deal) | Подходящ имот | A property that fits a buyer's or tenant's requirement | |
 | Match (on a property) | Подходящ купувач / наемател | A buyer or tenant deal the property fits | |
 | Match score | Съвпадение | Share of the applicable criteria met, shown as "Съвпадение 85%" | |
+| Join (an inquiry to a deal) | Присъединяване | Closing an inquiry into the contact's existing open deal instead of creating a new one | |
 | Close | Близо | A criterion missed by a small tolerance; half credit | |
 
 ---
