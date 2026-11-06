@@ -7,10 +7,10 @@ import { toast } from "sonner";
 import { Building2, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { RejectForm } from "./reject-form";
 import { PropertyPicker } from "@/components/domain/properties/property-picker";
 import { propertyCode, propertyHeadline } from "@/components/domain/properties/property-labels";
 import {
@@ -278,47 +278,6 @@ function AddCandidateForm({
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? t("saving") : t("add")}
       </Button>
-    </form>
-  );
-}
-
-export function RejectForm({
-  code,
-  pending,
-  onCancel,
-  onReject,
-}: {
-  code: string;
-  pending: boolean;
-  onCancel: () => void;
-  onReject: (reason: string | null) => void;
-}) {
-  const t = useTranslations("PropertyLinks");
-  const [reason, setReason] = useState("");
-
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        onReject(reason.trim() || null);
-      }}
-      className="space-y-4"
-    >
-      <DialogHeader>
-        <DialogTitle>{t("rejectTitle", { code })}</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-1.5">
-        <Label htmlFor="reject-reason">{t("rejectReason")}</Label>
-        <Textarea id="reject-reason" value={reason} maxLength={500} onChange={(event) => setReason(event.target.value)} />
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t("cancel")}
-        </Button>
-        <Button type="submit" disabled={pending}>
-          {pending ? t("saving") : t("reject")}
-        </Button>
-      </DialogFooter>
     </form>
   );
 }

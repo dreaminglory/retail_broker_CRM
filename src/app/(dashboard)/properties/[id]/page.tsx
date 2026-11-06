@@ -56,13 +56,12 @@ export default async function PropertyPage({ params, searchParams }: Props) {
 
   const supabase = await createSupabaseServer();
   const membership = await getCurrentMembership();
-  // Matching deals (spec: matching): only a property with an open listing. Listings are read
-  // first, since they decide whether the section shows and what it is called.
-  const listings = await new ListingService(supabase).listForProperty(property.id, property.agency_id);
-  const openOffers = [...new Set(listings.filter((listing) => listing.status === "active" || listing.status === "reserved").map((listing) => listing.offer_type))];
+  // Matching deals (spec: matching): an active property is matched in the same round as the rest;
+  // the database returns nothing without an open listing, and the section needs one to show.
   const view = parseMatchView(query, PROPERTY_MATCH_KEYS);
-  const showMatches = property.status === "active" && openOffers.length > 0;
-  const [parties, opportunityLinks, brokers, timeline, matches] = await Promise.all([
+  const showMatches = property.status === "active";
+  const [listings, parties, opportunityLinks, brokers, timeline, matches] = await Promise.all([
+    new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
     new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
     new MemberRepository(supabase).getActiveBrokers(property.agency_id),
@@ -75,6 +74,7 @@ export default async function PropertyPage({ params, searchParams }: Props) {
         })
       : null,
   ]);
+  const openOffers = [...new Set(listings.filter((listing) => listing.status === "active" || listing.status === "reserved").map((listing) => listing.offer_type))];
   const baseParams = matchBaseParams(query, PROPERTY_MATCH_KEYS, view, matches?.page ?? 1);
   // A viewing is scheduled on an active deal this property is a candidate on (rule 8: not when archived).
   const viewingDeals = opportunityLinks
@@ -151,7 +151,7 @@ export default async function PropertyPage({ params, searchParams }: Props) {
 
         <ListingSection property={property} listings={listings} />
 
-        {matches && (
+        {matches && openOffers.length > 0 && (
           <OpportunityMatchesSection propertyId={property.id} offerTypes={openOffers} matches={matches} view={view} baseParams={baseParams} />
         )}
 

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { RejectForm } from "@/components/domain/opportunities/property-links";
+import { RejectForm } from "@/components/domain/opportunities/reject-form";
 import { rejectMatchAction } from "@/app/(dashboard)/opportunities/[id]/properties/actions";
 
 type NotSuitableDialogProps = { opportunityId: string; propertyId: string; code: string };

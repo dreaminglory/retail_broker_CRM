@@ -148,6 +148,19 @@ describeServices('OpportunityPropertyService against the local stack', () => {
     ).rejects.toEqual(new DomainError('properties.errors.archived'));
   });
 
+  it('accepts a match on a nurture deal, as the matches list offers it there', async () => {
+    const opportunity = await createOpportunity();
+    await new OpportunityService(broker.db).close(opportunity.id, broker.agencyId, { outcome: 'nurture' });
+    const [a, b] = [await createProperty(), await createProperty()];
+
+    const added = await addCandidate({ opportunity_id: opportunity.id, property_id: a.id, source: 'match' });
+    const rejected = await links.rejectFromMatch(broker.agencyId, broker.userId, { opportunity_id: opportunity.id, property_id: b.id });
+    cleanup.track('opportunity_properties', rejected.id);
+
+    expect(added).toMatchObject({ status: 'candidate', source: 'match' });
+    expect(rejected).toMatchObject({ status: 'rejected', source: 'match' });
+  });
+
   it('audits each status change as one property_link row', async () => {
     const opportunity = await createOpportunity();
     const property = await createProperty();

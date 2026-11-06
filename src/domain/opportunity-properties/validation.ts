@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import type { PropertyLinkSource, PropertyLinkStatus } from './types';
 
-/** Where a link came from (AD-060). `viewing` is set by the database, never by the app. */
-export const LINK_SOURCES = ['manual', 'match', 'viewing'] as const satisfies readonly PropertyLinkSource[];
-
 /** In the order a deal usually moves through them. */
 export const PROPERTY_LINK_STATUSES = [
   'candidate',
@@ -13,7 +10,7 @@ export const PROPERTY_LINK_STATUSES = [
   'selected',
 ] as const satisfies readonly PropertyLinkStatus[];
 
-/** The sources the app may set; `viewing` is set by the database only. */
+/** Where a link came from (AD-060). The app sets `manual` or `match`; `viewing` is set by the database only. */
 export const APP_LINK_SOURCES = ['manual', 'match'] as const satisfies readonly PropertyLinkSource[];
 
 export const addCandidateSchema = z.object({

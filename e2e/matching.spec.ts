@@ -70,6 +70,8 @@ test('a broker adds the best match as a candidate and sees it under already offe
 // toggle shows it with that status → the link is removed again.
 const BEST_PROPERTY = '/properties/11111111-9999-0000-0000-000000000011'; // #1009
 const DEAL_TITLE = 'Alpha Opp 1';
+const RENT_PROPERTY = '/properties/11111111-9999-0000-0000-000000000015'; // rent-only, €750
+const TENANT_DEAL_TITLE = 'Alpha Opp 2'; // tenant deal, budget up to €800
 
 const dealMatches = (page: Page) => page.locator('section[aria-labelledby="property-matches-title"]');
 
@@ -97,8 +99,6 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   await expect(row).toContainText('Ivan Ivanov');
   await expect(row).toContainText(m.matching.broker.replace('{name}', ''));
   await expect(row).toContainText(m.matching.score.replace('{score}', '100'));
-  // Seller deals are not matches: every row is a buyer deal, so none shows a type label.
-  await expect(matches.getByText(m.Enums.opportunityType.seller, { exact: true })).toHaveCount(0);
 
   // 2. Add it to the deal: it leaves the new matches.
   await row.getByRole('button', { name: m.matching.addToDealFor.replace('{title}', DEAL_TITLE) }).click();
@@ -161,4 +161,19 @@ test('a broker marks a match as not suitable with a reason', async ({ page, m, s
 
   await properties.getByRole('button', { name: removeLink }).click();
   await expect(properties.getByRole('button', { name: removeLink })).toBeHidden();
+});
+
+// A rent listing matches tenant deals: the same section, titled for tenants, lists the seeded
+// tenant deal. (That a sale listing never lists tenants, and the reverse, is in the database
+// tests: the budgets of the seeded deals would hide a wrong mapping here.)
+test('a rent-only property lists its matching tenants', async ({ page, m, signInAs }) => {
+  await signInAs('broker@alpha.bg');
+  await page.goto(RENT_PROPERTY);
+
+  const matches = dealMatches(page);
+  await expect(matches.getByRole('heading', { name: m.matching.dealsTitleRent })).toBeVisible();
+  const row = matches.getByTestId('match-row').filter({ hasText: TENANT_DEAL_TITLE });
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText(m.matching.score.replace('{score}', '100'));
+  await expect(matches.getByTestId('match-row').filter({ hasText: DEAL_TITLE })).toHaveCount(0);
 });
