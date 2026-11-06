@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 57th migration
-(`20261107000002_invitation_resend.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 58th migration
+(`20261107000003_join_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -141,6 +141,7 @@ erDiagram
     uuid source_id FK
     uuid contact_id FK
     uuid opportunity_id FK "origin or joined deal, set on conversion"
+    timestamptz joined_at "when it joined an existing deal (AD-061); NULL otherwise"
     uuid assigned_to FK
     text status "new | contacted | converted | dismissed"
     text dismissed_reason
@@ -258,7 +259,7 @@ erDiagram
 The **timeline** (`src/domain/timeline`) is not a table. It reads `notes`, `tasks`,
 `audit_log` and `inquiries` in parallel and merges them in memory into the
 `TimelineEntry` union. A deal's timeline shows the inquiry it started from and the ones that joined
-it (`opportunity_id` = the deal); a joined inquiry is marked `joined` and dated by its `updated_at`
+it (`opportunity_id` = the deal); a joined inquiry is marked `joined` and dated by its `joined_at`
 (AD-061). The contact timeline is unchanged.
 The property timeline reads the property's own `property` rows, its `listing` rows (by
 `metadata.property_id`), the `opportunity` rows with `field_name = 'property_link'` for it, and
@@ -535,7 +536,8 @@ checks the value list; the RPC `convert_inquiry` also refuses to convert a final
 row lock, so two simultaneous conversions can't both succeed.
 
 A join (AD-061) also ends in `converted`: `inquiries.opportunity_id` is the joined deal and
-`opportunities.inquiry_id` stays the origin only, so an inquiry is "joined" when the two differ.
+`opportunities.inquiry_id` stays the origin only, so an inquiry is "joined" when the two differ. `inquiries.joined_at` records when (not
+`updated_at`, which a contact merge moves).
 
 ### 3.2 Opportunity: status and stage
 

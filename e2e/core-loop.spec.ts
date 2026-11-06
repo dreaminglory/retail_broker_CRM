@@ -145,6 +145,8 @@ test("a broker joins a repeat caller's inquiry to their open deal", async ({ pag
   await page.getByRole('button', { name: m.DuplicateSuggestionModal.useContact }).first().click();
   await convertDialog.getByRole('radio', { name: m.ConvertInquiryDialog.modeJoin }).click();
   await expect(convertDialog.getByText('Alpha Opp 1')).toBeVisible();
+  // Nothing is pre-selected: the broker always picks the deal.
+  await convertDialog.getByRole('radio', { name: /Alpha Opp 1/ }).check();
   await convertDialog.getByLabel(m.ConvertInquiryDialog.callBackTitleLabel).fill(callBack);
   await convertDialog.getByRole('button', { name: m.ConvertInquiryDialog.join, exact: true }).click();
 

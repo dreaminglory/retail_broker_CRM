@@ -39,6 +39,9 @@ export interface Inquiry {
   dismissed_reason: string | null;
   received_at: string;
 
+  /** When the inquiry joined an existing deal (AD-061). Null if it never joined one. */
+  joined_at: string | null;
+
   created_by: string | null;
   import_job_id: string | null;
   created_at: string;

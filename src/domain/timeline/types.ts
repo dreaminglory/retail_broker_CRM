@@ -21,10 +21,9 @@ export type TimelineAudit = AuditLogEntry & {
 };
 /**
  * On a deal's timeline, `joined` marks an inquiry that joined the deal instead of starting it
- * (AD-061), and `joined_at` is when: the inquiry's final update, since a converted inquiry never
- * changes again (I3). Both are unset on a contact's timeline.
+ * (AD-061); the inquiry's own `joined_at` is when. Unset on a contact's timeline.
  */
-export type TimelineInquiry = Inquiry & { joined?: boolean; joined_at?: string | null };
+export type TimelineInquiry = Inquiry & { joined?: boolean };
 
 export interface NoteTimelineEntry {
   type: 'note';

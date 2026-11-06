@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(24);
+SELECT plan(31);
 
 -- Setup: two agencies, as the superuser. Ids: 82 + kind + n.
 INSERT INTO auth.users (id, email) VALUES
@@ -174,6 +174,50 @@ RESET ROLE;
 SELECT is(
   (SELECT count(*)::int FROM tasks WHERE agency_id = '00000000-0000-0000-0000-82100000000a'), 2,
   'the refusals created no tasks'
+);
+
+-- Review fixes: the RPC validates the call back itself; joined_at dates the join
+SELECT set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-820000000002", "role": "authenticated"}', true);
+SET ROLE authenticated;
+
+SELECT throws_ok(
+  $$ SELECT public.join_inquiry('00000000-0000-0000-0000-82100000000a', '00000000-0000-0000-0000-825000000006',
+       '00000000-0000-0000-0000-823000000001', '00000000-0000-0000-0000-824000000001',
+       '{"title": "   ", "due_at": "2026-12-01T10:00:00Z"}'::jsonb) $$,
+  'P0001', 'errors.inquiries.join_invalid_task', 'a blank call-back title is refused with a key'
+);
+SELECT throws_ok(
+  $$ SELECT public.join_inquiry('00000000-0000-0000-0000-82100000000a', '00000000-0000-0000-0000-825000000006',
+       '00000000-0000-0000-0000-823000000001', '00000000-0000-0000-0000-824000000001',
+       '{"title": "Call", "due_at": "not a date"}'::jsonb) $$,
+  'P0001', 'errors.inquiries.join_invalid_task', 'a bad call-back date is refused with a key'
+);
+SELECT throws_ok(
+  $$ SELECT public.join_inquiry('00000000-0000-0000-0000-82100000000a', '00000000-0000-0000-0000-825000000006',
+       '00000000-0000-0000-0000-823000000001', '00000000-0000-0000-0000-824000000001',
+       '{"title": "Call"}'::jsonb) $$,
+  'P0001', 'errors.inquiries.join_invalid_task', 'a missing call-back date is refused with a key'
+);
+SELECT is(
+  (SELECT status FROM inquiries WHERE id = '00000000-0000-0000-0000-825000000006'),
+  'new', 'a refused call back leaves the inquiry untouched'
+);
+SELECT is(
+  (SELECT (public.join_inquiry('00000000-0000-0000-0000-82100000000a', '00000000-0000-0000-0000-825000000006',
+       '00000000-0000-0000-0000-823000000001', '00000000-0000-0000-0000-824000000001',
+       'null'::jsonb)->>'task_id') IS NULL),
+  true, 'a JSON null call back means no task'
+);
+SELECT ok(
+  (SELECT joined_at IS NOT NULL AND joined_at > now() - interval '1 minute'
+   FROM inquiries WHERE id = '00000000-0000-0000-0000-825000000006'),
+  'a join stamps joined_at'
+);
+RESET ROLE;
+SELECT is(
+  (SELECT count(*)::int FROM inquiries WHERE agency_id = '00000000-0000-0000-0000-82100000000a'
+     AND status <> 'converted' AND joined_at IS NOT NULL),
+  0, 'only joined inquiries have joined_at'
 );
 
 -- Grants

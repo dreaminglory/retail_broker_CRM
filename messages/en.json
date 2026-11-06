@@ -13,7 +13,8 @@
       "final_state": "This inquiry is already converted or dismissed and can't be changed.",
       "invalid_transition": "This inquiry has already moved on. Refresh the page and try again.",
       "join_closed_opportunity": "This inquiry can't join a deal that is won, lost or archived.",
-      "join_contact_not_on_opportunity": "This contact isn't on that deal."
+      "join_contact_not_on_opportunity": "This contact isn't on that deal.",
+      "join_invalid_task": "Check the call back: it needs a title and a valid date and time."
     },
     "loadFailed": "This data couldn't be loaded. Please try again.",
     "saveFailed": "Your changes couldn't be saved. Please try again.",
@@ -1021,7 +1022,9 @@
     "join": "Join",
     "joining": "Joining…",
     "joinNoDeals": "This contact has no open opportunities.",
-    "joinLoadFailed": "The contact's opportunities couldn't be loaded."
+    "joinLoadFailed": "The contact's opportunities couldn't be loaded.",
+    "joinNeedsDeal": "Pick the opportunity to join.",
+    "joinNeedsCallBack": "Enter a title and a valid date and time for the call back, or switch it off."
   },
   "InquiryCard": {
     "importedBadge": "Imported",

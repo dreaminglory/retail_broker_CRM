@@ -8,6 +8,14 @@ import type { Inquiry, CreateInquiryInput, UpdateInquiryInput, JoinableOpportuni
 import { ProfileRepository } from '../profiles/repository';
 import { DomainError } from '@/lib/errors';
 
+/** Most deals the join step lists; a contact with more open deals is beyond a normal book. */
+const JOINABLE_LIMIT = 50;
+
+type JoinableRow = Omit<JoinableOpportunity, 'stage_name' | 'owner_name'> & {
+  updated_at: string;
+  stages: { name: string } | { name: string }[] | null;
+};
+
 export interface InquiryListOptions {
   status?: 'new' | 'contacted' | 'converted' | 'dismissed' | 'all';
   assignedTo?: string;
@@ -21,50 +29,61 @@ export class InquiryRepository {
 
   /**
    * The contact's open deals (active or nurture), as primary contact or participant, newest
-   * first. It only shapes the list: join_inquiry re-checks every rule (AD-061).
+   * first, at most JOINABLE_LIMIT. It only shapes the list: join_inquiry re-checks every rule
+   * (AD-061).
    */
   async findJoinableOpportunities(agencyId: string, contactId: string): Promise<JoinableOpportunity[]> {
-    const { data: participations, error: participantError } = await this.db
-      .from('opportunity_participants')
-      .select('opportunity_id')
-      .eq('agency_id', agencyId)
-      .eq('contact_id', contactId);
-    if (participantError) {
-      throw new DomainError('errors.loadFailed', `Failed to load participations: ${participantError.message}`);
+    const columns = 'id, title, type, status, assigned_to, next_action_at, updated_at, stages(name)';
+
+    const [primary, participating] = await Promise.all([
+      this.db
+        .from('opportunities')
+        .select(columns)
+        .eq('agency_id', agencyId)
+        .eq('primary_contact_id', contactId)
+        .in('status', ['active', 'nurture'])
+        .order('updated_at', { ascending: false })
+        .limit(JOINABLE_LIMIT),
+      this.db
+        .from('opportunity_participants')
+        .select(`opportunities!inner(${columns})`)
+        .eq('agency_id', agencyId)
+        .eq('contact_id', contactId)
+        .in('opportunities.status', ['active', 'nurture'])
+        .limit(JOINABLE_LIMIT),
+    ]);
+    if (primary.error) {
+      throw new DomainError('errors.loadFailed', `Failed to load joinable deals: ${primary.error.message}`);
+    }
+    if (participating.error) {
+      throw new DomainError('errors.loadFailed', `Failed to load participations: ${participating.error.message}`);
     }
 
-    const ids = (participations ?? []).map((p) => p.opportunity_id as string);
-    const match = ids.length > 0
-      ? `primary_contact_id.eq.${contactId},id.in.(${ids.join(',')})`
-      : `primary_contact_id.eq.${contactId}`;
+    const byId = new Map<string, JoinableRow>();
+    for (const row of (primary.data ?? []) as unknown as JoinableRow[]) byId.set(row.id, row);
+    for (const link of (participating.data ?? []) as unknown as { opportunities: JoinableRow | JoinableRow[] | null }[]) {
+      const deal = Array.isArray(link.opportunities) ? link.opportunities[0] : link.opportunities;
+      if (deal) byId.set(deal.id, deal);
+    }
+    const rows = [...byId.values()]
+      .sort((x, y) => y.updated_at.localeCompare(x.updated_at) || y.id.localeCompare(x.id))
+      .slice(0, JOINABLE_LIMIT);
 
-    const { data, error } = await this.db
-      .from('opportunities')
-      .select('id, title, type, status, assigned_to, next_action_at, stages(name)')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'nurture'])
-      .or(match)
-      .order('updated_at', { ascending: false })
-      .order('id', { ascending: false })
-      .limit(20);
-    if (error) throw new DomainError('errors.loadFailed', `Failed to load joinable deals: ${error.message}`);
-
-    const rows = data ?? [];
     const owners = await new ProfileRepository(this.db).getProfilesByIds(
       rows.map((r) => r.assigned_to).filter((id): id is string => !!id)
     );
     return rows.map((r) => {
-      const stage = r.stages as unknown as { name: string } | { name: string }[] | null;
+      const stage = Array.isArray(r.stages) ? r.stages[0] : r.stages;
       return {
         id: r.id,
         title: r.title,
         type: r.type,
         status: r.status,
-        stage_name: (Array.isArray(stage) ? stage[0]?.name : stage?.name) ?? '',
+        stage_name: stage?.name ?? '',
         assigned_to: r.assigned_to,
         owner_name: r.assigned_to ? owners.get(r.assigned_to)?.display_name ?? null : null,
         next_action_at: r.next_action_at,
-      } as JoinableOpportunity;
+      };
     });
   }
 

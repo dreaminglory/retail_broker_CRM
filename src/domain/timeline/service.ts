@@ -12,6 +12,12 @@ import { ProfileRepository } from '@/domain/profiles/repository';
 import type { Profile } from '@/domain/profiles/types';
 
 /**
+ * Most inquiries read for one deal. A deal has a handful, and they are sorted by each entry's own
+ * date (the join date for a joined one) before the page is cut, so this is a safety cap, not a window.
+ */
+const DEAL_INQUIRY_CAP = 100;
+
+/**
  * Builds a fallback AuthorInfo when a user UUID is present but the
  * profile row cannot be found (e.g., deleted user).
  */
@@ -191,7 +197,7 @@ export class TimelineService {
 
     if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
 
-    const inquiries = await this.getDealInquiries(opportunityId, agencyId, limit + offset);
+    const inquiries = await this.getDealInquiries(opportunityId, agencyId);
 
     // Batch-resolve all author UUIDs
     const profilesMap = await this.resolveAuthors(
@@ -271,7 +277,7 @@ export class TimelineService {
    * The inquiry the deal started from and the ones that joined it (AD-061). An inquiry is joined
    * when it isn't the deal's origin; its date on this timeline is when it joined.
    */
-  private async getDealInquiries(opportunityId: string, agencyId: string, count: number): Promise<TimelineInquiry[]> {
+  private async getDealInquiries(opportunityId: string, agencyId: string): Promise<TimelineInquiry[]> {
     const { data: deal, error: dealError } = await this.db
       .from('opportunities')
       .select('inquiry_id')
@@ -288,14 +294,11 @@ export class TimelineService {
       .eq('agency_id', agencyId)
       .or(originId ? `opportunity_id.eq.${opportunityId},id.eq.${originId}` : `opportunity_id.eq.${opportunityId}`)
       .order('received_at', { ascending: false })
-      .range(0, count - 1);
+      .limit(DEAL_INQUIRY_CAP);
 
     if (error) throw new DomainError('errors.loadFailed', `Timeline inquiries fetch failed: ${error.message}`);
 
-    return ((data ?? []) as TimelineInquiry[]).map((inquiry) => {
-      const joined = inquiry.id !== originId;
-      return { ...inquiry, joined, joined_at: joined ? inquiry.updated_at : null };
-    });
+    return ((data ?? []) as TimelineInquiry[]).map((inquiry) => ({ ...inquiry, joined: inquiry.id !== originId }));
   }
 
   /** Adds the deal's title to the opportunity rows of a property timeline. */
@@ -415,7 +418,7 @@ export class TimelineService {
 
     audits.forEach((a) => entries.push({ type: 'audit', timestamp: a.performed_at, data: a }));
     inquiries.forEach((i) =>
-      entries.push({ type: 'inquiry', timestamp: i.joined && i.joined_at ? i.joined_at : i.received_at, data: i })
+      entries.push({ type: 'inquiry', timestamp: i.joined ? (i.joined_at ?? i.updated_at) : i.received_at, data: i })
     );
 
     // Sort by timestamp DESC

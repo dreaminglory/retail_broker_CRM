@@ -45,8 +45,8 @@ SELECT throws_ok(
   'P0001', 'errors.members.resend_too_soon', 'a second claim within 5 minutes is refused'
 );
 SELECT is(
-  (SELECT public.claim_invitation_resend('00000000-0000-0000-0000-832000000004')->>'role'),
-  'broker',
+  (SELECT public.claim_invitation_resend('00000000-0000-0000-0000-832000000004')->>'email'),
+  'invited-broker@r1.example',
   'an owner also claims a broker invitation'
 );
 SELECT throws_ok(
@@ -70,8 +70,8 @@ SELECT throws_ok(
   'P0001', 'errors.forbidden', 'a manager cannot resend a manager invitation'
 );
 SELECT is(
-  (SELECT public.claim_invitation_resend('00000000-0000-0000-0000-832000000004')->>'role'),
-  'broker',
+  (SELECT public.claim_invitation_resend('00000000-0000-0000-0000-832000000004')->>'email'),
+  'invited-broker@r1.example',
   'a manager claims a broker invitation'
 );
 

@@ -367,10 +367,12 @@ day keeps a busy reassignment from spamming anyone.
   (`errors.not_found`, `errors.inquiries.invalid_transition`, `join_closed_opportunity`,
   `join_contact_not_on_opportunity`). A `nurture` deal is reactivated as
   `OpportunityRepository.reactivate` does; a deal with no owner takes the inquiry's assignee; an
-  optional `call` task is created for the owner, else the caller.
+  optional `call` task is created for the owner, else the caller. The RPC validates the call back
+  itself (JSON null = none; blank title or bad date = `errors.inquiries.join_invalid_task`).
 - **Origin vs joined is derived**: `inquiries.opportunity_id` is origin or joined,
-  `opportunities.inquiry_id` is origin only. The "joined on" date is the inquiry's `updated_at`,
-  final under I3; no new column.
+  `opportunities.inquiry_id` is origin only. The "joined on" date is `inquiries.joined_at`, set by `join_inquiry`
+  (review fix, migration `20261107000003`): `updated_at` moves on a contact merge (C4), so it
+  can't date the join.
 - **The call-back title comes from the form** (RPCs don't see the locale); `due_at` defaults to
   now + 1 h in agency time.
 - **The notification reuses `notifyIfAssignedToColleague`** with the inquiry's previous assignee

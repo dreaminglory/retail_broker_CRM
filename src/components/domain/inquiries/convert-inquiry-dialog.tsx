@@ -18,8 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Inquiry, JoinableOpportunity } from "@/domain/inquiries/types";
-import { parseAgencyLocal, toAgencyLocalInput } from "@/lib/time/agency-day";
-import { JoinOpportunityStep, type CallBackDraft } from "./join-opportunity-step";
+import { JoinOpportunityStep } from "./join-opportunity-step";
+import { useJoinOpportunity, type JoinAction } from "./use-join-opportunity";
 import type { Stage } from "@/domain/stages/types";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
@@ -49,10 +49,6 @@ type ConvertResult = ActionResult<{
 
 const INITIAL_STATE: ConvertResult = { success: false, error: "" };
 
-type JoinResult = ActionResult<{ opportunityId: string; reactivated: boolean }>;
-const INITIAL_JOIN_STATE: JoinResult = { success: false, error: "" };
-const HOUR_MS = 3_600_000;
-
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface ConvertInquiryDialogProps {
@@ -66,11 +62,7 @@ interface ConvertInquiryDialogProps {
     prevState: ActionResult,
     formData: FormData
   ) => Promise<ConvertResult>;
-  joinAction: (
-    id: string,
-    prevState: ActionResult,
-    formData: FormData
-  ) => Promise<JoinResult>;
+  joinAction: JoinAction;
   listJoinableAction: (contactId: string) => Promise<ActionResult<JoinableOpportunity[]>>;
   /** Agency timezone: the call back's time is entered and shown in it. */
   timeZone: string;
@@ -105,14 +97,6 @@ export function ConvertInquiryDialog({
     INITIAL_STATE
   );
   
-  const [joinState, joinFormAction, joinPending] = useActionState(
-    joinAction.bind(null, inquiry.id) as (
-      prevState: JoinResult,
-      formData: FormData
-    ) => Promise<JoinResult>,
-    INITIAL_JOIN_STATE
-  );
-
   const formRef = useRef<HTMLFormElement>(null);
   const [suggestedDuplicates, setSuggestedDuplicates] = useState<PotentialDuplicate[]>([]);
   const [skipDuplicateCheck, setSkipDuplicateCheck] = useState(false);
@@ -131,69 +115,29 @@ export function ConvertInquiryDialog({
     inquiry.caller_name?.split(" ").slice(1).join(" ") ?? ""
   );
 
-  // Join (AD-061): offered when the chosen existing contact has open deals.
-  const [oppMode, setOppMode] = useState<"new" | "join">("new");
-  const [deals, setDeals] = useState<JoinableOpportunity[]>([]);
-  const [dealsStatus, setDealsStatus] = useState<"idle" | "loading" | "ready" | "failed">("idle");
-  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
-  const [callBack, setCallBack] = useState<CallBackDraft>({ enabled: true, title: "", due: "" });
-  const dealsRequest = useRef(0);
-  const handledJoin = useRef<JoinResult | null>(null);
   const callerName = inquiry.caller_name ?? inquiry.caller_phone ?? inquiry.caller_email ?? "";
-
-  const joining = oppMode === "join";
-  const callBackDue = callBack.enabled ? parseAgencyLocal(callBack.due, timeZone) : null;
-  const callBackInvalid = joining && callBack.enabled && (!callBackDue || !callBack.title.trim());
-  const taskJson =
-    joining && callBack.enabled && callBackDue
-      ? JSON.stringify({ title: callBack.title.trim(), due_at: callBackDue.toISOString() })
-      : "";
+  const join = useJoinOpportunity({
+    inquiryId: inquiry.id,
+    joinAction,
+    listJoinableAction,
+    timeZone,
+    defaultCallBackTitle: t("callBackTitle", { name: callerName }),
+    onJoined: (opportunityId) => {
+      onOpenChange(false);
+      onSuccess?.(opportunityId);
+    },
+  });
+  const { joining, joinState, joinPending, deals, dealsStatus, selectedDealId, callBack } = join;
 
   function pickContact(contact: ContactOption | null) {
     setExistingContact(contact);
-    setOppMode("new");
-    setDeals([]);
-    setSelectedDealId(null);
-    const request = ++dealsRequest.current;
-    if (!contact) {
-      setDealsStatus("idle");
-      return;
-    }
-    setDealsStatus("loading");
-    listJoinableAction(contact.id)
-      .then((result) => {
-        if (request !== dealsRequest.current) return;
-        setDeals(result.success ? result.data : []);
-        setDealsStatus(result.success ? "ready" : "failed");
-      })
-      .catch(() => {
-        if (request === dealsRequest.current) setDealsStatus("failed");
-      });
+    join.loadDealsFor(contact);
   }
 
   function chooseTab(tab: "new" | "existing") {
     setContactTab(tab);
-    if (tab === "new") setOppMode("new");
+    if (tab === "new") join.backToNew();
   }
-
-  function chooseMode(mode: "new" | "join") {
-    setOppMode(mode);
-    if (mode !== "join") return;
-    setSelectedDealId((current) => current ?? deals[0]?.id ?? null);
-    setCallBack((prev) => ({
-      ...prev,
-      title: prev.title || t("callBackTitle", { name: callerName }),
-      due: prev.due || toAgencyLocalInput(new Date(Date.now() + HOUR_MS).toISOString(), timeZone),
-    }));
-  }
-
-  // The joined deal is the destination, once per result.
-  useEffect(() => {
-    if (!joinState.success || !joinState.data || handledJoin.current === joinState) return;
-    handledJoin.current = joinState;
-    onOpenChange(false);
-    onSuccess?.(joinState.data.opportunityId);
-  }, [joinState, onOpenChange, onSuccess]);
 
   // Redirect on success or handle duplicates
   useEffect(() => {
@@ -231,7 +175,7 @@ export function ConvertInquiryDialog({
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     startTransition(() => {
-      if (joining) joinFormAction(formData);
+      if (joining) join.joinFormAction(formData);
       else formAction(formData);
     });
   };
@@ -380,12 +324,12 @@ export function ConvertInquiryDialog({
                           key={mode}
                           type="button"
                           role="radio"
-                          aria-checked={oppMode === mode}
-                          onClick={() => chooseMode(mode)}
+                          aria-checked={joining === (mode === "join")}
+                          onClick={() => join.chooseMode(mode)}
                           id={`convert-mode-${mode}`}
                           className={cn(
                             "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                            oppMode === mode
+                            joining === (mode === "join")
                               ? "bg-background shadow-sm text-foreground"
                               : "text-muted-foreground hover:text-foreground"
                           )}
@@ -405,14 +349,14 @@ export function ConvertInquiryDialog({
               <JoinOpportunityStep
                 deals={deals}
                 selectedId={selectedDealId}
-                onSelect={setSelectedDealId}
+                onSelect={join.setSelectedDealId}
                 callBack={callBack}
-                onCallBackChange={setCallBack}
+                onCallBackChange={join.setCallBack}
                 timeZone={timeZone}
                 invalidDeal={!joinState.success && !!joinState.fieldErrors?.opportunity_id}
               />
               <input type="hidden" name="opportunity_id" value={selectedDealId ?? ""} />
-              <input type="hidden" name="task" value={taskJson} />
+              <input type="hidden" name="task" value={join.taskJson} />
             </>
           )}
 
@@ -523,6 +467,12 @@ export function ConvertInquiryDialog({
             </p>
           )}
           
+          {join.blocker && (
+            <p className="text-xs text-muted-foreground" role="status" id="join-blocker">
+              {t(join.blocker)}
+            </p>
+          )}
+
           <input type="hidden" name="skipDuplicateCheck" value={skipDuplicateCheck ? "true" : "false"} />
 
           <div className="flex gap-2 pt-1">
@@ -538,7 +488,7 @@ export function ConvertInquiryDialog({
             <Button
               type="submit"
               className="flex-1"
-              disabled={joining ? joinPending || !selectedDealId || callBackInvalid : pending}
+              disabled={joining ? joinPending || join.blocker !== null : pending}
               id="convert-inquiry-submit"
             >
               {joining
