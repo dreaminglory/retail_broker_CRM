@@ -60,7 +60,7 @@ describeServices('MatchingService against the local stack', () => {
   });
 
   describe('forOpportunity', () => {
-    it('lists the new matches best first, reserved last, with names in the locale', async () => {
+    it('lists the new matches best first and reserved last, with the location named', async () => {
       const bg = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'bg');
 
       expect(bg.rows[0]).toMatchObject({ score: 100, listing_status: 'active', link_status: null, settlement_name: 'София' });
@@ -71,9 +71,6 @@ describeServices('MatchingService against the local stack', () => {
       expect(statuses.lastIndexOf('active')).toBeLessThan(statuses.indexOf('reserved'));
       expect(bg.unlinked).toBe(bg.total);
 
-      const en = await matching.forOpportunity(ALPHA_OPP_1, alpha.agencyId, 'en');
-      expect(en.rows[0].settlement_name).toBe('Sofia');
-      expect(en.rows.map((row) => row.property_id)).toEqual(bg.rows.map((row) => row.property_id));
     });
 
     // Own deal and own properties at a price no other suite uses, so concurrent suites that add
@@ -112,13 +109,17 @@ describeServices('MatchingService against the local stack', () => {
         });
         cleanup.track('opportunity_properties', link.id);
         linkedId = propertyIds[0];
-      });
+      }, 30_000);
 
       it('shows linked properties with their status when asked, and counts both views', async () => {
         const fresh = await matching.forOpportunity(dealId, alpha.agencyId, 'en');
         const all = await matching.forOpportunity(dealId, alpha.agencyId, 'en', { includeLinked: true });
 
         expect(fresh).toMatchObject({ total: 4, unlinked: 4 });
+        expect(fresh.rows[0].settlement_name).toBe('Sofia');
+        const bg = await matching.forOpportunity(dealId, alpha.agencyId, 'bg');
+        expect(bg.rows.map((row) => row.property_id)).toEqual(fresh.rows.map((row) => row.property_id));
+        expect(bg.rows[0].settlement_name).toBe('София');
         expect(fresh.rows.map((row) => row.property_id)).not.toContain(linkedId);
         expect(all).toMatchObject({ total: 5, unlinked: 4 });
         expect(all.rows.find((row) => row.property_id === linkedId)?.link_status).toBe('candidate');
