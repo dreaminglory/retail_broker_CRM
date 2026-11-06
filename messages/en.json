@@ -1192,6 +1192,7 @@
     "noActivity": "No activity history yet.",
     "loading": "Loading...",
     "loadMore": "Load older activity",
+    "inquiryJoinedOn": "Joined on {date}",
     "events": {
       "taskCompleted": "Task Completed",
       "taskCreated": "Task Created",
@@ -1201,6 +1202,7 @@
       "statusChanged": "Status Changed",
       "systemUpdate": "System Update",
       "newInquiry": "New Inquiry Received",
+      "joinedInquiry": "Inquiry Joined This Deal",
       "propertyCreated": "Property added",
       "propertyStatusChanged": "Property status changed",
       "listingCreated": "Listing added",

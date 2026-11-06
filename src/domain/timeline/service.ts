@@ -191,6 +191,8 @@ export class TimelineService {
 
     if (auditError) throw new DomainError('errors.loadFailed', `Timeline audit fetch failed: ${auditError.message}`);
 
+    const inquiries = await this.getDealInquiries(opportunityId, agencyId, limit + offset);
+
     // Batch-resolve all author UUIDs
     const profilesMap = await this.resolveAuthors(
       notesData ?? [],
@@ -202,7 +204,7 @@ export class TimelineService {
       this.enrichNotes(notesData ?? [], profilesMap),
       this.enrichTasks(tasksData ?? [], profilesMap),
       this.enrichAudits(auditData ?? [], profilesMap),
-      [],
+      inquiries,
       limit,
       offset
     );
@@ -264,6 +266,37 @@ export class TimelineService {
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────
+
+  /**
+   * The inquiry the deal started from and the ones that joined it (AD-061). An inquiry is joined
+   * when it isn't the deal's origin; its date on this timeline is when it joined.
+   */
+  private async getDealInquiries(opportunityId: string, agencyId: string, count: number): Promise<TimelineInquiry[]> {
+    const { data: deal, error: dealError } = await this.db
+      .from('opportunities')
+      .select('inquiry_id')
+      .eq('agency_id', agencyId)
+      .eq('id', opportunityId)
+      .maybeSingle();
+
+    if (dealError) throw new DomainError('errors.loadFailed', `Timeline opportunity fetch failed: ${dealError.message}`);
+
+    const originId = (deal?.inquiry_id as string | null | undefined) ?? null;
+    const { data, error } = await this.db
+      .from('inquiries')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .or(originId ? `opportunity_id.eq.${opportunityId},id.eq.${originId}` : `opportunity_id.eq.${opportunityId}`)
+      .order('received_at', { ascending: false })
+      .range(0, count - 1);
+
+    if (error) throw new DomainError('errors.loadFailed', `Timeline inquiries fetch failed: ${error.message}`);
+
+    return ((data ?? []) as TimelineInquiry[]).map((inquiry) => {
+      const joined = inquiry.id !== originId;
+      return { ...inquiry, joined, joined_at: joined ? inquiry.updated_at : null };
+    });
+  }
 
   /** Adds the deal's title to the opportunity rows of a property timeline. */
   private async withDeals(audits: TimelineAudit[], agencyId: string): Promise<TimelineAudit[]> {
@@ -381,7 +414,9 @@ export class TimelineService {
     });
 
     audits.forEach((a) => entries.push({ type: 'audit', timestamp: a.performed_at, data: a }));
-    inquiries.forEach((i) => entries.push({ type: 'inquiry', timestamp: i.received_at, data: i }));
+    inquiries.forEach((i) =>
+      entries.push({ type: 'inquiry', timestamp: i.joined && i.joined_at ? i.joined_at : i.received_at, data: i })
+    );
 
     // Sort by timestamp DESC
     entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());

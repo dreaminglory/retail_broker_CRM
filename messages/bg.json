@@ -1192,6 +1192,7 @@
     "noActivity": "Няма история на активността.",
     "loading": "Зареждане...",
     "loadMore": "Зареди по-стара активност",
+    "inquiryJoinedOn": "Присъединено на {date}",
     "events": {
       "taskCompleted": "Задачата е завършена",
       "taskCreated": "Задачата е създадена",
@@ -1201,6 +1202,7 @@
       "statusChanged": "Статусът е променен",
       "systemUpdate": "Системно обновяване",
       "newInquiry": "Получено е ново запитване",
+      "joinedInquiry": "Запитване се присъедини към сделката",
       "propertyCreated": "Имотът е добавен",
       "propertyStatusChanged": "Статусът на имота е променен",
       "listingCreated": "Добавена е обява",

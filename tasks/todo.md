@@ -221,14 +221,14 @@ inquiry card, a converted inquiry whose `opportunity_id` isn't the deal's origin
 timeline is unchanged. Keys under `timeline.inquiry.*`.
 
 **Acceptance criteria:**
-- [ ] Unit tests: an origin inquiry without the flag, a joined one with the flag and date, paging
+- [x] Unit tests: an origin inquiry without the flag, a joined one with the flag and date, paging
   across sources, and the contact timeline unchanged (`service.test.ts`)
-- [ ] In the browser, the seeded deal shows its origin inquiry, and after Task 6's join it shows
+- [x] In the browser, the seeded deal shows its origin inquiry, and after Task 6's join it shows
   the joined one (AC-7)
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/timeline`
-- [ ] Browser: a seeded deal in `bg` and `en`
+- [x] `npm run typecheck`, `npm run lint`, `npx vitest run src/domain/timeline`
+- [x] Browser: a seeded deal in `bg` and `en`
 
 **Dependencies:** Task 2 (data), Task 4 (seed). Independent of Task 6's files.
 **Files:** `src/domain/timeline/{service,types}.ts`, `service.test.ts`, the timeline inquiry item

@@ -92,7 +92,7 @@ Full tasks with acceptance criteria and verification: `tasks/todo.md`.
 ### Phase 2: Join
 - [x] Task 5: Joinable deals, `InquiryService.join` and `joinInquiryAction` (M)
 - [x] Task 6: Join step in the convert dialog and "Joined to" on the inquiry card (M)
-- [ ] Task 7: Inquiries on the opportunity timeline (S)
+- [x] Task 7: Inquiries on the opportunity timeline (S)
 
 ### Checkpoint 2: Join end to end
 - [ ] AC-1…AC-7 seen in the browser on seeded data, BG and EN, 1280 and 390 px
