@@ -171,6 +171,15 @@ describe('resolve and page', () => {
     expect(repo.listRows).toHaveBeenLastCalledWith(expect.anything(), { limit: 20, offset: 20 });
   });
 
+  it('an empty list on page 1 is read once (page 1 is the last page, nothing to clamp)', async () => {
+    repo.listRows.mockResolvedValue({ entity: 'opportunity', rows: [], total: 0 });
+
+    const page = await service.page(broker, 'overdue', undefined, 1);
+
+    expect(page).toMatchObject({ page: 1, result: { total: 0, rows: [] } });
+    expect(repo.listRows).toHaveBeenCalledTimes(1);
+  });
+
   it('a bad page number falls back to the first page', async () => {
     repo.listRows.mockResolvedValue({ entity: 'inquiry', rows: [], total: 0 });
     const page = await service.page(broker, 'new-inquiries', undefined, -2);
