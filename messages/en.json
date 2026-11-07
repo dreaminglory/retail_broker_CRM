@@ -111,7 +111,8 @@
     "toggleMenu": "Toggle menu",
     "menuTitle": "Navigation menu",
     "menuDescription": "Go to the different sections of BrokerCRM.",
-    "properties": "Properties"
+    "properties": "Properties",
+    "lists": "Lists"
   },
   "header": {
     "loading": "Loading...",
@@ -140,7 +141,8 @@
     "properties": "Properties | BrokerCRM",
     "newProperty": "New property | BrokerCRM",
     "property": "Property {code} | BrokerCRM",
-    "editProperty": "Edit property | BrokerCRM"
+    "editProperty": "Edit property | BrokerCRM",
+    "lists": "Lists | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -1933,6 +1935,26 @@
       "invalidLists": "The lists could not be counted.",
       "tooManyLists": "Too many lists to count at once.",
       "immutable": "The owner and record type of a list cannot change."
+    },
+    "entity": {
+      "opportunity": "Deals",
+      "inquiry": "Inquiries"
+    },
+    "scope": {
+      "label": "Whose work",
+      "mine": "Mine",
+      "agency": "Agency"
+    },
+    "overview": {
+      "title": "Lists",
+      "description": "The work left in each list. Open one and work through it until it is empty.",
+      "builtIn": "Built-in",
+      "saved": "Saved",
+      "savedEmpty": "Save a filter from Opportunities or Inquiries",
+      "agencyWide": "Whole agency",
+      "stale": "The filters of this list changed. Edit this list.",
+      "shared": "Shared with the agency",
+      "sharedBy": "Shared by {name}"
     }
   }
 }

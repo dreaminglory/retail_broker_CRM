@@ -209,13 +209,13 @@ for owners and managers as `?scope=agency` (as Today does). Sidebar item "Спи
 and Contacts. Keys under `smartLists.*` in both message files; Metadata title.
 
 **Acceptance criteria:**
-- [ ] Alpha broker sees seven built-in lists with the seeded counts; Alpha manager sees nine and the toggle; switching to Agency changes the counts
-- [ ] Empty saved group shows the hint; no hardcoded strings (lint)
-- [ ] Works at 1280 and 390 px in BG and EN
+- [x] Alpha broker sees seven built-in lists with the seeded counts; Alpha manager sees nine and the toggle; switching to Agency changes the counts
+- [x] Empty saved group shows the hint; no hardcoded strings (lint)
+- [x] Works at 1280 and 390 px in BG and EN
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
-- [ ] Browser: `/lists` as broker and manager, `NEXT_LOCALE=bg` and `en`, both widths
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] Browser: `/lists` as broker and manager, `NEXT_LOCALE=bg` and `en`, both widths
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/app/(dashboard)/lists/page.tsx`, `src/components/domain/smart-lists/list-overview.tsx`, `src/components/layout/sidebar.tsx`, `messages/{bg,en}.json`

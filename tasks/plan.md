@@ -107,7 +107,7 @@ target is missed.
 
 ### Phase 2: Built-in lists (Sonnet)
 - [x] Task 6: Smart list domain: validation, built-in presets, read service
-- [ ] Task 7: Списъци overview with counts and the sidebar entry
+- [x] Task 7: Списъци overview with counts and the sidebar entry
 - [ ] Task 8: List page for built-in lists
 - [ ] Task 9: Work through: the queue bar
 
