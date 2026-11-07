@@ -188,15 +188,15 @@ Vitest beside each file; the Today-consistency test (rule 2) and the SQL-vs-`get
 window test in `service.integration.test.ts`.
 
 **Acceptance criteria:**
-- [ ] Every preset parses with the strict schema; a filter with an unknown key or a bad enum is refused; a stored filter of an old shape gives `{ ok: false }`
-- [ ] Broker overview has no unassigned lists and no Agency scope even when asked; manager gets both
-- [ ] Integration: `no-next-action` and `new-inquiries` counts equal `loadTodayScreenData`; `overdue` and `due-today` equal Today's pending tasks mapped to deals per spec rule 2 (the viewer's deals, each in the section of its earliest pending task; the seed has a deal with a today task behind an overdue one and tasks assigned to someone other than the deal's owner), for broker mine, manager mine and manager agency
-- [ ] Saving a 6th `has_new_matches` list gives the friendly `smartLists.errors.matchListLimit` before the trigger does; a `no_touch_days` that isn't an integer ≥ 1 is refused by Zod
-- [ ] `smartLists.errors.matchListLimit` is in both `messages/bg.json` and `messages/en.json` with the other `smartLists.errors.*` keys; `overview` calls `smart_list_counts` in chunks of at most 100 lists (shared lists from other members can push one viewer past 100)
+- [x] Every preset parses with the strict schema; a filter with an unknown key or a bad enum is refused; a stored filter of an old shape gives `{ ok: false }`
+- [x] Broker overview has no unassigned lists and no Agency scope even when asked; manager gets both
+- [x] Integration: `no-next-action` and `new-inquiries` counts equal `loadTodayScreenData`; `overdue` and `due-today` equal Today's pending tasks mapped to deals per spec rule 2 (the viewer's deals, each in the section of its earliest pending task; the seed has a deal with a today task behind an overdue one and tasks assigned to someone other than the deal's owner), for broker mine, manager mine and manager agency
+- [x] Saving a 6th `has_new_matches` list gives the friendly `smartLists.errors.matchListLimit` before the trigger does; a `no_touch_days` that isn't an integer ≥ 1 is refused by Zod
+- [x] `smartLists.errors.matchListLimit` is in both `messages/bg.json` and `messages/en.json` with the other `smartLists.errors.*` keys; `overview` calls `smart_list_counts` in chunks of at most 100 lists (shared lists from other members can push one viewer past 100)
 
 **Verification:**
-- [ ] `npx vitest run src/domain/smart-lists`, `npm run test:services`
-- [ ] `npm run typecheck`, `npm run lint`
+- [x] `npx vitest run src/domain/smart-lists`, `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`
 
 **Dependencies:** Tasks 2–5
 **Files likely touched:** `src/domain/smart-lists/{types,validation,built-in,repository,service}.ts` and tests

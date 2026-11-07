@@ -84,7 +84,6 @@
     "price_positive": "The price must be greater than zero.",
     "price_cents": "The price has at most two decimals.",
     "offer_type_required": "Choose sale or rent.",
-    "contact_required": "Choose a contact.",
     "party_role_required": "Choose a role.",
     "property_required": "Choose a property.",
     "rejected_reason_too_long": "The reason can be at most 500 characters.",
@@ -1913,5 +1912,27 @@
     "remove": "Remove {name}",
     "inactiveArea": "inactive",
     "done": "Done"
+  },
+  "smartLists": {
+    "builtIn": {
+      "noNextAction": "No next action",
+      "overdue": "Overdue",
+      "dueToday": "Due today",
+      "hotNoTouch": "Hot, no recent contact",
+      "sellersNeedUpdate": "Sellers to update",
+      "newMatches": "Buyers with new matches",
+      "unassignedDeals": "Unassigned deals",
+      "newInquiries": "New inquiries",
+      "unassignedInquiries": "Unassigned inquiries"
+    },
+    "errors": {
+      "limit": "You can save at most 50 lists.",
+      "matchListLimit": "You can save at most 5 lists with new matches.",
+      "duplicateName": "You already have a list with this name.",
+      "invalidEntity": "This list has an unknown record type.",
+      "invalidLists": "The lists could not be counted.",
+      "tooManyLists": "Too many lists to count at once.",
+      "immutable": "The owner and record type of a list cannot change."
+    }
   }
 }
