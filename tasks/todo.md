@@ -127,8 +127,8 @@ script and time the counts call (every built-in list) and each list function.
 **Estimated scope:** M
 
 ## Checkpoint 1: List engine
-- [ ] `npx supabase db reset` + `npm run test:db` green; typecheck, lint, test green
-- [ ] Speed numbers below; if `new-matches` misses 1 s, the founder picks pre-filter / cache / cut 4
+- [x] `npx supabase db reset` + `npm run test:db` green; typecheck, lint, test green
+- [x] Speed numbers below; `new-matches` decision made (oldest last touch first)
 - [ ] Founder reviews AD-062 and each built-in list's seed output before any UI
 
 Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker owns every deal
@@ -149,7 +149,7 @@ Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker 
   - Built-in list pages (limit 20): due-today 19 ms, overdue 18, unassigned-deals 16,
     unassigned-inquiries 22, sellers-need-update 30, new-inquiries 45, no-next-action 47,
     hot-no-touch 64; "no touch for 14 days" 144; plain list 65. All under the 300 ms target
-    except `new-matches` sorted by count (the decision above).
+    except the `new-matches` page (1.3 s: its total_count tests every deal; see the decision above).
   - **Overview, counts for all nine lists in one call: median 1.13 s, p95 1.2–1.4 s (target 1 s).**
     About 0.9 s of that is the `new-matches` count; the other eight together ~0.2 s. On "Mine" for a
     broker with ~70 deals (1/30 of this) the same call is ~35 ms.
@@ -159,8 +159,7 @@ Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker 
   - The counts call stripped nothing before: with the `new-matches` sort it took 57 s; dropping
     `sort` in `smart_list_counts` made it 1.1 s.
 
-**Founder decision needed before Phase 2 (the plan reserved it for Checkpoint 1):** keep the
-`new-matches` list ordered by exact count? Options, with my recommendation first:
+**Founder decision (Checkpoint 1, 2026-11-07): option 1, oldest last touch first with the count shown on the rows of the page.** Built as migration `20261108000007` (the `new_matches_desc` sort is removed). Measured afterwards: a page of 20 of the new-matches list takes ~1.3 s at this worst case (the total over every deal 0.9 s plus 20 counts ~0.4 s), against ~40 ms for the other lists; on Mine for ~70 deals about 1/30 of that. Options that were on the table:
 1. Order `new-matches` by oldest last touch (cheap, like the other lists) and show each row's
    count for the 20 rows of the page only; keep the ~0.9 s count (which alone leaves the overview
    just over 1 s at 2,000 deals on Agency scope; fine on Mine). Spec change: order only.
@@ -179,7 +178,8 @@ Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker 
   (trimmed, 1–60), `parseStoredFilter` returning `{ ok, filter } | { ok: false }` for rule 5.
 - `built-in.ts`: the nine presets of the spec's table as filters, each with `entity`, `scope`
   (`mine` | `agency-only` for the two unassigned lists), its i18n key and its constants (3 and 14
-  days). Nothing else defines a built-in list.
+  days). Nothing else defines a built-in list. `new-matches` sorts by `last_touch_asc` and the page
+  shows `new_matches` per row (founder decision at Checkpoint 1).
 - `repository.ts`: calls the three functions and selects/inserts/updates/deletes `smart_lists`.
 - `service.ts` read paths: `overview(ctx, scope)` (visible built-ins by role + saved lists, one
   `smart_list_counts` call), `page(ctx, listId, scope, page)`, `next(ctx, listId, afterKey)`.

@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 64th migration
-(`20261108000006_deal_last_touch_view.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 65th migration
+(`20261108000007_new_matches_page_count.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -547,7 +547,7 @@ erDiagram
   `assigned_to` (`me` = `auth.uid()` | `unassigned` | user id), `next_action` (`none | overdue |
   today | upcoming`), `no_touch_days` (last touch at least N×24 h ago), `has_new_matches`,
   `search` (title, `%` and `_` literal), `sort` (`created_desc` | `last_touch_asc` |
-  `next_action_asc` | `new_matches_desc`; ties by `id`). Day windows come from `agencies.settings->>'timezone'` (default `Europe/Sofia`) and
+  `next_action_asc`; ties by `id`). Day windows come from `agencies.settings->>'timezone'` (default `Europe/Sofia`) and
   match `getTodayWindows`: overdue before now, today from now to the next agency midnight,
   upcoming from that midnight to midnight + 4 calendar days. A page returns `last_touch`,
   `total_count` (the whole list, before paging and before `p_after`) and `sort_key`
@@ -564,10 +564,11 @@ erDiagram
   must-have type, budget or location; these are necessary conditions on the same columns, and
   `092-smart-list-new-matches.sql` compares the result with a count made from `match_evaluate`
   alone. `smart_list_opportunities` takes `has_new_matches` (true: at least one new match) and
-  `sort = new_matches_desc` (counts every candidate deal; returns `new_matches`, otherwise
-  NULL). Measured at 2,000 deals (`scripts/smart-lists/scale.sql`, one broker owns all):
-  `has_new_matches` over every deal 0.86 s; the exact count for every deal, needed to sort by it,
-  takes 57 s there (an open decision for the founder, not used by the app yet).
+  returns `new_matches` (the exact count) for the rows of the page, otherwise NULL; there is no sort by
+  count (founder, Checkpoint 1: counting every deal took 57 s at 2,000 deals). Measured at 2,000
+  deals (`scripts/smart-lists/scale.sql`, one broker owns all): `has_new_matches` over every deal
+  0.9 s; a page of 20 of the new-matches list 1.3 s (the total over every deal plus 20 counts); on
+  "Mine" for a broker with about 70 deals roughly 30 times less.
 - **`smart_list_inquiries(filter, limit, offset, after)`**: the same shape for inquiries
   (`SECURITY INVOKER`, explicit agency filter, `total_count`, `sort_key`, `limit` capped at
   100). Filter keys `status[]` (absent = every status, as the inquiry list shows today),
@@ -576,8 +577,7 @@ erDiagram
   descending | `received_asc`).
 - **`smart_list_counts(lists)`**: `[{ key, entity, filter }]` in, `(key, count)` out in one call.
   Each count is the list function's `total_count` capped at 1000 ("999+" in the UI), so a count
-  can never differ from its list. The filter's `sort` is dropped first: a count never needs it,
-  and `new_matches_desc` makes the list count the matches of every deal (57 s at 2,000 deals). Bad input raises i18n keys (`smartLists.errors.invalidLists`,
+  can never differ from its list. The filter's `sort` is dropped first: a count never needs it. Bad input raises i18n keys (`smartLists.errors.invalidLists`,
   `invalidEntity`, `tooManyLists` for more than 100 lists), never SQL text.
 
 ---

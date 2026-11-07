@@ -30,6 +30,9 @@ CREATE FUNCTION pg_temp.all_deals(p_filter JSONB) RETURNS TEXT[] LANGUAGE sql AS
     inquiry_id, primary_contact_id, assigned_to, status, temperature, expected_value, currency, notes, next_action_at,
     closed_at, lost_reason, created_by, created_at, updated_at, last_touch, new_matches, sort_key, total_count, ord)
 $$;
+CREATE FUNCTION pg_temp.all_deals_set(p_filter JSONB) RETURNS TEXT[] LANGUAGE sql AS $$
+  SELECT ARRAY(SELECT x FROM unnest(pg_temp.all_deals(p_filter)) AS x ORDER BY x)
+$$;
 CREATE FUNCTION pg_temp.sl_inquiries(p_filter JSONB) RETURNS TEXT[] LANGUAGE sql AS $$
   SELECT coalesce(array_agg(caller_name ORDER BY ord), ARRAY[]::text[])
   FROM smart_list_inquiries(p_filter, 100, 0, NULL) WITH ORDINALITY AS r(id, agency_id, source_id, source_description,
@@ -53,8 +56,8 @@ SELECT is(pg_temp.sl_deals('{"status":["active"],"temperature":["hot"],"no_touch
   ARRAY['SL Hot touched 4d'], 'hot-no-touch: touched 4 days ago is in, 2 days ago is out');
 SELECT is(pg_temp.sl_deals('{"status":["active"],"type":["seller","landlord"],"no_touch_days":14,"assigned_to":"me","sort":"last_touch_asc"}'),
   ARRAY['SL Seller touched 15d'], 'sellers-need-update: 15 days is in, 13 days is out');
-SELECT is(pg_temp.all_deals('{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"new_matches_desc"}'),
-  ARRAY['Alpha Opp 1', 'Alpha Opp 2'], 'new-matches: the two matching-seed deals with an unoffered match (3 each, so ordered by id)');
+SELECT is(pg_temp.all_deals_set('{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"last_touch_asc"}'),
+  ARRAY['Alpha Opp 1', 'Alpha Opp 2'], 'new-matches: the two matching-seed deals with an unoffered match');
 SELECT is(pg_temp.sl_deals('{"status":["active"],"assigned_to":"unassigned","sort":"created_desc"}'),
   ARRAY['SL Unassigned deal'], 'unassigned-deals');
 SELECT is(pg_temp.sl_inquiries('{"status":["new"],"assigned_to":"me","sort":"received_asc"}'),
@@ -94,7 +97,7 @@ SELECT is(pg_temp.sl_deals('{"status":["active"],"next_action":"none","assigned_
   ARRAY['SL No action'], 'Beta: no-next-action has its own row');
 SELECT is(pg_temp.sl_deals('{"status":["active"],"temperature":["hot"],"no_touch_days":3,"assigned_to":"me","sort":"last_touch_asc"}'),
   ARRAY['SL Hot touched 4d'], 'Beta: hot-no-touch');
-SELECT is(pg_temp.all_deals('{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"new_matches_desc"}'),
+SELECT is(pg_temp.all_deals_set('{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"last_touch_asc"}'),
   (SELECT array_agg(title ORDER BY title) FROM (VALUES ('Beta Opp 2'), ('Beta Opp 3')) v(title)),
   'Beta: new-matches holds only Beta''s matching-seed deals');
 SELECT is(

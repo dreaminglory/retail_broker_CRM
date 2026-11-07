@@ -412,8 +412,8 @@ a retry for 5 minutes is felt.
   `total_count`) and `smart_list_counts` (`[{key, entity, filter}]` in, counts out, each capped at
   1000). Nothing computes a list in TypeScript. Unknown filter keys are ignored by SQL; Zod
   refuses them before saving.
-- **The filter carries `sort`** (`created_desc` default, `last_touch_asc`, `next_action_asc`,
-  `new_matches_desc`; inquiries `received_asc | received_desc`); every order ends with `id`.
+- **The filter carries `sort`** (`created_desc` default, `last_touch_asc`, `next_action_asc`;
+  inquiries `received_asc | received_desc`); every order ends with `id`.
 - **`me` is `auth.uid()` in SQL**, so a shared "mine" list is per viewer. Mine / Agency on the
   built-in lists is `assigned_to: 'me'` set or dropped by the service (AD-044).
 - **Day windows are computed in SQL** from the agency timezone setting (`agencies.settings`) and pinned to `getTodayWindows` by
@@ -421,9 +421,11 @@ a retry for 5 minutes is felt.
   days).
 - **Last touch is a function, not a column:** latest completed task `completed_at` or note
   `created_at` on the deal, else `created_at`; never `updated_at`.
-- **`new-matches` reuses `match_evaluate`:** one internal function counts a deal's unlinked
-  matches for both `match_properties` and the list. A cache or materialized view needs the
-  founder's OK (AD-060 revisit clause).
+- **`new-matches` reuses `match_evaluate`:** one view (`deal_match_rows`) holds the join for both
+  `match_properties` and the list. **Decided at Checkpoint 1 (founder, 2026-11-07): the list is
+  ordered by oldest last touch, and each row of the page shows its new-match count.** Ordering by
+  the exact count means counting every deal: 57 s at 2,000 deals (1.7–4.6 s even capped). A cache or
+  materialized view still needs the founder's OK (AD-060 revisit clause).
 - **The queue lives in the URL** (`/opportunities/[id]?list=<id>&pos=<n>`); Next and Skip ask for
   the first row after the current deal's `sort_key`, so a deal that left the list doesn't break
   the order. The opportunity list reads through `smart_list_opportunities` too, so a list and its

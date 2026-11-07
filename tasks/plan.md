@@ -40,7 +40,7 @@ Where the plan sharpens the spec. Task 1 records these as AD-062 and updates
     plus the same check in the service for the friendly message.
 - **The filter shape gains `sort`.** Built-in lists need their own order, so the filter carries
   `sort`: `created_desc` (default, the opportunity list's order today), `last_touch_asc`,
-  `next_action_asc`, `new_matches_desc`, and for inquiries `received_asc`, `received_desc`.
+  `next_action_asc`, and for inquiries `received_asc`, `received_desc`.
   Every sort ends with `id`.
 - **`me` is resolved in SQL** as `auth.uid()`, so a shared "mine" list is per viewer and no
   caller can pass someone else as "me". The Mine / Agency scope of the built-in lists is the

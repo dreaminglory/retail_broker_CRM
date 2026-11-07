@@ -9,7 +9,6 @@
 --
 -- LOCAL STACK ONLY. It refuses to run unless the seeded agency 11111111-1111-… exists.
 --   docker exec -i supabase_db_retail_broker_crm_application psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/smart-lists/scale.sql
--- Add -v full=1 for the slow case (every deal counted to sort by new matches).
 BEGIN;
 
 DO $$
@@ -184,18 +183,6 @@ BEGIN
   END LOOP;
 END $$;
 
--- The whole new-matches list sorted by count (every deal counted): slow, so opt in with -v full=1.
-\if :{?full}
-DO $$
-DECLARE
-  v_start TIMESTAMPTZ; v_n INT;
-BEGIN
-  v_start := clock_timestamp();
-  SELECT count(*) INTO v_n FROM smart_list_opportunities(
-    '{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"sort":"new_matches_desc"}', 20, 0, NULL);
-  INSERT INTO scale_timing VALUES ('new-matches list sorted by count, page of 20', extract(epoch FROM clock_timestamp() - v_start) * 1000, v_n);
-END $$;
-\endif
 
 -- The overview: all nine built-in lists in one counts call, then each list's page of 20. The
 -- filters are the presets of src/domain/smart-lists/built-in.ts (see 094-smart-list-seed.sql).
@@ -207,7 +194,7 @@ INSERT INTO scale_lists VALUES
   ('due-today', 'opportunity', '{"status":["active"],"next_action":"today","assigned_to":"me","sort":"next_action_asc"}'),
   ('hot-no-touch', 'opportunity', '{"status":["active"],"temperature":["hot"],"no_touch_days":3,"assigned_to":"me","sort":"last_touch_asc"}'),
   ('sellers-need-update', 'opportunity', '{"status":["active"],"type":["seller","landlord"],"no_touch_days":14,"assigned_to":"me","sort":"last_touch_asc"}'),
-  ('new-matches', 'opportunity', '{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"new_matches_desc"}'),
+  ('new-matches', 'opportunity', '{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"last_touch_asc"}'),
   ('unassigned-deals', 'opportunity', '{"status":["active"],"assigned_to":"unassigned","sort":"created_desc"}'),
   ('new-inquiries', 'inquiry', '{"status":["new"],"assigned_to":"me","sort":"received_asc"}'),
   ('unassigned-inquiries', 'inquiry', '{"status":["new"],"assigned_to":"unassigned","sort":"received_asc"}');
@@ -221,7 +208,7 @@ BEGIN
     SELECT count(*) INTO v_n FROM smart_list_counts((SELECT jsonb_agg(to_jsonb(l)) FROM scale_lists l));
     INSERT INTO scale_timing VALUES ('OVERVIEW: counts for all 9 built-in lists', extract(epoch FROM clock_timestamp() - v_start) * 1000, v_n);
   END LOOP;
-  FOR r IN SELECT * FROM scale_lists WHERE key <> 'new-matches' LOOP
+  FOR r IN SELECT * FROM scale_lists LOOP
     FOR i IN 1..10 LOOP
       v_start := clock_timestamp();
       IF r.entity = 'opportunity' THEN

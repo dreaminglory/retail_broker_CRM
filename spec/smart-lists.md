@@ -41,8 +41,8 @@ a step-through mode for inquiries.
     (`me | unassigned | <user id>`), `source_id[]`, `next_action` (`none | overdue | today |
     upcoming`), `no_touch_days` (int), `has_new_matches` (bool), `search`.
   - inquiry: `status[]`, `assigned_to` (`me | unassigned | <user id>`), `source_id[]`, `search`.
-  - both: `sort` (opportunity `created_desc` default, `last_touch_asc`, `next_action_asc`,
-    `new_matches_desc`; inquiry `received_asc | received_desc`). Every order ends with `id`.
+  - both: `sort` (opportunity `created_desc` default, `last_touch_asc`, `next_action_asc`;
+    inquiry `received_asc | received_desc`). Every order ends with `id`.
   `me` is resolved to the viewer at read time (`auth.uid()` in SQL), so a shared list "my overdue"
   works for everyone.
 - **Evaluated on read in Postgres**, like matching (AD-060): `smart_list_opportunities(filter,
@@ -68,7 +68,7 @@ a step-through mode for inquiries.
 | `due-today` | opportunity | `active`, `next_action_at` within today (agency tz) | `next_action_at` |
 | `hot-no-touch` | opportunity | `active`, `hot`, last touch 3+ days ago | oldest last touch first |
 | `sellers-need-update` | opportunity | `active` seller or landlord, last touch 14+ days ago | oldest last touch first |
-| `new-matches` | opportunity | `active` or `nurture` buyer or tenant with a requirement and new matches | most new matches first |
+| `new-matches` | opportunity | `active` or `nurture` buyer or tenant with a requirement and new matches | oldest last touch first (each row shows its new-match count; founder, Checkpoint 1) |
 | `unassigned-deals` | opportunity | `active`, `assigned_to` null | newest first |
 | `new-inquiries` | inquiry | `status = new` | oldest `received_at` first |
 | `unassigned-inquiries` | inquiry | `status = new`, `assigned_to` null | oldest `received_at` first |

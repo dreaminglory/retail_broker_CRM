@@ -1,6 +1,6 @@
 -- spec: smart-lists, Task 3 (AD-062, AD-060). `new_matches` on smart_list_opportunities: a deal's
 -- unlinked matches, counted by the same rule as match_properties' unlinked_count (both read
--- deal_match_rows), and the has_new_matches filter and new_matches_desc sort built on it.
+-- deal_match_rows), and the has_new_matches filter built on it.
 -- Also pins the pre-filter inside deal_match_rows: on a generated set of requirements and
 -- properties the count equals a count made straight from match_evaluate with no pre-filter.
 BEGIN;
@@ -57,6 +57,11 @@ FROM (VALUES
   ('bb', current_setting('test.a2'), 'buyer',    'active')
 ) AS v(n, ag, type, status);
 
+-- Distinct last touches (their creation dates) so the list order is fixed.
+UPDATE opportunities SET created_at = v.at::timestamptz
+FROM (VALUES ('b1', '2026-01-01'), ('b2', '2026-01-02'), ('n1', '2026-01-03'), ('t1', '2026-01-04')) AS v(n, at)
+WHERE id = current_setting('test.' || v.n)::uuid;
+
 -- Properties p1..p5 in Sofia, each with one listing: p1 sale 150k, p2 sale 160k (reserved),
 -- p3 sale 900k (far over every budget), p4 rent 600, p5 sale 155k but archived.
 SELECT set_config('test.' || n, gen_random_uuid()::text, true) FROM unnest(ARRAY['p1','p2','p3','p4','p5','pb']) AS n;
@@ -89,10 +94,11 @@ WHERE o.id IN (current_setting('test.b1')::uuid, current_setting('test.b2')::uui
 
 -- b1 sees p1 and p2 (p3 is over budget, p4 is a rental, p5 is archived); t1 sees p4; the nurture
 -- buyer sees p1 and p2 and the closed buyer is never matched.
+-- A deal's new_matches through the list (only deals with at least one are listed, so 0 otherwise).
 CREATE FUNCTION pg_temp.nm(p_deal TEXT) RETURNS INT LANGUAGE sql AS $$
-  SELECT new_matches FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
-    format('{"status": ["active","nurture","won"], "sort": "new_matches_desc", "type": ["buyer","tenant","seller"]}')::jsonb, 100, 0, NULL)
-  WHERE id = current_setting('test.' || p_deal)::uuid
+  SELECT COALESCE((SELECT new_matches FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
+    '{"status": ["active","nurture","won"], "has_new_matches": true, "type": ["buyer","tenant","seller"]}'::jsonb, 100, 0, NULL)
+  WHERE id = current_setting('test.' || p_deal)::uuid), 0)
 $$;
 CREATE FUNCTION pg_temp.unlinked(p_deal TEXT) RETURNS BIGINT LANGUAGE sql AS $$
   SELECT max(unlinked_count) FROM match_properties(current_setting('test.' || p_deal)::uuid, true, 100, 0)
@@ -132,29 +138,26 @@ SELECT is(
   ARRAY['b1','b2','n1','t1'], 'has_new_matches keeps the deals with at least one new match');
 
 SELECT is(
-  (SELECT array_agg(new_matches ORDER BY ord)
+  (SELECT array_agg(split_part(title, ' ', 1) ORDER BY ord)
    FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
-     '{"status": ["active","nurture"], "has_new_matches": true, "sort": "new_matches_desc"}', 100, 0, NULL)
+     '{"status": ["active","nurture"], "has_new_matches": true, "sort": "last_touch_asc"}', 100, 0, NULL)
    WITH ORDINALITY AS r(id, agency_id, title, type, stage_id, source_id, inquiry_id, primary_contact_id,
      assigned_to, status, temperature, expected_value, currency, notes, next_action_at, closed_at,
      lost_reason, created_by, created_at, updated_at, last_touch, new_matches, sort_key, total_count, ord)),
-  ARRAY[2, 1, 1, 1], 'new_matches_desc: most new matches first');
+  ARRAY['b1', 'b2', 'n1', 't1'], 'the new-matches list is ordered by oldest last touch');
 
 SELECT is(
-  (SELECT array_agg(id ORDER BY ord) FILTER (WHERE new_matches = 1)
+  (SELECT array_agg(new_matches ORDER BY ord)
    FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
-     '{"status": ["active","nurture"], "has_new_matches": true, "sort": "new_matches_desc"}', 100, 0, NULL)
+     '{"status": ["active","nurture"], "has_new_matches": true, "sort": "last_touch_asc"}', 100, 0, NULL)
    WITH ORDINALITY AS r(id, agency_id, title, type, stage_id, source_id, inquiry_id, primary_contact_id,
      assigned_to, status, temperature, expected_value, currency, notes, next_action_at, closed_at,
      lost_reason, created_by, created_at, updated_at, last_touch, new_matches, sort_key, total_count, ord)),
-  (SELECT array_agg(id ORDER BY id) FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
-     '{"status": ["active","nurture"], "has_new_matches": true, "sort": "new_matches_desc"}', 100, 0, NULL)
-   WHERE new_matches = 1),
-  'new_matches_desc: equal counts are ordered by id');
+  ARRAY[1, 2, 1, 1], 'and each row carries its new_matches count');
 
 SELECT is(
   (SELECT new_matches FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz, '{}', 100, 0, NULL) LIMIT 1),
-  NULL, 'new_matches is null when the list neither filters nor sorts by it');
+  NULL, 'new_matches is null when the list does not filter by has_new_matches');
 
 SELECT is(
   (SELECT total_count FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
@@ -260,8 +263,8 @@ SELECT pg_temp.act_as('pa_user');
 SELECT is(
   (SELECT array_agg(title || '=' || new_matches ORDER BY title)
    FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
-     '{"status": ["active","nurture"], "sort": "new_matches_desc"}', 100, 0, NULL)),
-  (SELECT pg_temp.reference()),
+     '{"status": ["active","nurture"], "has_new_matches": true}', 100, 0, NULL)),
+  (SELECT array_agg(x ORDER BY x) FROM unnest(pg_temp.reference()) AS x WHERE x NOT LIKE '%=0'),
   'with the pre-filter, new_matches equals the count made from match_evaluate alone for 60 generated deals');
 
 SELECT * FROM finish();

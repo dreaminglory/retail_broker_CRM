@@ -145,7 +145,7 @@ SELECT is(
   (SELECT min(total_count)::int FROM smart_list_opportunities('{"status": ["active"]}', 1, 0, NULL)),
   'a deal count equals the list function''s total_count');
 SELECT is(
-  (SELECT c.count FROM smart_list_counts('[{"key": "x", "entity": "opportunity", "filter": {"status": ["active"], "sort": "new_matches_desc"}}]') AS c),
+  (SELECT c.count FROM smart_list_counts('[{"key": "x", "entity": "opportunity", "filter": {"status": ["active"], "sort": "next_action_asc"}}]') AS c),
   (SELECT c.count FROM smart_list_counts('[{"key": "x", "entity": "opportunity", "filter": {"status": ["active"]}}]') AS c),
   'a count ignores the filter''s sort (it would only make the count slower)');
 SELECT is(
