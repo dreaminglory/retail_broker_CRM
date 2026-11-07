@@ -20,7 +20,7 @@ import { OpportunityListTable } from "@/components/domain/opportunities/opportun
 import { ListPageHeader } from "@/components/domain/smart-lists/list-page-header";
 import { QueueStepLink } from "@/components/domain/smart-lists/queue-bar";
 import { ListPager } from "@/components/ui/list-pager";
-import { InquiriesPageClient } from "../../inquiries/inquiries-page-client";
+import { InquiryList } from "@/components/domain/inquiries/inquiry-list";
 import { loadInquiryRowContext } from "../../inquiries/inquiry-row-context";
 
 export async function generateMetadata() {
@@ -145,17 +145,13 @@ async function InquiryRows({ ctx, data, rows, total }: RowsProps<InquiryListRow>
 
   return (
     <FreshNowProvider now={new Date().toISOString()}>
-      <InquiriesPageClient
-        embedded
+      <InquiryList
         inquiries={rows}
         pageInfo={pageInfo(data.page, data.pageSize, total)}
         leadSources={leadSources}
         stages={stages}
         brokers={brokers}
         inactiveAssigneeNames={inactiveAssigneeNames}
-        initialSearch=""
-        initialStatus="all"
-        userRole={ctx.role}
         timeZone={settings.timezone}
         joinedDeals={joinedDeals}
       />

@@ -18,47 +18,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { InquiryCard } from "@/components/domain/inquiries/inquiry-card";
 import { InquiryForm } from "@/components/domain/inquiries/inquiry-form";
-import { ConvertInquiryDialog } from "@/components/domain/inquiries/convert-inquiry-dialog";
-import {
-  createInquiryAction,
-  updateInquiryAction,
-  markInquiryContactedAction,
-  dismissInquiryAction,
-  convertInquiryAction,
-  joinInquiryAction,
-  listJoinableOpportunitiesAction,
-  searchInquiriesQuickAction,
-} from "./actions";
+import { InquiryList } from "@/components/domain/inquiries/inquiry-list";
+import { createInquiryAction, searchInquiriesQuickAction } from "./actions";
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
 import type { Stage } from "@/domain/stages/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus, Inbox } from "lucide-react";
-import { useFormStatus } from "react-dom";
 import { useTranslations } from "next-intl";
-import { ListPager } from "@/components/ui/list-pager";
 import type { PageInfo } from "@/lib/pagination";
-
-// ── Dismiss submit button ─────────────────────────────────────────────────────
-
-function DismissSubmitButton() {
-  const t = useTranslations("InquiriesPage");
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      variant="destructive"
-      disabled={pending}
-      id="dismiss-inquiry-submit"
-    >
-      {pending ? t("dismissModal.dismissingBtn") : t("dismissModal.submitBtn")}
-    </Button>
-  );
-}
 
 // ── Status filter options ─────────────────────────────────────────────────────
 
@@ -86,8 +55,6 @@ interface InquiriesPageClientProps {
   timeZone: string;
   /** Converted inquiries that joined a deal other than the one they started, by inquiry id. */
   joinedDeals: Record<string, { id: string; title: string }>;
-  /** Rows, row actions and pager only, inside another page (a smart list, spec rule 8). */
-  embedded?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -105,7 +72,6 @@ export function InquiriesPageClient({
   userRole,
   timeZone,
   joinedDeals,
-  embedded = false,
 }: InquiriesPageClientProps) {
   const t = useTranslations("InquiriesPage");
   const router = useRouter();
@@ -114,11 +80,6 @@ export function InquiriesPageClient({
 
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState(initialSearch);
-
-  const [editTarget, setEditTarget] = useState<Inquiry | null>(null);
-  const [dismissTarget, setDismissTarget] = useState<Inquiry | null>(null);
-  const [convertTarget, setConvertTarget] = useState<Inquiry | null>(null);
-  const [convertOpen, setConvertOpen] = useState(false);
 
   const [quickResults, setQuickResults] = useState<Inquiry[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -165,27 +126,6 @@ export function InquiriesPageClient({
     updateParams({ status: v === "all" ? "" : v, page: "" });
   }
 
-  async function handleMarkContacted(id: string) {
-    await markInquiryContactedAction(id);
-    router.refresh();
-  }
-
-  function handleOpenDismiss(inquiry: Inquiry) {
-    setDismissTarget(inquiry);
-  }
-
-  function handleOpenConvert(inquiry: Inquiry) {
-    setConvertTarget(inquiry);
-    setConvertOpen(true);
-  }
-
-  // A deactivated assignee stays selectable while editing their inquiry, so the select can name them.
-  function brokersWithAssignee(inquiry: Inquiry): ActiveBroker[] {
-    const name = inquiry.assigned_to ? inactiveAssigneeNames[inquiry.assigned_to] : undefined;
-    if (!inquiry.assigned_to || !name) return brokers;
-    return [...brokers, { id: inquiry.assigned_to, display_name: name, email: "", role: "broker" }];
-  }
-
   const statusLabel =
     t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.value ?? "all"}` as any);
 
@@ -195,8 +135,6 @@ export function InquiriesPageClient({
 
   return (
     <>
-      {!embedded && (
-      <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -304,8 +242,6 @@ export function InquiriesPageClient({
           </SelectContent>
         </Select>
       </div>
-      </>
-      )}
 
       {/* ── List ────────────────────────────────────────────────────────────── */}
       {initialId && (
@@ -316,10 +252,17 @@ export function InquiriesPageClient({
           </Button>
         </div>
       )}
-      <div
-        className={`space-y-2 ${isPending ? "opacity-60 pointer-events-none" : ""}`}
-      >
-        {displayedInquiries.length === 0 ? (
+      <InquiryList
+        inquiries={displayedInquiries}
+        pageInfo={initialId ? null : pageInfo}
+        leadSources={leadSources}
+        stages={stages}
+        brokers={brokers}
+        inactiveAssigneeNames={inactiveAssigneeNames}
+        timeZone={timeZone}
+        joinedDeals={joinedDeals}
+        pending={isPending}
+        empty={
           <div className="rounded-lg border border-dashed py-16 text-center">
             <Inbox className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
             <p className="text-sm font-medium text-muted-foreground">
@@ -329,123 +272,8 @@ export function InquiriesPageClient({
               {initialId ? t("emptyState.notFoundDesc") : t("emptyState.emptyDesc")}
             </p>
           </div>
-        ) : (
-          displayedInquiries.map((inquiry) => (
-            <InquiryCard
-              key={inquiry.id}
-              inquiry={inquiry}
-              leadSources={leadSources}
-              brokers={brokers}
-              inactiveAssigneeNames={inactiveAssigneeNames}
-              joinedDeal={joinedDeals[inquiry.id]}
-              onEdit={setEditTarget}
-              onMarkContacted={handleMarkContacted}
-              onConvert={handleOpenConvert}
-              onDismiss={handleOpenDismiss}
-            />
-          ))
-        )}
-      </div>
-      {!initialId && (
-        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
-      )}
-
-      {/* ── Edit dialog ──────────────────────────────────────────────────────── */}
-      <Dialog
-        open={!!editTarget}
-        onOpenChange={(open: boolean) => {
-          if (!open) setEditTarget(null);
-        }}
-      >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t("editInquiryTitle")}</DialogTitle>
-          </DialogHeader>
-          {editTarget && (
-            <InquiryForm
-              key={editTarget.id}
-              createAction={updateInquiryAction.bind(null, editTarget.id)}
-              inquiry={editTarget}
-              leadSources={leadSources}
-              brokers={brokersWithAssignee(editTarget)}
-              onSuccess={() => {
-                setEditTarget(null);
-                router.refresh();
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Dismiss dialog ───────────────────────────────────────────────────── */}
-      <Dialog
-        open={!!dismissTarget}
-        onOpenChange={(open: boolean) => {
-          if (!open) setDismissTarget(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t("dismissModal.title")}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            {t("dismissModal.warning")}
-          </p>
-          {dismissTarget && (
-            <form
-              action={async (formData: FormData) => {
-                const initialState = { success: false as const, error: "" };
-                await dismissInquiryAction(dismissTarget.id, initialState, formData);
-                setDismissTarget(null);
-                router.refresh();
-              }}
-              className="space-y-3"
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="dismiss-reason">{t("dismissModal.reasonLabel")}</Label>
-                <Textarea
-                  id="dismiss-reason"
-                  name="dismissed_reason"
-                  placeholder={t("dismissModal.reasonPlaceholder")}
-                  rows={2}
-                  maxLength={1000}
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDismissTarget(null)}
-                >
-                  {t("dismissModal.cancelBtn")}
-                </Button>
-                <DismissSubmitButton />
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Convert dialog ───────────────────────────────────────────────────── */}
-      {convertTarget && (
-        <ConvertInquiryDialog
-          open={convertOpen}
-          onOpenChange={(open: boolean) => {
-            setConvertOpen(open);
-            if (!open) setConvertTarget(null);
-          }}
-          inquiry={convertTarget}
-          stages={stages}
-          brokers={brokers}
-          convertAction={convertInquiryAction}
-          joinAction={joinInquiryAction}
-          listJoinableAction={listJoinableOpportunitiesAction}
-          timeZone={timeZone}
-          onSuccess={(opportunityId) => {
-            router.push(`/opportunities/${opportunityId}`);
-          }}
-        />
-      )}
+        }
+      />
     </>
   );
 }
