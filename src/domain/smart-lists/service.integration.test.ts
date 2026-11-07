@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
+import { adminClient, createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
 import { getTodayWindows, todayBucket } from '@/lib/time/agency-day';
+import { ExceptionsRepository } from '../exceptions/repository';
 import { OpportunityService } from '../opportunities/service';
 import { TaskService } from '../tasks/service';
 import { findBuiltInList, scopedFilter } from './built-in';
@@ -74,6 +75,21 @@ describeServices('SmartListService against the local stack', () => {
     return rows.map((r) => r.id).sort();
   }
 
+  /**
+   * Other suites write deals while this runs, so the screen the lists are compared with (Today,
+   * Exceptions) is read before and after the lists, and only one that didn't move counts.
+   */
+  async function betweenStableReads<T, L>(readToday: () => Promise<T>, readLists: () => Promise<L>) {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const before = await readToday();
+      const lists = await readLists();
+      const after = await readToday();
+      if (JSON.stringify(before) === JSON.stringify(after)) return { today: before, lists };
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    throw new Error('The compared screen kept changing while the lists were read');
+  }
+
   describe('the same numbers as Today, counted by deal (rule 2, AC-1)', () => {
     beforeAll(async () => {
       const w = getTodayWindows(TZ);
@@ -113,21 +129,6 @@ describeServices('SmartListService against the local stack', () => {
       { name: 'manager on mine', who: () => manager, role: 'manager', scope: 'mine' as const },
       { name: 'manager on agency', who: () => manager, role: 'manager', scope: 'agency' as const },
     ];
-
-    /**
-     * Other suites write Alpha deals while this runs, so Today is read before and after the
-     * lists, and the lists are compared only with a Today that didn't move in between.
-     */
-    async function betweenStableReads<T, L>(readToday: () => Promise<T>, readLists: () => Promise<L>) {
-      for (let attempt = 0; attempt < 30; attempt++) {
-        const before = await readToday();
-        const lists = await readLists();
-        const after = await readToday();
-        if (JSON.stringify(before) === JSON.stringify(after)) return { today: before, lists };
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-      throw new Error('Today kept changing while the lists were read');
-    }
 
     it.each(cases)('no-next-action and new-inquiries equal Today ($name)', async ({ who, role, scope }) => {
       const session = who();
@@ -177,6 +178,60 @@ describeServices('SmartListService against the local stack', () => {
       };
       expect(await titles('overdue')).toEqual([`SLC overdue then today ${RUN}`]);
       expect(await titles('due-today')).toEqual([`SLC task for someone else ${RUN}`]);
+    });
+  });
+
+  describe('Agency equals Exceptions where they overlap (AC-1)', () => {
+    let staleId: string;
+
+    beforeAll(async () => {
+      // Exceptions shows a deal with no next action under "At risk", or under "Stale" once it is
+      // untouched for 7 days; the list holds both. The seed has no stale one, so add it (the
+      // trigger sets updated_at only on update, so the insert keeps the old date).
+      const tenDaysAgo = new Date(Date.now() - 10 * 86_400_000).toISOString();
+      const { data, error } = await adminClient()
+        .from('opportunities')
+        .insert({
+          agency_id: manager.agencyId,
+          title: `SLE stale ${RUN}`,
+          type: 'buyer',
+          stage_id: stageId,
+          assigned_to: broker.userId,
+          created_by: manager.userId,
+          created_at: tenDaysAgo,
+          updated_at: tenDaysAgo,
+        })
+        .select('id')
+        .single();
+      expect(error).toBeNull();
+      staleId = data!.id;
+      cleanup.track('opportunities', staleId);
+    });
+
+    it('unassigned-inquiries and no-next-action equal the Exceptions page (manager on agency)', async () => {
+      const { today: exceptions, lists } = await betweenStableReads(
+        async () => {
+          const data = await new ExceptionsRepository(manager.db).getDashboardData(manager.agencyId, TZ);
+          return {
+            unassignedInquiries: data.unassignedInquiries.map((i) => i.id).sort(),
+            stale: data.staleOpportunities.map((o) => o.id),
+            noNextAction: [...data.atRiskOpportunities, ...data.staleOpportunities].map((o) => o.id).sort(),
+          };
+        },
+        async () => ({
+          overview: await new SmartListService(manager.db).overview(viewerOf(manager, 'manager'), 'agency'),
+          unassignedInquiries: await listIds(manager, 'unassigned-inquiries', 'agency'),
+          noNextAction: await listIds(manager, 'no-next-action', 'agency'),
+        })
+      );
+      const count = (id: string) => lists.overview.builtIn.find((b) => b.list.id === id)!.count;
+
+      expect(exceptions.stale).toContain(staleId);
+      expect(exceptions.unassignedInquiries.length).toBeGreaterThan(0);
+      expect(lists.unassignedInquiries).toEqual(exceptions.unassignedInquiries);
+      expect(count('unassigned-inquiries')).toBe(exceptions.unassignedInquiries.length);
+      expect(lists.noNextAction).toEqual(exceptions.noNextAction);
+      expect(count('no-next-action')).toBe(exceptions.noNextAction.length);
     });
   });
 
