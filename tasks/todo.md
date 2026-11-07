@@ -297,13 +297,15 @@ N days, has new matches; parsed like `parseOpportunityListFilters` (bad value â†
 The requirement summary and other row data still load as today.
 
 **Acceptance criteria:**
-- [ ] Parity: every existing filter and search returns the same rows and order as before the switch (integration test)
-- [ ] Each new filter narrows the list as the function does; combining them works; bad values are ignored
+- [x] Parity: every existing filter and search returns the same rows and order as before the switch (integration test)
+- [x] Each new filter narrows the list as the function does; combining them works; bad values are ignored
 - [ ] Existing E2E (`core-loop`, `matching`, `requirements`, `properties`) pass; BG and EN, both widths
 
 **Verification:**
 - [ ] `npm run test:services`, `npm run test:e2e`, typecheck, lint, test
-- [ ] Browser: opportunity list with each new filter
+- [x] Browser: opportunity list with each new filter
+
+Notes (2026-11-07): parity and new-filter tests run on tagged deals the suite creates (the other suites write Alpha in parallel). Search now trims and treats % and _ literally (the function escapes them; PostgREST ilike did not). typecheck, lint, test green. test:services: all green except matching forOpportunity/forProperty, and e2e 56/64 with only matching.spec failing: both fail the same on the unchanged code, because the local seed has drifted (Alpha Opp 1 already has three candidates from the AC-3 browser check). Re-run both after npx supabase db reset to tick the remaining boxes.
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/opportunities/{service,repository,validation}.ts` and tests, `src/app/(dashboard)/opportunities/{page,opportunities-page-client}.tsx`, `messages/{bg,en}.json`

@@ -1178,7 +1178,18 @@
       "allTemperatures": "All temperatures",
       "hot": "🔥 Hot",
       "warm": "⚡ Warm",
-      "cold": "❄️ Cold"
+      "cold": "❄️ Cold",
+      "allSources": "All sources",
+      "unknownSource": "Unknown source",
+      "anyNextAction": "Any next action",
+      "nextNone": "No next action",
+      "nextOverdue": "Overdue",
+      "nextToday": "Due today",
+      "nextUpcoming": "Next 3 days",
+      "anyTouch": "Any last touch",
+      "untouchedDays": "No touch for {days, plural, one {# day} other {# days}}",
+      "anyMatches": "Any matches",
+      "newMatches": "Has new matches"
     }
   },
   "OpportunityDetail": {

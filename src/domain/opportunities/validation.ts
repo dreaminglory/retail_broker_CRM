@@ -109,15 +109,39 @@ export type AddParticipantSchema = z.infer<typeof addParticipantSchema>;
 
 // ── List filters ───────────────────────────────────────────────────────────
 
+const nextActionParamSchema = z.enum(['none', 'overdue', 'today', 'upcoming']);
+/** Whole days as typed in the URL: digits only, 1–3650 (as the smart list filter allows). */
+const untouchedDaysParamSchema = z
+  .string()
+  .regex(/^\d{1,4}$/)
+  .transform(Number)
+  .pipe(z.number().int().min(1).max(3650));
+
 /**
- * `?broker=` and `?temperature=` on the opportunity list. A value that isn't a broker id or a
- * temperature (a stale link, a typo) means "no filter" rather than an error or an empty list.
+ * The opportunity list's URL filters: `?broker=`, `?temperature=`, and the smart-list ones
+ * (spec: smart-lists, rule 3) `?source=<id>`, `?next=none|overdue|today|upcoming`,
+ * `?untouched=<days>`, `?matches=new`. A value that doesn't parse (a stale link, a typo) means
+ * "no filter" rather than an error or an empty list.
  */
-export function parseOpportunityListFilters(params: { broker?: string; temperature?: string }) {
+export function parseOpportunityListFilters(params: {
+  broker?: string;
+  temperature?: string;
+  source?: string;
+  next?: string;
+  untouched?: string;
+  matches?: string;
+}) {
   const broker = z.string().uuid().safeParse(params.broker);
   const temperature = temperatureSchema.safeParse(params.temperature);
+  const source = z.string().uuid().safeParse(params.source);
+  const next = nextActionParamSchema.safeParse(params.next);
+  const untouched = untouchedDaysParamSchema.safeParse(params.untouched);
   return {
     assignedTo: broker.success ? broker.data : undefined,
     temperature: temperature.success ? temperature.data : undefined,
+    sourceId: source.success ? source.data : undefined,
+    nextAction: next.success ? next.data : undefined,
+    noTouchDays: untouched.success ? untouched.data : undefined,
+    hasNewMatches: params.matches === 'new',
   };
 }

@@ -22,6 +22,11 @@ export interface OpportunityListOptions {
   stageId?: string;
   type?: 'buyer' | 'seller' | 'landlord' | 'tenant' | 'all';
   search?: string;
+  /** The filters below exist only on the list page, through smart_list_opportunities (AD-062). */
+  sourceId?: string;
+  nextAction?: 'none' | 'overdue' | 'today' | 'upcoming';
+  noTouchDays?: number;
+  hasNewMatches?: boolean;
   limit?: number;
   offset?: number;
 }
@@ -36,34 +41,19 @@ export class OpportunityRepository {
     opts: OpportunityListOptions = {}
   ): Promise<Opportunity[]> {
     const { limit = 50, offset = 0 } = opts;
-    const { data, error } = await this.filtered(agencyId, opts, false).range(offset, offset + limit - 1);
+    const { data, error } = await this.filtered(agencyId, opts).range(offset, offset + limit - 1);
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
     return (data ?? []) as Opportunity[];
   }
 
-  /** One page of rows plus the total that match the filters (for the pager). */
-  async findPage(
-    agencyId: string,
-    opts: OpportunityListOptions = {}
-  ): Promise<{ rows: Opportunity[]; total: number }> {
-    const { limit = 50, offset = 0 } = opts;
-    const query = this.filtered(agencyId, opts, true);
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-    if (error?.code === 'PGRST103') {
-      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
-      const retry = await query.range(0, 0);
-      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
-    }
-    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
-    return { rows: (data ?? []) as Opportunity[], total: count ?? 0 };
-  }
-
-  private filtered(agencyId: string, opts: OpportunityListOptions, withCount: boolean) {
+  // The paged list (with the smart-list filters) reads through smart_list_opportunities:
+  // OpportunityService.listPage. This query serves the quick search only.
+  private filtered(agencyId: string, opts: OpportunityListOptions) {
     const { status = 'active', assignedTo, stageId, search } = opts;
 
     let query = this.db
       .from('opportunities')
-      .select('*', withCount ? { count: 'exact' } : undefined)
+      .select('*')
       .eq('agency_id', agencyId)
       // id breaks created_at ties so pages never overlap
       .order('created_at', { ascending: false })

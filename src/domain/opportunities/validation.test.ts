@@ -35,15 +35,53 @@ describe('opportunity schemas: optional references', () => {
 describe('parseOpportunityListFilters', () => {
   const BROKER_ID = '11111111-4444-4444-8444-444444444444';
 
+  const SOURCE_ID = '33333333-4444-4444-8444-444444444444';
+
   it('reads a broker id and a temperature', () => {
-    expect(parseOpportunityListFilters({ broker: BROKER_ID, temperature: 'hot' })).toEqual({
+    expect(parseOpportunityListFilters({ broker: BROKER_ID, temperature: 'hot' })).toMatchObject({
       assignedTo: BROKER_ID,
       temperature: 'hot',
     });
   });
 
+  it('reads the smart-list filters: source, next action, untouched days, new matches', () => {
+    expect(
+      parseOpportunityListFilters({ source: SOURCE_ID, next: 'overdue', untouched: '14', matches: 'new' })
+    ).toEqual({
+      assignedTo: undefined,
+      temperature: undefined,
+      sourceId: SOURCE_ID,
+      nextAction: 'overdue',
+      noTouchDays: 14,
+      hasNewMatches: true,
+    });
+  });
+
   it('treats missing params as no filter', () => {
-    expect(parseOpportunityListFilters({})).toEqual({ assignedTo: undefined, temperature: undefined });
+    expect(parseOpportunityListFilters({})).toEqual({
+      assignedTo: undefined,
+      temperature: undefined,
+      sourceId: undefined,
+      nextAction: undefined,
+      noTouchDays: undefined,
+      hasNewMatches: false,
+    });
+  });
+
+  it.each(['all', '', 'not-a-uuid'])('ignores source %j', (source) => {
+    expect(parseOpportunityListFilters({ source }).sourceId).toBeUndefined();
+  });
+
+  it.each(['all', '', 'tomorrow'])('ignores next action %j', (next) => {
+    expect(parseOpportunityListFilters({ next }).nextAction).toBeUndefined();
+  });
+
+  it.each(['', '0', '-3', '2.5', 'ten', '1e1', '3651'])('ignores untouched days %j', (untouched) => {
+    expect(parseOpportunityListFilters({ untouched }).noTouchDays).toBeUndefined();
+  });
+
+  it.each(['', 'all', 'yes'])('reads matches %j as no new-matches filter', (matches) => {
+    expect(parseOpportunityListFilters({ matches }).hasNewMatches).toBe(false);
   });
 
   it.each(['all', '', 'not-a-uuid'])('ignores broker %j', (broker) => {

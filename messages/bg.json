@@ -1178,7 +1178,18 @@
       "allTemperatures": "Всички температури",
       "hot": "🔥 Горещо",
       "warm": "⚡ Топло",
-      "cold": "❄️ Студено"
+      "cold": "❄️ Студено",
+      "allSources": "Всички източници",
+      "unknownSource": "Неизвестен източник",
+      "anyNextAction": "Всяко следващо действие",
+      "nextNone": "Без следващо действие",
+      "nextOverdue": "Просрочени",
+      "nextToday": "За днес",
+      "nextUpcoming": "Следващите 3 дни",
+      "anyTouch": "Всеки последен контакт",
+      "untouchedDays": "Без контакт {days, plural, one {# ден} other {# дни}}",
+      "anyMatches": "Всички съвпадения",
+      "newMatches": "С нови съвпадения"
     }
   },
   "OpportunityDetail": {
