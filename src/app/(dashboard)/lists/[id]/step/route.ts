@@ -19,7 +19,15 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/lists/[id]/s
   }
 
   const input = parseQueueStep(Object.fromEntries(url.searchParams));
-  const step = await new SmartListService(auth.supabase).step(auth, id, input.scope, input);
+  let step: Awaited<ReturnType<SmartListService["step"]>>;
+  try {
+    step = await new SmartListService(auth.supabase).step(auth, id, input.scope, input);
+  } catch (error) {
+    // The list page shows the list (or its own error) rather than a bare 500 with the detail.
+    console.error("Smart list step failed:", error);
+    const scope = input.scope === "agency" ? "?scope=agency" : "";
+    return NextResponse.redirect(new URL(`/lists/${encodeURIComponent(id)}${scope}`, url));
+  }
 
   // A list the viewer can't open, or one without a queue, goes back to the lists.
   if (!step) return NextResponse.redirect(new URL("/lists", url));
