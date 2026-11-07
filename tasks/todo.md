@@ -230,13 +230,13 @@ after each, so the row and count update (rule 8). Empty state "Nothing left — 
 broker opening an agency-only list gets `notFound()`.
 
 **Acceptance criteria:**
-- [ ] Each built-in list shows its seeded rows in its order with the right count; page 2 works
-- [ ] Assigning an inquiry from `unassigned-inquiries` removes it and lowers the count (AC-7)
-- [ ] BG and EN, 1280 and 390 px
+- [x] Each built-in list shows its seeded rows in its order with the right count; page 2 works
+- [x] Assigning an inquiry from `unassigned-inquiries` removes it and lowers the count (AC-7)
+- [x] BG and EN, 1280 and 390 px
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
-- [ ] Browser: two opportunity lists and both inquiry lists, both locales and widths
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] Browser: two opportunity lists and both inquiry lists, both locales and widths
 
 **Dependencies:** Task 7
 **Files likely touched:** `src/app/(dashboard)/lists/[id]/page.tsx`, `src/components/domain/smart-lists/list-page.tsx`, the existing table components (props only), `messages/{bg,en}.json`

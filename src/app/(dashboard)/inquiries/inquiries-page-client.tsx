@@ -86,6 +86,8 @@ interface InquiriesPageClientProps {
   timeZone: string;
   /** Converted inquiries that joined a deal other than the one they started, by inquiry id. */
   joinedDeals: Record<string, { id: string; title: string }>;
+  /** Rows, row actions and pager only, inside another page (a smart list, spec rule 8). */
+  embedded?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -103,6 +105,7 @@ export function InquiriesPageClient({
   userRole,
   timeZone,
   joinedDeals,
+  embedded = false,
 }: InquiriesPageClientProps) {
   const t = useTranslations("InquiriesPage");
   const router = useRouter();
@@ -192,6 +195,8 @@ export function InquiriesPageClient({
 
   return (
     <>
+      {!embedded && (
+      <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -299,6 +304,8 @@ export function InquiriesPageClient({
           </SelectContent>
         </Select>
       </div>
+      </>
+      )}
 
       {/* ── List ────────────────────────────────────────────────────────────── */}
       {initialId && (

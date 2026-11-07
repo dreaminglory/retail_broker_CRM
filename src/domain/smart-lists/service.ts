@@ -137,10 +137,17 @@ export class SmartListService {
     const scope = resolveListScope(viewer.role, requestedScope);
     const list = await this.resolve(viewer, listId, scope);
     if (!list) return null;
-    const current = Number.isInteger(page) && page >= 1 ? page : 1;
-    const result = list.filter
-      ? await this.repo.listRows(list.filter, { limit: LIST_PAGE_SIZE, offset: (current - 1) * LIST_PAGE_SIZE })
-      : null;
+    let current = Number.isInteger(page) && page >= 1 ? page : 1;
+    if (!list.filter) return { list, scope, page: current, pageSize: LIST_PAGE_SIZE, result: null };
+
+    const load = (p: number) => this.repo.listRows(list.filter!, { limit: LIST_PAGE_SIZE, offset: (p - 1) * LIST_PAGE_SIZE });
+    let result = await load(current);
+    // A page past the end (rows left the list meanwhile) shows the last page, as the other lists do.
+    const lastPage = Math.max(1, Math.ceil(result.total / LIST_PAGE_SIZE));
+    if (result.rows.length === 0 && current > lastPage) {
+      current = lastPage;
+      result = await load(current);
+    }
     return { list, scope, page: current, pageSize: LIST_PAGE_SIZE, result };
   }
 

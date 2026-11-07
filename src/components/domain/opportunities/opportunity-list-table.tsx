@@ -14,9 +14,11 @@ interface OpportunityListTableProps {
   /** Buyer and tenant deals' requirement summary lines by opportunity id, shown under the title. */
   requirementSummaries?: Record<string, string>;
   stages: Stage[];
+  /** New matches by opportunity id, shown on the row (the new-matches smart list). */
+  newMatches?: Record<string, number>;
 }
 
-export function OpportunityListTable({ opportunities, requirementSummaries = {}, stages }: OpportunityListTableProps) {
+export function OpportunityListTable({ opportunities, requirementSummaries = {}, stages, newMatches }: OpportunityListTableProps) {
   const t = useTranslations("OpportunityListTable");
 
   if (opportunities.length === 0) {
@@ -38,16 +40,17 @@ export function OpportunityListTable({ opportunities, requirementSummaries = {},
       {opportunities.map((opp) => {
         const stage = stages.find((s) => s.id === opp.stage_id);
         return (
-          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} requirementSummary={requirementSummaries[opp.id]} />
+          <OpportunityRow key={opp.id} opportunity={opp} stage={stage} requirementSummary={requirementSummaries[opp.id]} newMatches={newMatches?.[opp.id]} />
         );
       })}
     </div>
   );
 }
 
-function OpportunityRow({ opportunity, stage, requirementSummary }: { opportunity: Opportunity; stage?: Stage; requirementSummary?: string }) {
+function OpportunityRow({ opportunity, stage, requirementSummary, newMatches }: { opportunity: Opportunity; stage?: Stage; requirementSummary?: string; newMatches?: number }) {
   const format = useFormatter();
   const enums = useTranslations("Enums");
+  const t = useTranslations("OpportunityListTable");
 
   return (
     <Link
@@ -88,6 +91,12 @@ function OpportunityRow({ opportunity, stage, requirementSummary }: { opportunit
           )}
         </div>
       </div>
+
+      {newMatches !== undefined && newMatches > 0 && (
+        <Badge variant="secondary" className="shrink-0">
+          {t("newMatches", { count: newMatches })}
+        </Badge>
+      )}
 
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
     </Link>

@@ -1108,7 +1108,8 @@
   },
   "OpportunityListTable": {
     "noOpportunities": "No opportunities found",
-    "noOpportunitiesDesc": "Adjust your filters or create a new opportunity."
+    "noOpportunitiesDesc": "Adjust your filters or create a new opportunity.",
+    "newMatches": "{count, plural, one {# new match} other {# new matches}}"
   },
   "ParticipantList": {
     "title": "Participants",
@@ -1955,6 +1956,13 @@
       "stale": "The filters of this list changed. Edit this list.",
       "shared": "Shared with the agency",
       "sharedBy": "Shared by {name}"
+    },
+    "page": {
+      "back": "All lists",
+      "dealCount": "{count, plural, one {# deal} other {# deals}}",
+      "inquiryCount": "{count, plural, one {# inquiry} other {# inquiries}}",
+      "emptyTitle": "Nothing left — well done",
+      "emptyDesc": "Every record in this list has been dealt with."
     }
   }
 }

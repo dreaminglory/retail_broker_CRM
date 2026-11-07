@@ -1108,7 +1108,8 @@
   },
   "OpportunityListTable": {
     "noOpportunities": "Няма намерени сделки",
-    "noOpportunitiesDesc": "Променете филтрите или създайте нова сделка."
+    "noOpportunitiesDesc": "Променете филтрите или създайте нова сделка.",
+    "newMatches": "{count, plural, one {# нов подходящ имот} other {# нови подходящи имота}}"
   },
   "ParticipantList": {
     "title": "Участници",
@@ -1955,6 +1956,13 @@
       "stale": "Филтрите на този списък са се променили. Редактирайте списъка.",
       "shared": "Споделен с агенцията",
       "sharedBy": "Споделен от {name}"
+    },
+    "page": {
+      "back": "Всички списъци",
+      "dealCount": "{count, plural, one {# сделка} other {# сделки}}",
+      "inquiryCount": "{count, plural, one {# запитване} other {# запитвания}}",
+      "emptyTitle": "Нищо не остана — браво",
+      "emptyDesc": "Всички записи в този списък са обработени."
     }
   }
 }

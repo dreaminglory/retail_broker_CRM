@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import type { ListOverview } from "@/domain/smart-lists/service";
 import type { SmartListEntity } from "@/domain/smart-lists/types";
 import { formatListCount, listHref } from "./list-count";
+import { ScopeToggle } from "./scope-toggle";
 
 function EntityIcon({ entity }: { entity: SmartListEntity }) {
   const t = useTranslations("smartLists.entity");
@@ -68,23 +69,7 @@ export function ListOverviewView({ scope, canSwitchScope, builtIn, saved }: List
           <h1 className="text-2xl font-bold tracking-tight">{t("overview.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("overview.description")}</p>
         </div>
-        {canSwitchScope && (
-          <div role="group" aria-label={t("scope.label")} className="inline-flex rounded-md border p-0.5 text-sm">
-            {(["mine", "agency"] as const).map((option) => (
-              <Link
-                key={option}
-                href={option === "agency" ? "/lists?scope=agency" : "/lists"}
-                aria-current={scope === option ? "page" : undefined}
-                className={cn(
-                  "rounded px-3 py-1 transition-colors",
-                  scope === option ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {t(`scope.${option}`)}
-              </Link>
-            ))}
-          </div>
-        )}
+        {canSwitchScope && <ScopeToggle scope={scope} basePath="/lists" />}
       </div>
 
       <section aria-labelledby="lists-built-in" className="mb-8">
