@@ -117,6 +117,21 @@ describe('overview', () => {
     expect(repo.counts.mock.calls.map((c) => (c[0] as unknown[]).length)).toEqual([100, 29]);
     expect(overview.saved.every((s) => typeof s.count === 'number')).toBe(true);
   });
+
+  it('sends the count chunks at once, not one after the other', async () => {
+    repo.findVisible.mockResolvedValue(Array.from({ length: 250 }, (_, i) => savedList({ id: `l-${i}`, name: `List ${i}` })));
+    const pending: (() => void)[] = [];
+    repo.counts.mockImplementation(
+      (items: { key: string }[]) =>
+        new Promise((resolve) => pending.push(() => resolve(new Map(items.map((it) => [it.key, 7])))))
+    );
+
+    const overview = service.overview(manager, 'agency');
+    await vi.waitFor(() => expect(repo.counts).toHaveBeenCalledTimes(3));
+    pending.forEach((answer) => answer());
+
+    expect((await overview).saved.every((s) => s.count === 7)).toBe(true);
+  });
 });
 
 describe('resolve and page', () => {

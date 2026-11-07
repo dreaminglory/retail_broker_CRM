@@ -96,9 +96,10 @@ export class SmartListService {
       if (parsed.ok) requests.push({ key: list.id, entity: parsed.filter.entity, filter: parsed.filter.filter });
     }
 
+    const chunks: CountRequest[][] = [];
+    for (let i = 0; i < requests.length; i += COUNTS_CHUNK) chunks.push(requests.slice(i, i + COUNTS_CHUNK));
     const counts = new Map<string, number>();
-    for (let i = 0; i < requests.length; i += COUNTS_CHUNK) {
-      const chunk = await this.repo.counts(requests.slice(i, i + COUNTS_CHUNK));
+    for (const chunk of await Promise.all(chunks.map((c) => this.repo.counts(c)))) {
       for (const [key, count] of chunk) counts.set(key, count);
     }
 
