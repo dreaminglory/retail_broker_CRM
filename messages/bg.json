@@ -1963,6 +1963,17 @@
       "inquiryCount": "{count, plural, one {# запитване} other {# запитвания}}",
       "emptyTitle": "Нищо не остана — браво",
       "emptyDesc": "Всички записи в този списък са обработени."
+    },
+    "queue": {
+      "workThrough": "Обработи",
+      "label": "Обработване на {name}",
+      "position": "№ {pos} · {total, plural, one {# сделка} other {# сделки}} в списъка",
+      "previous": "Предишна",
+      "skip": "Пропусни",
+      "next": "Следваща",
+      "exit": "Изход",
+      "doneTitle": "Списъкът е обработен — няма какво повече.",
+      "backToLists": "Към списъците"
     }
   }
 }

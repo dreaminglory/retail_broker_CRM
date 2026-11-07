@@ -1963,6 +1963,17 @@
       "inquiryCount": "{count, plural, one {# inquiry} other {# inquiries}}",
       "emptyTitle": "Nothing left — well done",
       "emptyDesc": "Every record in this list has been dealt with."
+    },
+    "queue": {
+      "workThrough": "Work through",
+      "label": "Working through {name}",
+      "position": "No. {pos} · {total, plural, one {# deal} other {# deals}} in the list",
+      "previous": "Previous",
+      "skip": "Skip",
+      "next": "Next",
+      "exit": "Exit",
+      "doneTitle": "List done — nothing left to work through.",
+      "backToLists": "Back to lists"
     }
   }
 }

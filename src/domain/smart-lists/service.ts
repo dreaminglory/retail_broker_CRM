@@ -63,7 +63,12 @@ export type ListPage = {
   result: ListRows | null;
 };
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Where a queue step lands: a deal at a position, or the end of the list. */
+export type QueueStep =
+  | { done: true; total: number; scope: ListScope }
+  | { done: false; id: string; sortKey: SortKey; pos: number; total: number; scope: ListScope };
+
+const UUID_RE =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class SmartListService {
   private readonly repo: SmartListRepository;
@@ -152,21 +157,29 @@ export class SmartListService {
   }
 
   /**
-   * The queue's next row: the first one after `after` in the list's order, re-running the list
-   * now, so a row that no longer fits has dropped off (rule 7). `after` null gives the first row.
-   * `nextId` null means the list is done.
+   * One step of the queue (rule 7), re-running the list now so a deal that no longer fits has
+   * dropped off. Next: the first row after `after` (the key the current deal came with; null
+   * starts the queue). Previous: the row at position `pos - 1` of the list as it is now (cut 2).
+   * Null when the viewer can't open the list, or it has no queue (inquiries, a stale filter).
    */
-  async next(
+  async step(
     viewer: Viewer,
     listId: string,
     requestedScope: string | undefined,
-    after: SortKey | null
-  ): Promise<{ nextId: string | null; total: number } | null> {
+    input: { dir: 'next' | 'prev'; pos: number; after: SortKey | null }
+  ): Promise<QueueStep | null> {
     const scope = resolveListScope(viewer.role, requestedScope);
     const list = await this.resolve(viewer, listId, scope);
-    if (!list?.filter) return null;
-    const { rows, total } = await this.repo.listRows(list.filter, { limit: 1, after });
-    return { nextId: rows[0]?.id ?? null, total };
+    if (!list?.filter || list.entity !== 'opportunity') return null;
+
+    const target = input.dir === 'prev' ? Math.max(1, input.pos - 1) : input.pos + 1;
+    const { rows, total } =
+      input.dir === 'prev'
+        ? await this.repo.listRows(list.filter, { limit: 1, offset: target - 1 })
+        : await this.repo.listRows(list.filter, { limit: 1, after: input.after });
+    const row = rows[0];
+    if (!row) return { done: true, total, scope };
+    return { done: false, id: row.id, sortKey: row.sort_key, pos: target, total, scope };
   }
 
   // ── Mutations ─────────────────────────────────────────────────────────────

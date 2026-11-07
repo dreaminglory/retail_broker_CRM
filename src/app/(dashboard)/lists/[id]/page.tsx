@@ -1,6 +1,9 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, ListChecks, PartyPopper } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { queueStepHref } from "@/domain/smart-lists/queue";
 import type { Locale } from "@/i18n/config";
 import { getAuthContext, type AuthContext } from "@/lib/actions";
 import { pageInfo, parsePage } from "@/lib/pagination";
@@ -29,9 +32,9 @@ export default async function SmartListPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ scope?: string; page?: string }>;
+  searchParams: Promise<{ scope?: string; page?: string; done?: string }>;
 }) {
-  const [{ id }, { scope, page }] = await Promise.all([params, searchParams]);
+  const [{ id }, { scope, page, done }] = await Promise.all([params, searchParams]);
 
   // Only a missing session or membership means "sign in"; any other failure
   // reaches the error boundary.
@@ -57,12 +60,34 @@ export default async function SmartListPage({
       total={result?.total ?? null}
       scope={data.scope}
       showScopeToggle={list.kind === "built-in" && list.list.scope === "mine" && canSwitchListScope(ctx.role)}
+      actions={
+        list.entity === "opportunity" && result && result.total > 0 ? (
+          <Link
+            href={queueStepHref({ listId: list.id, dir: "next", pos: 0, scope: data.scope })}
+            className={buttonVariants({ size: "sm" })}
+          >
+            <ListChecks className="h-4 w-4" aria-hidden />
+            {t("smartLists.queue.workThrough")}
+          </Link>
+        ) : null
+      }
     />
   );
 
   return (
     <div className="mx-auto max-w-4xl">
       {header}
+      {done === "1" && (
+        <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <PartyPopper className="h-4 w-4 text-emerald-600" aria-hidden />
+            {t("smartLists.queue.doneTitle")}
+          </p>
+          <Link href={data.scope === "agency" ? "/lists?scope=agency" : "/lists"} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            {t("smartLists.queue.backToLists")}
+          </Link>
+        </div>
+      )}
       {!result ? (
         <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
           {t("smartLists.overview.stale")}

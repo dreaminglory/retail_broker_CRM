@@ -171,21 +171,72 @@ describe('resolve and page', () => {
   });
 });
 
-describe('next', () => {
-  it('asks for the one row after the current key and says when the list is done', async () => {
-    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [{ id: 'd-2' }], total: 4 });
-    expect(await service.next(broker, 'no-next-action', undefined, [10, 'd-1'])).toEqual({ nextId: 'd-2', total: 4 });
-    expect(repo.listRows).toHaveBeenCalledWith(
-      { entity: 'opportunity', filter: { status: ['active'], next_action: 'none', sort: 'last_touch_asc', assigned_to: 'me' } },
-      { limit: 1, after: [10, 'd-1'] }
-    );
+describe('step (the queue, rule 7)', () => {
+  const NO_NEXT_ACTION = {
+    entity: 'opportunity',
+    filter: { status: ['active'], next_action: 'none', sort: 'last_touch_asc', assigned_to: 'me' },
+  };
 
-    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [], total: 0 });
-    expect(await service.next(broker, 'no-next-action', undefined, [11, 'd-9'])).toEqual({ nextId: null, total: 0 });
+  it('starts at the first row', async () => {
+    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [{ id: 'd-1', sort_key: [5, 'd-1'] }], total: 4 });
+    expect(await service.step(broker, 'no-next-action', undefined, { dir: 'next', pos: 0, after: null })).toEqual({
+      done: false,
+      id: 'd-1',
+      sortKey: [5, 'd-1'],
+      pos: 1,
+      total: 4,
+      scope: 'mine',
+    });
+    expect(repo.listRows).toHaveBeenCalledWith(NO_NEXT_ACTION, { limit: 1, after: null });
   });
 
-  it('gives null for a list the viewer cannot open', async () => {
-    expect(await service.next(broker, 'unassigned-deals', undefined, null)).toBeNull();
+  it('Next asks for the row after the key the deal came with, re-running the list now', async () => {
+    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [{ id: 'd-2', sort_key: [10, 'd-2'] }], total: 3 });
+    expect(await service.step(broker, 'no-next-action', undefined, { dir: 'next', pos: 1, after: [5, 'd-1'] })).toMatchObject({
+      done: false,
+      id: 'd-2',
+      pos: 2,
+      total: 3,
+    });
+    expect(repo.listRows).toHaveBeenCalledWith(NO_NEXT_ACTION, { limit: 1, after: [5, 'd-1'] });
+  });
+
+  it('says the list is done when nothing is after the key', async () => {
+    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [], total: 0 });
+    expect(await service.step(broker, 'no-next-action', undefined, { dir: 'next', pos: 3, after: [11, 'd-9'] })).toEqual({
+      done: true,
+      total: 0,
+      scope: 'mine',
+    });
+  });
+
+  it('Previous takes the row before the position, as the list is now', async () => {
+    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [{ id: 'd-2', sort_key: [10, 'd-2'] }], total: 5 });
+    expect(await service.step(broker, 'no-next-action', undefined, { dir: 'prev', pos: 3, after: [12, 'd-3'] })).toMatchObject({
+      id: 'd-2',
+      pos: 2,
+    });
+    expect(repo.listRows).toHaveBeenCalledWith(NO_NEXT_ACTION, { limit: 1, offset: 1 });
+  });
+
+  it('Previous at the first position stays on the first row', async () => {
+    repo.listRows.mockResolvedValueOnce({ entity: 'opportunity', rows: [{ id: 'd-1', sort_key: [5, 'd-1'] }], total: 5 });
+    expect(await service.step(broker, 'no-next-action', undefined, { dir: 'prev', pos: 1, after: null })).toMatchObject({ pos: 1 });
+    expect(repo.listRows).toHaveBeenCalledWith(NO_NEXT_ACTION, { limit: 1, offset: 0 });
+  });
+
+  it('gives null for a list the viewer cannot open, an inquiry list or a stale saved list', async () => {
+    expect(await service.step(broker, 'unassigned-deals', undefined, { dir: 'next', pos: 0, after: null })).toBeNull();
+    expect(await service.step(broker, 'new-inquiries', undefined, { dir: 'next', pos: 0, after: null })).toBeNull();
+    repo.findById.mockResolvedValue(savedList({ filter: { stage: 'New' } }));
+    expect(await service.step(broker, LIST_ID, undefined, { dir: 'next', pos: 0, after: null })).toBeNull();
+    expect(repo.listRows).not.toHaveBeenCalled();
+  });
+
+  it('keeps the agency scope only for owners and managers', async () => {
+    repo.listRows.mockResolvedValue({ entity: 'opportunity', rows: [{ id: 'd-1', sort_key: [5, 'd-1'] }], total: 1 });
+    expect(await service.step(manager, 'overdue', 'agency', { dir: 'next', pos: 0, after: null })).toMatchObject({ scope: 'agency' });
+    expect(await service.step(broker, 'overdue', 'agency', { dir: 'next', pos: 0, after: null })).toMatchObject({ scope: 'mine' });
   });
 });
 

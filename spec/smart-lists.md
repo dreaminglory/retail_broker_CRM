@@ -110,11 +110,13 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
 6. **Counts.** The overview shows every visible list with its live count, computed when the page
    loads. Counts are exact up to 999 and shown as "999+" above.
 7. **Work through (opportunities).** "Work through" opens the first deal of the list on its normal
-   detail page with a queue bar: list name, "3 of 17", Previous, Skip / Next, Exit. Next takes the
-   first row after the current one's sort key, re-running the list at that moment, so a deal that
-   no longer fits has dropped off and new ones appear in order. When nothing is left: "List done",
-   back to the overview. The queue state lives in the URL (`?list=<id>&pos=<n>`; Next asks for the
-   row after the current deal's sort key), nothing is stored. Everything on the detail page works as usual (complete task with next, close, etc.).
+   detail page with a queue bar: list name, "No. 3 · 17 deals in the list", Previous, Skip / Next,
+   Exit. Next takes the first row after the current one's sort key, re-running the list at that
+   moment, so a deal that no longer fits has dropped off and new ones appear in order. When
+   nothing is left: "List done", back to the overview. The queue state lives in the URL
+   (`?list=<id>&pos=<n>&of=<total>&key=<k1>`; Next asks for the row after the sort key the deal
+   had when the queue opened it, since working the deal moves its key; AD-062), nothing is
+   stored. Everything on the detail page works as usual (complete task with next, close, etc.).
 8. **Inquiry lists** open as the inquiry list filtered to the list, with its existing row actions
    (convert, dismiss, mark contacted, reassign); the count updates on each action. No queue bar.
 9. **Tenancy.** Lists and their results come only from the caller's agency (RLS on

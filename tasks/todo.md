@@ -252,13 +252,13 @@ reversed order (cut 2: droppable without touching the rest). Sticky at the botto
 client state in effects; the bar is a Server Component with links/forms.
 
 **Acceptance criteria:**
-- [ ] On `no-next-action`: schedule a task on deal 1, press Next → deal 2, total one lower; Skip leaves deal 1 in the list (AC-6)
-- [ ] After the last deal, "List done"; Exit returns to the list page
-- [ ] The rest of the detail page behaves as without `?list`; BG and EN, both widths
+- [x] On `no-next-action`: schedule a task on deal 1, press Next → deal 2, total one lower; Skip leaves deal 1 in the list (AC-6)
+- [x] After the last deal, "List done"; Exit returns to the list page
+- [x] The rest of the detail page behaves as without `?list`; BG and EN, both widths
 
 **Verification:**
-- [ ] `npx vitest run src/domain/smart-lists` (next/previous/done), `npm run typecheck`, `npm run lint`
-- [ ] Browser: work through `no-next-action` as Alpha broker in BG and EN at 1280 and 390 px
+- [x] `npx vitest run src/domain/smart-lists` (next/previous/done), `npm run typecheck`, `npm run lint`
+- [x] Browser: work through `no-next-action` as Alpha broker in BG and EN at 1280 and 390 px
 
 **Dependencies:** Task 8
 **Files likely touched:** `src/app/(dashboard)/opportunities/[id]/page.tsx`, `src/components/domain/smart-lists/queue-bar.tsx`, `src/domain/smart-lists/service.ts`, `messages/{bg,en}.json`

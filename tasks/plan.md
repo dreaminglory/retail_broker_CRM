@@ -109,7 +109,7 @@ target is missed.
 - [x] Task 6: Smart list domain: validation, built-in presets, read service
 - [x] Task 7: Списъци overview with counts and the sidebar entry
 - [x] Task 8: List page for built-in lists
-- [ ] Task 9: Work through: the queue bar
+- [x] Task 9: Work through: the queue bar
 
 **Checkpoint 2:** AC-1, -2, -3, -6, -7 seen in the browser in BG and EN at 1280 and 390 px;
 `/review` of Phases 1–2.

@@ -439,10 +439,17 @@ a retry for 5 minutes is felt.
   and the overview p95 ~1.1–1.4 s (spec rule 10); on Mine about 30× less. `deal_match_rows` lives
   in the `private` schema, which the API doesn't expose, so a client can't request every
   deal × listing pair directly; the invoker functions read it as the caller.
-- **The queue lives in the URL** (`/opportunities/[id]?list=<id>&pos=<n>`); Next and Skip ask for
-  the first row after the current deal's `sort_key`, so a deal that left the list doesn't break
-  the order. The opportunity list reads through `smart_list_opportunities` too, so a list and its
-  saved copy always agree.
+- **The queue lives in the URL** (`/opportunities/[id]?list=<id>&pos=<n>&of=<total>&key=<k1>`);
+  Next and Skip ask for the first row after the current deal's `sort_key`, so a deal that left the
+  list doesn't break the order. **The key is the one the deal had when the queue opened it**, not
+  its key now (Task 9): working a deal moves its key (a completed task is a new touch, a new task
+  a new next action), and asking "after the key now" would skip every deal in between. Each step
+  is a GET to `/lists/[id]/step` that re-runs the list at the click and redirects to the deal or
+  to the list's "List done" state, so the deal page only resolves the list's name. `pos` counts
+  the deals stepped through and `of` is the list's size at the last step, shown as "No. 2 · 1
+  deal in the list" (a deal that was worked has left the count). Previous takes the row at
+  `pos - 1` of the list as it is now (cut 2). The opportunity list reads through
+  `smart_list_opportunities` too, so a list and its saved copy always agree.
 **Why:** the count is the work left, so a list must be evaluated when it is read; one SQL
 definition per list keeps the overview, the list page and the queue consistent, and matching
 keeps one rule set.
