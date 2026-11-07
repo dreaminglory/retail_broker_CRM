@@ -97,8 +97,8 @@ AD-050 RPCs. Leaked-password protection is still off
 **Go-live prerequisites (founder):** a domain verified in Resend, hosting that allows two daily
 crons (or the pg_cron fallback, AD-042), production env vars.
 
-**Open decisions:** Smart Lists are in the gate, though AD-039 named only properties, requirements and matching (founder
-to confirm).
+**Open decisions:** none. Smart Lists stay in the gate (founder, 2026-11-07); scope in
+`spec/smart-lists.md`.
 
 ## 6. Pilot evidence
 
