@@ -1,6 +1,6 @@
 # Spec: smart-lists
 
-> **Status:** Approved scope (founder, 2026-11-07). Decision to write: AD-062. Q1 and Q2 still
+> **Status:** Approved scope (founder, 2026-11-07). Decision: AD-062. Q1 and Q2 still
 > open; the defaults below stand until the founder answers.
 > Requirements: FR-LST-01…09.
 > **Evidence:** business brief "Saved operational filters and Smart Lists" (pilot included scope,
@@ -41,13 +41,18 @@ a step-through mode for inquiries.
     (`me | unassigned | <user id>`), `source_id[]`, `next_action` (`none | overdue | today |
     upcoming`), `no_touch_days` (int), `has_new_matches` (bool), `search`.
   - inquiry: `status[]`, `assigned_to` (`me | unassigned | <user id>`), `source_id[]`, `search`.
-  `me` is resolved to the viewer at read time, so a shared list "my overdue" works for everyone.
+  - both: `sort` (opportunity `created_desc` default, `last_touch_asc`, `next_action_asc`,
+    `new_matches_desc`; inquiry `received_asc | received_desc`). Every order ends with `id`.
+  `me` is resolved to the viewer at read time (`auth.uid()` in SQL), so a shared list "my overdue"
+  works for everyone.
 - **Evaluated on read in Postgres**, like matching (AD-060): `smart_list_opportunities(filter,
   limit, offset)` and `smart_list_inquiries(filter, limit, offset)`, `SECURITY INVOKER` plus an
   explicit `current_agency_id()` filter, returning the page, `total_count`, and each row's sort key
-  (for the queue). `smart_list_counts(filters jsonb[])` returns the counts for the overview in one
-  call. Day windows are agency-local and identical to Today's (`getTodayWindows`); the plan decides
-  whether they are computed in SQL from `agencies.timezone` or passed in.
+  (for the queue). `smart_list_counts(p_lists jsonb)` takes `[{ key, entity, filter }]` and returns
+  the counts for the overview in one call. Day windows are agency-local and identical to Today's
+  (`getTodayWindows`), computed in SQL from `agencies.timezone` and pinned to `getTodayWindows` by
+  a test (AD-062). The opportunity list reads through `smart_list_opportunities` too (Task 10),
+  so a list and its saved copy always agree.
 - **Last touch** (new derived value, not stored): the latest of a completed task's `completed_at`
   and a note's `created_at` on the deal, else the deal's `created_at`. Not `updated_at`, which
   merges and edits move. `has_new_matches` = the deal's `unlinked_count` from matching is above 0,
@@ -86,7 +91,9 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
    source, next action state, no touch for N days, has new matches. Any member saves personal
    lists; at most 50 per member per agency.
 4. **Sharing.** Only owners and managers can set `shared`. A shared list is visible to every
-   member of the agency; only owners and managers can rename, edit, unshare or delete it. A
+   member of the agency; only owners and managers can rename, edit or delete it. Unsharing hands
+   the list back to its creator alone, so only the creator can unshare it (RLS: the changed row
+   must still be visible to the one who changes it); another manager deletes it instead. A
    personal list is visible to and changed by its creator only — not by a manager (RLS).
    Deleting a list is a hard delete; it only removes the view.
 5. **Stale filters.** A saved filter that no longer parses (shape changed) shows an "edit this
@@ -98,8 +105,8 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
    detail page with a queue bar: list name, "3 of 17", Previous, Skip / Next, Exit. Next takes the
    first row after the current one's sort key, re-running the list at that moment, so a deal that
    no longer fits has dropped off and new ones appear in order. When nothing is left: "List done",
-   back to the overview. The queue state lives in the URL (`?list=<id>&after=<key>`), nothing is
-   stored. Everything on the detail page works as usual (complete task with next, close, etc.).
+   back to the overview. The queue state lives in the URL (`?list=<id>&pos=<n>`; Next asks for the
+   row after the current deal's sort key), nothing is stored. Everything on the detail page works as usual (complete task with next, close, etc.).
 8. **Inquiry lists** open as the inquiry list filtered to the list, with its existing row actions
    (convert, dismiss, mark contacted, reassign); the count updates on each action. No queue bar.
 9. **Tenancy.** Lists and their results come only from the caller's agency (RLS on

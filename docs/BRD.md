@@ -291,6 +291,20 @@ active opportunity has an owner, a next action and a complete history.
 | FR-MAT-07 | ✅ One agency can't see or match another agency's properties or deals |
 | FR-MAT-08 | ✅ A match list returns in under 300 ms (p95) at 2,000 properties and 2,000 requirements |
 
+### FR-LST: Smart lists (module `smart-lists`)
+
+| ID | Requirement |
+|----|------------|
+| FR-LST-01 | Nine built-in lists of deals and inquiries (no next action, overdue, due today, hot with no touch, sellers to update, new matches, unassigned deals, new inquiries, unassigned inquiries), each computed when read with a live count (AD-062) |
+| FR-LST-02 | Mine / Agency scope as on Today for owners and managers, brokers always mine; counts agree with Today and Exceptions |
+| FR-LST-03 | Save the current opportunity or inquiry filters as a named list; the opportunity list gains source, next action, no touch for N days and has new matches |
+| FR-LST-04 | Saved lists are personal; owners and managers can share one with the agency; a broker can't share, edit or delete a shared list; at most 50 per member |
+| FR-LST-05 | Work through an opportunity list one deal at a time with a queue bar (position, Next, Skip, Previous, Exit) |
+| FR-LST-06 | Inquiry lists keep their row actions (convert, dismiss, mark contacted, reassign) and the count updates |
+| FR-LST-07 | One agency can't see another agency's lists, rows or counts |
+| FR-LST-08 | A list page and a queue step return in under 300 ms (p95), and the overview with every count in under 1 s, at 2,000 deals, 2,000 requirements, 2,000 properties and 5,000 inquiries |
+| FR-LST-09 | Overview, list page and queue bar work in Bulgarian and English at 1280 and 390 px |
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Priority |

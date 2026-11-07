@@ -21,13 +21,13 @@ last touch), invariants for `shared` and the cap, glossary (Списък / Сп�
 migration count.
 
 **Acceptance criteria:**
-- [ ] pgTAP: a broker inserts a personal list; inserting or updating to `shared = true` as a broker fails; owner and manager can; a member sees own + shared only; a manager can't select, update or delete another member's personal list; a broker can't update or delete a shared list; Beta sees nothing of Alpha
-- [ ] Duplicate name for the same member (case-insensitive) fails; the 51st list fails with `smartLists.errors.limit`; `entity` outside the list fails
-- [ ] AD-062, the BRD rows, the spec adjustments and the domain-model stub are in the same commit
+- [x] pgTAP: a broker inserts a personal list; inserting or updating to `shared = true` as a broker fails; owner and manager can; a member sees own + shared only; a manager can't select, update or delete another member's personal list; a broker can't update or delete a shared list; Beta sees nothing of Alpha
+- [x] Duplicate name for the same member (case-insensitive) fails; the 51st list fails with `smartLists.errors.limit`; `entity` outside the list fails
+- [x] AD-062, the BRD rows, the spec adjustments and the domain-model stub are in the same commit
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** None
 **Files likely touched:** `SPEC.md`, `docs/decisions-log.md`, `docs/BRD.md`, `spec/smart-lists.md`, `docs/domain-model.md`, `supabase/migrations/<ts>_smart_lists.sql`, `supabase/tests/database/090-smart-lists.sql`

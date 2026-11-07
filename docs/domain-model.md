@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 58th migration
-(`20261107000003_join_review_fixes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 59th migration
+(`20261108000001_smart_lists.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -60,8 +60,11 @@ flowchart LR
   subgraph Q[Requirement]
     requirements --- requirement_locations
   end
+  subgraph S[Smart lists]
+    smart_lists
+  end
 
-  T -->|agency_id on every row| I & P & H & M & N & R & Q
+  T -->|agency_id on every row| I & P & H & M & N & R & Q & S
   opportunities -->|buyer or tenant search| requirements
   requirement_locations -->|settlement, area| areas
   contacts -->|party of| property_parties
@@ -509,6 +512,34 @@ must-have flags. `matching` treats a must-have as a filter and the rest as score
   "Подходящи имоти" section, and the property's "Подходящи купувачи / наематели" section (one
   section; a property listed for sale and rent shows both kinds of deal with their type).
 
+### 2.10 Smart lists
+
+`spec/smart-lists.md`, AD-062. **In progress:** only the table and its rules are built; the list
+functions arrive with the module's next tasks.
+
+```mermaid
+erDiagram
+  agencies ||--o{ smart_lists : has
+  smart_lists {
+    uuid created_by "creator, never changes"
+    text name "1-60, unique per member ignoring case"
+    text entity "opportunity | inquiry, never changes"
+    jsonb filter "one shape per entity (Zod); includes sort"
+    boolean shared "owner/manager only"
+  }
+```
+
+- **`smart_lists` holds custom lists only.** The nine built-in lists are code
+  (`src/domain/smart-lists/built-in.ts`), not rows. Not audited.
+- **Access:** a personal list is seen and changed by its creator only (a manager can't); only an
+  owner or manager can insert or update to `shared = true`; a shared list is seen by the agency
+  and renamed, edited or deleted by owners and managers; **only the creator can unshare** (the
+  changed row must stay visible to the one changing it). `agency_id`, `created_by` and `entity`
+  never change. At most 50 lists per member (`smartLists.errors.limit`).
+- **Planned, not built yet:** `smart_list_opportunities`, `smart_list_inquiries` and
+  `smart_list_counts` (invoker SQL, evaluated on read), and **last touch** (latest completed
+  task's `completed_at` or note's `created_at` on a deal, else `created_at`; never `updated_at`).
+
 ---
 
 ## 3. Lifecycles
@@ -784,6 +815,9 @@ The "Enforced by" column tells you which layer to change and test.
 | Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
 | Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
 | L19 | A link's `source` is `manual`, `match` or `viewing`, set on insert and never updated; the app may send `manual` or `match` (a member could send `match`: it only feeds a measurement) (AD-060) | `CHECK opportunity_properties_source_check`, column `UPDATE` privileges (AD-058), trigger `mark_property_viewed` + `080-matching.sql` |
+| S1 | A personal smart list is seen and changed by its creator only, a manager included; only owners and managers can insert or update to `shared = true`; a shared list is changed or deleted by owners and managers only; only the creator can unshare (AD-062) | RLS policies on `smart_lists` (`SELECT` applies to the updated row) + `090-smart-lists.sql`; `requireRole()` in the share action (Task 12) |
+| S2 | A smart list's `agency_id`, `created_by` and `entity` never change; `entity` is `opportunity` or `inquiry`; the name is 1–60 characters and unique per member ignoring case | trigger `smart_lists_immutable`, `CHECK`s, unique index `uq_smart_lists_member_name` + `090-smart-lists.sql` |
+| S3 | A member holds at most 50 smart lists | trigger `smart_lists_limit` (key `smartLists.errors.limit`) + `090-smart-lists.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
@@ -858,6 +892,8 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Match score | Съвпадение | Share of the applicable criteria met, shown as "Съвпадение 85%" | |
 | Join (an inquiry to a deal) | Присъединяване | Closing an inquiry into the contact's existing open deal instead of creating a new one | |
 | Close | Близо | A criterion missed by a small tolerance; half credit | |
+| Smart list | Списък (nav: Списъци) | A named filter of deals or inquiries with a live count; built-in or saved (AD-062) | |
+| Work through (a list) | Обработи | Open the list's deals one after another with a queue bar | |
 
 ---
 

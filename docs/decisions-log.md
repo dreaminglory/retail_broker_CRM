@@ -393,6 +393,47 @@ shouldn't need a second account or a database edit.
 **Revisit if:** pilots need to join a deal the contact isn't on, or a failed resend email blocking
 a retry for 5 minutes is felt.
 
+### AD-062: Smart lists are filters evaluated on read in SQL; built-in lists are code
+**Accepted** (founder, 2026-11-07; scope in `spec/smart-lists.md`).
+- **`smart_lists` holds custom lists only** (`entity` `opportunity | inquiry`, `filter` jsonb,
+  `shared`, `created_by`; unique name per member ignoring case; max 50 per member, enforced by a
+  trigger raising `smartLists.errors.limit`). The nine built-in lists are presets in
+  `src/domain/smart-lists/built-in.ts`, nothing per agency. Not audited: a list is a view
+  preference.
+- **RLS:** a personal list is seen and changed by its creator only, a manager included. Only
+  owners and managers can insert or update to `shared = true`. A shared list is seen by the
+  agency and renamed, edited or deleted by owners and managers. `agency_id`, `created_by` and
+  `entity` never change (trigger). **Only the creator can unshare:** unsharing hands the list back
+  to them alone, and an UPDATE's new row must pass the SELECT policy, so another manager would
+  hide it from themself and is refused; they delete the list instead.
+- **Three invoker SQL functions** (`LANGUAGE sql STABLE SECURITY INVOKER`, an explicit
+  `current_agency_id()` filter, `authenticated` only): `smart_list_opportunities`,
+  `smart_list_inquiries` (filter, limit, offset, `p_after` key; return the page, `sort_key` and
+  `total_count`) and `smart_list_counts` (`[{key, entity, filter}]` in, counts out, each capped at
+  1000). Nothing computes a list in TypeScript. Unknown filter keys are ignored by SQL; Zod
+  refuses them before saving.
+- **The filter carries `sort`** (`created_desc` default, `last_touch_asc`, `next_action_asc`,
+  `new_matches_desc`; inquiries `received_asc | received_desc`); every order ends with `id`.
+- **`me` is `auth.uid()` in SQL**, so a shared "mine" list is per viewer. Mine / Agency on the
+  built-in lists is `assigned_to: 'me'` set or dropped by the service (AD-044).
+- **Day windows are computed in SQL** from `agencies.timezone` and pinned to `getTodayWindows` by
+  a test (`overdue` before now, `today` until the next agency midnight, `upcoming` the next four
+  days).
+- **Last touch is a function, not a column:** latest completed task `completed_at` or note
+  `created_at` on the deal, else `created_at`; never `updated_at`.
+- **`new-matches` reuses `match_evaluate`:** one internal function counts a deal's unlinked
+  matches for both `match_properties` and the list. A cache or materialized view needs the
+  founder's OK (AD-060 revisit clause).
+- **The queue lives in the URL** (`/opportunities/[id]?list=<id>&pos=<n>`); Next and Skip ask for
+  the first row after the current deal's `sort_key`, so a deal that left the list doesn't break
+  the order. The opportunity list reads through `smart_list_opportunities` too, so a list and its
+  saved copy always agree.
+**Why:** the count is the work left, so a list must be evaluated when it is read; one SQL
+definition per list keeps the overview, the list page and the queue consistent, and matching
+keeps one rule set.
+**Revisit if:** the all-deal `new-matches` count misses the 1 s overview target at 2,000 deals
+(measured in the module's Task 3), or agencies ask to configure thresholds or list definitions.
+
 ---
 
 ## Retired
