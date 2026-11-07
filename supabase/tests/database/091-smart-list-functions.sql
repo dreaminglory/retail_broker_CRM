@@ -5,7 +5,7 @@
 -- The clock is fixed: smart_list_opportunities_at takes the instant the public function reads
 -- from now(). 2026-06-15 12:00 UTC is 15:00 in Sofia (UTC+3); local midnight is 21:00 UTC.
 BEGIN;
-SELECT plan(52);
+SELECT plan(53);
 
 -- ── Setup ────────────────────────────────────────────────────────────────────
 
@@ -198,6 +198,13 @@ SELECT is(pg_temp.lst('{}'), ARRAY['d7','d5','d4','d3','d2','d1'], 'sort: create
 SELECT is(pg_temp.lst('{"sort": "last_touch_asc"}'), ARRAY['d2','d5','d7','d4','d3','d1'], 'sort: last_touch_asc');
 SELECT is(pg_temp.lst('{"sort": "next_action_asc"}'), ARRAY['d2','d3','d4','d5','d7','d1'], 'sort: next_action_asc puts no next action last');
 SELECT is(pg_temp.lst('{"sort": "no_such_sort"}'), ARRAY['d7','d5','d4','d3','d2','d1'], 'sort: an unknown value falls back to created_desc');
+
+SELECT is(
+  (SELECT count(*)::int FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz,
+     '{"status": ["active","nurture","won"], "sort": "last_touch_asc"}', 100, 0, NULL) AS l
+   JOIN opportunities o ON o.id = l.id
+   WHERE l.last_touch IS DISTINCT FROM opportunity_last_touch(o)),
+  0, 'the list''s last_touch is opportunity_last_touch for every deal (one rule, read through one view)');
 
 -- ── Paging and the queue key ─────────────────────────────────────────────────
 

@@ -99,7 +99,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 - [x] Task 2: `smart_list_opportunities` and last touch
 - [x] Task 3: `new_matches` and the speed spike
 - [x] Task 4: `smart_list_inquiries` and `smart_list_counts`
-- [ ] Task 5: Seed every built-in list and measure the targets (Sonnet)
+- [x] Task 5: Seed every built-in list and measure the targets (Sonnet)
 
 **Checkpoint 1:** `db reset` + `test:db` green; speed numbers recorded; the founder reviews
 AD-062, each built-in list's rows on the seed (SQL output), and decides on `new-matches` if the

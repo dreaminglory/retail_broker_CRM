@@ -550,3 +550,88 @@ BEGIN
   (v_pending_1, v_agency_1, 'broker', 'invited', 'pending@alpha.bg', v_owner_1, now() - interval '1 day', now() - interval '1 day'),
   (v_pending_2, v_agency_2, 'broker', 'invited', 'pending@beta.bg', v_owner_2, now() - interval '1 day', now() - interval '1 day');
 END $$;
+
+-- ==============================================================================
+-- smart-lists (Task 5, AD-062). Per agency, rows that land in each built-in list and one
+-- just outside each threshold. All titles and caller names start with "SL " so other suites
+-- and screens can tell them apart. Times are relative to now().
+--
+--   no-next-action        SL No action (active, no task)
+--   overdue               SL Overdue (task due 2 days ago)
+--   due-today             SL Due today (task due later today, agency time)
+--   hot-no-touch          SL Hot touched 4d IN; SL Hot touched 2d out (hot, note 4 / 2 days ago)
+--   sellers-need-update   SL Seller touched 15d IN; SL Seller touched 13d out
+--   new-matches           already seeded: Alpha Opp 1 and 2, Beta Opp 2 and 3 (matching seed);
+--                         Opp 3 / Opp 4 (no requirement) are the near misses
+--   unassigned-deals      SL Unassigned deal (active, no owner, has a next action)
+--   new-inquiries         SL New inquiry (assigned), SL Unassigned inquiry
+--   unassigned-inquiries  SL Unassigned inquiry; SL Contacted inquiry (contacted) is out
+-- plus one personal list (the broker's) and one shared list (the manager's).
+-- ==============================================================================
+DO $$
+DECLARE
+  v_a RECORD;
+  v_due_today TIMESTAMPTZ := least(
+    greatest(
+      (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '23 hours') AT TIME ZONE 'Europe/Sofia',
+      now() + interval '5 minutes'
+    ),
+    (date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '1 day' - interval '1 second') AT TIME ZONE 'Europe/Sofia'
+  );
+  v_stage UUID;
+  v_source UUID;
+  v_opp UUID;
+BEGIN
+  FOR v_a IN
+    SELECT * FROM (VALUES
+      ('11111111-1111-1111-1111-111111111111'::uuid, '11111111-4444-4444-4444-444444444444'::uuid, '11111111-3333-3333-3333-333333333333'::uuid),
+      ('22222222-1111-1111-1111-111111111111'::uuid, '22222222-4444-4444-4444-444444444444'::uuid, '22222222-3333-3333-3333-333333333333'::uuid)
+    ) AS t(agency_id, broker_id, manager_id)
+  LOOP
+    SELECT id INTO v_stage FROM public.stages WHERE agency_id = v_a.agency_id AND name = 'Active' LIMIT 1;
+    SELECT id INTO v_source FROM public.lead_sources WHERE agency_id = v_a.agency_id AND name = 'Imot.bg' LIMIT 1;
+
+    -- Deals. created_at is 30 days back so a deal's last touch is its latest note.
+    INSERT INTO public.opportunities (agency_id, title, type, stage_id, source_id, assigned_to, status, temperature, created_at) VALUES
+      (v_a.agency_id, 'SL No action',         'buyer',  v_stage, v_source, v_a.broker_id, 'active', 'warm', now() - interval '30 days'),
+      (v_a.agency_id, 'SL Overdue',           'buyer',  v_stage, v_source, v_a.broker_id, 'active', 'warm', now() - interval '30 days'),
+      (v_a.agency_id, 'SL Due today',         'buyer',  v_stage, v_source, v_a.broker_id, 'active', 'warm', now() - interval '30 days'),
+      (v_a.agency_id, 'SL Hot touched 4d',    'buyer',  v_stage, v_source, v_a.broker_id, 'active', 'hot',  now() - interval '30 days'),
+      (v_a.agency_id, 'SL Hot touched 2d',    'buyer',  v_stage, v_source, v_a.broker_id, 'active', 'hot',  now() - interval '30 days'),
+      (v_a.agency_id, 'SL Seller touched 15d','seller', v_stage, v_source, v_a.broker_id, 'active', 'warm', now() - interval '30 days'),
+      (v_a.agency_id, 'SL Seller touched 13d','seller', v_stage, v_source, v_a.broker_id, 'active', 'warm', now() - interval '30 days'),
+      (v_a.agency_id, 'SL Unassigned deal',   'buyer',  v_stage, v_source, NULL,          'active', 'cold', now() - interval '30 days');
+
+    -- Next actions: every SL deal but "No action" has one, so each lands in its own list only.
+    -- The tasks have no assignee on purpose: they only give the deal its next_action_at, and
+    -- leave the broker's Today and daily digest (which count assigned tasks) as they were.
+    INSERT INTO public.tasks (agency_id, opportunity_id, assigned_to, title, task_type, due_at, status)
+    SELECT v_a.agency_id, o.id, NULL, 'SL task for ' || o.title, 'call',
+           CASE o.title WHEN 'SL Overdue' THEN now() - interval '2 days'
+                        WHEN 'SL Due today' THEN v_due_today
+                        ELSE now() + interval '6 days' END,
+           'pending'
+    FROM public.opportunities o
+    WHERE o.agency_id = v_a.agency_id AND o.title LIKE 'SL %' AND o.title <> 'SL No action';
+
+    -- Touches: a note on the day that puts each deal on its side of the threshold.
+    INSERT INTO public.notes (agency_id, opportunity_id, created_by, content, created_at)
+    SELECT v_a.agency_id, o.id, v_a.broker_id, 'SL note', now() - t.ago
+    FROM (VALUES
+      ('SL Hot touched 4d', interval '4 days'), ('SL Hot touched 2d', interval '2 days'),
+      ('SL Seller touched 15d', interval '15 days'), ('SL Seller touched 13d', interval '13 days')
+    ) AS t(title, ago)
+    JOIN public.opportunities o ON o.agency_id = v_a.agency_id AND o.title = t.title;
+
+    -- Inquiries.
+    INSERT INTO public.inquiries (agency_id, source_id, assigned_to, status, caller_name, caller_phone, subject, received_at, raw_payload) VALUES
+      (v_a.agency_id, v_source, v_a.broker_id, 'new',       'SL New inquiry',       '+359888900001', 'SL assigned',   now() - interval '4 hours',  '{"message": "SL"}'::jsonb),
+      (v_a.agency_id, v_source, NULL,          'new',       'SL Unassigned inquiry','+359888900002', 'SL unassigned', now() - interval '5 hours',  '{"message": "SL"}'::jsonb),
+      (v_a.agency_id, v_source, NULL,          'contacted', 'SL Contacted inquiry', '+359888900003', 'SL contacted',  now() - interval '2 days',   '{"message": "SL"}'::jsonb);
+
+    -- Saved lists: the broker's personal one and the manager's shared one.
+    INSERT INTO public.smart_lists (agency_id, created_by, name, entity, filter, shared) VALUES
+      (v_a.agency_id, v_a.broker_id,  'SL My hot deals',  'opportunity', '{"temperature":["hot"],"assigned_to":"me"}'::jsonb, false),
+      (v_a.agency_id, v_a.manager_id, 'SL Team overdue',  'opportunity', '{"next_action":"overdue"}'::jsonb, true);
+  END LOOP;
+END $$;

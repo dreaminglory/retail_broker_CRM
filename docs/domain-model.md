@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 62nd migration
-(`20261108000004_smart_list_inquiries.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 64th migration
+(`20261108000006_deal_last_touch_view.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -536,9 +536,11 @@ erDiagram
   and renamed, edited or deleted by owners and managers; **only the creator can unshare** (the
   changed row must stay visible to the one changing it). `agency_id`, `created_by` and `entity`
   never change. At most 50 lists per member (`smartLists.errors.limit`).
-- **Last touch** (`opportunity_last_touch(opportunities)`, not stored): the latest completed
-  task's `completed_at` or note's `created_at` on the deal, else its `created_at`. Never
-  `updated_at` (edits and merges move it); a cancelled task isn't a touch.
+- **Last touch** (view `deal_last_touch`, `security_invoker`; `opportunity_last_touch(opportunities)`
+  reads it; not stored): the latest completed task's `completed_at` or note's `created_at` on the
+  deal, else its `created_at`. Never `updated_at` (edits and merges move it); a cancelled task
+  isn't a touch. A view because the list needs it for hundreds of deals: the function, which
+  can't be inlined, cost 63 ms for 150 deals against 6.7 ms for the same query inline.
 - **`smart_list_opportunities(filter, limit, offset, after)`**: `SECURITY INVOKER` plus an
   explicit `current_agency_id()` filter; the only place a deal list is evaluated. Filter keys
   `status[]` (default `active`), `type[]`, `stage_id[]`, `temperature[]`, `source_id[]`,
@@ -574,7 +576,8 @@ erDiagram
   descending | `received_asc`).
 - **`smart_list_counts(lists)`**: `[{ key, entity, filter }]` in, `(key, count)` out in one call.
   Each count is the list function's `total_count` capped at 1000 ("999+" in the UI), so a count
-  can never differ from its list. Bad input raises i18n keys (`smartLists.errors.invalidLists`,
+  can never differ from its list. The filter's `sort` is dropped first: a count never needs it,
+  and `new_matches_desc` makes the list count the matches of every deal (57 s at 2,000 deals). Bad input raises i18n keys (`smartLists.errors.invalidLists`,
   `invalidEntity`, `tooManyLists` for more than 100 lists), never SQL text.
 
 ---

@@ -115,12 +115,12 @@ titles prefixed `SL ` so other suites can ignore them. Add inquiries, tasks and 
 script and time the counts call (every built-in list) and each list function.
 
 **Acceptance criteria:**
-- [ ] Each built-in preset (written as raw jsonb in a pgTAP block) returns exactly its seeded `SL` rows for Alpha's broker
-- [ ] `npm run test:services` and `npm run test:e2e` still pass (counts other suites assert were updated or unaffected)
-- [ ] Overview p95 (all counts) and list p95 recorded against rule 10 (1 s, 300 ms)
+- [x] Each built-in preset (written as raw jsonb in a pgTAP block) returns exactly its seeded `SL` rows for Alpha's broker
+- [x] `npm run test:services` and `npm run test:e2e` still pass (counts other suites assert were updated or unaffected)
+- [x] Overview p95 (all counts) and list p95 recorded against rule 10 (1 s, 300 ms)
 
 **Verification:**
-- [ ] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
+- [x] `npx supabase db reset`, `npm run test:db`, `npm run test:services`, `npm run test:e2e`
 
 **Dependencies:** Tasks 3, 4
 **Files likely touched:** `supabase/seed.sql`, `supabase/tests/database/091-smart-list-functions.sql`, `scripts/smart-lists/scale.sql`, suites whose counts move
@@ -144,13 +144,26 @@ Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker 
 - **`new-matches` list sorted by exact count** (spec order "most new matches first"): **56.8 s**.
   Capped count (stop at N matches per deal, show "N+"): N=10 → 4.6 s, N=3 → 1.7 s. Neither meets
   300 ms at this scope. A broker on "Mine" (about 1/30 of the deals) is roughly 30× cheaper.
-- Plain active list, page of 20: ~42 ms. "No touch for 14 days" page: p95 ~310–344 ms (the last
-  touch is computed for every candidate deal); to look at in Task 5 (index on completed tasks).
+- **Task 5, full seed shape** (2,000 deals incl. tasks and notes, 5,000 inquiries, one broker owns
+  every deal, local stack, p95 unless noted):
+  - Built-in list pages (limit 20): due-today 19 ms, overdue 18, unassigned-deals 16,
+    unassigned-inquiries 22, sellers-need-update 30, new-inquiries 45, no-next-action 47,
+    hot-no-touch 64; "no touch for 14 days" 144; plain list 65. All under the 300 ms target
+    except `new-matches` sorted by count (the decision above).
+  - **Overview, counts for all nine lists in one call: median 1.13 s, p95 1.2–1.4 s (target 1 s).**
+    About 0.9 s of that is the `new-matches` count; the other eight together ~0.2 s. On "Mine" for a
+    broker with ~70 deals (1/30 of this) the same call is ~35 ms.
+  - Before the last-touch view, `hot-no-touch` took 381 ms and `sellers-need-update` 326 ms: a
+    SQL function with `SET search_path` isn't inlined (63 ms against 6.7 ms for 150 deals). An
+    index on completed tasks made no difference and was not added.
+  - The counts call stripped nothing before: with the `new-matches` sort it took 57 s; dropping
+    `sort` in `smart_list_counts` made it 1.1 s.
 
 **Founder decision needed before Phase 2 (the plan reserved it for Checkpoint 1):** keep the
 `new-matches` list ordered by exact count? Options, with my recommendation first:
 1. Order `new-matches` by oldest last touch (cheap, like the other lists) and show each row's
-   count for the 20 rows of the page only; keep the 0.86 s count. Spec change: order only.
+   count for the 20 rows of the page only; keep the ~0.9 s count (which alone leaves the overview
+   just over 1 s at 2,000 deals on Agency scope; fine on Mine). Spec change: order only.
 2. Cap the count ("5+") and sort by it: 1.7–4.6 s at Agency scope, fine on Mine. Spec change: "5+".
 3. Cache or materialize the counts (Ask first in the spec; AD-060 revisit clause). Exact and fast,
    but a new table or view to keep fresh.

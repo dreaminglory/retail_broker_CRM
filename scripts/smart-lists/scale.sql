@@ -86,7 +86,42 @@ SELECT o.agency_id, o.id,
         ) v(k))
 FROM (SELECT o.*, row_number() OVER (ORDER BY o.title) AS n FROM opportunities o WHERE o.agency_id = current_setting('scale.agency')::uuid) o;
 
+-- 5,000 inquiries: 40% new, a third unassigned, spread over 90 days
+INSERT INTO inquiries (agency_id, assigned_to, status, caller_name, caller_phone, received_at, raw_payload)
+SELECT current_setting('scale.agency')::uuid,
+       CASE WHEN g % 3 = 0 THEN NULL ELSE current_setting('scale.user')::uuid END,
+       CASE WHEN g % 10 < 4 THEN 'new' WHEN g % 10 < 6 THEN 'contacted' WHEN g % 10 < 8 THEN 'converted' ELSE 'dismissed' END,
+       'Caller ' || g, '+3598881' || lpad(g::text, 5, '0'),
+       now() - (g % 90) * interval '1 day' - (g % 24) * interval '1 hour', '{}'::jsonb
+FROM generate_series(1, 5000) g;
+
+-- Tasks and touches per deal (n = its row number): a fifth has no task (no next action), a fifth
+-- an overdue one, a fifth one due today (Sofia, later today), the rest a future one. A third has
+-- a completed task and a quarter a note, at different ages, so last touch varies.
+-- The tasks trigger sets next_action_at on each insert.
+INSERT INTO tasks (agency_id, opportunity_id, assigned_to, title, task_type, due_at, status)
+SELECT o.agency_id, o.id, o.assigned_to, 'Task ' || o.n, 'call',
+       CASE o.n % 5 WHEN 1 THEN now() - interval '2 days'
+                    WHEN 2 THEN least((date_trunc('day', now() AT TIME ZONE 'Europe/Sofia') + interval '1 day' - interval '1 second') AT TIME ZONE 'Europe/Sofia', now() + interval '2 hours')
+                    ELSE now() + (1 + o.n % 9) * interval '1 day' END,
+       'pending'
+FROM (SELECT o.*, row_number() OVER (ORDER BY o.title) AS n FROM opportunities o WHERE o.agency_id = current_setting('scale.agency')::uuid) o
+WHERE o.n % 5 <> 0;
+INSERT INTO tasks (agency_id, opportunity_id, assigned_to, title, task_type, due_at, status, completed_at)
+SELECT o.agency_id, o.id, o.assigned_to, 'Done ' || o.n, 'call', now() - (o.n % 40) * interval '1 day', 'completed',
+       now() - (o.n % 40) * interval '1 day'
+FROM (SELECT o.*, row_number() OVER (ORDER BY o.title) AS n FROM opportunities o WHERE o.agency_id = current_setting('scale.agency')::uuid) o
+WHERE o.n % 3 = 0;
+INSERT INTO notes (agency_id, opportunity_id, created_by, content, created_at)
+SELECT o.agency_id, o.id, o.assigned_to, 'Note ' || o.n, now() - (o.n % 25) * interval '1 day'
+FROM (SELECT o.*, row_number() OVER (ORDER BY o.title) AS n FROM opportunities o WHERE o.agency_id = current_setting('scale.agency')::uuid) o
+WHERE o.n % 4 = 0;
+-- Hot and seller deals so the threshold lists have rows
+UPDATE opportunities SET temperature = 'hot' WHERE agency_id = current_setting('scale.agency')::uuid AND title ~ '[05]$';
+UPDATE opportunities SET type = 'seller' WHERE agency_id = current_setting('scale.agency')::uuid AND title ~ '[27]$' AND NOT EXISTS (SELECT 1 FROM requirements r WHERE r.opportunity_id = opportunities.id);
+
 ANALYZE properties; ANALYZE listings; ANALYZE opportunities; ANALYZE requirements; ANALYZE opportunity_properties;
+ANALYZE inquiries; ANALYZE tasks; ANALYZE notes;
 
 SELECT count(*) AS deals FROM opportunities WHERE agency_id = current_setting('scale.agency')::uuid;
 
@@ -161,6 +196,43 @@ BEGIN
   INSERT INTO scale_timing VALUES ('new-matches list sorted by count, page of 20', extract(epoch FROM clock_timestamp() - v_start) * 1000, v_n);
 END $$;
 \endif
+
+-- The overview: all nine built-in lists in one counts call, then each list's page of 20. The
+-- filters are the presets of src/domain/smart-lists/built-in.ts (see 094-smart-list-seed.sql).
+CREATE TEMP TABLE scale_lists (key TEXT, entity TEXT, filter JSONB);
+GRANT ALL ON scale_lists TO authenticated;
+INSERT INTO scale_lists VALUES
+  ('no-next-action', 'opportunity', '{"status":["active"],"next_action":"none","assigned_to":"me","sort":"last_touch_asc"}'),
+  ('overdue', 'opportunity', '{"status":["active"],"next_action":"overdue","assigned_to":"me","sort":"next_action_asc"}'),
+  ('due-today', 'opportunity', '{"status":["active"],"next_action":"today","assigned_to":"me","sort":"next_action_asc"}'),
+  ('hot-no-touch', 'opportunity', '{"status":["active"],"temperature":["hot"],"no_touch_days":3,"assigned_to":"me","sort":"last_touch_asc"}'),
+  ('sellers-need-update', 'opportunity', '{"status":["active"],"type":["seller","landlord"],"no_touch_days":14,"assigned_to":"me","sort":"last_touch_asc"}'),
+  ('new-matches', 'opportunity', '{"status":["active","nurture"],"type":["buyer","tenant"],"has_new_matches":true,"assigned_to":"me","sort":"new_matches_desc"}'),
+  ('unassigned-deals', 'opportunity', '{"status":["active"],"assigned_to":"unassigned","sort":"created_desc"}'),
+  ('new-inquiries', 'inquiry', '{"status":["new"],"assigned_to":"me","sort":"received_asc"}'),
+  ('unassigned-inquiries', 'inquiry', '{"status":["new"],"assigned_to":"unassigned","sort":"received_asc"}');
+
+DO $$
+DECLARE
+  v_start TIMESTAMPTZ; v_n INT; i INT; r RECORD;
+BEGIN
+  FOR i IN 1..10 LOOP
+    v_start := clock_timestamp();
+    SELECT count(*) INTO v_n FROM smart_list_counts((SELECT jsonb_agg(to_jsonb(l)) FROM scale_lists l));
+    INSERT INTO scale_timing VALUES ('OVERVIEW: counts for all 9 built-in lists', extract(epoch FROM clock_timestamp() - v_start) * 1000, v_n);
+  END LOOP;
+  FOR r IN SELECT * FROM scale_lists WHERE key <> 'new-matches' LOOP
+    FOR i IN 1..10 LOOP
+      v_start := clock_timestamp();
+      IF r.entity = 'opportunity' THEN
+        SELECT count(*) INTO v_n FROM smart_list_opportunities(r.filter, 20, 0, NULL);
+      ELSE
+        SELECT count(*) INTO v_n FROM smart_list_inquiries(r.filter, 20, 0, NULL);
+      END IF;
+      INSERT INTO scale_timing VALUES ('list page: ' || r.key, extract(epoch FROM clock_timestamp() - v_start) * 1000, v_n);
+    END LOOP;
+  END LOOP;
+END $$;
 
 SELECT fn, count(*) AS runs,
        round(min(ms), 1) AS min_ms,
