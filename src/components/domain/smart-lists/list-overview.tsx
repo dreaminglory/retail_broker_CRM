@@ -4,7 +4,7 @@ import { Briefcase, ChevronRight, Inbox, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ListOverview } from "@/domain/smart-lists/service";
 import type { SmartListEntity } from "@/domain/smart-lists/types";
-import { formatListCount, listHref } from "./list-count";
+import { formatListCount, listHref } from "./list-links";
 import { ScopeToggle } from "./scope-toggle";
 
 function EntityIcon({ entity }: { entity: SmartListEntity }) {

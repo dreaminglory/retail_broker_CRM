@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatListCount } from './list-count';
+import { formatListCount } from './list-links';
 
 describe('formatListCount (rule 6)', () => {
   it('is exact up to 999 and "999+" above', () => {
