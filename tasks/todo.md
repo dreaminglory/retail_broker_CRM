@@ -276,6 +276,16 @@ counts. AC-2 and AC-3 are asserted by pgTAP (`094`, `092`) and the services suit
 through in the browser: AC-3 (add a candidate, the buyer leaves `new-matches`) is still to see.
 `npx supabase db reset` + `test:db` 717/717, `test:services` 931/931, `test:e2e` 64/64.
 
+Notes (2026-11-07, review fixes `09e0c48`..`a0c8f7d`): AC-3 seen in the browser as Alpha's
+manager on Agency. Alpha Opp 1 had 3 unoffered matches; after 2 were added as candidates it stayed
+in `new-matches` ("1 new match"), and after the 3rd it left the list (2 -> 1 deals). Work through,
+Next, Previous and Skip all navigated, ending on List done. An inquiry row action on
+`unassigned-inquiries` (mark contacted) refreshed the list and its count, 2 -> 1. `/lists`, list
+pages and the queue bar checked in bg and en at 1280 and 390 px. AC-1's Agency overlap with
+Exceptions is now in the services suite: Exceptions splits "no next action" into At risk and Stale,
+so `no-next-action` equals At risk + Stale, not At risk alone. `test:services` 938/938,
+`test:e2e` 64/64.
+
 ## Phase 3: Custom lists, E2E, cut items
 
 ## Task 10: Opportunity list reads through `smart_list_opportunities`, new filters — **Sonnet, Opus review**
