@@ -15,70 +15,10 @@ import type {
   AddParticipantInput,
 } from './types';
 
-export interface OpportunityListOptions {
-  status?: 'active' | 'won' | 'lost' | 'nurture' | 'archived' | 'all';
-  assignedTo?: string;
-  temperature?: 'hot' | 'warm' | 'cold';
-  stageId?: string;
-  type?: 'buyer' | 'seller' | 'landlord' | 'tenant' | 'all';
-  search?: string;
-  /** The filters below exist only on the list page, through smart_list_opportunities (AD-062). */
-  sourceId?: string;
-  nextAction?: 'none' | 'overdue' | 'today' | 'upcoming';
-  noTouchDays?: number;
-  hasNewMatches?: boolean;
-  limit?: number;
-  offset?: number;
-}
-
 export class OpportunityRepository {
   constructor(private readonly db: SupabaseClient) {}
 
   // ── Opportunities ─────────────────────────────────────────────────────────
-
-  async findAll(
-    agencyId: string,
-    opts: OpportunityListOptions = {}
-  ): Promise<Opportunity[]> {
-    const { limit = 50, offset = 0 } = opts;
-    const { data, error } = await this.filtered(agencyId, opts).range(offset, offset + limit - 1);
-    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
-    return (data ?? []) as Opportunity[];
-  }
-
-  // The paged list (with the smart-list filters) reads through smart_list_opportunities:
-  // OpportunityService.listPage. This query serves the quick search only.
-  private filtered(agencyId: string, opts: OpportunityListOptions) {
-    const { status = 'active', assignedTo, stageId, search } = opts;
-
-    let query = this.db
-      .from('opportunities')
-      .select('*')
-      .eq('agency_id', agencyId)
-      // id breaks created_at ties so pages never overlap
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false });
-
-    if (status !== 'all') {
-      query = query.eq('status', status);
-    }
-    if (assignedTo) {
-      query = query.eq('assigned_to', assignedTo);
-    }
-    if (opts.temperature) {
-      query = query.eq('temperature', opts.temperature);
-    }
-    if (stageId && stageId !== 'all') {
-      query = query.eq('stage_id', stageId);
-    }
-    if (opts.type && opts.type !== 'all') {
-      query = query.eq('type', opts.type);
-    }
-    if (search) {
-      query = query.ilike('title', `%${search}%`);
-    }
-    return query;
-  }
 
   async findById(id: string, agencyId: string): Promise<OpportunityWithDetails | null> {
     const { data, error } = await this.db

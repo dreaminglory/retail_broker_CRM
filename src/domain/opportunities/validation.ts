@@ -20,6 +20,10 @@ export const opportunityStatusSchema = z.enum([
 
 export const temperatureSchema = z.enum(['hot', 'warm', 'cold']);
 
+/** Where a deal's next action falls: the list filter and the smart list filter read the same states. */
+export const nextActionStateSchema = z.enum(['none', 'overdue', 'today', 'upcoming']);
+export type NextActionState = z.infer<typeof nextActionStateSchema>;
+
 export const participantRoleSchema = z.enum([
   'buyer',
   'seller',
@@ -109,7 +113,6 @@ export type AddParticipantSchema = z.infer<typeof addParticipantSchema>;
 
 // ── List filters ───────────────────────────────────────────────────────────
 
-const nextActionParamSchema = z.enum(['none', 'overdue', 'today', 'upcoming']);
 /** Whole days as typed in the URL: digits only, 1–3650 (as the smart list filter allows). */
 const untouchedDaysParamSchema = z
   .string()
@@ -134,7 +137,7 @@ export function parseOpportunityListFilters(params: {
   const broker = z.string().uuid().safeParse(params.broker);
   const temperature = temperatureSchema.safeParse(params.temperature);
   const source = z.string().uuid().safeParse(params.source);
-  const next = nextActionParamSchema.safeParse(params.next);
+  const next = nextActionStateSchema.safeParse(params.next);
   const untouched = untouchedDaysParamSchema.safeParse(params.untouched);
   return {
     assignedTo: broker.success ? broker.data : undefined,

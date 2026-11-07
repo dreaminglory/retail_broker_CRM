@@ -1154,7 +1154,7 @@
   },
   "OpportunitiesPage": {
     "title": "Opportunities",
-    "count": "{count} opportunities found",
+    "count": "{count, plural, one {# opportunity found} other {# opportunities found}}",
     "newBtn": "New opportunity",
     "newTitle": "Create opportunity",
     "searchPlaceholder": "Search by title…",

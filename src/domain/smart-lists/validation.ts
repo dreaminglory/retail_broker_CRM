@@ -4,7 +4,12 @@
  */
 
 import { z } from 'zod';
-import { opportunityStatusSchema, opportunityTypeSchema, temperatureSchema } from '../opportunities/validation';
+import {
+  nextActionStateSchema,
+  opportunityStatusSchema,
+  opportunityTypeSchema,
+  temperatureSchema,
+} from '../opportunities/validation';
 import type { ListFilter } from './types';
 
 const uuid = z.string().uuid();
@@ -16,7 +21,6 @@ const searchSchema = z.string().trim().max(200);
 
 export const opportunityListSortSchema = z.enum(['created_desc', 'last_touch_asc', 'next_action_asc']);
 export const inquiryListSortSchema = z.enum(['received_asc', 'received_desc']);
-export const nextActionStateSchema = z.enum(['none', 'overdue', 'today', 'upcoming']);
 
 export const opportunityListFilterSchema = z
   .object({

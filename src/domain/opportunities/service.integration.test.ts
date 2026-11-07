@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { adminClient, createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
 import { SmartListRepository } from '../smart-lists/repository';
-import { OpportunityRepository, type OpportunityListOptions } from './repository';
+import type { OpportunityListOptions } from './types';
 import { OpportunityService } from './service';
 
 describeServices('OpportunityService against the local stack', () => {
@@ -83,14 +83,38 @@ describeServices('OpportunityService against the local stack', () => {
     expect(new Set([...first.rows, ...second.rows].map((row) => row.id)).size).toBe(3);
   });
 
-  // Task 10: the list reads through smart_list_opportunities. The old PostgREST query (still
-  // behind findAll, for the quick search) is the oracle: same rows, same order, same total.
-  // The other suites write Alpha's deals in parallel, so the cases run on deals this suite
-  // creates, found by a tag in the title (search is part of every case).
+  // Task 10: the list reads through smart_list_opportunities. Parity with the PostgREST query it
+  // replaced: the expected rows are worked out here from the deals' own fields, with that query's
+  // rules (active by default, newest first, id breaking ties). The other suites write Alpha's
+  // deals in parallel, so the cases run on deals this suite creates, found by a tag in the title
+  // (search is part of every case).
   describe('reads through smart_list_opportunities (parity and the new filters)', () => {
     const tag = `Parity ${crypto.randomUUID().slice(0, 8)}`;
     let manager: TestSession;
     let ids: Record<string, string>;
+    type Fixture = {
+      id: string;
+      status: string;
+      type: string;
+      temperature: string;
+      stage_id: string;
+      assigned_to: string | null;
+      created_at: string;
+    };
+    let fixtures: Fixture[];
+
+    /** The rows and order the old PostgREST query gave for these options. */
+    function expectedFor(opts: OpportunityListOptions): string[] {
+      const status = opts.status ?? 'active';
+      return fixtures
+        .filter((d) => status === 'all' || d.status === status)
+        .filter((d) => !opts.type || opts.type === 'all' || d.type === opts.type)
+        .filter((d) => !opts.stageId || opts.stageId === 'all' || d.stage_id === opts.stageId)
+        .filter((d) => !opts.temperature || d.temperature === opts.temperature)
+        .filter((d) => !opts.assignedTo || d.assigned_to === opts.assignedTo)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id))
+        .map((d) => d.id);
+    }
     let ctx: { stageA: string; stageB: string; sourceId: string };
 
     beforeAll(async () => {
@@ -127,8 +151,13 @@ describeServices('OpportunityService against the local stack', () => {
         deal('untouched 20d', { assigned_to: broker.userId, created_at: new Date(Date.now() - 20 * day).toISOString() }),
         deal('untouched 5d', { type: 'seller', temperature: 'hot', created_at: new Date(Date.now() - 5 * day).toISOString() }),
       ];
-      const { data: rows, error } = await admin.from('opportunities').insert(rowsToInsert).select('id, title');
+      const { data: rows, error } = await admin
+        .from('opportunities')
+        .insert(rowsToInsert)
+        .select('id, title, status, type, temperature, stage_id, assigned_to, created_at');
       if (error) throw error;
+      // created_at as the database stored it, so ties and order are exact.
+      fixtures = rows!.map((r) => ({ ...r, created_at: new Date(r.created_at).toISOString() }));
       ids = Object.fromEntries(rows!.map((r) => [r.title.slice(tag.length + 1), r.id]));
       for (const r of rows!) cleanup.track('opportunities', r.id);
 
@@ -166,34 +195,50 @@ describeServices('OpportunityService against the local stack', () => {
     ];
 
     it.each(parity)('%s: same rows and order as before', async (_name, opts) => {
-      const query = { ...opts(), search: tag };
-      const oracle = await new OpportunityRepository(manager.db).findAll(manager.agencyId, { ...query, limit: 1000 });
+      const expected = expectedFor(opts());
 
-      const page = await new OpportunityService(manager.db).listPage(manager.agencyId, { ...query, limit: 50 });
+      const page = await new OpportunityService(manager.db).listPage(manager.agencyId, {
+        ...opts(),
+        search: tag,
+        limit: 50,
+      });
 
-      expect(oracle.length).toBeGreaterThan(0);
-      expect(page.total).toBe(oracle.length);
-      expect(page.rows.map((r) => r.id)).toEqual(oracle.map((r) => r.id));
+      expect(expected.length).toBeGreaterThan(0);
+      expect(page.total).toBe(expected.length);
+      expect(page.rows.map((r) => r.id)).toEqual(expected);
     });
 
-    it('searches the title case-insensitively, as before', async () => {
+    it('searches the title case-insensitively, anywhere in it', async () => {
       const service = new OpportunityService(manager.db);
-      const repo = new OpportunityRepository(manager.db);
-      for (const search of [`${tag} hot`, `${tag} HOT buyer`, `${tag} no such deal`]) {
-        const oracle = await repo.findAll(manager.agencyId, { search, status: 'all', limit: 1000 });
-        const page = await service.listPage(manager.agencyId, { search, status: 'all', limit: 50 });
-        expect(page.rows.map((r) => r.id), search).toEqual(oracle.map((r) => r.id));
+      const cases: [string, string[]][] = [
+        [`${tag} hot`, ['hot buyer']],
+        [`${tag} HOT buyer`, ['hot buyer']],
+        [`  ${tag} seller `, ['seller']],
+        [`${tag} no such deal`, []],
+      ];
+      for (const [search, names] of cases) {
+        const page = await service.listPage(manager.agencyId, { search, limit: 50 });
+        expect(page.rows.map((r) => r.id), search).toEqual(names.map((n) => ids[n]));
+      }
+    });
+
+    it('treats % and _ in the search as plain characters (list and quick search alike)', async () => {
+      const service = new OpportunityService(manager.db);
+      for (const search of [`${tag} h_t`, `${tag} %buyer`]) {
+        expect((await service.listPage(manager.agencyId, { search, status: 'all', limit: 50 })).total, search).toBe(0);
       }
     });
 
     it('pages in the same order as before', async () => {
-      const query = { search: tag, status: 'all' as const };
-      const oracle = await new OpportunityRepository(manager.db).findAll(manager.agencyId, { ...query, limit: 1000 });
-
-      const second = await new OpportunityService(manager.db).listPage(manager.agencyId, { ...query, limit: 3, offset: 3 });
+      const second = await new OpportunityService(manager.db).listPage(manager.agencyId, {
+        search: tag,
+        status: 'all',
+        limit: 3,
+        offset: 3,
+      });
 
       expect(second.total).toBe(8);
-      expect(second.rows.map((r) => r.id)).toEqual(oracle.slice(3, 6).map((r) => r.id));
+      expect(second.rows.map((r) => r.id)).toEqual(expectedFor({ status: 'all' }).slice(3, 6));
     });
 
     it('still gives the total for a page past the end, so the pager can fall back', async () => {

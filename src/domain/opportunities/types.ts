@@ -3,6 +3,8 @@
  * AD-009: All four opportunity types from Sprint 1.
  */
 
+import type { NextActionState } from './validation';
+
 export type OpportunityType = 'buyer' | 'seller' | 'landlord' | 'tenant';
 export type OpportunityStatus = 'active' | 'won' | 'lost' | 'nurture' | 'archived';
 export type Temperature = 'hot' | 'warm' | 'cold';
@@ -121,3 +123,19 @@ export interface AddParticipantInput {
   role: ParticipantRole;
   notes?: string | null;
 }
+
+/** The opportunity list's filters and paging (OpportunityService.listPage, AD-062). */
+export type OpportunityListOptions = {
+  status?: OpportunityStatus | 'all';
+  assignedTo?: string;
+  temperature?: Temperature;
+  stageId?: string;
+  type?: OpportunityType | 'all';
+  search?: string;
+  sourceId?: string;
+  nextAction?: NextActionState;
+  noTouchDays?: number;
+  hasNewMatches?: boolean;
+  limit?: number;
+  offset?: number;
+};

@@ -1154,7 +1154,7 @@
   },
   "OpportunitiesPage": {
     "title": "Сделки",
-    "count": "Намерени {count} сделки",
+    "count": "{count, plural, one {Намерена # сделка} other {Намерени # сделки}}",
     "newBtn": "Нова сделка",
     "newTitle": "Създаване на сделка",
     "searchPlaceholder": "Търсене по заглавие…",

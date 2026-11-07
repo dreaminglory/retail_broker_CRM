@@ -32,14 +32,22 @@ function sqlFailure(error: { code?: string; message: string }, fallback: string)
 
 type RowWithTotal = { total_count: number | string };
 
+type ListRowsOptions = { limit: number; offset?: number; after?: SortKey | null };
+
 export class SmartListRepository {
   constructor(private readonly db: SupabaseClient) {}
 
   /** One page of a list (or the row after `after`, for the queue), with the list's total. */
   async listRows(
-    list: ListFilter,
-    opts: { limit: number; offset?: number; after?: SortKey | null }
-  ): Promise<ListRows> {
+    list: Extract<ListFilter, { entity: 'opportunity' }>,
+    opts: ListRowsOptions
+  ): Promise<Extract<ListRows, { entity: 'opportunity' }>>;
+  async listRows(
+    list: Extract<ListFilter, { entity: 'inquiry' }>,
+    opts: ListRowsOptions
+  ): Promise<Extract<ListRows, { entity: 'inquiry' }>>;
+  async listRows(list: ListFilter, opts: ListRowsOptions): Promise<ListRows>;
+  async listRows(list: ListFilter, opts: ListRowsOptions): Promise<ListRows> {
     const fn = list.entity === 'opportunity' ? 'smart_list_opportunities' : 'smart_list_inquiries';
     const { data, error } = await this.db.rpc(fn, {
       p_filter: list.filter,
