@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ComponentProps } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, SkipForward, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,6 +16,14 @@ type QueueBarProps = {
   sortKey: SortKey | null;
   scope: ListScope;
 };
+
+/**
+ * A link to a queue step. Never prefetched: a step re-runs the list, and a prefetched redirect
+ * would land on the deal the list pointed at when the link was rendered, not at the click.
+ */
+export function QueueStepLink(props: Omit<ComponentProps<typeof Link>, "prefetch">) {
+  return <Link {...props} prefetch={false} />;
+}
 
 /**
  * Work through: the bar on a deal opened from a list (spec rule 7). Links only, so the step runs
@@ -43,7 +52,7 @@ export function QueueBar({ listId, listName, pos, total, sortKey, scope }: Queue
           </p>
         </div>
         <div className="flex items-center gap-1.5">
-          <Link
+          <QueueStepLink
             href={prevHref}
             aria-disabled={pos <= 1}
             tabIndex={pos <= 1 ? -1 : undefined}
@@ -51,15 +60,15 @@ export function QueueBar({ listId, listName, pos, total, sortKey, scope }: Queue
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">{t("previous")}</span>
-          </Link>
-          <Link href={nextHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
+          </QueueStepLink>
+          <QueueStepLink href={nextHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
             <SkipForward className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">{t("skip")}</span>
-          </Link>
-          <Link href={nextHref} className={buttonVariants({ size: "sm" })}>
+          </QueueStepLink>
+          <QueueStepLink href={nextHref} className={buttonVariants({ size: "sm" })}>
             {t("next")}
             <ChevronRight className="h-4 w-4" aria-hidden />
-          </Link>
+          </QueueStepLink>
           <Link href={listHref} className={buttonVariants({ variant: "ghost", size: "sm" })}>
             <X className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">{t("exit")}</span>

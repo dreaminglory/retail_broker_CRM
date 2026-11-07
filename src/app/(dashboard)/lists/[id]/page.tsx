@@ -18,6 +18,7 @@ import { RequirementService } from "@/domain/requirements/service";
 import { getAgencySettings } from "@/domain/agencies/settings";
 import { OpportunityListTable } from "@/components/domain/opportunities/opportunity-list-table";
 import { ListPageHeader } from "@/components/domain/smart-lists/list-page-header";
+import { QueueStepLink } from "@/components/domain/smart-lists/queue-bar";
 import { ListPager } from "@/components/ui/list-pager";
 import { InquiriesPageClient } from "../../inquiries/inquiries-page-client";
 import { loadInquiryRowContext } from "../../inquiries/inquiry-row-context";
@@ -62,13 +63,13 @@ export default async function SmartListPage({
       showScopeToggle={list.kind === "built-in" && list.list.scope === "mine" && canSwitchListScope(ctx.role)}
       actions={
         list.entity === "opportunity" && result && result.total > 0 ? (
-          <Link
+          <QueueStepLink
             href={queueStepHref({ listId: list.id, dir: "next", pos: 0, scope: data.scope })}
             className={buttonVariants({ size: "sm" })}
           >
             <ListChecks className="h-4 w-4" aria-hidden />
             {t("smartLists.queue.workThrough")}
-          </Link>
+          </QueueStepLink>
         ) : null
       }
     />
