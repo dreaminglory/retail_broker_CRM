@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 60th migration
-(`20261108000002_smart_list_opportunities.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 62nd migration
+(`20261108000004_smart_list_inquiries.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -514,8 +514,8 @@ must-have flags. `matching` treats a must-have as a filter and the rest as score
 
 ### 2.10 Smart lists
 
-`spec/smart-lists.md`, AD-062. **In progress:** the table, last touch and the opportunity list
-function are built; the inquiry list and the counts arrive with the module's next tasks.
+`spec/smart-lists.md`, AD-062. **In progress:** the table, the three list functions and last
+touch are built; the app side (service, screens) arrives with the module's next tasks.
 
 ```mermaid
 erDiagram
@@ -566,7 +566,16 @@ erDiagram
   NULL). Measured at 2,000 deals (`scripts/smart-lists/scale.sql`, one broker owns all):
   `has_new_matches` over every deal 0.86 s; the exact count for every deal, needed to sort by it,
   takes 57 s there (an open decision for the founder, not used by the app yet).
-- **Planned, not built yet:** `smart_list_inquiries`, `smart_list_counts`.
+- **`smart_list_inquiries(filter, limit, offset, after)`**: the same shape for inquiries
+  (`SECURITY INVOKER`, explicit agency filter, `total_count`, `sort_key`, `limit` capped at
+  100). Filter keys `status[]` (absent = every status, as the inquiry list shows today),
+  `assigned_to` (`me | unassigned | user id`), `source_id[]`, `search` (caller name, phone,
+  email or subject; `%` and `_` literal), `sort` (`received_desc` default, ties by `id`
+  descending | `received_asc`).
+- **`smart_list_counts(lists)`**: `[{ key, entity, filter }]` in, `(key, count)` out in one call.
+  Each count is the list function's `total_count` capped at 1000 ("999+" in the UI), so a count
+  can never differ from its list. Bad input raises i18n keys (`smartLists.errors.invalidLists`,
+  `invalidEntity`, `tooManyLists` for more than 100 lists), never SQL text.
 
 ---
 

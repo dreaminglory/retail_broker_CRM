@@ -95,12 +95,12 @@ received_desc`), same return shape rules as Task 2. `smart_list_counts(p_lists j
 `authenticated` only.
 
 **Acceptance criteria:**
-- [ ] pgTAP: each inquiry filter key; `me`; cross-agency empty
-- [ ] `smart_list_counts` returns, for a mixed array of opportunity and inquiry filters, the same numbers as `total_count` of the list functions, and 1000 for a list with more rows
-- [ ] An invalid `entity` in the array raises an i18n key, not a SQL error text
+- [x] pgTAP: each inquiry filter key; `me`; cross-agency empty
+- [x] `smart_list_counts` returns, for a mixed array of opportunity and inquiry filters, the same numbers as `total_count` of the list functions, and 1000 for a list with more rows
+- [x] An invalid `entity` in the array raises an i18n key, not a SQL error text
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
+- [x] `npx supabase db reset` then `npm run test:db`
 
 **Dependencies:** Task 2 (Task 3 for the `new-matches` count)
 **Files likely touched:** `supabase/migrations/<ts>_smart_list_inquiries.sql`, `supabase/tests/database/091-smart-list-functions.sql`
