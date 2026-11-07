@@ -115,7 +115,7 @@ target is missed.
 `/review` of Phases 1–2.
 
 ### Phase 3: Custom lists, E2E, cut items (Sonnet)
-- [ ] Task 10: Opportunity list reads through `smart_list_opportunities`, new filters
+- [x] Task 10: Opportunity list reads through `smart_list_opportunities`, new filters
 - [ ] Task 11: Save as list, rename, edit, delete
 - [ ] Task 12: Share a list (owner/manager)
 - [ ] Task 13: Custom lists for inquiries (cut 1)
