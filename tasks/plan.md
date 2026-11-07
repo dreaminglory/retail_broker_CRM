@@ -97,7 +97,7 @@ Full tasks with acceptance criteria are in `tasks/todo.md`.
 ### Phase 1: List engine (Opus)
 - [x] Task 1: AD-062, `smart_lists` table, RLS and the docs
 - [x] Task 2: `smart_list_opportunities` and last touch
-- [ ] Task 3: `new_matches` and the speed spike
+- [x] Task 3: `new_matches` and the speed spike
 - [ ] Task 4: `smart_list_inquiries` and `smart_list_counts`
 - [ ] Task 5: Seed every built-in list and measure the targets (Sonnet)
 

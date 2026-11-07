@@ -101,7 +101,7 @@ RETURNS TEXT[] LANGUAGE sql AS $$
   FROM smart_list_opportunities_at(current_setting('test.now')::timestamptz, p_filter, p_limit, p_offset, p_after)
        WITH ORDINALITY AS r(id, agency_id, title, type, stage_id, source_id, inquiry_id, primary_contact_id,
          assigned_to, status, temperature, expected_value, currency, notes, next_action_at, closed_at,
-         lost_reason, created_by, created_at, updated_at, last_touch, sort_key, total_count, ord)
+         lost_reason, created_by, created_at, updated_at, last_touch, new_matches, sort_key, total_count, ord)
 $$;
 
 -- Same, ignoring order.

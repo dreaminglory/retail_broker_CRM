@@ -74,13 +74,13 @@ properties as a broker: min / median / p95 / max. If the p95 is over 1 s, try th
 the plan; record both numbers.
 
 **Acceptance criteria:**
-- [ ] `081-match-lists.sql` still passes unchanged (the matching output didn't move)
-- [ ] pgTAP: `new_matches` equals `match_properties(...).unlinked_count` for every seeded buyer and tenant deal; adding a candidate or a not-suitable link lowers it
-- [ ] Scale numbers recorded in the commit message and in the Checkpoint 1 notes below
+- [x] `081-match-lists.sql` still passes unchanged (the matching output didn't move)
+- [x] pgTAP: `new_matches` equals `match_properties(...).unlinked_count` for every seeded buyer and tenant deal; adding a candidate or a not-suitable link lowers it
+- [x] Scale numbers recorded in the commit message and in the Checkpoint 1 notes below
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `docker exec -i supabase_db_retail_broker_crm_application psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/smart-lists/scale.sql`
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `docker exec -i supabase_db_retail_broker_crm_application psql -U postgres -d postgres -v ON_ERROR_STOP=1 < scripts/smart-lists/scale.sql`
 
 **Dependencies:** Task 2
 **Files likely touched:** `supabase/migrations/<ts>_smart_list_new_matches.sql`, `supabase/tests/database/091-smart-list-functions.sql`, `scripts/smart-lists/scale.sql`
@@ -131,7 +131,30 @@ script and time the counts call (every built-in list) and each list function.
 - [ ] Speed numbers below; if `new-matches` misses 1 s, the founder picks pre-filter / cache / cut 4
 - [ ] Founder reviews AD-062 and each built-in list's seed output before any UI
 
-Notes (speed):
+Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker owns every deal
+(worst case: an owner/manager on the Agency scope); `scripts/smart-lists/scale.sql`, local stack:
+- `match_evaluate` alone, one deal: ~97 ms (no pre-filter). Through the view with the must-have
+  pre-filter: median 11.6 ms, p95 32 ms. `match_properties` after the refactor: p95 ~66 ms
+  (matching measured ~150 ms before), output unchanged (`081` passes untouched).
+- **`new-matches` count** (deals with at least one new match, 1,907 of 2,000): **0.86 s** as a per-deal
+  `LATERAL … LIMIT 1`. The same question asked as a plain `EXISTS` or through a SQL function took
+  **39–45 s**: the planner computes every pair, and a function with the required `search_path`
+  can't be inlined. So the count is inside the 1 s overview target but with little room for the
+  other counts.
+- **`new-matches` list sorted by exact count** (spec order "most new matches first"): **56.8 s**.
+  Capped count (stop at N matches per deal, show "N+"): N=10 → 4.6 s, N=3 → 1.7 s. Neither meets
+  300 ms at this scope. A broker on "Mine" (about 1/30 of the deals) is roughly 30× cheaper.
+- Plain active list, page of 20: ~42 ms. "No touch for 14 days" page: p95 ~310–344 ms (the last
+  touch is computed for every candidate deal); to look at in Task 5 (index on completed tasks).
+
+**Founder decision needed before Phase 2 (the plan reserved it for Checkpoint 1):** keep the
+`new-matches` list ordered by exact count? Options, with my recommendation first:
+1. Order `new-matches` by oldest last touch (cheap, like the other lists) and show each row's
+   count for the 20 rows of the page only; keep the 0.86 s count. Spec change: order only.
+2. Cap the count ("5+") and sort by it: 1.7–4.6 s at Agency scope, fine on Mine. Spec change: "5+".
+3. Cache or materialize the counts (Ask first in the spec; AD-060 revisit clause). Exact and fast,
+   but a new table or view to keep fresh.
+4. Cut `new-matches` (spec cut 4).
 
 ## Phase 2: Built-in lists
 

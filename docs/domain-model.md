@@ -543,16 +543,30 @@ erDiagram
   explicit `current_agency_id()` filter; the only place a deal list is evaluated. Filter keys
   `status[]` (default `active`), `type[]`, `stage_id[]`, `temperature[]`, `source_id[]`,
   `assigned_to` (`me` = `auth.uid()` | `unassigned` | user id), `next_action` (`none | overdue |
-  today | upcoming`), `no_touch_days` (last touch at least N×24 h ago), `search` (title,
-  `%` and `_` literal), `sort` (`created_desc` | `last_touch_asc` | `next_action_asc`; ties by
-  `id`). Day windows come from `agencies.settings->>'timezone'` (default `Europe/Sofia`) and
+  today | upcoming`), `no_touch_days` (last touch at least N×24 h ago), `has_new_matches`,
+  `search` (title, `%` and `_` literal), `sort` (`created_desc` | `last_touch_asc` |
+  `next_action_asc` | `new_matches_desc`; ties by `id`). Day windows come from `agencies.settings->>'timezone'` (default `Europe/Sofia`) and
   match `getTodayWindows`: overdue before now, today from now to the next agency midnight,
   upcoming from that midnight to midnight + 4 calendar days. A page returns `last_touch`,
   `total_count` (the whole list, before paging and before `p_after`) and `sort_key`
   (`[position, id]`, both exact below 2^53); passing a row's key as `p_after` returns the rows
   strictly after it, even once that deal has left the list. `limit` is capped at 100. The clock is
   a parameter of `smart_list_opportunities_at` (tests fix it); the public function passes `now()`.
-- **Planned, not built yet:** `smart_list_inquiries`, `smart_list_counts`, `new_matches`.
+- **New matches** (view `deal_match_rows`, `security_invoker`): the one join of "which open
+  listings of the right offer type fit this deal", extracted from `match_properties`, which now
+  reads it, so `match_properties.unlinked_count` and the list's `new_matches` are the same rule.
+  A match is new when the property has no link to the deal in any status (`op.is_new`). A view,
+  not a function, because only a view is inlined, so "has a new match" as a per-deal
+  `LATERAL … LIMIT 1` stops at the first match (a SQL function with the required `search_path`
+  always computes every row). Before `match_evaluate` runs, a pre-filter drops pairs that fail a
+  must-have type, budget or location; these are necessary conditions on the same columns, and
+  `092-smart-list-new-matches.sql` compares the result with a count made from `match_evaluate`
+  alone. `smart_list_opportunities` takes `has_new_matches` (true: at least one new match) and
+  `sort = new_matches_desc` (counts every candidate deal; returns `new_matches`, otherwise
+  NULL). Measured at 2,000 deals (`scripts/smart-lists/scale.sql`, one broker owns all):
+  `has_new_matches` over every deal 0.86 s; the exact count for every deal, needed to sort by it,
+  takes 57 s there (an open decision for the founder, not used by the app yet).
+- **Planned, not built yet:** `smart_list_inquiries`, `smart_list_counts`.
 
 ---
 
