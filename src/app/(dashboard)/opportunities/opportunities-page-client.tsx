@@ -34,6 +34,14 @@ import { useTranslations } from "next-intl";
 const STATUS_FILTER_KEYS = ["allStatuses", "active", "won", "lost", "nurture", "archived"];
 const TEMPERATURE_FILTER_KEYS = ["allTemperatures", "hot", "warm", "cold"] as const;
 const TYPE_FILTER_KEYS = ["allTypes", "buyer", "seller", "tenant", "landlord"];
+const NEXT_ACTION_FILTERS = [
+  ["all", "anyNextAction"],
+  ["none", "nextNone"],
+  ["overdue", "nextOverdue"],
+  ["today", "nextToday"],
+  ["upcoming", "nextUpcoming"],
+] as const;
+const UNTOUCHED_DAY_OPTIONS = ["3", "7", "14", "30"];
 
 interface OpportunitiesPageClientProps {
   opportunities: Opportunity[];
@@ -49,6 +57,11 @@ interface OpportunitiesPageClientProps {
   initialType: string;
   initialBroker: string;
   initialTemperature: string;
+  initialSource: string;
+  initialNextAction: string;
+  /** Days as a string, or "all". */
+  initialUntouched: string;
+  initialMatches: string;
 }
 
 export function OpportunitiesPageClient({
@@ -64,7 +77,16 @@ export function OpportunitiesPageClient({
   initialType,
   initialBroker,
   initialTemperature,
+  initialSource,
+  initialNextAction,
+  initialUntouched,
+  initialMatches,
 }: OpportunitiesPageClientProps) {
+  // A day count from a link that isn't a preset still shows as selected.
+  const untouchedOptions =
+    initialUntouched === "all" || UNTOUCHED_DAY_OPTIONS.includes(initialUntouched)
+      ? UNTOUCHED_DAY_OPTIONS
+      : [...UNTOUCHED_DAY_OPTIONS, initialUntouched];
   const t = useTranslations("OpportunitiesPage");
   const getStageName = useStageTranslation();
   const router = useRouter();
@@ -274,6 +296,75 @@ export function OpportunitiesPageClient({
                 {getStageName(s.name)}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialSource} onValueChange={(v) => updateParams({ source: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-44">
+            <SelectValue>
+              {(val: string) =>
+                val && val !== "all"
+                  ? (leadSources.find((s) => s.id === val)?.name ?? t("filters.unknownSource"))
+                  : t("filters.allSources")
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("filters.allSources")}</SelectItem>
+            {leadSources.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialNextAction} onValueChange={(v) => updateParams({ next: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-48">
+            <SelectValue>
+              {(val: string) =>
+                t(`filters.${NEXT_ACTION_FILTERS.find(([value]) => value === val)?.[1] ?? "anyNextAction"}`)
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {NEXT_ACTION_FILTERS.map(([value, key]) => (
+              <SelectItem key={value} value={value}>
+                {t(`filters.${key}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialUntouched} onValueChange={(v) => updateParams({ untouched: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-48">
+            <SelectValue>
+              {(val: string) =>
+                val && val !== "all"
+                  ? t("filters.untouchedDays", { days: Number(val) })
+                  : t("filters.anyTouch")
+              }
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("filters.anyTouch")}</SelectItem>
+            {untouchedOptions.map((days) => (
+              <SelectItem key={days} value={days}>
+                {t("filters.untouchedDays", { days: Number(days) })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={initialMatches} onValueChange={(v) => updateParams({ matches: (v as string) || "all", page: "" })}>
+          <SelectTrigger className="w-44">
+            <SelectValue>
+              {(val: string) => (val === "new" ? t("filters.newMatches") : t("filters.anyMatches"))}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("filters.anyMatches")}</SelectItem>
+            <SelectItem value="new">{t("filters.newMatches")}</SelectItem>
           </SelectContent>
         </Select>
       </div>

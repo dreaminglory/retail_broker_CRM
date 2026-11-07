@@ -4,6 +4,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DomainError } from '@/lib/errors';
 import { OpportunityRepository } from './repository';
 import type {
   Opportunity,
@@ -13,33 +14,71 @@ import type {
   UpdateOpportunityInput,
   CloseOpportunityInput,
   AddParticipantInput,
+  OpportunityListOptions,
 } from './types';
 import {
   createOpportunitySchema,
   updateOpportunitySchema,
   closeOpportunitySchema,
   addParticipantSchema,
+  opportunityStatusSchema,
 } from './validation';
-import type { OpportunityListOptions } from './repository';
+
+import { SmartListRepository } from '../smart-lists/repository';
+import type { OpportunityListFilter } from '../smart-lists/validation';
+
+const ALL_STATUSES = opportunityStatusSchema.options;
+
+/** The list page's options as a smart list filter (newest first, as the list always was). */
+export function toListFilter(opts: OpportunityListOptions): OpportunityListFilter {
+  const filter: OpportunityListFilter = {
+    status: opts.status === 'all' ? [...ALL_STATUSES] : [opts.status ?? 'active'],
+  };
+  if (opts.type && opts.type !== 'all') filter.type = [opts.type];
+  if (opts.stageId && opts.stageId !== 'all') filter.stage_id = [opts.stageId];
+  if (opts.temperature) filter.temperature = [opts.temperature];
+  if (opts.assignedTo) filter.assigned_to = opts.assignedTo;
+  if (opts.sourceId) filter.source_id = [opts.sourceId];
+  if (opts.nextAction) filter.next_action = opts.nextAction;
+  if (opts.noTouchDays) filter.no_touch_days = opts.noTouchDays;
+  if (opts.hasNewMatches) filter.has_new_matches = true;
+  if (opts.search?.trim()) filter.search = opts.search.trim();
+  return filter;
+}
 
 export class OpportunityService {
   private readonly repo: OpportunityRepository;
+  private readonly lists: SmartListRepository;
 
   constructor(db: SupabaseClient) {
     this.repo = new OpportunityRepository(db);
+    this.lists = new SmartListRepository(db);
   }
 
   // ── Queries ───────────────────────────────────────────────────────────────
 
-  async list(agencyId: string, opts?: OpportunityListOptions): Promise<Opportunity[]> {
-    return this.repo.findAll(agencyId, opts);
-  }
-
+  /**
+   * One page of the opportunity list plus the total that match. Reads through
+   * smart_list_opportunities (AD-062), so the list and a list saved from it always agree. The
+   * function filters by the caller's agency; the rows are checked against `agencyId` here too.
+   */
   async listPage(
     agencyId: string,
-    opts?: OpportunityListOptions
+    opts: OpportunityListOptions = {}
   ): Promise<{ rows: Opportunity[]; total: number }> {
-    return this.repo.findPage(agencyId, opts);
+    const { limit = 50, offset = 0 } = opts;
+    const list = { entity: 'opportunity' as const, filter: toListFilter(opts) };
+    const page = await this.lists.listRows(list, { limit, offset });
+    if (page.rows.some((row) => row.agency_id !== agencyId)) {
+      throw new DomainError('errors.loadFailed', 'smart_list_opportunities returned rows of another agency');
+    }
+    if (page.rows.length === 0 && offset > 0) {
+      // Past the last row the function returns no rows, so no total: ask for it, so loadPage can
+      // fall back to the last page.
+      const first = await this.lists.listRows(list, { limit: 1, offset: 0 });
+      return { rows: [], total: first.total };
+    }
+    return { rows: page.rows, total: page.total };
   }
 
   async getById(id: string, agencyId: string): Promise<OpportunityWithDetails | null> {

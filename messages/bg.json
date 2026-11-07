@@ -84,7 +84,6 @@
     "price_positive": "Цената трябва да е по-голяма от нула.",
     "price_cents": "Цената е с най-много два знака след десетичната запетая.",
     "offer_type_required": "Изберете продажба или наем.",
-    "contact_required": "Изберете контакт.",
     "party_role_required": "Изберете роля.",
     "property_required": "Изберете имот.",
     "rejected_reason_too_long": "Причината може да е най-много 500 знака.",
@@ -112,7 +111,8 @@
     "toggleMenu": "Отваряне на менюто",
     "menuTitle": "Меню за навигация",
     "menuDescription": "Преминете към различните раздели на BrokerCRM.",
-    "properties": "Имоти"
+    "properties": "Имоти",
+    "lists": "Списъци"
   },
   "header": {
     "loading": "Зареждане...",
@@ -141,7 +141,8 @@
     "properties": "Имоти | BrokerCRM",
     "newProperty": "Нов имот | BrokerCRM",
     "property": "Имот {code} | BrokerCRM",
-    "editProperty": "Редакция на имот | BrokerCRM"
+    "editProperty": "Редакция на имот | BrokerCRM",
+    "lists": "Списъци | BrokerCRM"
   },
   "SettingsImport": {
     "title": "История на импортиранията",
@@ -1107,7 +1108,8 @@
   },
   "OpportunityListTable": {
     "noOpportunities": "Няма намерени сделки",
-    "noOpportunitiesDesc": "Променете филтрите или създайте нова сделка."
+    "noOpportunitiesDesc": "Променете филтрите или създайте нова сделка.",
+    "newMatches": "{count, plural, one {# нов подходящ имот} other {# нови подходящи имота}}"
   },
   "ParticipantList": {
     "title": "Участници",
@@ -1152,7 +1154,7 @@
   },
   "OpportunitiesPage": {
     "title": "Сделки",
-    "count": "Намерени {count} сделки",
+    "count": "{count, plural, one {Намерена # сделка} other {Намерени # сделки}}",
     "newBtn": "Нова сделка",
     "newTitle": "Създаване на сделка",
     "searchPlaceholder": "Търсене по заглавие…",
@@ -1176,7 +1178,18 @@
       "allTemperatures": "Всички температури",
       "hot": "🔥 Горещо",
       "warm": "⚡ Топло",
-      "cold": "❄️ Студено"
+      "cold": "❄️ Студено",
+      "allSources": "Всички източници",
+      "unknownSource": "Неизвестен източник",
+      "anyNextAction": "Всяко следващо действие",
+      "nextNone": "Без следващо действие",
+      "nextOverdue": "Просрочени",
+      "nextToday": "За днес",
+      "nextUpcoming": "Следващите 3 дни",
+      "anyTouch": "Всеки последен контакт",
+      "untouchedDays": "Без контакт {days, plural, one {# ден} other {# дни}}",
+      "anyMatches": "Всички съвпадения",
+      "newMatches": "С нови съвпадения"
     }
   },
   "OpportunityDetail": {
@@ -1913,5 +1926,65 @@
     "remove": "Махни {name}",
     "inactiveArea": "неактивен",
     "done": "Готово"
+  },
+  "smartLists": {
+    "builtIn": {
+      "noNextAction": "Без следващо действие",
+      "overdue": "Просрочени",
+      "dueToday": "За днес",
+      "hotNoTouch": "Горещи без контакт",
+      "sellersNeedUpdate": "Продавачи за обновяване",
+      "newMatches": "Нови подходящи имоти",
+      "unassignedDeals": "Неразпределени сделки",
+      "newInquiries": "Нови запитвания",
+      "unassignedInquiries": "Неразпределени запитвания"
+    },
+    "errors": {
+      "limit": "Можете да запазите най-много 50 списъка.",
+      "matchListLimit": "Можете да запазите най-много 5 списъка с нови подходящи имоти.",
+      "duplicateName": "Вече имате списък с това име.",
+      "invalidEntity": "Списъкът е с непознат вид записи.",
+      "invalidLists": "Списъците не можаха да бъдат преброени.",
+      "tooManyLists": "Твърде много списъци за едно преброяване.",
+      "immutable": "Собственикът и видът записи на списък не могат да се променят."
+    },
+    "entity": {
+      "opportunity": "Сделки",
+      "inquiry": "Запитвания"
+    },
+    "scope": {
+      "label": "Чия работа",
+      "mine": "Моята",
+      "agency": "Агенцията"
+    },
+    "overview": {
+      "title": "Списъци",
+      "description": "Оставащата работа във всеки списък. Отворете един и го обработете, докато се изпразни.",
+      "builtIn": "Вградени",
+      "saved": "Запазени",
+      "savedEmpty": "Запазете филтър от Сделки или Запитвания",
+      "agencyWide": "Цялата агенция",
+      "stale": "Филтрите на този списък са се променили. Редактирайте списъка.",
+      "shared": "Споделен с агенцията",
+      "sharedBy": "Споделен от {name}"
+    },
+    "page": {
+      "back": "Всички списъци",
+      "dealCount": "{count, plural, one {# сделка} other {# сделки}}",
+      "inquiryCount": "{count, plural, one {# запитване} other {# запитвания}}",
+      "emptyTitle": "Нищо не остана — браво",
+      "emptyDesc": "Всички записи в този списък са обработени."
+    },
+    "queue": {
+      "workThrough": "Обработи",
+      "label": "Обработване на {name}",
+      "position": "№ {pos} · {total, plural, one {# сделка} other {# сделки}} в списъка",
+      "previous": "Предишна",
+      "skip": "Пропусни",
+      "next": "Следваща",
+      "exit": "Изход",
+      "doneTitle": "Списъкът е обработен — няма какво повече.",
+      "backToLists": "Към списъците"
+    }
   }
 }

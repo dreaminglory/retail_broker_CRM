@@ -24,6 +24,10 @@ interface SearchParams {
   type?: OpportunityType | "all";
   broker?: string;
   temperature?: string;
+  source?: string;
+  next?: string;
+  untouched?: string;
+  matches?: string;
   page?: string;
 }
 
@@ -38,7 +42,8 @@ export default async function OpportunitiesPage({
   const stage = params.stage ?? "all";
   const type = params.type ?? "all";
   const page = parsePage(params.page);
-  const { assignedTo, temperature } = parseOpportunityListFilters(params);
+  const { assignedTo, temperature, sourceId, nextAction, noTouchDays, hasNewMatches } =
+    parseOpportunityListFilters(params);
 
   const supabase = await createSupabaseServer();
   const {
@@ -74,6 +79,10 @@ export default async function OpportunitiesPage({
       type: type === "all" ? "all" : type,
       assignedTo,
       temperature,
+      sourceId,
+      nextAction,
+      noTouchDays,
+      hasNewMatches,
       limit,
       offset,
     })
@@ -103,6 +112,10 @@ export default async function OpportunitiesPage({
         initialType={type}
         initialBroker={assignedTo ?? "all"}
         initialTemperature={temperature ?? "all"}
+        initialSource={sourceId ?? "all"}
+        initialNextAction={nextAction ?? "all"}
+        initialUntouched={noTouchDays ? String(noTouchDays) : "all"}
+        initialMatches={hasNewMatches ? "new" : "all"}
       />
     </div>
   );

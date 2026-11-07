@@ -9,7 +9,9 @@ SELECT tables_are(
           -- global reference data (properties, AD-057)
           'settlements', 'areas', 'properties', 'listings', 'property_parties', 'opportunity_properties',
           -- requirements (AD-059)
-          'requirements', 'requirement_locations'],
+          'requirements', 'requirement_locations',
+          -- smart lists (AD-062)
+          'smart_lists'],
     'All expected tables should exist'
 );
 

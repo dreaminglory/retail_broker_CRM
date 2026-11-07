@@ -84,7 +84,6 @@
     "price_positive": "The price must be greater than zero.",
     "price_cents": "The price has at most two decimals.",
     "offer_type_required": "Choose sale or rent.",
-    "contact_required": "Choose a contact.",
     "party_role_required": "Choose a role.",
     "property_required": "Choose a property.",
     "rejected_reason_too_long": "The reason can be at most 500 characters.",
@@ -112,7 +111,8 @@
     "toggleMenu": "Toggle menu",
     "menuTitle": "Navigation menu",
     "menuDescription": "Go to the different sections of BrokerCRM.",
-    "properties": "Properties"
+    "properties": "Properties",
+    "lists": "Lists"
   },
   "header": {
     "loading": "Loading...",
@@ -141,7 +141,8 @@
     "properties": "Properties | BrokerCRM",
     "newProperty": "New property | BrokerCRM",
     "property": "Property {code} | BrokerCRM",
-    "editProperty": "Edit property | BrokerCRM"
+    "editProperty": "Edit property | BrokerCRM",
+    "lists": "Lists | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -1107,7 +1108,8 @@
   },
   "OpportunityListTable": {
     "noOpportunities": "No opportunities found",
-    "noOpportunitiesDesc": "Adjust your filters or create a new opportunity."
+    "noOpportunitiesDesc": "Adjust your filters or create a new opportunity.",
+    "newMatches": "{count, plural, one {# new match} other {# new matches}}"
   },
   "ParticipantList": {
     "title": "Participants",
@@ -1152,7 +1154,7 @@
   },
   "OpportunitiesPage": {
     "title": "Opportunities",
-    "count": "{count} opportunities found",
+    "count": "{count, plural, one {# opportunity found} other {# opportunities found}}",
     "newBtn": "New opportunity",
     "newTitle": "Create opportunity",
     "searchPlaceholder": "Search by title…",
@@ -1176,7 +1178,18 @@
       "allTemperatures": "All temperatures",
       "hot": "🔥 Hot",
       "warm": "⚡ Warm",
-      "cold": "❄️ Cold"
+      "cold": "❄️ Cold",
+      "allSources": "All sources",
+      "unknownSource": "Unknown source",
+      "anyNextAction": "Any next action",
+      "nextNone": "No next action",
+      "nextOverdue": "Overdue",
+      "nextToday": "Due today",
+      "nextUpcoming": "Next 3 days",
+      "anyTouch": "Any last touch",
+      "untouchedDays": "No touch for {days, plural, one {# day} other {# days}}",
+      "anyMatches": "Any matches",
+      "newMatches": "Has new matches"
     }
   },
   "OpportunityDetail": {
@@ -1913,5 +1926,65 @@
     "remove": "Remove {name}",
     "inactiveArea": "inactive",
     "done": "Done"
+  },
+  "smartLists": {
+    "builtIn": {
+      "noNextAction": "No next action",
+      "overdue": "Overdue",
+      "dueToday": "Due today",
+      "hotNoTouch": "Hot, no recent contact",
+      "sellersNeedUpdate": "Sellers to update",
+      "newMatches": "Buyers with new matches",
+      "unassignedDeals": "Unassigned deals",
+      "newInquiries": "New inquiries",
+      "unassignedInquiries": "Unassigned inquiries"
+    },
+    "errors": {
+      "limit": "You can save at most 50 lists.",
+      "matchListLimit": "You can save at most 5 lists with new matches.",
+      "duplicateName": "You already have a list with this name.",
+      "invalidEntity": "This list has an unknown record type.",
+      "invalidLists": "The lists could not be counted.",
+      "tooManyLists": "Too many lists to count at once.",
+      "immutable": "The owner and record type of a list cannot change."
+    },
+    "entity": {
+      "opportunity": "Deals",
+      "inquiry": "Inquiries"
+    },
+    "scope": {
+      "label": "Whose work",
+      "mine": "Mine",
+      "agency": "Agency"
+    },
+    "overview": {
+      "title": "Lists",
+      "description": "The work left in each list. Open one and work through it until it is empty.",
+      "builtIn": "Built-in",
+      "saved": "Saved",
+      "savedEmpty": "Save a filter from Opportunities or Inquiries",
+      "agencyWide": "Whole agency",
+      "stale": "The filters of this list changed. Edit this list.",
+      "shared": "Shared with the agency",
+      "sharedBy": "Shared by {name}"
+    },
+    "page": {
+      "back": "All lists",
+      "dealCount": "{count, plural, one {# deal} other {# deals}}",
+      "inquiryCount": "{count, plural, one {# inquiry} other {# inquiries}}",
+      "emptyTitle": "Nothing left — well done",
+      "emptyDesc": "Every record in this list has been dealt with."
+    },
+    "queue": {
+      "workThrough": "Work through",
+      "label": "Working through {name}",
+      "position": "No. {pos} · {total, plural, one {# deal} other {# deals}} in the list",
+      "previous": "Previous",
+      "skip": "Skip",
+      "next": "Next",
+      "exit": "Exit",
+      "doneTitle": "List done — nothing left to work through.",
+      "backToLists": "Back to lists"
+    }
   }
 }

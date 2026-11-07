@@ -6,6 +6,7 @@ import {
   Building2,
   LayoutDashboard,
   CalendarCheck,
+  ListChecks,
   Users,
   Briefcase,
   Home,
@@ -40,6 +41,11 @@ const navItems: NavItem[] = [
     i18nKey: "today",
     href: "/today",
     icon: CalendarCheck,
+  },
+  {
+    i18nKey: "lists",
+    href: "/lists",
+    icon: ListChecks,
   },
   {
     i18nKey: "contacts",

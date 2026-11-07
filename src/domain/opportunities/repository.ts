@@ -15,80 +15,10 @@ import type {
   AddParticipantInput,
 } from './types';
 
-export interface OpportunityListOptions {
-  status?: 'active' | 'won' | 'lost' | 'nurture' | 'archived' | 'all';
-  assignedTo?: string;
-  temperature?: 'hot' | 'warm' | 'cold';
-  stageId?: string;
-  type?: 'buyer' | 'seller' | 'landlord' | 'tenant' | 'all';
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
-
 export class OpportunityRepository {
   constructor(private readonly db: SupabaseClient) {}
 
   // ── Opportunities ─────────────────────────────────────────────────────────
-
-  async findAll(
-    agencyId: string,
-    opts: OpportunityListOptions = {}
-  ): Promise<Opportunity[]> {
-    const { limit = 50, offset = 0 } = opts;
-    const { data, error } = await this.filtered(agencyId, opts, false).range(offset, offset + limit - 1);
-    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
-    return (data ?? []) as Opportunity[];
-  }
-
-  /** One page of rows plus the total that match the filters (for the pager). */
-  async findPage(
-    agencyId: string,
-    opts: OpportunityListOptions = {}
-  ): Promise<{ rows: Opportunity[]; total: number }> {
-    const { limit = 50, offset = 0 } = opts;
-    const query = this.filtered(agencyId, opts, true);
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-    if (error?.code === 'PGRST103') {
-      // Offset past the last row: ask for the count only, so loadPage can fall back to the last page.
-      const retry = await query.range(0, 0);
-      if (!retry.error) return { rows: [], total: retry.count ?? 0 };
-    }
-    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch opportunities: ${error.message}`);
-    return { rows: (data ?? []) as Opportunity[], total: count ?? 0 };
-  }
-
-  private filtered(agencyId: string, opts: OpportunityListOptions, withCount: boolean) {
-    const { status = 'active', assignedTo, stageId, search } = opts;
-
-    let query = this.db
-      .from('opportunities')
-      .select('*', withCount ? { count: 'exact' } : undefined)
-      .eq('agency_id', agencyId)
-      // id breaks created_at ties so pages never overlap
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false });
-
-    if (status !== 'all') {
-      query = query.eq('status', status);
-    }
-    if (assignedTo) {
-      query = query.eq('assigned_to', assignedTo);
-    }
-    if (opts.temperature) {
-      query = query.eq('temperature', opts.temperature);
-    }
-    if (stageId && stageId !== 'all') {
-      query = query.eq('stage_id', stageId);
-    }
-    if (opts.type && opts.type !== 'all') {
-      query = query.eq('type', opts.type);
-    }
-    if (search) {
-      query = query.ilike('title', `%${search}%`);
-    }
-    return query;
-  }
 
   async findById(id: string, agencyId: string): Promise<OpportunityWithDetails | null> {
     const { data, error } = await this.db

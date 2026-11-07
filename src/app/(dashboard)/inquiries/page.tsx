@@ -4,7 +4,7 @@ import { InquiryService } from "@/domain/inquiries/service";
 import { LeadSourceRepository } from "@/domain/lead-sources/repository";
 import { StageRepository } from "@/domain/stages/repository";
 import { MemberRepository } from "@/domain/members/repository";
-import { ProfileRepository } from "@/domain/profiles/repository";
+import { loadInquiryRowContext } from "./inquiry-row-context";
 import { PAGE_SIZE, loadPage, pageInfo, parsePage } from "@/lib/pagination";
 import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
@@ -76,33 +76,8 @@ export default async function InquiriesPage({
     getAgencySettings(agencyId),
   ]);
 
-  // Assignees who were deactivated later aren't in the active list, but their inquiries still show them.
   const inquiries = paged.rows;
-  const activeIds = new Set(brokers.map((b) => b.id));
-  const inactiveIds = inquiries.flatMap((i) =>
-    i.assigned_to && !activeIds.has(i.assigned_to) ? [i.assigned_to] : []
-  );
-  const inactiveProfiles = await new ProfileRepository(supabase).getProfilesByIds(inactiveIds);
-  const inactiveAssigneeNames = Object.fromEntries(
-    [...inactiveProfiles].flatMap(([id, profile]) =>
-      profile.display_name ? [[id, profile.display_name]] : []
-    )
-  );
-
-  // A converted inquiry "joined" a deal when that deal started from another inquiry (AD-061).
-  const convertedIds = [...new Set(inquiries.flatMap((i) => (i.status === "converted" && i.opportunity_id ? [i.opportunity_id] : [])))];
-  const { data: deals } = convertedIds.length
-    ? await supabase.from("opportunities").select("id, title, inquiry_id").eq("agency_id", agencyId).in("id", convertedIds)
-    : { data: [] };
-  const dealById = new Map((deals ?? []).map((d) => [d.id as string, d]));
-  const joinedDeals = Object.fromEntries(
-    inquiries.flatMap((i) => {
-      const deal = i.opportunity_id ? dealById.get(i.opportunity_id) : undefined;
-      return i.status === "converted" && deal && deal.inquiry_id !== i.id
-        ? [[i.id, { id: deal.id as string, title: deal.title as string }]]
-        : [];
-    })
-  );
+  const { inactiveAssigneeNames, joinedDeals } = await loadInquiryRowContext(supabase, agencyId, inquiries, brokers);
 
   // A fresh `now` per render: relative times match between the server and hydration.
   return (

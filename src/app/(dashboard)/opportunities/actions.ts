@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { OpportunityService } from '@/domain/opportunities/service';
-import { OpportunityRepository } from '@/domain/opportunities/repository';
 import {
   createOpportunitySchema,
   updateOpportunitySchema,
@@ -181,6 +180,7 @@ export async function removeParticipantAction(
 export async function searchOpportunitiesQuickAction(search: string) {
   if (!search || search.length < 2) return [];
   const { supabase, agencyId } = await getAuthContext();
-  const repo = new OpportunityRepository(supabase);
-  return repo.findAll(agencyId, { search, limit: 5 });
+  // The same read as the list, so a suggestion is always a deal the list then finds.
+  const { rows } = await new OpportunityService(supabase).listPage(agencyId, { search, limit: 5 });
+  return rows;
 }
