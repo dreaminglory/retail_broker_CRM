@@ -266,8 +266,15 @@ client state in effects; the bar is a Server Component with links/forms.
 
 ## Checkpoint 2: Built-in lists
 - [ ] AC-1, -2, -3, -6, -7 seen in the browser, BG and EN, 1280 and 390 px
-- [ ] typecheck, lint, test, `test:services`, `test:e2e` green
+- [x] typecheck, lint, test, `test:services`, `test:e2e` green
 - [ ] `/review` of Phases 1–2 (Opus, fresh session)
+
+Notes (2026-11-07, build session): seen in the browser — AC-1 (broker 7 lists, manager 9 with
+Mine / Agency), AC-6 (Skip, Previous, Next after a scheduled task: count 2 -> 1, List done), AC-7
+(reassigning from `unassigned-inquiries`: 2 -> 1); overdue and new-matches rows in order with
+counts. AC-2 and AC-3 are asserted by pgTAP (`094`, `092`) and the services suite, not clicked
+through in the browser: AC-3 (add a candidate, the buyer leaves `new-matches`) is still to see.
+`npx supabase db reset` + `test:db` 717/717, `test:services` 931/931, `test:e2e` 64/64.
 
 ## Phase 3: Custom lists, E2E, cut items
 
