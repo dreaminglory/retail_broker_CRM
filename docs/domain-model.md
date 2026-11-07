@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 59th migration
-(`20261108000001_smart_lists.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 60th migration
+(`20261108000002_smart_list_opportunities.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -514,8 +514,8 @@ must-have flags. `matching` treats a must-have as a filter and the rest as score
 
 ### 2.10 Smart lists
 
-`spec/smart-lists.md`, AD-062. **In progress:** only the table and its rules are built; the list
-functions arrive with the module's next tasks.
+`spec/smart-lists.md`, AD-062. **In progress:** the table, last touch and the opportunity list
+function are built; the inquiry list and the counts arrive with the module's next tasks.
 
 ```mermaid
 erDiagram
@@ -536,9 +536,23 @@ erDiagram
   and renamed, edited or deleted by owners and managers; **only the creator can unshare** (the
   changed row must stay visible to the one changing it). `agency_id`, `created_by` and `entity`
   never change. At most 50 lists per member (`smartLists.errors.limit`).
-- **Planned, not built yet:** `smart_list_opportunities`, `smart_list_inquiries` and
-  `smart_list_counts` (invoker SQL, evaluated on read), and **last touch** (latest completed
-  task's `completed_at` or note's `created_at` on a deal, else `created_at`; never `updated_at`).
+- **Last touch** (`opportunity_last_touch(opportunities)`, not stored): the latest completed
+  task's `completed_at` or note's `created_at` on the deal, else its `created_at`. Never
+  `updated_at` (edits and merges move it); a cancelled task isn't a touch.
+- **`smart_list_opportunities(filter, limit, offset, after)`**: `SECURITY INVOKER` plus an
+  explicit `current_agency_id()` filter; the only place a deal list is evaluated. Filter keys
+  `status[]` (default `active`), `type[]`, `stage_id[]`, `temperature[]`, `source_id[]`,
+  `assigned_to` (`me` = `auth.uid()` | `unassigned` | user id), `next_action` (`none | overdue |
+  today | upcoming`), `no_touch_days` (last touch at least N×24 h ago), `search` (title,
+  `%` and `_` literal), `sort` (`created_desc` | `last_touch_asc` | `next_action_asc`; ties by
+  `id`). Day windows come from `agencies.settings->>'timezone'` (default `Europe/Sofia`) and
+  match `getTodayWindows`: overdue before now, today from now to the next agency midnight,
+  upcoming from that midnight to midnight + 4 calendar days. A page returns `last_touch`,
+  `total_count` (the whole list, before paging and before `p_after`) and `sort_key`
+  (`[position, id]`, both exact below 2^53); passing a row's key as `p_after` returns the rows
+  strictly after it, even once that deal has left the list. `limit` is capped at 100. The clock is
+  a parameter of `smart_list_opportunities_at` (tests fix it); the public function passes `now()`.
+- **Planned, not built yet:** `smart_list_inquiries`, `smart_list_counts`, `new_matches`.
 
 ---
 

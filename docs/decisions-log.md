@@ -416,7 +416,7 @@ a retry for 5 minutes is felt.
   `new_matches_desc`; inquiries `received_asc | received_desc`); every order ends with `id`.
 - **`me` is `auth.uid()` in SQL**, so a shared "mine" list is per viewer. Mine / Agency on the
   built-in lists is `assigned_to: 'me'` set or dropped by the service (AD-044).
-- **Day windows are computed in SQL** from `agencies.timezone` and pinned to `getTodayWindows` by
+- **Day windows are computed in SQL** from the agency timezone setting (`agencies.settings`) and pinned to `getTodayWindows` by
   a test (`overdue` before now, `today` until the next agency midnight, `upcoming` the next four
   days).
 - **Last touch is a function, not a column:** latest completed task `completed_at` or note

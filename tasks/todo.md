@@ -50,13 +50,13 @@ migration count.
 - Grants: `authenticated` only. Start `091-smart-list-functions.sql`.
 
 **Acceptance criteria:**
-- [ ] pgTAP: each filter key alone narrows to the expected seeded rows; an empty filter equals the active deals; `me` is the caller; a Beta broker with Alpha ids gets nothing
-- [ ] Last touch: a note or completed task moves it; a merge or an edit (`updated_at`) doesn't; a cancelled task doesn't
-- [ ] `today` / `overdue` / `upcoming` edges asserted at fixed `now()` values around Sofia midnight; each sort's order and the `p_after` key return the next row even after the current one left the list
+- [x] pgTAP: each filter key alone narrows to the expected seeded rows; an empty filter equals the active deals; `me` is the caller; a Beta broker with Alpha ids gets nothing
+- [x] Last touch: a note or completed task moves it; a merge or an edit (`updated_at`) doesn't; a cancelled task doesn't
+- [x] `today` / `overdue` / `upcoming` edges asserted at fixed `now()` values around Sofia midnight; each sort's order and the `p_after` key return the next row even after the current one left the list
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `EXPLAIN ANALYZE` on the local seed noted in the commit message
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `EXPLAIN ANALYZE` on the local seed noted in the commit message
 
 **Dependencies:** Task 1
 **Files likely touched:** `supabase/migrations/<ts>_smart_list_opportunities.sql`, `supabase/tests/database/091-smart-list-functions.sql`

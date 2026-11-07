@@ -50,7 +50,7 @@ a step-through mode for inquiries.
   explicit `current_agency_id()` filter, returning the page, `total_count`, and each row's sort key
   (for the queue). `smart_list_counts(p_lists jsonb)` takes `[{ key, entity, filter }]` and returns
   the counts for the overview in one call. Day windows are agency-local and identical to Today's
-  (`getTodayWindows`), computed in SQL from `agencies.timezone` and pinned to `getTodayWindows` by
+  (`getTodayWindows`), computed in SQL from the agency timezone setting (`agencies.settings`) and pinned to `getTodayWindows` by
   a test (AD-062). The opportunity list reads through `smart_list_opportunities` too (Task 10),
   so a list and its saved copy always agree.
 - **Last touch** (new derived value, not stored): the latest of a completed task's `completed_at`
