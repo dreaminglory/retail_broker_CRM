@@ -534,8 +534,11 @@ erDiagram
 - **Access:** a personal list is seen and changed by its creator only (a manager can't); only an
   owner or manager can insert or update to `shared = true`; a shared list is seen by the agency
   and renamed, edited or deleted by owners and managers; **only the creator can unshare** (the
-  changed row must stay visible to the one changing it). `agency_id`, `created_by` and `entity`
-  never change. At most 50 lists per member (`smartLists.errors.limit`).
+  UPDATE policy's `WITH CHECK`: `shared OR created_by = auth.uid()`). `agency_id`, `created_by` and
+  `entity` never change. At most 50 lists per member (`smartLists.errors.limit`), of which at most
+  5 opportunity lists with `has_new_matches` (`smartLists.errors.matchListLimit`). A member's lists
+  go with their auth user (`ON DELETE CASCADE`), shared ones included; deactivating a membership
+  keeps them.
 - **Last touch** (view `deal_last_touch`, `security_invoker`; `opportunity_last_touch(opportunities)`
   reads it; not stored): the latest completed task's `completed_at` or note's `created_at` on the
   deal, else its `created_at`. Never `updated_at` (edits and merges move it); a cancelled task
@@ -545,7 +548,9 @@ erDiagram
   explicit `current_agency_id()` filter; the only place a deal list is evaluated. Filter keys
   `status[]` (default `active`), `type[]`, `stage_id[]`, `temperature[]`, `source_id[]`,
   `assigned_to` (`me` = `auth.uid()` | `unassigned` | user id), `next_action` (`none | overdue |
-  today | upcoming`), `no_touch_days` (last touch at least N×24 h ago), `has_new_matches`,
+  today | upcoming`; `overdue`/`today` place a deal by `next_action_at`, its earliest pending
+  task, so a deal is in one of the two at most), `no_touch_days` (last touch at least N×24 h ago;
+  a whole number ≥ 1, any other value matches nothing), `has_new_matches`,
   `search` (title, `%` and `_` literal), `sort` (`created_desc` | `last_touch_asc` |
   `next_action_asc`; ties by `id`). Day windows come from `agencies.settings->>'timezone'` (default `Europe/Sofia`) and
   match `getTodayWindows`: overdue before now, today from now to the next agency midnight,
@@ -554,7 +559,8 @@ erDiagram
   (`[position, id]`, both exact below 2^53); passing a row's key as `p_after` returns the rows
   strictly after it, even once that deal has left the list. `limit` is capped at 100. The clock is
   a parameter of `smart_list_opportunities_at` (tests fix it); the public function passes `now()`.
-- **New matches** (view `deal_match_rows`, `security_invoker`): the one join of "which open
+- **New matches** (view `private.deal_match_rows`, `security_invoker`; in `private` so the API
+  doesn't expose it, `authenticated` has USAGE and SELECT for the invoker functions): the one join of "which open
   listings of the right offer type fit this deal", extracted from `match_properties`, which now
   reads it, so `match_properties.unlinked_count` and the list's `new_matches` are the same rule.
   A match is new when the property has no link to the deal in any status (`op.is_new`). A view,
@@ -855,9 +861,9 @@ The "Enforced by" column tells you which layer to change and test.
 | Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
 | Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
 | L19 | A link's `source` is `manual`, `match` or `viewing`, set on insert and never updated; the app may send `manual` or `match` (a member could send `match`: it only feeds a measurement) (AD-060) | `CHECK opportunity_properties_source_check`, column `UPDATE` privileges (AD-058), trigger `mark_property_viewed` + `080-matching.sql` |
-| S1 | A personal smart list is seen and changed by its creator only, a manager included; only owners and managers can insert or update to `shared = true`; a shared list is changed or deleted by owners and managers only; only the creator can unshare (AD-062) | RLS policies on `smart_lists` (`SELECT` applies to the updated row) + `090-smart-lists.sql`; `requireRole()` in the share action (Task 12) |
+| S1 | A personal smart list is seen and changed by its creator only, a manager included; only owners and managers can insert or update to `shared = true`; a shared list is changed or deleted by owners and managers only; only the creator can unshare (AD-062) | RLS policies on `smart_lists` (`WITH CHECK` on update: `shared OR created_by = auth.uid()`) + `090-smart-lists.sql`, `095-smart-list-review-fixes.sql`; `requireRole()` in the share action (Task 12) |
 | S2 | A smart list's `agency_id`, `created_by` and `entity` never change; `entity` is `opportunity` or `inquiry`; the name is 1–60 characters and unique per member ignoring case | trigger `smart_lists_immutable`, `CHECK`s, unique index `uq_smart_lists_member_name` + `090-smart-lists.sql` |
-| S3 | A member holds at most 50 smart lists | trigger `smart_lists_limit` (key `smartLists.errors.limit`) + `090-smart-lists.sql` |
+| S3 | A member holds at most 50 smart lists, at most 5 of them opportunity lists with `has_new_matches` | triggers `smart_lists_limit` (`smartLists.errors.limit`) and `smart_lists_match_limit` (`smartLists.errors.matchListLimit`) + `090-smart-lists.sql`, `095-smart-list-review-fixes.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |

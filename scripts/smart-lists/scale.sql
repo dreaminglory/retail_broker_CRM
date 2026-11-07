@@ -158,7 +158,7 @@ BEGIN
   -- through match_properties (it reads the same view; matching measured p95 ~150 ms before).
   FOR v_id IN SELECT o.id FROM opportunities o JOIN requirements r ON r.opportunity_id = o.id ORDER BY o.title LIMIT 20 LOOP
     v_start := clock_timestamp();
-    SELECT count(*) INTO v_n FROM deal_match_rows d WHERE d.opportunity_id = v_id AND d.is_new;
+    SELECT count(*) INTO v_n FROM private.deal_match_rows d WHERE d.opportunity_id = v_id AND d.is_new;
     INSERT INTO scale_timing VALUES ('one deal through deal_match_rows (pre-filter)', extract(epoch FROM clock_timestamp() - v_start) * 1000, v_n);
     v_start := clock_timestamp();
     SELECT count(*) INTO v_n FROM match_properties(v_id, true, 20, 0);

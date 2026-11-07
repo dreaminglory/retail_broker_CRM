@@ -404,28 +404,41 @@ a retry for 5 minutes is felt.
   owners and managers can insert or update to `shared = true`. A shared list is seen by the
   agency and renamed, edited or deleted by owners and managers. `agency_id`, `created_by` and
   `entity` never change (trigger). **Only the creator can unshare:** unsharing hands the list back
-  to them alone, and an UPDATE's new row must pass the SELECT policy, so another manager would
-  hide it from themself and is refused; they delete the list instead.
+  to them alone, so the UPDATE policy's `WITH CHECK` requires `shared OR created_by = auth.uid()`;
+  another manager deletes the list instead. (It once relied on Postgres applying the SELECT policy
+  to the new row, which happens only when the UPDATE reads the table: an UPDATE with no WHERE got
+  through. Fixed at the Checkpoint 1 review.) At most 5 of a member's lists may use
+  `has_new_matches` (trigger, `smartLists.errors.matchListLimit`): each is a matching pass in the
+  overview.
 - **Three invoker SQL functions** (`LANGUAGE sql STABLE SECURITY INVOKER`, an explicit
   `current_agency_id()` filter, `authenticated` only): `smart_list_opportunities`,
   `smart_list_inquiries` (filter, limit, offset, `p_after` key; return the page, `sort_key` and
   `total_count`) and `smart_list_counts` (`[{key, entity, filter}]` in, counts out, each capped at
   1000). Nothing computes a list in TypeScript. Unknown filter keys are ignored by SQL; Zod
-  refuses them before saving.
+  refuses them before saving. A known key with a value of the wrong shape (a bad uuid, an unknown
+  `next_action`, a `no_touch_days` that isn't a whole number ≥ 1) matches nothing, so a stale
+  filter never widens.
 - **The filter carries `sort`** (`created_desc` default, `last_touch_asc`, `next_action_asc`;
   inquiries `received_asc | received_desc`); every order ends with `id`.
 - **`me` is `auth.uid()` in SQL**, so a shared "mine" list is per viewer. Mine / Agency on the
   built-in lists is `assigned_to: 'me'` set or dropped by the service (AD-044).
 - **Day windows are computed in SQL** from the agency timezone setting (`agencies.settings`) and pinned to `getTodayWindows` by
   a test (`overdue` before now, `today` until the next agency midnight, `upcoming` the next four
-  days).
+  days). **`overdue` and `due-today` are deals by the deal's owner, placed by `next_action_at`**
+  (the earliest pending task), not Today's tasks by the task's assignee; the Today-consistency
+  test compares after mapping Today's tasks to the viewer's deals (spec rule 2, Checkpoint 1
+  review).
 - **Last touch is a function, not a column:** latest completed task `completed_at` or note
   `created_at` on the deal, else `created_at`; never `updated_at`.
 - **`new-matches` reuses `match_evaluate`:** one view (`deal_match_rows`) holds the join for both
   `match_properties` and the list. **Decided at Checkpoint 1 (founder, 2026-11-07): the list is
   ordered by oldest last touch, and each row of the page shows its new-match count.** Ordering by
   the exact count means counting every deal: 57 s at 2,000 deals (1.7–4.6 s even capped). A cache or
-  materialized view still needs the founder's OK (AD-060 revisit clause).
+  materialized view still needs the founder's OK (AD-060 revisit clause). **Accepted speed
+  exception:** on Agency scope at 2,000 deals the `new-matches` page and queue step take ~1.2–1.3 s
+  and the overview p95 ~1.1–1.4 s (spec rule 10); on Mine about 30× less. `deal_match_rows` lives
+  in the `private` schema, which the API doesn't expose, so a client can't request every
+  deal × listing pair directly; the invoker functions read it as the caller.
 - **The queue lives in the URL** (`/opportunities/[id]?list=<id>&pos=<n>`); Next and Skip ask for
   the first row after the current deal's `sort_key`, so a deal that left the list doesn't break
   the order. The opportunity list reads through `smart_list_opportunities` too, so a list and its
@@ -433,8 +446,8 @@ a retry for 5 minutes is felt.
 **Why:** the count is the work left, so a list must be evaluated when it is read; one SQL
 definition per list keeps the overview, the list page and the queue consistent, and matching
 keeps one rule set.
-**Revisit if:** the all-deal `new-matches` count misses the 1 s overview target at 2,000 deals
-(measured in the module's Task 3), or agencies ask to configure thresholds or list definitions.
+**Revisit if:** pilot agencies working on Agency scope find the `new-matches` list or the overview
+slow (the accepted exception above), or agencies ask to configure thresholds or list definitions.
 
 ---
 

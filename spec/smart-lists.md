@@ -39,7 +39,7 @@ a step-through mode for inquiries.
 - **One filter shape per entity** (Zod in `validation.ts`, mirrored by the SQL that reads it):
   - opportunity: `status[]`, `type[]`, `stage_id[]`, `temperature[]`, `assigned_to`
     (`me | unassigned | <user id>`), `source_id[]`, `next_action` (`none | overdue | today |
-    upcoming`), `no_touch_days` (int), `has_new_matches` (bool), `search`.
+    upcoming`), `no_touch_days` (whole number ≥ 1; any other value matches nothing), `has_new_matches` (bool), `search`.
   - inquiry: `status[]`, `assigned_to` (`me | unassigned | <user id>`), `source_id[]`, `search`.
   - both: `sort` (opportunity `created_desc` default, `last_touch_asc`, `next_action_asc`;
     inquiry `received_asc | received_desc`). Every order ends with `id`.
@@ -83,13 +83,21 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
    get a Mine / Agency toggle; a broker always sees their own, as on Today (AD-044). Exceptions:
    `unassigned-deals` and `unassigned-inquiries` have no owner, so they are agency-wide and shown
    to owners and managers only, like Exceptions.
-2. **Same numbers as Today.** For the same viewer and scope, `no-next-action`, `overdue` (counted
-   by deal, not by task), `due-today` and `new-inquiries` agree with Today's sections. A test pins
-   this so the two can't drift.
+2. **Same numbers as Today, counted by deal.** For the same viewer and scope, `no-next-action`
+   and `new-inquiries` equal Today's "At risk" and "New inquiries". `overdue` and `due-today` are
+   lists of **deals by the deal's owner**, placed by the deal's next action (its earliest pending
+   task): a deal is in `overdue` when that task is before now and in `due-today` when it falls
+   later today, so a deal is in one of the two at most. Today lists **tasks by the task's
+   assignee**, so the two agree after this mapping: the viewer's deals, each in the section of its
+   earliest pending task. A task assigned to someone other than the deal's owner, or a later task
+   on a deal that is already overdue, shows on Today but doesn't move the deal. A test pins the
+   mapping so the two can't drift (Checkpoint 1 review).
 3. **Custom lists.** "Save as list" on the opportunity list and the inquiry list stores the
    current filters under a name. The opportunity list gains the filters it doesn't have yet:
    source, next action state, no touch for N days, has new matches. Any member saves personal
-   lists; at most 50 per member per agency.
+   lists; at most 50 per member per agency, of which at most 5 opportunity lists with
+   `has_new_matches` (each is a matching pass in the overview; `smartLists.errors.matchListLimit`).
+   [ASSUMPTION A6]
 4. **Sharing.** Only owners and managers can set `shared`. A shared list is visible to every
    member of the agency; only owners and managers can rename, edit or delete it. Unsharing hands
    the list back to its creator alone, so only the creator can unshare it (RLS: the changed row
@@ -116,6 +124,12 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
     `new-matches` included. [ASSUMPTION A5: matching across all deals meets this without a
     cache. Validate: the scale script; if it misses, ask before adding a cache (AD-060 revisit
     clause) or cut the list]
+    **Accepted exception (founder, Checkpoint 1, 2026-11-07; AD-062):** on Agency scope with one
+    owner of all 2,000 deals, `new-matches` misses both targets: its list page and each queue
+    step take ~1.2–1.3 s (the total runs a matching pass over every deal), and the overview p95 is
+    ~1.1–1.4 s, of which ~0.9 s is `new-matches`. Every other list page is under 150 ms and the
+    other eight counts ~0.2 s together. On Mine (a broker with ~70 deals) all of it is about 30×
+    cheaper. No cache for now; revisit per AD-062 if pilot agencies on Agency scope feel it.
 
 ## Screens
 
@@ -149,9 +163,10 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
 
 ## Success criteria
 
-- **AC-1** Alpha's broker sees every built-in list they may see with counts; `no-next-action`,
-  `overdue`, `due-today` and `new-inquiries` equal Today's sections for the same scope, and Agency
-  scope equals Exceptions' counts where they overlap (FR-LST-01, -02).
+- **AC-1** Alpha's broker sees every built-in list they may see with counts; `no-next-action` and
+  `new-inquiries` equal Today's sections for the same scope, `overdue` and `due-today` equal
+  Today's tasks mapped to deals as in rule 2, and Agency scope equals Exceptions' counts where
+  they overlap (FR-LST-01, -02).
 - **AC-2** Each built-in list holds exactly the seeded records its definition names, in its order;
   a hot deal touched 2 days ago is not in `hot-no-touch`, one touched 4 days ago is (FR-LST-01).
 - **AC-3** `new-matches` holds the seeded Alpha buyer with an unoffered match and drops it once the
@@ -169,7 +184,8 @@ Validate: pilot feedback; the numbers are constants in `built-in.ts`, not settin
   (FR-LST-06).
 - **AC-8** A Beta member gets no Alpha list, row or count, even with an Alpha list id (pgTAP)
   (FR-LST-07).
-- **AC-9** The speed targets of rule 10 hold on the scaled seed (FR-LST-08).
+- **AC-9** The speed targets of rule 10 hold on the scaled seed, except the accepted `new-matches`
+  exception on Agency scope recorded in rule 10 (FR-LST-08).
 - **AC-10** Overview, list page and queue bar work in BG and EN at 1280 and 390 px; no hardcoded
   strings (FR-LST-09).
 
@@ -235,7 +251,10 @@ history or "worked" statistics.
 - **A3** Completed tasks and notes are a good enough "touch"; calls logged outside the CRM aren't
   seen. `phone-loop` will add calls.
 - **A4** Fifty personal lists per member is far above need.
-- **A5** All-deal matching meets the overview target without a cache (rule 10).
+- **A5** All-deal matching meets the overview target without a cache (rule 10). **Missed** at
+  2,000 deals on Agency scope (Checkpoint 1); accepted as the exception in rule 10.
+- **A6** Five saved `has_new_matches` lists per member are enough (rule 3). Added at the
+  Checkpoint 1 review to bound the overview's cost; founder to confirm.
 
 ## Open questions (founder)
 
