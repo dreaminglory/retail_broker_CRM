@@ -125,19 +125,26 @@ describeServices('NotificationService daily digest against the local stack', () 
   });
 
   it('sends one digest per user however many times it runs', async () => {
-    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
+    // Checked per member on members of its own: other suites add and remove Alpha members while
+    // this runs, so the run's totals can differ between the two runs without anything being wrong.
+    const busy = await createTempMember('idempotent');
+    const idle = await createTempMember('idempotent-empty');
+    await createOverdueTask(busy.userId, broker.agencyId, 'Digest task for the member');
     const { mailer, sent } = fakeMailer();
 
-    const first = await run(mailer);
+    await run(mailer);
+    const firstRecipients = sent.splice(0).map((message) => message.to);
     const second = await run(mailer);
+    const secondRecipients = sent.map((message) => message.to);
 
-    expect(first.sent).toBeGreaterThanOrEqual(1);
-    expect(second.sent).toBe(0);
-    expect(second.alreadyDone).toBe(first.sent);
-    expect(second.skipped).toBe(first.skipped); // an empty digest is looked at again, and is still empty
-    const recipients = sent.map((message) => message.to);
-    expect(new Set(recipients).size).toBe(recipients.length);
-    expect(recipients).toContain(await emailFor(broker.userId));
+    expect(firstRecipients.filter((to) => to === busy.email)).toHaveLength(1);
+    expect(new Set(firstRecipients).size).toBe(firstRecipients.length);
+    expect(secondRecipients).not.toContain(busy.email);
+    expect(second.alreadyDone).toBeGreaterThanOrEqual(1);
+    expect(await deliveryFor(busy.userId)).toEqual({ status: 'sent', error: null });
+    // An empty digest is looked at again, and is still empty: never sent, skipped both times.
+    expect([...firstRecipients, ...secondRecipients]).not.toContain(idle.email);
+    expect(await deliveryFor(idle.userId)).toEqual({ status: 'skipped', error: null });
   });
 
   it('sends one digest per user when runs overlap', async () => {
@@ -173,13 +180,16 @@ describeServices('NotificationService daily digest against the local stack', () 
   });
 
   it("writes the recipient's own language and links to Today", async () => {
-    await createOverdueTask(broker.userId, broker.agencyId, 'Digest task for the broker');
+    // A member of its own: the seeded broker gathers tasks from other suites and E2E runs, and a
+    // digest lists only the first 10, so this task could fall off the end.
+    const member = await createTempMember('language');
+    await createOverdueTask(member.userId, broker.agencyId, 'Digest task for the member');
     const { mailer, sent } = fakeMailer();
 
     await run(mailer);
 
-    const message = sent.find((m) => m.to === 'broker@alpha.bg')!;
-    expect(message.html).toContain('Digest task for the broker');
+    const message = sent.find((m) => m.to === member.email)!;
+    expect(message.html).toContain('Digest task for the member');
     expect(message.html).toContain('Добро утро');
     expect(message.html).toContain(`href="${APP_URL}/today"`);
   });
@@ -316,8 +326,11 @@ describeServices('NotificationService daily digest against the local stack', () 
   });
 
   it("never puts another agency's data in a digest", async () => {
-    await createOverdueTask(broker.userId, broker.agencyId, 'Alpha only task');
-    await createOverdueTask(betaBroker.userId, betaBroker.agencyId, 'Beta only task');
+    // A digest lists only the first 10 tasks, so neither task may fall off the end: Alpha's goes to
+    // a member of its own; Beta's seeded broker gets one due before every other suite's task.
+    const alphaMember = await createTempMember('cross-agency');
+    await createOverdueTask(alphaMember.userId, broker.agencyId, 'Alpha only task');
+    await createOverdueTask(betaBroker.userId, betaBroker.agencyId, 'Beta only task', '2020-01-01T09:00:00Z');
     const { mailer, sent } = fakeMailer();
 
     await run(mailer, broker.agencyId);
@@ -336,6 +349,7 @@ describeServices('NotificationService daily digest against the local stack', () 
       expect(message.to).not.toMatch(/@alpha\.bg$/);
     }
     expect(betaMail.find((m) => m.to === 'broker@beta.bg')!.html).toContain('Beta only task');
+    expect(alphaMail.find((m) => m.to === alphaMember.email)!.html).toContain('Alpha only task');
   });
 
   describe('inquiry-assigned email', () => {
