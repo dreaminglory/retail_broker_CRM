@@ -9,6 +9,7 @@ const createJob = vi.fn();
 const getJob = vi.fn();
 const getPropertyPreview = vi.fn();
 const setCreateAreas = vi.fn();
+const getResult = vi.fn();
 const notifyImportCompleted = vi.fn();
 let scheduled: Array<() => Promise<void>> = [];
 
@@ -27,6 +28,7 @@ vi.mock('@/domain/imports/service', () => ({
     createJob = createJob;
     getPropertyPreview = getPropertyPreview;
     setCreateAreas = setCreateAreas;
+    getResult = getResult;
   },
 }));
 vi.mock('@/domain/imports/repository', () => ({
@@ -46,6 +48,7 @@ const {
   saveImportMappingAction,
   getPropertyPreviewAction,
   savePropertyImportAreasAction,
+  getImportResultAction,
 } = await import('./actions');
 
 describe('commitImportBatchAction', () => {
@@ -205,5 +208,28 @@ describe('property preview actions', () => {
     expect((await savePropertyImportAreasAction('job-1', [])).success).toBe(false);
     expect(getPropertyPreview).not.toHaveBeenCalled();
     expect(setCreateAreas).not.toHaveBeenCalled();
+  });
+});
+
+describe('getImportResultAction', () => {
+  beforeEach(() => {
+    getResult.mockReset();
+  });
+
+  it('reads what the import created, skipped and failed', async () => {
+    fake = createFakeSupabase({ role: 'owner', userId: 'user-me', agencyId: 'agency-1' });
+    getResult.mockResolvedValue({ created: 20, skipped: 0, errors: 0 });
+
+    const result = await getImportResultAction('job-1');
+
+    expect(result).toEqual({ success: true, data: { created: 20, skipped: 0, errors: 0 } });
+    expect(getResult).toHaveBeenCalledWith('agency-1', 'job-1');
+  });
+
+  it('refuses a broker', async () => {
+    fake = createFakeSupabase({ role: 'broker', userId: 'user-me', agencyId: 'agency-1' });
+
+    expect((await getImportResultAction('job-1')).success).toBe(false);
+    expect(getResult).not.toHaveBeenCalled();
   });
 });

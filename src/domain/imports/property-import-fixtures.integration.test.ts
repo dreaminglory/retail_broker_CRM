@@ -62,6 +62,7 @@ describeServices('Property import fixtures against the local stack', () => {
       if ((await imports.commitBatch(owner.agencyId, jobId)).remaining === 0) break;
     }
     const { data: job } = await owner.db.from('import_jobs').select('status, created_count').eq('id', jobId).single();
+    const result = await imports.getResult(owner.agencyId, jobId);
     const { data: areas } = await owner.db.from('areas').select('id').eq('import_job_id', jobId);
     const { data: contacts } = await owner.db.from('contacts').select('id').eq('import_job_id', jobId);
     const { data: props } = await owner.db.from('properties').select('id').eq('import_job_id', jobId);
@@ -70,7 +71,7 @@ describeServices('Property import fixtures against the local stack', () => {
     contacts!.forEach((c) => cleanup.track('contacts', c.id));
     props!.forEach((p) => cleanup.track('properties', p.id));
     const reverted = await imports.revert(owner.agencyId, jobId);
-    return { job, reverted, created: { areas: areas!.length, contacts: contacts!.length } };
+    return { job, result, reverted, created: { areas: areas!.length, contacts: contacts!.length } };
   }
 
   it.each(['properties-basic.csv', 'properties-basic-cp1251.csv'])(
@@ -201,8 +202,10 @@ describeServices('Property import fixtures against the local stack', () => {
     await imports.setCreateAreas(owner.agencyId, jobId, preview.newAreas.filter((a) => a !== vitosha).map((a) => a.key));
     expect((await imports.getPropertyPreview(owner.agencyId, jobId)).newAreas.find((a) => a.key === vitosha!.key)?.checked).toBe(false);
 
-    const { job, created } = await commitAndRevert(jobId);
+    const { job, result, created } = await commitAndRevert(jobId);
     expect(job).toEqual({ status: 'completed', created_count: 20 });
+    // What the wizard's last step shows.
+    expect(result).toEqual({ created: 20, skipped: 0, errors: 0 });
     expect(created.areas).toBe(0);
   });
 

@@ -579,6 +579,13 @@ export class ImportService {
     await this.repository.updateJob(agencyId, jobId, { options: { ...job.options, create_areas: keys } });
   }
 
+  /** What a committed job did, for the wizard's last step. */
+  async getResult(agencyId: string, jobId: string): Promise<{ created: number; skipped: number; errors: number }> {
+    const job = await this.repository.getJob(agencyId, jobId);
+    if (!job) throw new DomainError("import.errors.notFound", "Job not found");
+    return { created: job.created_count, skipped: job.skipped_count, errors: job.error_count };
+  }
+
   async getSummary(agencyId: string, jobId: string): Promise<ImportSummary> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");

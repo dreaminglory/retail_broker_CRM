@@ -201,7 +201,8 @@
         "desc": "Your {type} have been successfully imported.",
         "success": "The import process finished successfully.",
         "downloadError": "Download Error Report",
-        "goTo": "Go to {type}"
+        "goTo": "Go to {type}",
+        "result": "{created, plural, one {# record} other {# records}} created, {skipped} skipped, {errors} failed."
       },
       "back": "Back",
       "validating": "Validating...",
@@ -326,7 +327,8 @@
     },
     "entityType": {
       "contact": "Contacts",
-      "inquiry": "Inquiries"
+      "inquiry": "Inquiries",
+      "property": "Properties"
     },
     "jobStatus": {
       "draft": "Draft",
@@ -384,7 +386,9 @@
         "skipped": "Already imported (reference)",
         "invalid": "Invalid"
       }
-    }
+    },
+    "revertDescProperty": "This permanently deletes the properties this import created (with their listings and owner links), and the owner contacts and areas it created, unless they were worked on since. A property that was edited, archived or worked on (a note, task, candidate link, listing, price or owner change) is kept with its owner; an area that a kept property or a buyer requirement uses is kept.",
+    "revertSuccessProperty": "Import reverted. Deleted: {properties, plural, one {# property} other {# properties}}, {contacts, plural, one {# contact} other {# contacts}}, {areas, plural, one {# area} other {# areas}}. Kept because they were worked on or are in use: {keptProperties, plural, one {# property} other {# properties}}, {keptContacts, plural, one {# contact} other {# contacts}}, {keptAreas, plural, one {# area} other {# areas}}."
   },
   "SettingsStages": {
     "settings": "Settings",

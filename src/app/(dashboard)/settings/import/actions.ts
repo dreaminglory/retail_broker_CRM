@@ -138,6 +138,7 @@ export async function commitImportBatchAction(
     if (result.remaining === 0) {
       revalidatePath("/contacts");
       revalidatePath("/inquiries");
+      revalidatePath("/properties");
       revalidatePath("/");
       // A contact job has no inquiries, so it sends nothing.
       notifyAfterResponse((notifications) =>
@@ -161,6 +162,7 @@ export async function revertImportJobAction(
 
     revalidatePath("/contacts");
     revalidatePath("/inquiries");
+    revalidatePath("/properties");
     revalidatePath("/");
     revalidatePath("/settings/import");
 
@@ -193,5 +195,17 @@ export async function savePropertyImportAreasAction(jobId: string, keys: string[
 
     await new ImportService(ctx.supabase).setCreateAreas(ctx.agencyId, jobId, parsed.data);
     return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+/** What a committed job created, skipped and failed, for the wizard's last step. */
+export async function getImportResultAction(
+  jobId: string
+): Promise<ActionResult<{ created: number; skipped: number; errors: number }>> {
+  try {
+    const ctx = await getAuthContext();
+    assertManagerOrOwner(ctx.role);
+
+    return { success: true, data: await new ImportService(ctx.supabase).getResult(ctx.agencyId, jobId) };
   } catch (error) { return toActionError(error); }
 }

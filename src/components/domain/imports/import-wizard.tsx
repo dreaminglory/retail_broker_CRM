@@ -19,6 +19,7 @@ import {
   commitImportBatchAction,
   getPropertyPreviewAction,
   savePropertyImportAreasAction,
+  getImportResultAction,
 } from "@/app/(dashboard)/settings/import/actions";
 import { PropertyImportPreview } from "./property-import-preview";
 import type { PropertyPreview } from "@/domain/imports/property-preview";
@@ -84,6 +85,12 @@ export function ImportWizard({
   const [propertyPreview, setPropertyPreview] = useState<PropertyPreview | null>(null);
   const [keptAreas, setKeptAreas] = useState<Set<string>>(new Set());
   const [isStaged, setIsStaged] = useState(false);
+  // The rows the commit writes: a property job's duplicates too under "create anyway".
+  const rowsToCommit =
+    entityType === "property" && propertyPreview
+      ? propertyPreview.counts.new + (options.duplicate_strategy === "create" ? propertyPreview.counts.duplicate : 0)
+      : summary?.valid ?? 0;
+  const [result, setResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);
 
   // Commit State
   const [progress, setProgress] = useState<{ processed: number, remaining: number }>({ processed: 0, remaining: 0 });
@@ -220,7 +227,7 @@ export function ImportWizard({
       }
       setStep(4);
       
-      let currentRemaining = summary.valid;
+      let currentRemaining = rowsToCommit;
       while (currentRemaining > 0) {
         const res = await commitImportBatchAction(jobId);
         if (!res.success) {
@@ -233,6 +240,11 @@ export function ImportWizard({
         }
         setProgress(prev => ({ processed: prev.processed + res.data!.processed, remaining: res.data!.remaining }));
         currentRemaining = res.data.remaining;
+      }
+
+      if (entityType === "property") {
+        const resultRes = await getImportResultAction(jobId);
+        if (resultRes.success && resultRes.data) setResult(resultRes.data);
       }
 
       setStep(5);
@@ -369,7 +381,7 @@ export function ImportWizard({
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} disabled={isProcessing}>{t("back")}</Button>
-            <Button onClick={handleCommit} disabled={isProcessing || summary.valid === 0}>
+            <Button onClick={handleCommit} disabled={isProcessing || rowsToCommit === 0}>
               {isProcessing ? t("starting") : t("startImport")}
             </Button>
           </CardFooter>
@@ -386,11 +398,11 @@ export function ImportWizard({
             <div className="w-full bg-secondary h-4 rounded-full overflow-hidden">
               <div 
                 className="bg-primary h-full transition-all duration-300"
-                style={{ width: `${Math.max(5, (progress.processed / summary.valid) * 100)}%` }}
+                style={{ width: `${Math.max(5, (progress.processed / Math.max(1, rowsToCommit)) * 100)}%` }}
               />
             </div>
             <div className="text-sm text-center text-muted-foreground">
-              {t("step4.progress", { processed: progress.processed, total: summary.valid })}
+              {t("step4.progress", { processed: progress.processed, total: rowsToCommit })}
             </div>
           </CardContent>
         </Card>
@@ -404,6 +416,11 @@ export function ImportWizard({
           </CardHeader>
           <CardContent>
              <p>{t("step5.success")}</p>
+             {result && (
+               <p className="mt-2 text-sm text-muted-foreground">
+                 {t("step5.result", { created: result.created, skipped: result.skipped, errors: result.errors })}
+               </p>
+             )}
              {summary.invalid > 0 && (
                <Button variant="link" onClick={() => window.open(`/settings/import/${jobId}/errors.csv`, '_blank')} className="px-0">
                  {t("step5.downloadError")}

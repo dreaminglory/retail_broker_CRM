@@ -287,12 +287,12 @@ On 390 px the tables become cards.
   deleted and kept for each, reading the new `RevertResult` fields.
 
 **Acceptance criteria:**
-- [ ] Committing the basic fixture shows 20 created and links to `/properties`, where the 20 show.
-- [ ] Reverting shows deleted and kept counts for properties, contacts and areas; a contact or inquiry job revert still shows its own counts only.
+- [x] Committing the basic fixture shows 20 created and links to `/properties`, where the 20 show.
+- [x] Reverting shows deleted and kept counts for properties, contacts and areas; a contact or inquiry job revert still shows its own counts only.
 
 **Verification:**
-- [ ] `npx vitest run src/app/(dashboard)/settings/import`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`
+- [x] `npx vitest run src/app/(dashboard)/settings/import`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`
 
 **Dependencies:** Task 9
 **Files likely touched:** `src/components/domain/imports/import-wizard.tsx`, `src/app/(dashboard)/settings/import/page.tsx`, `src/app/(dashboard)/settings/import/[id]/page.tsx`, `src/app/(dashboard)/settings/import/revert-import-button.tsx`, `messages/*.json`
