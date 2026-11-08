@@ -9,6 +9,10 @@ const REVERT_REFUSALS: Record<string, string> = {
   "Revert window (7 days) expired": "import.errors.revertExpired",
 };
 
+// Values in a GET filter go in the URL: 100 phones, refs or ids keep it well under the
+// server's limit (500 phones did not, at 2,000 rows).
+const URL_CHUNK = 100;
+
 export class ImportRepository {
   constructor(private db: SupabaseClient<any>) {}
 
@@ -242,16 +246,33 @@ export class ImportRepository {
     return results;
   }
 
+  /** Exact row counts per status, without reading the rows (no 1,000-row cap). */
+  async countRowsByStatus<S extends string>(agencyId: string, jobId: string, statuses: S[]): Promise<Record<S, number>> {
+    const entries = await Promise.all(
+      statuses.map(async (status) => {
+        const { count, error } = await this.db
+          .from("import_rows")
+          .select("id", { count: "exact", head: true })
+          .eq("agency_id", agencyId)
+          .eq("import_job_id", jobId)
+          .eq("status", status);
+        if (error) throw new DomainError('errors.loadFailed', `Failed to count import rows: ${error.message}`);
+        return [status, count ?? 0] as const;
+      })
+    );
+    return Object.fromEntries(entries) as Record<S, number>;
+  }
+
   /** Existing properties of the agency with one of these `external_ref`s (rule 4). */
   async lookupPropertyExternalRefs(agencyId: string, refs: string[]): Promise<{ id: string; external_ref: string }[]> {
     const unique = [...new Set(refs)];
     const results: { id: string; external_ref: string }[] = [];
-    for (let i = 0; i < unique.length; i += 500) {
+    for (let i = 0; i < unique.length; i += URL_CHUNK) {
       const { data, error } = await this.db
         .from("properties")
         .select("id, external_ref")
         .eq("agency_id", agencyId)
-        .in("external_ref", unique.slice(i, i + 500));
+        .in("external_ref", unique.slice(i, i + URL_CHUNK));
       if (error) throw new DomainError('errors.loadFailed', `Failed to look up property external refs: ${error.message}`);
       results.push(...((data ?? []) as { id: string; external_ref: string }[]));
     }
@@ -278,13 +299,13 @@ export class ImportRepository {
   async lookupMethodsOfType(agencyId: string, type: "phone" | "email", values: string[]): Promise<{ contact_id: string; value: string }[]> {
     const unique = [...new Set(values)];
     const results: { contact_id: string; value: string }[] = [];
-    for (let i = 0; i < unique.length; i += 500) {
+    for (let i = 0; i < unique.length; i += URL_CHUNK) {
       const { data, error } = await this.db
         .from("contact_methods")
         .select("contact_id, value")
         .eq("agency_id", agencyId)
         .eq("type", type)
-        .in("value", unique.slice(i, i + 500));
+        .in("value", unique.slice(i, i + URL_CHUNK));
       if (error) throw new DomainError('errors.loadFailed', `Failed to look up contact methods: ${error.message}`);
       results.push(...((data ?? []) as { contact_id: string; value: string }[]));
     }
@@ -294,12 +315,12 @@ export class ImportRepository {
   async lookupContactNames(agencyId: string, ids: string[]): Promise<Map<string, string>> {
     const unique = [...new Set(ids)];
     const names = new Map<string, string>();
-    for (let i = 0; i < unique.length; i += 200) {
+    for (let i = 0; i < unique.length; i += URL_CHUNK) {
       const { data, error } = await this.db
         .from("contacts")
         .select("id, display_name")
         .eq("agency_id", agencyId)
-        .in("id", unique.slice(i, i + 200));
+        .in("id", unique.slice(i, i + URL_CHUNK));
       if (error) throw new DomainError('errors.loadFailed', `Failed to look up contacts: ${error.message}`);
       (data ?? []).forEach((c) => names.set(c.id as string, c.display_name as string));
     }

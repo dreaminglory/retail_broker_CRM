@@ -210,12 +210,12 @@ pipeline on the basic and edge fixtures, from stage through revert. Record the m
 in `tasks/plan.md`.
 
 **Acceptance criteria:**
-- [ ] The integration suite stages, validates, commits and reverts both basic fixtures with the expected counts. The edge fixture gives the expected outcome on every row (a table in the test).
-- [ ] Scale: validate plus preview under 30 s and commit under 2 min for 2,000 rows (rule 11), or the misses are written in the plan for Checkpoint 1.
+- [x] The integration suite stages, validates, commits and reverts both basic fixtures with the expected counts. The edge fixture gives the expected outcome on every row (a table in the test).
+- [x] Scale: validate plus preview under 30 s and commit under 2 min for 2,000 rows (rule 11), or the misses are written in the plan for Checkpoint 1.
 
 **Verification:**
-- [ ] `npm run test:services`; `npx tsx scripts/property-import/measure.ts`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npm run test:services`; `npx tsx scripts/property-import/measure.ts`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/domain/imports/__fixtures__/properties-*.csv`, `scripts/property-import/generate-scale.ts`, `scripts/property-import/measure.ts`, `src/domain/imports/property-import.integration.test.ts`, `tasks/plan.md`

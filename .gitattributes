@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# Exact bytes: an encoding test fixture, not text to normalise.
+src/domain/imports/__fixtures__/*-cp1251.csv binary

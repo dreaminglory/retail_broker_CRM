@@ -78,7 +78,25 @@ These are the places where the plan makes the spec more concrete. Task 1 records
 - [x] Task 4: Validation: duplicates and owners — **Opus**
 - [x] Task 5: `import_commit_properties` — **Opus**
 - [x] Task 6: Revert for property jobs — **Opus**
-- [ ] Task 7: Fixtures and the 2,000-row scale run — Sonnet
+- [x] Task 7: Fixtures and the 2,000-row scale run — Sonnet
+
+### Scale run (Task 7, 2026-11-08, local stack)
+`PROPERTY_IMPORT_SCALE=1 npm run test:services -- scripts/property-import/measure.test.ts`,
+2,000 rows (`scripts/property-import/generate-scale.ts`), owner@alpha.bg:
+
+| Step | Time | Rule 11 |
+|---|---|---|
+| Stage (4 × 500-row chunks) | 0.4 s | — |
+| Validate | 3.3 s | |
+| Preview read (2 × 1,000-row pages) | 0.2 s | validate + preview 3.5 s < 30 s ✅ |
+| Commit (10 × 200-row batches) | 8.0 s | < 2 min ✅ |
+| Revert | 2.7 s | — |
+
+The run found two bugs, fixed in Task 7: GET filters with 500 phones exceeded the URL limit
+(lookups now go 100 at a time, settlement names 10), and the validation summary read rows back
+through the 1,000-row PostgREST cap (now counted per status). The measure is a gated vitest
+file, not a `tsx` script: it needs the `@/` aliases and the test client, and the repo has no
+TypeScript runner.
 
 ### Checkpoint 1 (founder)
 - [ ] Integration suite stages, validates, commits and reverts every fixture

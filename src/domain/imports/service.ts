@@ -482,19 +482,19 @@ export class ImportService {
       if (rows.length < pageSize) break;
     }
 
-    const allRows = await this.repository.listRows(agencyId, job.id);
-    const count = (status: string) => allRows.filter((r) => r.status === status).length;
-    const summary = { valid: count("valid"), invalid: count("invalid"), duplicate: count("duplicate"), skipped: count("skipped") };
+    // Counted in the database: reading the rows back is capped at 1,000 by PostgREST.
+    const counts = await this.repository.countRowsByStatus(agencyId, job.id, ["valid", "invalid", "duplicate", "skipped"]);
+    const total = counts.valid + counts.invalid + counts.duplicate + counts.skipped;
 
     await this.repository.updateJob(agencyId, job.id, {
       status: "validated",
-      valid_count: summary.valid,
-      invalid_count: summary.invalid,
-      duplicate_count: summary.duplicate,
-      skipped_count: summary.skipped,
+      valid_count: counts.valid,
+      invalid_count: counts.invalid,
+      duplicate_count: counts.duplicate,
+      skipped_count: counts.skipped,
     });
 
-    return { total: allRows.length, valid: summary.valid, invalid: summary.invalid, duplicate: summary.duplicate, completed: false };
+    return { total, valid: counts.valid, invalid: counts.invalid, duplicate: counts.duplicate, completed: false };
   }
 
   async commitBatch(agencyId: string, jobId: string): Promise<{ processed: number; remaining: number }> {

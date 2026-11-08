@@ -4,7 +4,8 @@ import { escapeLikePattern } from '@/domain/contacts/validation';
 import type { SettlementRow } from './types';
 import { settlementNameColumn } from './validation';
 
-const NAME_CHUNK = 40;
+// Each name is two percent-encoded Cyrillic filters (~20 bytes a letter): 10 keep the URL short.
+const NAME_CHUNK = 10;
 const CODE_CHUNK = 200;
 
 /** Settlements are global: no agency filter, RLS lets every signed-in user read them. */
