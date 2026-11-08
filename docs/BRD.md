@@ -305,6 +305,21 @@ active opportunity has an owner, a next action and a complete history.
 | FR-LST-08 | ⚠️ A list page and a queue step return in under 300 ms (p95), and the overview with every count in under 1 s, at 2,000 deals, 2,000 requirements, 2,000 properties and 5,000 inquiries. Met except the accepted exception: the `new-matches` page, its queue step and the overview on Agency scope at 2,000 deals take ~1.1–1.4 s (AD-062); on Mine about 30× less |
 | FR-LST-09 | ✅ Overview, list page and queue bar work in Bulgarian and English at 1280 and 390 px |
 
+### FR-PIM: Property import (module `property-import`)
+
+| ID | Requirement |
+|----|------------|
+| FR-PIM-01 | ❌ Properties: upload a CSV, map columns from Bulgarian and English headers, validate, preview, commit on the AD-034 pipeline |
+| FR-PIM-02 | ❌ A row becomes a property with the same rules as the property form (type, rooms, m², floor, construction, location) |
+| FR-PIM-03 | ❌ Settlement resolved by name (Bulgarian or English, without `гр.`/`с.`) or EKATTE code; ambiguity narrowed by municipality or province, never guessed |
+| FR-PIM-04 | ❌ `sale_price` and `rent_price` create sale and rent listings in EUR; BGN amounts converted at 1.95583 and counted in the preview |
+| FR-PIM-05 | ❌ Unknown areas are created per settlement, shared by the file's rows, listed in the preview and can be unticked |
+| FR-PIM-06 | ❌ The owner is matched by phone or email or created as a new contact, linked as an `owner` party; an unparseable phone makes the row invalid |
+| FR-PIM-07 | ❌ Duplicates by `external_ref` (always skipped) and by settlement plus normalised address (skip or create), re-checked at commit; a re-run creates nothing |
+| FR-PIM-08 | ❌ Imported properties are normal properties: in `/properties`, ⌘K and matching right after the commit |
+| FR-PIM-09 | ❌ Revert within 7 days deletes only untouched properties, their listings and parties, unworked imported owners and unused new areas |
+| FR-PIM-10 | ❌ Owner and manager only; jobs, settlements' areas, members and contacts come only from the caller's agency |
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Priority |

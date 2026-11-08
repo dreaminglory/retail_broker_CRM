@@ -49,7 +49,7 @@ starts; pilot evidence sets the order.
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Done |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Done |
-| `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Planned |
+| `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | In progress |
 | `go-live` | Domain, Resend domain, hosting, crons, prod env; E2E and coverage gate in CI; founder review of `bg.json`; dry run | `reminders`, `smart-lists`, `property-import` | Planned |
 | `lead-intake` | Portal inquiry emails (homes.bg, imot.bg, alo.bg) and a website form → inquiries; parser fixtures per portal | pilot | Later |
 | `routing` | Round robin, on-duty broker, escalation, shared pool | `lead-intake` | Later |
@@ -98,7 +98,7 @@ AD-050 RPCs. Leaked-password protection is still off
 crons (or the pg_cron fallback, AD-042), production env vars.
 
 **Open decisions:** none. `property-import` scope approved (founder, 2026-11-08) in
-`spec/property-import.md`; next step is `/plan`.
+`spec/property-import.md`; plan in `tasks/plan.md`, Phase 1 (pipeline) being built.
 
 ## 6. Pilot evidence
 

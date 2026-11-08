@@ -30,13 +30,13 @@ migration `<ts>_property_import_schema.sql` per `supabase-patterns`:
 In `docs/domain-model.md`, update §2.5 (new entity type and columns) and the migration count.
 
 **Acceptance criteria:**
-- [ ] pgTAP: `property_address_key` maps `ул. "Яворов" № 12, ет. 3` and `ул Яворов 12 ет 3` to the same key and returns null for blank text; the generated column fills in on insert and update.
-- [ ] pgTAP: a `property` job can be inserted; a property, listing, party and area take `import_job_id`; the property and listing `created` audit rows carry `import_job_id`, and a property made by hand has none.
-- [ ] Existing property, listing and timeline tests stay green. AD-064, the BRD rows and the domain-model edits are in the same commit.
+- [x] pgTAP: `property_address_key` maps `ул. "Яворов" № 12, ет. 3` and `ул Яворов 12 ет 3` to the same key and returns null for blank text; the generated column fills in on insert and update.
+- [x] pgTAP: a `property` job can be inserted; a property, listing, party and area take `import_job_id`; the property and listing `created` audit rows carry `import_job_id`, and a property made by hand has none.
+- [x] Existing property, listing and timeline tests stay green. AD-064, the BRD rows and the domain-model edits are in the same commit.
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** None
 **Files likely touched:** `SPEC.md`, `docs/decisions-log.md`, `docs/BRD.md`, `docs/domain-model.md`, `supabase/migrations/<ts>_property_import_schema.sql`, `supabase/tests/database/100-property-import.sql`
