@@ -8,7 +8,8 @@ import type { Locale } from "@/i18n/config";
 import { getAuthContext, type AuthContext } from "@/lib/actions";
 import { pageInfo, parsePage } from "@/lib/pagination";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
-import { SmartListService, canEditList, type ListPage, type ResolvedList } from "@/domain/smart-lists/service";
+import { SmartListService, canEditList, shareState, type ListPage, type ResolvedList } from "@/domain/smart-lists/service";
+import { Badge } from "@/components/ui/badge";
 import { opportunityParamsFromFilter } from "@/domain/smart-lists/url-filter";
 import { SavedListControls } from "@/components/domain/smart-lists/saved-list-controls";
 import { canSwitchListScope } from "@/domain/smart-lists/built-in";
@@ -65,8 +66,14 @@ export default async function SmartListPage({
       showScopeToggle={list.kind === "built-in" && list.list.scope === "mine" && canSwitchListScope(ctx.role)}
       actions={
         <>
+          {list.kind === "saved" && list.list.shared && <Badge variant="secondary">{t("smartLists.overview.shared")}</Badge>}
           {list.kind === "saved" && canEditList(ctx, list.list) && (
-            <SavedListControls listId={list.id} name={list.list.name} editHref={editFiltersHref(list)} />
+            <SavedListControls
+              listId={list.id}
+              name={list.list.name}
+              editHref={editFiltersHref(list)}
+              share={shareState(ctx, list.list)}
+            />
           )}
           {list.entity === "opportunity" && result && result.total > 0 && (
             <QueueStepLink

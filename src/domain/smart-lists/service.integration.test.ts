@@ -362,6 +362,46 @@ describeServices('SmartListService against the local stack', () => {
     });
   });
 
+  describe('sharing (rule 4, AC-5)', () => {
+    it('a manager shares; the broker sees it but cannot change it; unsharing hides it again', async () => {
+      const managerView = viewerOf(manager, 'manager');
+      const brokerView = viewerOf(broker, 'broker');
+      const managerLists = new SmartListService(manager.db);
+      const brokerLists = new SmartListService(broker.db);
+
+      const list = await managerLists.save(managerView, { name: `SLSH ${RUN}`, entity: 'opportunity', filter: { status: ['active'] } });
+      cleanup.track('smart_lists', list.id);
+      await expect(brokerLists.share(brokerView, list.id)).rejects.toMatchObject({ code: 'errors.forbidden' });
+      expect((await brokerLists.overview(brokerView)).saved.map((s) => s.list.id)).not.toContain(list.id);
+
+      await managerLists.share(managerView, list.id);
+      const seen = (await brokerLists.overview(brokerView)).saved.find((s) => s.list.id === list.id);
+      expect(seen?.sharedBy).toBeTruthy();
+      await expect(brokerLists.rename(brokerView, list.id, 'Mine')).rejects.toMatchObject({ code: 'errors.forbidden' });
+      await expect(brokerLists.remove(brokerView, list.id)).rejects.toMatchObject({ code: 'errors.forbidden' });
+      await expect(brokerLists.unshare(brokerView, list.id)).rejects.toMatchObject({ code: 'errors.forbidden' });
+
+      // RLS refuses the broker straight to the table too.
+      const { data: changed } = await broker.db.from('smart_lists').update({ name: 'Mine' }).eq('id', list.id).select('id');
+      expect(changed).toEqual([]);
+
+      await managerLists.unshare(managerView, list.id);
+      expect((await brokerLists.overview(brokerView)).saved.map((s) => s.list.id)).not.toContain(list.id);
+    });
+
+    it('a broker cannot insert a shared list even straight to the table', async () => {
+      const { error } = await broker.db.from('smart_lists').insert({
+        agency_id: broker.agencyId,
+        created_by: broker.userId,
+        name: `SLSH ${RUN} broker`,
+        entity: 'opportunity',
+        filter: {},
+        shared: true,
+      });
+      expect(error).not.toBeNull();
+    });
+  });
+
   describe('a member of another agency', () => {
     it('cannot open an Alpha saved list by id (AC-8)', async () => {
       const alpha = await signInAs('manager@alpha.bg');

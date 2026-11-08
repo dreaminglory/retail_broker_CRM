@@ -393,6 +393,51 @@ describe('rename, updateFilter and remove', () => {
   });
 });
 
+describe('share and unshare (rule 4, AC-5)', () => {
+  beforeEach(() => {
+    repo.update.mockImplementation(async (_a: string, _id: string, patch: object) => savedList(patch));
+  });
+
+  it('a manager shares their own personal list', async () => {
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-manager' }));
+    await service.share(manager, LIST_ID);
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { shared: true });
+  });
+
+  it('a broker can never share, even their own list', async () => {
+    repo.findById.mockResolvedValue(savedList());
+    await expect(service.share(broker, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+    expect(repo.findById).not.toHaveBeenCalled();
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('sharing a list that is already shared changes nothing', async () => {
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-manager', shared: true }));
+    await service.share(manager, LIST_ID);
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('only the creator unshares; another manager is refused (they delete it instead)', async () => {
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-manager', shared: true }));
+    await service.unshare(manager, LIST_ID);
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { shared: false });
+
+    repo.update.mockClear();
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-other', shared: true }));
+    await expect(service.unshare(manager, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+    await expect(service.unshare(broker, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('shareState says which control the viewer gets', async () => {
+    const { shareState } = await import('./service');
+    expect(shareState(manager, savedList({ created_by: 'u-manager' }))).toBe('share');
+    expect(shareState(manager, savedList({ created_by: 'u-manager', shared: true }))).toBe('unshare');
+    expect(shareState(manager, savedList({ created_by: 'u-other', shared: true }))).toBeNull();
+    expect(shareState(broker, savedList())).toBeNull();
+  });
+});
+
 describe('messages', () => {
   it('every smartLists error the SQL or the service raises is in both message files', () => {
     const keys = ['limit', 'matchListLimit', 'duplicateName', 'invalidEntity', 'invalidLists', 'tooManyLists', 'immutable', 'notFound'];

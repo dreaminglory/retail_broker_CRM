@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Pencil, Share2, SlidersHorizontal, Trash2, UserRound } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,17 +20,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteListAction, renameListAction } from "@/app/(dashboard)/lists/actions";
+import {
+  deleteListAction,
+  renameListAction,
+  shareListAction,
+  unshareListAction,
+} from "@/app/(dashboard)/lists/actions";
 
 type SavedListControlsProps = {
   listId: string;
   name: string;
   /** The entity list with this list's filters and "Update list". */
   editHref: string;
+  /** Share (an owner's or manager's own personal list), Stop sharing (their shared list), or none. */
+  share: "share" | "unshare" | null;
 };
 
 /** Rename, Edit filters and Delete on a saved list the viewer may change (rule 4). */
-export function SavedListControls({ listId, name, editHref }: SavedListControlsProps) {
+export function SavedListControls({ listId, name, editHref, share }: SavedListControlsProps) {
   const t = useTranslations("smartLists.saved");
   const router = useRouter();
   const [dialog, setDialog] = useState<"rename" | "delete" | null>(null);
@@ -52,6 +59,18 @@ export function SavedListControls({ listId, name, editHref }: SavedListControlsP
       }
       setDialog(null);
       toast.success(t("renamedToast"));
+      router.refresh();
+    });
+  }
+
+  function toggleShare() {
+    startTransition(async () => {
+      const result = share === "share" ? await shareListAction({ id: listId }) : await unshareListAction({ id: listId });
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(t(share === "share" ? "sharedToast" : "unsharedToast"));
       router.refresh();
     });
   }
@@ -79,6 +98,16 @@ export function SavedListControls({ listId, name, editHref }: SavedListControlsP
         <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" aria-hidden />
         {t("editFilters")}
       </Link>
+      {share && (
+        <Button size="sm" variant="outline" type="button" disabled={pending} onClick={toggleShare}>
+          {share === "share" ? (
+            <Share2 className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+          ) : (
+            <UserRound className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+          )}
+          {t(share === "share" ? "share" : "unshare")}
+        </Button>
+      )}
       <Button size="sm" variant="ghost" type="button" className="text-destructive" onClick={() => setDialog("delete")}>
         <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden />
         {t("delete")}

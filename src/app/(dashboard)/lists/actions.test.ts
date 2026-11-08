@@ -4,7 +4,7 @@ import { createFakeSupabase, type FakeSupabase } from '@/test/fake-supabase';
 
 let fake: FakeSupabase;
 
-const lists = { save: vi.fn(), rename: vi.fn(), updateFilter: vi.fn(), remove: vi.fn() };
+const lists = { save: vi.fn(), rename: vi.fn(), updateFilter: vi.fn(), remove: vi.fn(), share: vi.fn(), unshare: vi.fn() };
 const revalidatePath = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServer: async () => fake.client }));
@@ -18,10 +18,13 @@ vi.mock('@/domain/smart-lists/service', () => ({
     rename = lists.rename;
     updateFilter = lists.updateFilter;
     remove = lists.remove;
+    share = lists.share;
+    unshare = lists.unshare;
   },
 }));
 
-const { saveListAction, renameListAction, updateListFilterAction, deleteListAction } = await import('./actions');
+const { saveListAction, renameListAction, updateListFilterAction, deleteListAction, shareListAction, unshareListAction } =
+  await import('./actions');
 
 const ME = 'user-1';
 const LIST_ID = '6f1c2b0e-8c1a-4a57-9f3e-1d2c3b4a5f60';
@@ -106,5 +109,24 @@ describe('renameListAction, updateListFilterAction, deleteListAction', () => {
   it('refuses an id that is not a uuid', async () => {
     expect((await renameListAction({ id: 'x', name: 'Hot' })).success).toBe(false);
     expect(lists.rename).not.toHaveBeenCalled();
+  });
+});
+
+describe('shareListAction and unshareListAction (AC-5)', () => {
+  it('a broker gets the forbidden error before the service or the database', async () => {
+    expect(await shareListAction({ id: LIST_ID })).toEqual({ success: false, error: 'errors.forbidden' });
+    expect(await unshareListAction({ id: LIST_ID })).toEqual({ success: false, error: 'errors.forbidden' });
+    expect(lists.share).not.toHaveBeenCalled();
+    expect(lists.unshare).not.toHaveBeenCalled();
+    expect(fake.touchedTables).not.toContain('smart_lists');
+  });
+
+  it('a manager shares and unshares, refreshing the overview and the list', async () => {
+    fake = createFakeSupabase({ role: 'manager', userId: ME, agencyId: 'agency-1' });
+    expect(await shareListAction({ id: LIST_ID })).toEqual({ success: true, data: undefined });
+    expect(lists.share).toHaveBeenCalledWith(expect.objectContaining({ role: 'manager' }), LIST_ID);
+    expect(await unshareListAction({ id: LIST_ID })).toEqual({ success: true, data: undefined });
+    expect(lists.unshare).toHaveBeenCalledWith(expect.objectContaining({ role: 'manager' }), LIST_ID);
+    expect(revalidatePath).toHaveBeenCalledWith(`/lists/${LIST_ID}`);
   });
 });

@@ -350,13 +350,19 @@ and managers; shared lists show the creator's name in the overview. Brokers see 
 delete control on a shared list.
 
 **Acceptance criteria:**
-- [ ] AC-5: a manager shares; every Alpha member sees it; a broker has no edit/share/delete controls and the actions refuse them
-- [ ] A broker calling `shareList` gets the forbidden error; unshare hides it from others again
-- [ ] Action tests for both roles; BG and EN
+- [x] AC-5: a manager shares; every Alpha member sees it; a broker has no edit/share/delete controls and the actions refuse them
+- [x] A broker calling `shareList` gets the forbidden error; unshare hides it from others again
+- [x] Action tests for both roles; BG and EN
 
 **Verification:**
-- [ ] `npx vitest run "src/app/(dashboard)/lists"`, `npm run test:services`, typecheck, lint
-- [ ] Browser: share as manager, view as broker
+- [x] `npx vitest run "src/app/(dashboard)/lists"`, `npm run test:services`, typecheck, lint
+- [x] Browser: share as manager, view as broker
+
+Notes (2026-11-08): Share shows only on an owner's or manager's own personal list and Stop
+sharing only to the creator of a shared list (`shareState`), as RLS allows; another manager
+deletes a shared list instead. A shared list shows "Shared with the agency" on its page. Seen:
+manager shares in BG at 1280; broker sees it read-only in EN at 390 and "Shared by" in the
+overview. Unshare is asserted against the stack (service.integration), not clicked.
 
 **Dependencies:** Task 11
 **Files likely touched:** `src/app/(dashboard)/lists/actions.ts` (+ test), `src/domain/smart-lists/service.ts`, `src/components/domain/smart-lists/list-page.tsx`, `messages/{bg,en}.json`

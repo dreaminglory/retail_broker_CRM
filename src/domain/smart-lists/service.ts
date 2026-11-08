@@ -77,6 +77,15 @@ export function canEditList(viewer: Viewer, list: Pick<SmartList, 'created_by' |
   return list.shared ? hasRole(viewer.role, MANAGER_ROLES) : list.created_by === viewer.userId;
 }
 
+/**
+ * The share control a viewer gets on a saved list: owners and managers share their own personal
+ * list; only the creator unshares a shared one (rule 4). Null: no control.
+ */
+export function shareState(viewer: Viewer, list: Pick<SmartList, 'created_by' | 'shared'>): 'share' | 'unshare' | null {
+  if (!hasRole(viewer.role, MANAGER_ROLES) || list.created_by !== viewer.userId) return null;
+  return list.shared ? 'unshare' : 'share';
+}
+
 const UUID_RE =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export class SmartListService {
@@ -237,16 +246,40 @@ export class SmartListService {
     return this.repo.update(viewer.agencyId, listId, { filter: parsed });
   }
 
+  /** Shares the viewer's own list with the agency: owners and managers only (rule 4). */
+  async share(viewer: Viewer, listId: string): Promise<SmartList> {
+    if (!hasRole(viewer.role, MANAGER_ROLES)) throw new DomainError('errors.forbidden');
+    const list = await this.visible(viewer, listId);
+    if (list.shared && list.created_by === viewer.userId) return list;
+    if (shareState(viewer, list) !== 'share') throw new DomainError('errors.forbidden');
+    return this.repo.update(viewer.agencyId, listId, { shared: true });
+  }
+
+  /** Hands a shared list back to its creator alone; only the creator may (rule 4). */
+  async unshare(viewer: Viewer, listId: string): Promise<SmartList> {
+    if (!hasRole(viewer.role, MANAGER_ROLES)) throw new DomainError('errors.forbidden');
+    const list = await this.visible(viewer, listId);
+    if (!list.shared && list.created_by === viewer.userId) return list;
+    if (shareState(viewer, list) !== 'unshare') throw new DomainError('errors.forbidden');
+    return this.repo.update(viewer.agencyId, listId, { shared: false });
+  }
+
   /** A hard delete: a list is only a view (rule 4). */
   async remove(viewer: Viewer, listId: string): Promise<void> {
     await this.editable(viewer, listId);
     await this.repo.remove(viewer.agencyId, listId);
   }
 
-  /** The saved list, if the viewer sees it and may change it (RLS says the same). */
-  private async editable(viewer: Viewer, listId: string): Promise<SmartList> {
+  /** The saved list, if the viewer sees it (RLS). */
+  private async visible(viewer: Viewer, listId: string): Promise<SmartList> {
     const list = UUID_RE.test(listId) ? await this.repo.findById(viewer.agencyId, listId) : null;
     if (!list) throw new DomainError('smartLists.errors.notFound');
+    return list;
+  }
+
+  /** The saved list, if the viewer sees it and may change it (RLS says the same). */
+  private async editable(viewer: Viewer, listId: string): Promise<SmartList> {
+    const list = await this.visible(viewer, listId);
     if (!canEditList(viewer, list)) throw new DomainError('errors.forbidden');
     return list;
   }

@@ -2006,7 +2006,11 @@
       "delete": "Delete",
       "deleteTitle": "Delete “{name}”?",
       "deleteDescription": "Only the list is deleted; its deals and inquiries stay as they are.",
-      "deletedToast": "List deleted"
+      "deletedToast": "List deleted",
+      "share": "Share with the agency",
+      "unshare": "Stop sharing",
+      "sharedToast": "The whole agency now sees this list",
+      "unsharedToast": "Only you see this list now"
     }
   }
 }
