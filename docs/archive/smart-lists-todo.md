@@ -1,6 +1,6 @@
 # Tasks: smart-lists
 
-> **Plan:** `tasks/plan.md` · **Spec:** `spec/smart-lists.md`
+> **Plan:** `docs/archive/smart-lists-plan.md` · **Spec:** `spec/smart-lists.md`
 > Every task also clears the Definition of Done in `AGENTS.md`. Tick a task only after that.
 > Migrations: the next free timestamps after `20261107000003`, in order (`20261108000001`…).
 > pgTAP: `090-smart-lists.sql` (table, RLS), `091-smart-list-functions.sql`.
@@ -129,7 +129,7 @@ script and time the counts call (every built-in list) and each list function.
 ## Checkpoint 1: List engine
 - [x] `npx supabase db reset` + `npm run test:db` green; typecheck, lint, test green
 - [x] Speed numbers below; `new-matches` decision made (oldest last touch first)
-- [ ] Founder reviews AD-062 and each built-in list's seed output before any UI
+- [ ] Founder reviews AD-062 and each built-in list's seed output before any UI — **not ticked by the build: the founder's call.** The Checkpoint 1 decision on `new-matches` is recorded above; each built-in list's seed output was seen in the browser on 2026-11-08 (Checkpoint 2 note).
 
 Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker owns every deal
 (worst case: an owner/manager on the Agency scope); `scripts/smart-lists/scale.sql`, local stack:
@@ -265,9 +265,9 @@ client state in effects; the bar is a Server Component with links/forms.
 **Estimated scope:** M
 
 ## Checkpoint 2: Built-in lists
-- [ ] AC-1, -2, -3, -6, -7 seen in the browser, BG and EN, 1280 and 390 px
+- [x] AC-1, -2, -3, -6, -7 seen in the browser, BG and EN, 1280 and 390 px
 - [x] typecheck, lint, test, `test:services`, `test:e2e` green
-- [ ] `/review` of Phases 1–2 (Opus, fresh session)
+- [x] `/review` of Phases 1–2 (Opus, fresh session; done, confirmed by the founder 2026-11-08)
 
 Notes (2026-11-07, build session): seen in the browser — AC-1 (broker 7 lists, manager 9 with
 Mine / Agency), AC-6 (Skip, Previous, Next after a scheduled task: count 2 -> 1, List done), AC-7
@@ -322,13 +322,22 @@ with the filters and an "Update list" button. A stored filter that doesn't parse
 this list" state (rule 5).
 
 **Acceptance criteria:**
-- [ ] AC-4: a broker saves a list from filters, sees it with the right count after reload; another broker doesn't see it
-- [ ] Rename to a duplicate name and the 51st list show the i18n error toast; delete removes it
-- [ ] Service tests: save, rename, update filter, delete, stale filter; BG and EN, both widths
+- [x] AC-4: a broker saves a list from filters, sees it with the right count after reload; another broker doesn't see it
+- [x] Rename to a duplicate name and the 51st list show the i18n error toast; delete removes it
+- [x] Service tests: save, rename, update filter, delete, stale filter; BG and EN, both widths
 
 **Verification:**
-- [ ] `npx vitest run src/domain/smart-lists`, `npm run test:services`, typecheck, lint
-- [ ] Browser: save, rename, edit, delete in BG and EN
+- [x] `npx vitest run src/domain/smart-lists`, `npm run test:services`, typecheck, lint
+- [x] Browser: save, rename, edit, delete in BG and EN
+
+Notes (2026-11-08): the filters are saved from the URL params on the server through the list
+page's own mapping (`url-filter.ts` → `toListFilter`), so a saved list counts what the page
+showed. "Edit filters" opens `/opportunities?…&list=<id>`; what the page can't show (several
+values, `me`, `unassigned`) is left out and "Update list" saves what it shows. Each seeded agency
+has one broker, so "another broker doesn't see it" is asserted with the agency's manager (RLS:
+personal lists are the creator's only). The 51st-list toast is the same `toActionError` path as
+the duplicate name (seen in the browser) and is covered by the service tests. test:services
+1016/1016.
 
 **Dependencies:** Tasks 8, 10
 **Files likely touched:** `src/app/(dashboard)/lists/actions.ts` (+ test), `src/domain/smart-lists/service.ts`, `src/components/domain/smart-lists/save-list-dialog.tsx`, `src/app/(dashboard)/opportunities/opportunities-page-client.tsx`, `messages/{bg,en}.json`
@@ -341,13 +350,19 @@ and managers; shared lists show the creator's name in the overview. Brokers see 
 delete control on a shared list.
 
 **Acceptance criteria:**
-- [ ] AC-5: a manager shares; every Alpha member sees it; a broker has no edit/share/delete controls and the actions refuse them
-- [ ] A broker calling `shareList` gets the forbidden error; unshare hides it from others again
-- [ ] Action tests for both roles; BG and EN
+- [x] AC-5: a manager shares; every Alpha member sees it; a broker has no edit/share/delete controls and the actions refuse them
+- [x] A broker calling `shareList` gets the forbidden error; unshare hides it from others again
+- [x] Action tests for both roles; BG and EN
 
 **Verification:**
-- [ ] `npx vitest run "src/app/(dashboard)/lists"`, `npm run test:services`, typecheck, lint
-- [ ] Browser: share as manager, view as broker
+- [x] `npx vitest run "src/app/(dashboard)/lists"`, `npm run test:services`, typecheck, lint
+- [x] Browser: share as manager, view as broker
+
+Notes (2026-11-08): Share shows only on an owner's or manager's own personal list and Stop
+sharing only to the creator of a shared list (`shareState`), as RLS allows; another manager
+deletes a shared list instead. A shared list shows "Shared with the agency" on its page. Seen:
+manager shares in BG at 1280; broker sees it read-only in EN at 390 and "Shared by" in the
+overview. Unshare is asserted against the stack (service.integration), not clicked.
 
 **Dependencies:** Task 11
 **Files likely touched:** `src/app/(dashboard)/lists/actions.ts` (+ test), `src/domain/smart-lists/service.ts`, `src/components/domain/smart-lists/list-page.tsx`, `messages/{bg,en}.json`
@@ -359,13 +374,20 @@ assigned-to and source if the page shows them), stored as `InquiryListFilter`; t
 overview handle `entity = inquiry` saved lists. Reuses Task 11's dialog and actions.
 
 **Acceptance criteria:**
-- [ ] A broker saves "New from imot.bg" and sees the right rows and count
-- [ ] Edit filters opens the inquiry list with the filters applied
-- [ ] BG and EN, both widths
+- [x] A broker saves "New from imot.bg" and sees the right rows and count
+- [x] Edit filters opens the inquiry list with the filters applied
+- [x] BG and EN, both widths
 
 **Verification:**
-- [ ] `npx vitest run src/domain/smart-lists`, typecheck, lint
-- [ ] Browser in BG and EN
+- [x] `npx vitest run src/domain/smart-lists`, typecheck, lint
+- [x] Browser in BG and EN
+
+Notes (2026-11-08): the inquiry list shows only status and search, so that is what a saved
+inquiry list stores (`inquiryFilterFromParams`, newest first as the list); assigned-to and
+source are not on the page and were not added. "From imot.bg" is therefore a search, not a
+source filter. Counts equal the inquiry page's for three filters against the stack. Seen: save
+`status=new` as the broker in EN at 390 (7 = the page), Edit filters → contacted → Update list in
+BG at 1280 (1 = the page). No new files in `validation.ts` were needed.
 
 **Dependencies:** Task 11
 **Files likely touched:** `src/app/(dashboard)/inquiries/{page,inquiries-page-client}.tsx`, `src/domain/smart-lists/validation.ts`, `messages/{bg,en}.json`
@@ -378,18 +400,44 @@ list); save a custom list from the opportunity filters and reopen it; a manager 
 a broker sees it read-only. BG and EN, 1280 and 390 px, using `e2e/fixtures.ts`.
 
 **Acceptance criteria:**
-- [ ] The spec passes in all four projects (bg/en × 1280/390)
-- [ ] It leaves the seed as it found it or runs on rows no other spec asserts
-- [ ] The full `npm run test:e2e` passes
+- [x] The spec passes in all four projects (bg/en × 1280/390)
+- [x] It leaves the seed as it found it or runs on rows no other spec asserts
+- [x] The full `npm run test:e2e` passes
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e`
+
+Notes (2026-11-08): working through the seeded `no-next-action` would move the seeded rows other
+suites count, so each run creates two tagged deals with no next action (service role, local
+stack, `serviceRest` in `e2e/fixtures.ts`), saves a list from them, works it through to List
+done, deletes the list in the UI and archives its deals. The share test deletes its list
+afterwards. The spec ran twice (alone after a reset, then in the full suite): test:e2e 72/72.
+After `npx supabase db reset`: test:db 717/717, test:services 1030/1030, test 791 passed.
 
 **Dependencies:** Tasks 9, 12
 **Files likely touched:** `e2e/smart-lists.spec.ts`, `e2e/fixtures.ts`
 **Estimated scope:** S
 
+Notes (2026-11-08, Phase 3 review fixes): Edit filters now warns when the page can't show a
+list's filter as it is (`shownExactly`; seen on the seeded "SL My hot deals", which has
+`assigned_to: me`). Update list maps the params by the list's own entity (`updateFilterFromParams`;
+the client no longer sends it), both entity pages load the edited list with
+`SmartListService.findEditable`, `toListFilter` moved to the pure `opportunities/list-filter.ts`,
+`smartListEntitySchema` / `inquiryStatusSchema` are shared from `validation.ts`, and the E2E
+formats plurals with next-intl's `createTranslator` (no undeclared `intl-messageformat`).
+AD-063 records the URL-mapping decision. After `npx supabase db reset`: test:db 717/717,
+test:services 1037/1037, test 798 passed, test:e2e 76/76.
+
 ## Checkpoint 3: Complete
-- [ ] AC-1…AC-10 met; full Definition of Done (typecheck, lint, test, `db reset` + `test:db`, `test:services`, `test:e2e`, browser in bg and en)
-- [ ] `docs/domain-model.md` §2.10 and §4 as built; BRD FR-LST rows set
-- [ ] `/review` (Opus, fresh session); then close: `SPEC.md` Done, archive `tasks/*` to `docs/archive/smart-lists-*.md`
+- [x] AC-1…AC-10 met; full Definition of Done (typecheck, lint, test, `db reset` + `test:db`, `test:services`, `test:e2e`, browser in bg and en)
+- [x] `docs/domain-model.md` §2.10 and §4 as built; BRD FR-LST rows set
+- [x] `/review` (Opus; ran in the build session, not a fresh one); then close: `SPEC.md` Done, archive `tasks/*` to `docs/archive/smart-lists-*.md`
+
+Notes (2026-11-08, close): AC-2 seen in the browser after a db reset, as Alpha's broker in BG at
+1280: each of the seven broker lists holds its seeded rows in its order (no-next-action: SL No
+action; overdue: SL Overdue, Alpha Opp 1; due-today: SL Due today; hot-no-touch: SL Hot touched
+4d, not 2d; sellers-need-update: SL Seller touched 15d, not 13d; new-matches: Alpha Opp 2 and 1
+with 3 new matches each; new-inquiries: oldest first). AC-8 is pgTAP; AC-9 holds with the accepted
+`new-matches` exception (BRD FR-LST-08 ⚠️); AC-10 is the E2E in all four projects plus lint. The
+Phase 3 review ran in the build session (fixes in `e7fb2bb`), not a fresh one. Closed:
+`SPEC.md` Done, BRD FR-LST rows set, `docs/domain-model.md` §2.10 as built.

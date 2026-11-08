@@ -28,6 +28,7 @@ import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus, Inbox } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { PageInfo } from "@/lib/pagination";
+import { SaveListDialog, UpdateListBar } from "@/components/domain/smart-lists/save-list-dialog";
 
 // ── Status filter options ─────────────────────────────────────────────────────
 
@@ -55,6 +56,8 @@ interface InquiriesPageClientProps {
   timeZone: string;
   /** Converted inquiries that joined a deal other than the one they started, by inquiry id. */
   joinedDeals: Record<string, { id: string; title: string }>;
+  /** The saved list whose filters are being edited, if any. */
+  editingList: { id: string; name: string; shownExactly: boolean } | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -72,6 +75,7 @@ export function InquiriesPageClient({
   userRole,
   timeZone,
   joinedDeals,
+  editingList,
 }: InquiriesPageClientProps) {
   const t = useTranslations("InquiriesPage");
   const router = useRouter();
@@ -136,7 +140,7 @@ export function InquiriesPageClient({
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -144,7 +148,8 @@ export function InquiriesPageClient({
             {initialSearch ? t("matchingSearch", { search: initialSearch }) : ""}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <SaveListDialog entity="inquiry" />
           {(userRole === "owner" || userRole === "manager") && (
             <Button variant="outline" size="sm" onClick={() => router.push("/settings/import/new?type=inquiry")}>
               {t("importBtn")}
@@ -177,6 +182,8 @@ export function InquiriesPageClient({
         </Dialog>
         </div>
       </div>
+
+      {editingList && <UpdateListBar list={editingList} />}
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="mb-4 flex gap-3">

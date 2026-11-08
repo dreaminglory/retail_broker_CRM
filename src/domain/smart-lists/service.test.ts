@@ -11,13 +11,15 @@ const repo = {
   listRows: vi.fn(),
   countByMember: vi.fn(),
   insert: vi.fn(),
+  update: vi.fn(),
+  remove: vi.fn(),
 };
 const profiles = { getProfilesByIds: vi.fn() };
 
 vi.mock('./repository', () => ({ SmartListRepository: vi.fn(function () { return repo; }) }));
 vi.mock('../profiles/repository', () => ({ ProfileRepository: vi.fn(function () { return profiles; }) }));
 
-const { SmartListService, MAX_MATCH_LISTS_PER_MEMBER } = await import('./service');
+const { SmartListService, MAX_MATCH_LISTS_PER_MEMBER, canEditList } = await import('./service');
 
 const broker = { userId: 'u-broker', agencyId: 'a-1', role: 'broker' };
 const manager = { userId: 'u-manager', agencyId: 'a-1', role: 'manager' };
@@ -312,9 +314,164 @@ describe('save', () => {
   });
 });
 
+describe('canEditList (rule 4)', () => {
+  it('a personal list is changed by its creator only, a shared one by owners and managers', () => {
+    expect(canEditList(broker, savedList())).toBe(true);
+    expect(canEditList(manager, savedList())).toBe(false);
+    expect(canEditList(broker, savedList({ shared: true }))).toBe(false);
+    expect(canEditList(manager, savedList({ shared: true }))).toBe(true);
+    expect(canEditList({ ...broker, role: 'owner' }, savedList({ shared: true, created_by: 'u-other' }))).toBe(true);
+  });
+});
+
+describe('rename, updateFilter and remove', () => {
+  beforeEach(() => {
+    repo.findById.mockResolvedValue(savedList());
+    repo.countByMember.mockResolvedValue({ total: 3, matchLists: 0 });
+    repo.update.mockImplementation(async (_a: string, _id: string, patch: object) => savedList(patch));
+    repo.remove.mockResolvedValue(undefined);
+  });
+
+  it('renames with the trimmed name', async () => {
+    await service.rename(broker, LIST_ID, '  Hot ones ');
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { name: 'Hot ones' });
+  });
+
+  it('refuses an empty or too long name', async () => {
+    await expect(service.rename(broker, LIST_ID, '  ')).rejects.toHaveProperty('name', 'ZodError');
+    await expect(service.rename(broker, LIST_ID, 'x'.repeat(61))).rejects.toHaveProperty('name', 'ZodError');
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('updates the filter from the list page URL', async () => {
+    await service.updateFilterFromParams(broker, LIST_ID, { type: 'seller' });
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, {
+      filter: { status: ['active'], type: ['seller'], sort: 'created_desc' },
+    });
+  });
+
+  it('a stale list can be fixed by saving the filters the page shows (rule 5)', async () => {
+    repo.findById.mockResolvedValue(savedList({ filter: { old_key: 1 } }));
+    await service.updateFilterFromParams(broker, LIST_ID, {});
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { filter: { status: ['active'], sort: 'created_desc' } });
+  });
+
+  it('refuses turning on new matches past the creator cap, but not keeping it on', async () => {
+    repo.countByMember.mockResolvedValue({ total: 6, matchLists: MAX_MATCH_LISTS_PER_MEMBER });
+    await expect(service.updateFilterFromParams(broker, LIST_ID, { matches: 'new' })).rejects.toMatchObject({
+      code: 'smartLists.errors.matchListLimit',
+    });
+
+    repo.findById.mockResolvedValue(savedList({ filter: { has_new_matches: true } }));
+    await service.updateFilterFromParams(broker, LIST_ID, { matches: 'new', type: 'buyer' });
+    expect(repo.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts the cap against the list creator when a manager edits a shared list', async () => {
+    repo.findById.mockResolvedValue(savedList({ shared: true, created_by: 'u-broker' }));
+    await service.updateFilterFromParams(manager, LIST_ID, { matches: 'new' });
+    expect(repo.countByMember).toHaveBeenCalledWith('a-1', 'u-broker');
+  });
+
+  it('removes a list', async () => {
+    await service.remove(broker, LIST_ID);
+    expect(repo.remove).toHaveBeenCalledWith('a-1', LIST_ID);
+  });
+
+  it('refuses a list the viewer cannot change and one they cannot see', async () => {
+    repo.findById.mockResolvedValue(savedList({ shared: true }));
+    await expect(service.rename(broker, LIST_ID, 'Mine now')).rejects.toMatchObject({ code: 'errors.forbidden' });
+    await expect(service.updateFilterFromParams(broker, LIST_ID, {})).rejects.toMatchObject({ code: 'errors.forbidden' });
+    await expect(service.remove(broker, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+
+    repo.findById.mockResolvedValue(null);
+    await expect(service.rename(broker, LIST_ID, 'Gone')).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
+    await expect(service.remove(broker, 'not-a-uuid')).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
+    expect(repo.update).not.toHaveBeenCalled();
+    expect(repo.remove).not.toHaveBeenCalled();
+  });
+});
+
+describe('findEditable and updateFilterFromParams (Edit filters, Update list)', () => {
+  beforeEach(() => {
+    repo.update.mockImplementation(async (_a: string, _id: string, patch: object) => savedList(patch));
+  });
+
+  it('gives the list the viewer may change, with whether the page can show its filter', async () => {
+    repo.findById.mockResolvedValue(savedList({ filter: { temperature: ['hot'] } }));
+    expect(await service.findEditable(broker, LIST_ID, 'opportunity')).toEqual({ id: LIST_ID, name: 'My hot deals', shownExactly: true });
+
+    repo.findById.mockResolvedValue(savedList({ filter: { temperature: ['hot'], assigned_to: 'me' } }));
+    expect(await service.findEditable(broker, LIST_ID, 'opportunity')).toMatchObject({ shownExactly: false });
+
+    // A stale filter can't be shown either: Update list replaces it (rule 5).
+    repo.findById.mockResolvedValue(savedList({ filter: { old_key: 1 } }));
+    expect(await service.findEditable(broker, LIST_ID, 'opportunity')).toMatchObject({ shownExactly: false });
+  });
+
+  it('gives null for another entity, a list the viewer cannot change, or a bad id', async () => {
+    repo.findById.mockResolvedValue(savedList());
+    expect(await service.findEditable(broker, LIST_ID, 'inquiry')).toBeNull();
+    expect(await service.findEditable(manager, LIST_ID, 'opportunity')).toBeNull();
+    expect(await service.findEditable(broker, 'nope', 'opportunity')).toBeNull();
+  });
+
+  it('maps the params by the list own entity, whatever the caller thinks it is', async () => {
+    repo.findById.mockResolvedValue(savedList({ entity: 'inquiry', filter: {} }));
+    await service.updateFilterFromParams(broker, LIST_ID, { status: 'new', type: 'buyer' });
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { filter: { status: ['new'], sort: 'received_desc' } });
+    expect(repo.findById).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('share and unshare (rule 4, AC-5)', () => {
+  beforeEach(() => {
+    repo.update.mockImplementation(async (_a: string, _id: string, patch: object) => savedList(patch));
+  });
+
+  it('a manager shares their own personal list', async () => {
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-manager' }));
+    await service.share(manager, LIST_ID);
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { shared: true });
+  });
+
+  it('a broker can never share, even their own list', async () => {
+    repo.findById.mockResolvedValue(savedList());
+    await expect(service.share(broker, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+    expect(repo.findById).not.toHaveBeenCalled();
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('sharing a list that is already shared changes nothing', async () => {
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-manager', shared: true }));
+    await service.share(manager, LIST_ID);
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('only the creator unshares; another manager is refused (they delete it instead)', async () => {
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-manager', shared: true }));
+    await service.unshare(manager, LIST_ID);
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { shared: false });
+
+    repo.update.mockClear();
+    repo.findById.mockResolvedValue(savedList({ created_by: 'u-other', shared: true }));
+    await expect(service.unshare(manager, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+    await expect(service.unshare(broker, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+
+  it('shareState says which control the viewer gets', async () => {
+    const { shareState } = await import('./service');
+    expect(shareState(manager, savedList({ created_by: 'u-manager' }))).toBe('share');
+    expect(shareState(manager, savedList({ created_by: 'u-manager', shared: true }))).toBe('unshare');
+    expect(shareState(manager, savedList({ created_by: 'u-other', shared: true }))).toBeNull();
+    expect(shareState(broker, savedList())).toBeNull();
+  });
+});
+
 describe('messages', () => {
   it('every smartLists error the SQL or the service raises is in both message files', () => {
-    const keys = ['limit', 'matchListLimit', 'duplicateName', 'invalidEntity', 'invalidLists', 'tooManyLists', 'immutable'];
+    const keys = ['limit', 'matchListLimit', 'duplicateName', 'invalidEntity', 'invalidLists', 'tooManyLists', 'immutable', 'notFound'];
     for (const key of keys) {
       expect((en.smartLists.errors as Record<string, string>)[key], key).toBeTruthy();
       expect((bg.smartLists.errors as Record<string, string>)[key], key).toBeTruthy();

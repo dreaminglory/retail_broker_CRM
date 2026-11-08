@@ -514,8 +514,9 @@ must-have flags. `matching` treats a must-have as a filter and the rest as score
 
 ### 2.10 Smart lists
 
-`spec/smart-lists.md`, AD-062. **In progress:** the table, the three list functions and last
-touch are built; the app side (service, screens) arrives with the module's next tasks.
+`spec/smart-lists.md`, AD-062, AD-063. **Built** (module `smart-lists`, Done 2026-11-08): the
+table, the three list functions, last touch, the overview (`/lists`), the list page
+(`/lists/[id]`), Work through, saved lists and sharing.
 
 ```mermaid
 erDiagram
@@ -581,6 +582,21 @@ erDiagram
   `assigned_to` (`me | unassigned | user id`), `source_id[]`, `search` (caller name, phone,
   email or subject; `%` and `_` literal), `sort` (`received_desc` default, ties by `id`
   descending | `received_asc`).
+- **App side** (`src/domain/smart-lists/`): `built-in.ts` is the only definition of the nine
+  built-in lists (filters, scope, i18n key); `SmartListService` decides which lists a viewer sees
+  and on which scope (brokers always Mine; the two unassigned lists are owner/manager only) and
+  asks for every count of the overview in one `smart_list_counts` call per 100 lists. The
+  opportunity list page reads through `smart_list_opportunities` too, so a list and its saved
+  copy can't disagree.
+- **Saved lists come from the entity list's URL** (AD-063): "Save as list" and "Update list" send
+  the page's URL params and the server maps them (`url-filter.ts`, through the deal list's own
+  `toListFilter`) by the list's own `entity`. Deal lists store the page's filters, inquiry lists
+  status and search, both newest first. A filter the page can't show (`me`, `unassigned`, several
+  values, another sort, a stale shape) makes "Edit filters" warn before Update replaces it.
+  A stored filter that no longer parses shows "edit this list" instead of rows (rule 5).
+- **Work through** keeps the queue in the URL (`/opportunities/[id]?list=…&pos=…&key=…`); each
+  step is a GET to `/lists/[id]/step` that re-runs the list and redirects to the next deal or to
+  "List done" (AD-062).
 - **`smart_list_counts(lists)`**: `[{ key, entity, filter }]` in, `(key, count)` out in one call.
   Each count is the list function's `total_count` capped at 1000 ("999+" in the UI), so a count
   can never differ from its list. The filter's `sort` is dropped first: a count never needs it. Bad input raises i18n keys (`smartLists.errors.invalidLists`,
@@ -861,7 +877,7 @@ The "Enforced by" column tells you which layer to change and test.
 | Q7 | A requirement is written only through `save_requirement` / `remove_requirement`, which check the agency, the deal type and an `active` or `nurture` status; `location_keys` always equals the location rows (rules 1, 7, AD-059) | the two `SECURITY DEFINER` RPCs + `078-requirement-writes.sql` |
 | Q8 | One save is one timeline entry with the old and new value of each changed criterion; a save that changes nothing (re-ordered types or construction included) writes none (rule 8, FR-REQ-04) | trigger `audit_requirement_changes`, the no-change `WHERE` and list order in `save_requirement` + `078`, `079` |
 | L19 | A link's `source` is `manual`, `match` or `viewing`, set on insert and never updated; the app may send `manual` or `match` (a member could send `match`: it only feeds a measurement) (AD-060) | `CHECK opportunity_properties_source_check`, column `UPDATE` privileges (AD-058), trigger `mark_property_viewed` + `080-matching.sql` |
-| S1 | A personal smart list is seen and changed by its creator only, a manager included; only owners and managers can insert or update to `shared = true`; a shared list is changed or deleted by owners and managers only; only the creator can unshare (AD-062) | RLS policies on `smart_lists` (`WITH CHECK` on update: `shared OR created_by = auth.uid()`) + `090-smart-lists.sql`, `095-smart-list-review-fixes.sql`; `requireRole()` in the share action (Task 12) |
+| S1 | A personal smart list is seen and changed by its creator only, a manager included; only owners and managers can insert or update to `shared = true`; a shared list is changed or deleted by owners and managers only; only the creator can unshare (AD-062) | RLS policies on `smart_lists` (`WITH CHECK` on update: `shared OR created_by = auth.uid()`) + `090-smart-lists.sql`, `095-smart-list-review-fixes.sql`; `requireRole()` in the share actions and `canEditList` / `shareState` in `SmartListService` |
 | S2 | A smart list's `agency_id`, `created_by` and `entity` never change; `entity` is `opportunity` or `inquiry`; the name is 1–60 characters and unique per member ignoring case | trigger `smart_lists_immutable`, `CHECK`s, unique index `uq_smart_lists_member_name` + `090-smart-lists.sql` |
 | S3 | A member holds at most 50 smart lists, at most 5 of them opportunity lists with `has_new_matches` | triggers `smart_lists_limit` (`smartLists.errors.limit`) and `smart_lists_match_limit` (`smartLists.errors.matchListLimit`) + `090-smart-lists.sql`, `095-smart-list-review-fixes.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |

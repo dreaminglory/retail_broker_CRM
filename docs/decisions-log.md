@@ -456,6 +456,27 @@ keeps one rule set.
 **Revisit if:** pilot agencies working on Agency scope find the `new-matches` list or the overview
 slow (the accepted exception above), or agencies ask to configure thresholds or list definitions.
 
+### AD-063: A saved list's filter comes from its entity list's URL
+**Accepted** (smart-lists Tasks 11–13 and their review, 2026-11-08).
+- **Save as list and Update list send the list page's URL params, not a filter.** The server maps
+  them in `src/domain/smart-lists/url-filter.ts` through the same `toListFilter` the deal list
+  reads with (`src/domain/opportunities/list-filter.ts`), so a saved list counts exactly what the
+  page showed. Update list maps them by the **list's own** `entity`; the client never says which.
+- **A saved list stores only what its page can show.** Deal lists: the page's filters, newest
+  first. Inquiry lists: status and search, newest first; assigned-to and source are not on the
+  inquiry page, so they are not saved (a list "from imot.bg" is a search).
+- **Edit filters opens the entity list with the filter as URL params.** What the page can't show
+  (`me`, `unassigned`, several values of a key, another sort, a stale shape) is left out, and the
+  page **warns** before Update list replaces it (`shownExactly`). Lists saved from the UI always
+  round-trip exactly; seeded or SQL-made lists may not.
+- **Sharing:** owners and managers share their own personal list; only the creator unshares
+  (AD-062's RLS). The actions require the role before any read.
+**Why:** one mapping between the page and the saved filter means the list and its saved copy
+can't drift, and nothing the user can't see is changed without a warning.
+**Revisit if:** the inquiry page gains filters (add them to the mapping), or users ask to edit
+`me` / several values from the list page (add them to the page's URL filters, which removes the
+warning case).
+
 ---
 
 ## Retired

@@ -5,11 +5,12 @@
 
 import type { Opportunity } from '../opportunities/types';
 import type { Inquiry } from '../inquiries/types';
-import type { InquiryListFilter, OpportunityListFilter } from './validation';
+import type { InquiryListFilter, OpportunityListFilter, smartListEntitySchema } from './validation';
+import type { z } from 'zod';
 
 export type { InquiryListFilter, OpportunityListFilter };
 
-export type SmartListEntity = 'opportunity' | 'inquiry';
+export type SmartListEntity = z.infer<typeof smartListEntitySchema>;
 
 /** Mine = assigned to the viewer; Agency = everyone's (owners and managers, AD-044). */
 export type ListScope = 'mine' | 'agency';

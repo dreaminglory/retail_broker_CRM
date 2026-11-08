@@ -8,6 +8,8 @@ import { findBuiltInList, scopedFilter } from './built-in';
 import { SmartListRepository } from './repository';
 import { SmartListService, type Viewer } from './service';
 import type { OpportunityListFilter } from './types';
+import { inquiryFilterFromParams, opportunityFilterFromParams } from './url-filter';
+import { InquiryService } from '../inquiries/service';
 
 // Today reads the agency timezone through the request's Supabase client; the seed uses Sofia.
 vi.mock('@/domain/agencies/settings', () => ({
@@ -323,6 +325,103 @@ describeServices('SmartListService against the local stack', () => {
       await expect(
         service.save(viewer, { name: `sld ${RUN}`, entity: 'inquiry', filter: {} })
       ).rejects.toMatchObject({ code: 'smartLists.errors.duplicateName' });
+    });
+
+    it('a list saved from the URL counts what the deal list shows; only its creator sees or changes it (AC-4)', async () => {
+      const deal = await createDeal(broker, `SLS ${RUN} warm`);
+      await broker.db.from('opportunities').update({ temperature: 'warm' }).eq('id', deal.id);
+      const service = new SmartListService(broker.db);
+      const viewer = viewerOf(broker, 'broker');
+      const params = { search: `SLS ${RUN}`, temperature: 'warm', type: 'buyer' };
+
+      const list = await service.save(viewer, { name: `SLS ${RUN}`, entity: 'opportunity', filter: opportunityFilterFromParams(params) });
+      cleanup.track('smart_lists', list.id);
+
+      const shown = await new OpportunityService(broker.db).listPage(broker.agencyId, {
+        search: params.search, temperature: 'warm', type: 'buyer',
+      });
+      const overview = await service.overview(viewer);
+      expect(overview.saved.find((s) => s.list.id === list.id)?.count).toBe(shown.total);
+      expect(shown.total).toBe(1);
+
+      // Another member of the agency, a manager included, neither sees nor changes it.
+      const managerView = viewerOf(manager, 'manager');
+      const other = new SmartListService(manager.db);
+      expect((await other.overview(managerView)).saved.map((s) => s.list.id)).not.toContain(list.id);
+      await expect(other.rename(managerView, list.id, 'Taken')).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
+      await expect(other.remove(managerView, list.id)).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
+
+      // Rename, then widen the filter: the count follows.
+      await service.rename(viewer, list.id, `SLS ${RUN} renamed`);
+      await service.updateFilterFromParams(viewer, list.id, { search: `SLS ${RUN}`, temperature: 'hot' });
+      const after = await service.page(viewer, list.id, undefined);
+      expect(after?.list.kind === 'saved' && after.list.list.name).toBe(`SLS ${RUN} renamed`);
+      expect(after?.result?.total).toBe(0);
+
+      await service.remove(viewer, list.id);
+      expect(await service.page(viewer, list.id, undefined)).toBeNull();
+    });
+  });
+
+  describe('inquiry lists (cut 1)', () => {
+    it('a list saved from the inquiry URL counts what the inquiry list shows', async () => {
+      const service = new SmartListService(broker.db);
+      const viewer = viewerOf(broker, 'broker');
+      for (const params of [{ status: 'new' }, {}, { status: 'contacted', search: 'a' }]) {
+        const list = await service.save(viewer, {
+          name: `SLI ${RUN} ${JSON.stringify(params)}`,
+          entity: 'inquiry',
+          filter: inquiryFilterFromParams(params),
+        });
+        cleanup.track('smart_lists', list.id);
+        const shown = await new InquiryService(broker.db).listPage(broker.agencyId, {
+          status: params.status as never,
+          search: params.search,
+          limit: 1,
+        });
+        const page = await service.page(viewer, list.id, undefined);
+        expect(page?.result?.total, JSON.stringify(params)).toBe(shown.total);
+      }
+    });
+  });
+
+  describe('sharing (rule 4, AC-5)', () => {
+    it('a manager shares; the broker sees it but cannot change it; unsharing hides it again', async () => {
+      const managerView = viewerOf(manager, 'manager');
+      const brokerView = viewerOf(broker, 'broker');
+      const managerLists = new SmartListService(manager.db);
+      const brokerLists = new SmartListService(broker.db);
+
+      const list = await managerLists.save(managerView, { name: `SLSH ${RUN}`, entity: 'opportunity', filter: { status: ['active'] } });
+      cleanup.track('smart_lists', list.id);
+      await expect(brokerLists.share(brokerView, list.id)).rejects.toMatchObject({ code: 'errors.forbidden' });
+      expect((await brokerLists.overview(brokerView)).saved.map((s) => s.list.id)).not.toContain(list.id);
+
+      await managerLists.share(managerView, list.id);
+      const seen = (await brokerLists.overview(brokerView)).saved.find((s) => s.list.id === list.id);
+      expect(seen?.sharedBy).toBeTruthy();
+      await expect(brokerLists.rename(brokerView, list.id, 'Mine')).rejects.toMatchObject({ code: 'errors.forbidden' });
+      await expect(brokerLists.remove(brokerView, list.id)).rejects.toMatchObject({ code: 'errors.forbidden' });
+      await expect(brokerLists.unshare(brokerView, list.id)).rejects.toMatchObject({ code: 'errors.forbidden' });
+
+      // RLS refuses the broker straight to the table too.
+      const { data: changed } = await broker.db.from('smart_lists').update({ name: 'Mine' }).eq('id', list.id).select('id');
+      expect(changed).toEqual([]);
+
+      await managerLists.unshare(managerView, list.id);
+      expect((await brokerLists.overview(brokerView)).saved.map((s) => s.list.id)).not.toContain(list.id);
+    });
+
+    it('a broker cannot insert a shared list even straight to the table', async () => {
+      const { error } = await broker.db.from('smart_lists').insert({
+        agency_id: broker.agencyId,
+        created_by: broker.userId,
+        name: `SLSH ${RUN} broker`,
+        entity: 'opportunity',
+        filter: {},
+        shared: true,
+      });
+      expect(error).not.toBeNull();
     });
   });
 

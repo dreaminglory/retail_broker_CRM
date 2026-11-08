@@ -1,6 +1,6 @@
 # Implementation Plan: smart-lists
 
-> **Spec:** `spec/smart-lists.md` · **Checklist:** `tasks/todo.md`
+> **Spec:** `spec/smart-lists.md` · **Checklist:** `docs/archive/smart-lists-todo.md`
 > **Status:** Plan approved (founder, 2026-11-07). Approved scope (founder, 2026-11-07).
 > Decisions: AD-062 (written in Task 1). Branch: `feat/smart-lists`, cut from
 > `feat/conversion-join` (founder, 2026-11-07; `main` doesn't have `requirements`, `matching` or
@@ -92,7 +92,7 @@ T2–T4 ─ T6 service, built-in.ts ─ T7 overview + sidebar ─ T8 list page �
 ```
 
 ## Task list
-Full tasks with acceptance criteria are in `tasks/todo.md`.
+Full tasks with acceptance criteria are in `docs/archive/smart-lists-todo.md`.
 
 ### Phase 1: List engine (Opus)
 - [x] Task 1: AD-062, `smart_lists` table, RLS and the docs

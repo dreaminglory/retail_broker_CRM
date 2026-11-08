@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
+import { hasRole, MANAGER_ROLES } from '@/lib/roles';
 import { ProfileRepository } from '../profiles/repository';
 import {
   canSwitchListScope,
@@ -23,6 +24,7 @@ import {
   opportunityListFilterSchema,
   parseStoredFilter,
 } from './validation';
+import { listFilterFromParams, shownExactly } from './url-filter';
 
 export type Viewer = { userId: string; agencyId: string; role: string };
 
@@ -67,6 +69,23 @@ export type ListPage = {
 export type QueueStep =
   | { done: true; total: number; scope: ListScope }
   | { done: false; id: string; sortKey: SortKey; pos: number; total: number; scope: ListScope };
+
+/**
+ * Who may rename, edit, share or delete a saved list (rule 4, as RLS says it): the creator of a
+ * personal list; owners and managers for a shared one.
+ */
+export function canEditList(viewer: Viewer, list: Pick<SmartList, 'created_by' | 'shared'>): boolean {
+  return list.shared ? hasRole(viewer.role, MANAGER_ROLES) : list.created_by === viewer.userId;
+}
+
+/**
+ * The share control a viewer gets on a saved list: owners and managers share their own personal
+ * list; only the creator unshares a shared one (rule 4). Null: no control.
+ */
+export function shareState(viewer: Viewer, list: Pick<SmartList, 'created_by' | 'shared'>): 'share' | 'unshare' | null {
+  if (!hasRole(viewer.role, MANAGER_ROLES) || list.created_by !== viewer.userId) return null;
+  return list.shared ? 'unshare' : 'share';
+}
 
 const UUID_RE =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -203,5 +222,86 @@ export class SmartListService {
     }
 
     return this.repo.insert(viewer.agencyId, viewer.userId, { name, entity: input.entity, filter, shared: false });
+  }
+
+  async rename(viewer: Viewer, listId: string, name: string): Promise<SmartList> {
+    const parsed = listNameSchema.parse(name);
+    await this.editable(viewer, listId);
+    return this.repo.update(viewer.agencyId, listId, { name: parsed });
+  }
+
+  /**
+   * "Update list": replaces a list's filter with the entity list's URL params, mapped by the
+   * list's own entity; this also fixes a stale list (rule 5). Turning on new matches is held to
+   * the creator's cap (rule 3).
+   */
+  async updateFilterFromParams(viewer: Viewer, listId: string, params: Record<string, string>): Promise<SmartList> {
+    const list = await this.editable(viewer, listId);
+    return this.applyFilter(viewer, list, listFilterFromParams(list.entity, params).filter);
+  }
+
+  /**
+   * The saved list of this entity the viewer may change, for "Edit filters" on the entity list,
+   * with whether that list can show its filter as it is; null otherwise.
+   */
+  async findEditable(
+    viewer: Viewer,
+    listId: string,
+    entity: SmartListEntity
+  ): Promise<{ id: string; name: string; shownExactly: boolean } | null> {
+    const list = UUID_RE.test(listId) ? await this.repo.findById(viewer.agencyId, listId) : null;
+    if (!list || list.entity !== entity || !canEditList(viewer, list)) return null;
+    const parsed = parseStoredFilter(list.entity, list.filter);
+    return { id: list.id, name: list.name, shownExactly: parsed.ok && shownExactly(parsed.filter) };
+  }
+
+  private async applyFilter(viewer: Viewer, list: SmartList, filter: unknown): Promise<SmartList> {
+    const parsed: Record<string, unknown> =
+      list.entity === 'opportunity' ? opportunityListFilterSchema.parse(filter) : inquiryListFilterSchema.parse(filter);
+
+    const hadMatches = (list.filter as { has_new_matches?: unknown } | null)?.has_new_matches === true;
+    if (list.entity === 'opportunity' && parsed.has_new_matches === true && !hadMatches) {
+      const creator = await this.repo.countByMember(viewer.agencyId, list.created_by);
+      if (creator.matchLists >= MAX_MATCH_LISTS_PER_MEMBER) throw new DomainError('smartLists.errors.matchListLimit');
+    }
+    return this.repo.update(viewer.agencyId, list.id, { filter: parsed });
+  }
+
+  /** Shares the viewer's own list with the agency: owners and managers only (rule 4). */
+  async share(viewer: Viewer, listId: string): Promise<SmartList> {
+    if (!hasRole(viewer.role, MANAGER_ROLES)) throw new DomainError('errors.forbidden');
+    const list = await this.visible(viewer, listId);
+    if (list.shared && list.created_by === viewer.userId) return list;
+    if (shareState(viewer, list) !== 'share') throw new DomainError('errors.forbidden');
+    return this.repo.update(viewer.agencyId, listId, { shared: true });
+  }
+
+  /** Hands a shared list back to its creator alone; only the creator may (rule 4). */
+  async unshare(viewer: Viewer, listId: string): Promise<SmartList> {
+    if (!hasRole(viewer.role, MANAGER_ROLES)) throw new DomainError('errors.forbidden');
+    const list = await this.visible(viewer, listId);
+    if (!list.shared && list.created_by === viewer.userId) return list;
+    if (shareState(viewer, list) !== 'unshare') throw new DomainError('errors.forbidden');
+    return this.repo.update(viewer.agencyId, listId, { shared: false });
+  }
+
+  /** A hard delete: a list is only a view (rule 4). */
+  async remove(viewer: Viewer, listId: string): Promise<void> {
+    await this.editable(viewer, listId);
+    await this.repo.remove(viewer.agencyId, listId);
+  }
+
+  /** The saved list, if the viewer sees it (RLS). */
+  private async visible(viewer: Viewer, listId: string): Promise<SmartList> {
+    const list = UUID_RE.test(listId) ? await this.repo.findById(viewer.agencyId, listId) : null;
+    if (!list) throw new DomainError('smartLists.errors.notFound');
+    return list;
+  }
+
+  /** The saved list, if the viewer sees it and may change it (RLS says the same). */
+  private async editable(viewer: Viewer, listId: string): Promise<SmartList> {
+    const list = await this.visible(viewer, listId);
+    if (!canEditList(viewer, list)) throw new DomainError('errors.forbidden');
+    return list;
   }
 }

@@ -8,7 +8,10 @@ import type { Locale } from "@/i18n/config";
 import { getAuthContext, type AuthContext } from "@/lib/actions";
 import { pageInfo, parsePage } from "@/lib/pagination";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
-import { SmartListService, type ListPage } from "@/domain/smart-lists/service";
+import { SmartListService, canEditList, shareState, type ListPage, type ResolvedList } from "@/domain/smart-lists/service";
+import { Badge } from "@/components/ui/badge";
+import { listParamsFromFilter } from "@/domain/smart-lists/url-filter";
+import { SavedListControls } from "@/components/domain/smart-lists/saved-list-controls";
 import { canSwitchListScope } from "@/domain/smart-lists/built-in";
 import type { InquiryListRow, OpportunityListRow } from "@/domain/smart-lists/types";
 import { StageRepository } from "@/domain/stages/repository";
@@ -62,15 +65,26 @@ export default async function SmartListPage({
       scope={data.scope}
       showScopeToggle={list.kind === "built-in" && list.list.scope === "mine" && canSwitchListScope(ctx.role)}
       actions={
-        list.entity === "opportunity" && result && result.total > 0 ? (
-          <QueueStepLink
-            href={queueStepHref({ listId: list.id, dir: "next", pos: 0, scope: data.scope })}
-            className={buttonVariants({ size: "sm" })}
-          >
-            <ListChecks className="h-4 w-4" aria-hidden />
-            {t("smartLists.queue.workThrough")}
-          </QueueStepLink>
-        ) : null
+        <>
+          {list.kind === "saved" && list.list.shared && <Badge variant="secondary">{t("smartLists.overview.shared")}</Badge>}
+          {list.kind === "saved" && canEditList(ctx, list.list) && (
+            <SavedListControls
+              listId={list.id}
+              name={list.list.name}
+              editHref={editFiltersHref(list)}
+              share={shareState(ctx, list.list)}
+            />
+          )}
+          {list.entity === "opportunity" && result && result.total > 0 && (
+            <QueueStepLink
+              href={queueStepHref({ listId: list.id, dir: "next", pos: 0, scope: data.scope })}
+              className={buttonVariants({ size: "sm" })}
+            >
+              <ListChecks className="h-4 w-4" aria-hidden />
+              {t("smartLists.queue.workThrough")}
+            </QueueStepLink>
+          )}
+        </>
       }
     />
   );
@@ -106,6 +120,13 @@ export default async function SmartListPage({
       )}
     </div>
   );
+}
+
+/** "Edit filters": the entity list with the saved filters applied and "Update list" (a stale list opens with none). */
+function editFiltersHref(list: Extract<ResolvedList, { kind: "saved" }>): string {
+  const params = list.filter ? listParamsFromFilter(list.filter) : new URLSearchParams();
+  params.set("list", list.id);
+  return `/${list.entity === "opportunity" ? "opportunities" : "inquiries"}?${params.toString()}`;
 }
 
 type RowsProps<Row> = { ctx: AuthContext; data: ListPage; rows: Row[]; total: number };

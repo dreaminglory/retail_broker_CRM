@@ -10,6 +10,7 @@ import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 import { getAgencySettings } from "@/domain/agencies/settings";
+import { SmartListService } from "@/domain/smart-lists/service";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -22,6 +23,8 @@ interface SearchParams {
   status?: "new" | "contacted" | "converted" | "dismissed" | "all";
   page?: string;
   id?: string;
+  /** A saved inquiry list being edited ("Edit filters"): the page shows "Update list". */
+  list?: string;
 }
 
 export default async function InquiriesPage({
@@ -61,7 +64,8 @@ export default async function InquiriesPage({
   }
 
   // Fetch all required data in parallel
-  const [paged, leadSources, stages, brokers, settings] = await Promise.all([
+  const viewer = { userId: user!.id, agencyId, role: membership?.role ?? "" };
+  const [paged, leadSources, stages, brokers, settings, editingList] = await Promise.all([
     id ? loadInquiryById(supabase, agencyId, id) : loadPage(page, PAGE_SIZE, (offset, limit) =>
       new InquiryService(supabase).listPage(agencyId, {
         search: search || undefined,
@@ -74,6 +78,7 @@ export default async function InquiriesPage({
     new StageRepository(supabase).findActive(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
     getAgencySettings(agencyId),
+    params.list ? new SmartListService(supabase).findEditable(viewer, params.list, "inquiry") : null,
   ]);
 
   const inquiries = paged.rows;
@@ -96,6 +101,7 @@ export default async function InquiriesPage({
           userRole={membership?.role}
           timeZone={settings.timezone}
           joinedDeals={joinedDeals}
+          editingList={editingList}
         />
       </div>
     </FreshNowProvider>
