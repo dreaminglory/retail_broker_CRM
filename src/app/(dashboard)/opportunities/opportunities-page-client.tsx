@@ -64,7 +64,7 @@ interface OpportunitiesPageClientProps {
   initialUntouched: string;
   initialMatches: string;
   /** The saved list whose filters are being edited, if any. */
-  editingList: { id: string; name: string } | null;
+  editingList: { id: string; name: string; shownExactly: boolean } | null;
 }
 
 export function OpportunitiesPageClient({
@@ -183,7 +183,7 @@ export function OpportunitiesPageClient({
         </div>
       </div>
 
-      {editingList && <UpdateListBar entity="opportunity" list={editingList} />}
+      {editingList && <UpdateListBar list={editingList} />}
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="mb-4 flex flex-wrap gap-3">

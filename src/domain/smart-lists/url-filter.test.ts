@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   inquiryFilterFromParams,
   inquiryParamsFromFilter,
+  listFilterFromParams,
+  listParamsFromFilter,
+  shownExactly,
   opportunityFilterFromParams,
   opportunityParamsFromFilter,
 } from './url-filter';
@@ -120,5 +123,36 @@ describe('inquiry lists: the inquiry list URL as a saved filter and back', () =>
     const params = { status: 'contacted', search: 'Ivan' };
     expect(Object.fromEntries(inquiryParamsFromFilter(inquiryFilterFromParams(params)))).toEqual(params);
     expect(inquiryParamsFromFilter({ status: ['new', 'contacted'], assigned_to: 'me' }).toString()).toBe('');
+  });
+});
+
+describe('listFilterFromParams and listParamsFromFilter pick the mapping by entity', () => {
+  it('maps each entity with its own list page rules', () => {
+    expect(listFilterFromParams('opportunity', { status: 'won' })).toEqual({ entity: 'opportunity', filter: { status: ['won'], sort: 'created_desc' } });
+    expect(listFilterFromParams('inquiry', { status: 'new' })).toEqual({ entity: 'inquiry', filter: { status: ['new'], sort: 'received_desc' } });
+    expect(listParamsFromFilter({ entity: 'inquiry', filter: { status: ['new'] } }).toString()).toBe('status=new');
+  });
+});
+
+describe('shownExactly: can the list page show this saved filter as it is? (Update list)', () => {
+  it('a filter saved from the page is shown exactly', () => {
+    expect(shownExactly(listFilterFromParams('opportunity', { type: 'buyer', temperature: 'warm', status: 'all' }))).toBe(true);
+    expect(shownExactly(listFilterFromParams('inquiry', { status: 'new', search: 'Ivan' }))).toBe(true);
+  });
+
+  it('defaults the page applies anyway count as shown (no status = active, no sort = newest)', () => {
+    expect(shownExactly({ entity: 'opportunity', filter: { temperature: ['hot'] } })).toBe(true);
+    expect(shownExactly({ entity: 'opportunity', filter: { status: ['archived', 'won', 'lost', 'nurture', 'active'] } })).toBe(true);
+    expect(shownExactly({ entity: 'inquiry', filter: {} })).toBe(true);
+    expect(shownExactly({ entity: 'inquiry', filter: { status: ['dismissed', 'new', 'contacted', 'converted'] } })).toBe(true);
+  });
+
+  it('me, unassigned, several values or another sort cannot be shown', () => {
+    expect(shownExactly({ entity: 'opportunity', filter: { temperature: ['hot'], assigned_to: 'me' } })).toBe(false);
+    expect(shownExactly({ entity: 'opportunity', filter: { assigned_to: 'unassigned' } })).toBe(false);
+    expect(shownExactly({ entity: 'opportunity', filter: { type: ['buyer', 'tenant'] } })).toBe(false);
+    expect(shownExactly({ entity: 'opportunity', filter: { sort: 'last_touch_asc' } })).toBe(false);
+    expect(shownExactly({ entity: 'inquiry', filter: { assigned_to: 'me' } })).toBe(false);
+    expect(shownExactly({ entity: 'inquiry', filter: { sort: 'received_asc' } })).toBe(false);
   });
 });

@@ -353,7 +353,7 @@ describeServices('SmartListService against the local stack', () => {
 
       // Rename, then widen the filter: the count follows.
       await service.rename(viewer, list.id, `SLS ${RUN} renamed`);
-      await service.updateFilter(viewer, list.id, opportunityFilterFromParams({ search: `SLS ${RUN}`, temperature: 'hot' }));
+      await service.updateFilterFromParams(viewer, list.id, { search: `SLS ${RUN}`, temperature: 'hot' });
       const after = await service.page(viewer, list.id, undefined);
       expect(after?.list.kind === 'saved' && after.list.list.name).toBe(`SLS ${RUN} renamed`);
       expect(after?.result?.total).toBe(0);

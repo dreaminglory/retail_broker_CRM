@@ -2010,7 +2010,8 @@
       "share": "Share with the agency",
       "unshare": "Stop sharing",
       "sharedToast": "The whole agency now sees this list",
-      "unsharedToast": "Only you see this list now"
+      "unsharedToast": "Only you see this list now",
+      "notShownExactly": "This list has filters this page can't show (such as \"mine\", several values, or its order). Updating replaces them with the filters shown here."
     }
   }
 }

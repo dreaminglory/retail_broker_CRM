@@ -8,23 +8,19 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { SmartListService } from '@/domain/smart-lists/service';
-import { inquiryFilterFromParams, opportunityFilterFromParams } from '@/domain/smart-lists/url-filter';
+import { listFilterFromParams } from '@/domain/smart-lists/url-filter';
+import { smartListEntitySchema } from '@/domain/smart-lists/validation';
 import type { SmartListEntity } from '@/domain/smart-lists/types';
 import { getAuthContext, requireRole, toActionError, type ActionResult } from '@/lib/actions';
 import { MANAGER_ROLES } from '@/lib/roles';
 
 const idSchema = z.string().uuid();
-const entitySchema = z.enum(['opportunity', 'inquiry']);
 const paramsSchema = z.record(z.string().max(40), z.string().max(400)).refine((p) => Object.keys(p).length <= 30);
 
-const saveSchema = z.object({ name: z.string(), entity: entitySchema, params: paramsSchema });
+const saveSchema = z.object({ name: z.string(), entity: smartListEntitySchema, params: paramsSchema });
 const renameSchema = z.object({ id: idSchema, name: z.string() });
-const updateFilterSchema = z.object({ id: idSchema, entity: entitySchema, params: paramsSchema });
+const updateFilterSchema = z.object({ id: idSchema, params: paramsSchema });
 const idInputSchema = z.object({ id: idSchema });
-
-function filterFromParams(entity: SmartListEntity, params: Record<string, string>) {
-  return entity === 'opportunity' ? opportunityFilterFromParams(params) : inquiryFilterFromParams(params);
-}
 
 function revalidateList(id?: string) {
   revalidatePath('/lists');
@@ -44,7 +40,7 @@ export async function saveListAction(input: {
     const list = await new SmartListService(ctx.supabase).save(ctx, {
       name,
       entity,
-      filter: filterFromParams(entity, params),
+      filter: listFilterFromParams(entity, params).filter,
     });
     revalidateList();
     return { success: true, data: { id: list.id } };
@@ -66,17 +62,17 @@ export async function renameListAction(input: { id: string; name: string }): Pro
   }
 }
 
+/** "Update list": the service maps the params by the list's own entity. */
 export async function updateListFilterAction(input: {
   id: string;
-  entity: SmartListEntity;
   params: Record<string, string>;
 }): Promise<ActionResult> {
   try {
     const parsed = updateFilterSchema.safeParse(input);
     if (!parsed.success) return toActionError(parsed.error);
     const ctx = await getAuthContext();
-    const { id, entity, params } = parsed.data;
-    await new SmartListService(ctx.supabase).updateFilter(ctx, id, filterFromParams(entity, params));
+    const { id, params } = parsed.data;
+    await new SmartListService(ctx.supabase).updateFilterFromParams(ctx, id, params);
     revalidateList(id);
     return { success: true, data: undefined };
   } catch (error) {

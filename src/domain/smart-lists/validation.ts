@@ -14,6 +14,9 @@ import type { ListFilter } from './types';
 
 const uuid = z.string().uuid();
 
+export const smartListEntitySchema = z.enum(['opportunity', 'inquiry']);
+export const inquiryStatusSchema = z.enum(['new', 'contacted', 'converted', 'dismissed']);
+
 /** `me` is resolved to the viewer in SQL, so a shared "mine" list works for everyone. */
 const assignedToSchema = z.union([z.literal('me'), z.literal('unassigned'), uuid]);
 
@@ -40,7 +43,7 @@ export const opportunityListFilterSchema = z
 
 export const inquiryListFilterSchema = z
   .object({
-    status: z.array(z.enum(['new', 'contacted', 'converted', 'dismissed'])).optional(),
+    status: z.array(inquiryStatusSchema).optional(),
     assigned_to: assignedToSchema.optional(),
     source_id: z.array(uuid).optional(),
     search: searchSchema.optional(),

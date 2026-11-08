@@ -24,6 +24,7 @@ import {
   opportunityListFilterSchema,
   parseStoredFilter,
 } from './validation';
+import { listFilterFromParams, shownExactly } from './url-filter';
 
 export type Viewer = { userId: string; agencyId: string; role: string };
 
@@ -230,11 +231,31 @@ export class SmartListService {
   }
 
   /**
-   * Replaces a list's filter with one of its entity's current shape; this also fixes a stale
-   * list (rule 5). Turning on new matches is held to the creator's cap (rule 3).
+   * "Update list": replaces a list's filter with the entity list's URL params, mapped by the
+   * list's own entity; this also fixes a stale list (rule 5). Turning on new matches is held to
+   * the creator's cap (rule 3).
    */
-  async updateFilter(viewer: Viewer, listId: string, filter: unknown): Promise<SmartList> {
+  async updateFilterFromParams(viewer: Viewer, listId: string, params: Record<string, string>): Promise<SmartList> {
     const list = await this.editable(viewer, listId);
+    return this.applyFilter(viewer, list, listFilterFromParams(list.entity, params).filter);
+  }
+
+  /**
+   * The saved list of this entity the viewer may change, for "Edit filters" on the entity list,
+   * with whether that list can show its filter as it is; null otherwise.
+   */
+  async findEditable(
+    viewer: Viewer,
+    listId: string,
+    entity: SmartListEntity
+  ): Promise<{ id: string; name: string; shownExactly: boolean } | null> {
+    const list = UUID_RE.test(listId) ? await this.repo.findById(viewer.agencyId, listId) : null;
+    if (!list || list.entity !== entity || !canEditList(viewer, list)) return null;
+    const parsed = parseStoredFilter(list.entity, list.filter);
+    return { id: list.id, name: list.name, shownExactly: parsed.ok && shownExactly(parsed.filter) };
+  }
+
+  private async applyFilter(viewer: Viewer, list: SmartList, filter: unknown): Promise<SmartList> {
     const parsed: Record<string, unknown> =
       list.entity === 'opportunity' ? opportunityListFilterSchema.parse(filter) : inquiryListFilterSchema.parse(filter);
 
@@ -243,7 +264,7 @@ export class SmartListService {
       const creator = await this.repo.countByMember(viewer.agencyId, list.created_by);
       if (creator.matchLists >= MAX_MATCH_LISTS_PER_MEMBER) throw new DomainError('smartLists.errors.matchListLimit');
     }
-    return this.repo.update(viewer.agencyId, listId, { filter: parsed });
+    return this.repo.update(viewer.agencyId, list.id, { filter: parsed });
   }
 
   /** Shares the viewer's own list with the agency: owners and managers only (rule 4). */

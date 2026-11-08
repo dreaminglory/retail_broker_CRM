@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { BookmarkPlus, Save } from "lucide-react";
+import { BookmarkPlus, Save, TriangleAlert } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,12 +100,12 @@ export function SaveListDialog({ entity }: SaveListDialogProps) {
 }
 
 type UpdateListBarProps = {
-  entity: SmartListEntity;
-  list: { id: string; name: string };
+  /** `shownExactly` false: the page can't show the saved filter as it is, so Update changes it. */
+  list: { id: string; name: string; shownExactly: boolean };
 };
 
 /** Shown on the entity list opened from "Edit filters": saves the filters shown into the list. */
-export function UpdateListBar({ entity, list }: UpdateListBarProps) {
+export function UpdateListBar({ list }: UpdateListBarProps) {
   const t = useTranslations("smartLists.saved");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -113,7 +113,7 @@ export function UpdateListBar({ entity, list }: UpdateListBarProps) {
 
   function update() {
     startTransition(async () => {
-      const result = await updateListFilterAction({ id: list.id, entity, params: filterParams(searchParams) });
+      const result = await updateListFilterAction({ id: list.id, params: filterParams(searchParams) });
       if (!result.success) {
         toast.error(result.error);
         return;
@@ -128,7 +128,15 @@ export function UpdateListBar({ entity, list }: UpdateListBarProps) {
       role="status"
       className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3"
     >
-      <p className="min-w-0 break-words text-sm">{t("editing", { name: list.name })}</p>
+      <div className="min-w-0 space-y-1">
+        <p className="break-words text-sm">{t("editing", { name: list.name })}</p>
+        {!list.shownExactly && (
+          <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+            <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t("notShownExactly")}
+          </p>
+        )}
+      </div>
       <div className="flex flex-wrap gap-2">
         <Link href={`/lists/${list.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
           {t("cancel")}

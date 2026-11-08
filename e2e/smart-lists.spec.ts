@@ -50,6 +50,15 @@ test('a broker saves a list from the deal filters and works it through to List d
     await expect(page.getByRole('heading', { name: m.smartLists.overview.title })).toBeVisible();
     await expect(page.getByRole('link', { name: new RegExp(m.smartLists.builtIn.noNextAction) })).toBeVisible();
 
+    async function scheduleTask(title: string) {
+      await page.getByRole('button', { name: m.OpportunityTaskList.addBtn }).click();
+      const taskDialog = page.getByRole('dialog');
+      await taskDialog.getByLabel(m.OpportunityTaskList.taskTitleLabel).fill(title);
+      await taskDialog.getByLabel(m.OpportunityTaskList.dueAtLabel).fill(dateTimeLocal(2, 10));
+      await taskDialog.getByRole('button', { name: m.OpportunityTaskList.submitAdd }).click();
+      await expect(taskDialog).toBeHidden();
+    }
+
     // Save the run's deals without a next action as a list.
     await page.goto(`/opportunities?search=${encodeURIComponent(tag)}&next=none`);
     await page.getByRole('button', { name: m.smartLists.saved.saveAsList }).click();
@@ -61,6 +70,11 @@ test('a broker saves a list from the deal filters and works it through to List d
     await expect(page.getByRole('heading', { name: listName })).toBeVisible();
     await expect(page.getByText(formatMessage(appLocale, m.smartLists.page.dealCount, { count: 2 }))).toBeVisible();
 
+    // A list saved from the page opens in Edit filters without the warning.
+    await page.getByRole('link', { name: m.smartLists.saved.editFilters }).click();
+    await expect(page.getByRole('button', { name: m.smartLists.saved.updateList })).toBeVisible();
+    await expect(page.getByText(m.smartLists.saved.notShownExactly)).toHaveCount(0);
+
     // It is under Saved after a reload, with its count.
     await page.goto('/lists');
     await expect(page.getByRole('link', { name: new RegExp(listName) })).toContainText('2');
@@ -71,24 +85,17 @@ test('a broker saves a list from the deal filters and works it through to List d
     await page.waitForURL(/\/opportunities\/[0-9a-f-]+\?.*list=/);
     const bar = page.getByRole('navigation', { name: formatMessage(appLocale, q.label, { name: listName }) });
     await expect(bar).toContainText(formatMessage(appLocale, q.position, { pos: 1, total: 2 }));
-    const firstDeal = page.url();
+    const firstDealPath = new URL(page.url()).pathname;
 
-    for (const [i, expected] of [[1, { pos: 2, total: 1 }], [2, null]] as const) {
-      await page.getByRole('button', { name: m.OpportunityTaskList.addBtn }).click();
-      const taskDialog = page.getByRole('dialog');
-      await taskDialog.getByLabel(m.OpportunityTaskList.taskTitleLabel).fill(`E2E call ${i} ${tag}`);
-      await taskDialog.getByLabel(m.OpportunityTaskList.dueAtLabel).fill(dateTimeLocal(2, 10));
-      await taskDialog.getByRole('button', { name: m.OpportunityTaskList.submitAdd }).click();
-      await expect(taskDialog).toBeHidden();
+    // Deal 1 gets a next action and leaves the list: Next opens the other deal, one left.
+    await scheduleTask(`E2E call 1 ${tag}`);
+    await bar.getByRole('link', { name: q.next, exact: true }).click();
+    await page.waitForURL((url) => url.pathname.startsWith('/opportunities/') && url.pathname !== firstDealPath);
+    await expect(bar).toContainText(formatMessage(appLocale, q.position, { pos: 2, total: 1 }));
 
-      await bar.getByRole('link', { name: q.next, exact: true }).click();
-      if (expected) {
-        await page.waitForURL((url) => url.pathname.startsWith('/opportunities/') && url.href !== firstDeal);
-        await expect(bar).toContainText(formatMessage(appLocale, q.position, expected));
-      }
-    }
-
-    // After the last deal: List done, and the list is empty.
+    // Deal 2 too: Next ends the list with List done, and the list is empty.
+    await scheduleTask(`E2E call 2 ${tag}`);
+    await bar.getByRole('link', { name: q.next, exact: true }).click();
     await page.waitForURL(/\/lists\/[0-9a-f-]{36}\?done=1/);
     await expect(page.getByText(q.doneTitle)).toBeVisible();
     await expect(page.getByText(m.smartLists.page.emptyTitle)).toBeVisible();
@@ -137,4 +144,15 @@ test('a manager shares a list and a broker sees it read-only', async ({ page, m,
   } finally {
     if (listId) await serviceRest(`smart_lists?id=eq.${listId}`, { method: 'DELETE' });
   }
+});
+
+test('Edit filters warns when the page cannot show a list filter as it is', async ({ page, m, signInAs }) => {
+  // The seeded "SL My hot deals" is { temperature: hot, assigned_to: me }; the deal list has no "me".
+  await signInAs('broker@alpha.bg');
+  await page.goto('/lists');
+  await page.getByRole('link', { name: /SL My hot deals/ }).click();
+  await page.getByRole('link', { name: m.smartLists.saved.editFilters }).click();
+  await page.waitForURL(/\/opportunities\?.*list=/);
+  await expect(page.getByText(m.smartLists.saved.notShownExactly)).toBeVisible();
+  await expect(page.getByRole('button', { name: m.smartLists.saved.updateList })).toBeVisible();
 });

@@ -4,7 +4,7 @@ import { createFakeSupabase, type FakeSupabase } from '@/test/fake-supabase';
 
 let fake: FakeSupabase;
 
-const lists = { save: vi.fn(), rename: vi.fn(), updateFilter: vi.fn(), remove: vi.fn(), share: vi.fn(), unshare: vi.fn() };
+const lists = { save: vi.fn(), rename: vi.fn(), updateFilterFromParams: vi.fn(), remove: vi.fn(), share: vi.fn(), unshare: vi.fn() };
 const revalidatePath = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({ createSupabaseServer: async () => fake.client }));
@@ -16,7 +16,7 @@ vi.mock('@/domain/smart-lists/service', () => ({
   SmartListService: class {
     save = lists.save;
     rename = lists.rename;
-    updateFilter = lists.updateFilter;
+    updateFilterFromParams = lists.updateFilterFromParams;
     remove = lists.remove;
     share = lists.share;
     unshare = lists.unshare;
@@ -35,7 +35,7 @@ beforeEach(() => {
   fake = createFakeSupabase({ role: 'broker', userId: ME, agencyId: 'agency-1' });
   lists.save.mockResolvedValue({ id: LIST_ID });
   lists.rename.mockResolvedValue({ id: LIST_ID });
-  lists.updateFilter.mockResolvedValue({ id: LIST_ID });
+  lists.updateFilterFromParams.mockResolvedValue({ id: LIST_ID });
   lists.remove.mockResolvedValue(undefined);
 });
 
@@ -98,13 +98,12 @@ describe('renameListAction, updateListFilterAction, deleteListAction', () => {
     expect(revalidatePath).toHaveBeenCalledWith(`/lists/${LIST_ID}`);
   });
 
-  it('updates the filter from the URL the list page shows', async () => {
-    await updateListFilterAction({ id: LIST_ID, entity: 'opportunity', params: { status: 'all', next: 'none' } });
-    expect(lists.updateFilter).toHaveBeenCalledWith(
-      expect.objectContaining(viewer),
-      LIST_ID,
-      expect.objectContaining({ next_action: 'none', sort: 'created_desc' })
-    );
+  it('hands the URL the list page shows to the service, which maps it by the list entity', async () => {
+    await updateListFilterAction({ id: LIST_ID, params: { status: 'all', next: 'none' } });
+    expect(lists.updateFilterFromParams).toHaveBeenCalledWith(expect.objectContaining(viewer), LIST_ID, {
+      status: 'all',
+      next: 'none',
+    });
   });
 
   it('deletes', async () => {

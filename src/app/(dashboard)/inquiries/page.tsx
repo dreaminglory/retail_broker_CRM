@@ -10,7 +10,7 @@ import { z } from "zod";
 import { InquiriesPageClient } from "./inquiries-page-client";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 import { getAgencySettings } from "@/domain/agencies/settings";
-import { SmartListService, canEditList, type Viewer } from "@/domain/smart-lists/service";
+import { SmartListService } from "@/domain/smart-lists/service";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -64,7 +64,7 @@ export default async function InquiriesPage({
   }
 
   // Fetch all required data in parallel
-  const viewer: Viewer = { userId: user!.id, agencyId, role: membership?.role ?? "" };
+  const viewer = { userId: user!.id, agencyId, role: membership?.role ?? "" };
   const [paged, leadSources, stages, brokers, settings, editingList] = await Promise.all([
     id ? loadInquiryById(supabase, agencyId, id) : loadPage(page, PAGE_SIZE, (offset, limit) =>
       new InquiryService(supabase).listPage(agencyId, {
@@ -78,7 +78,7 @@ export default async function InquiriesPage({
     new StageRepository(supabase).findActive(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
     getAgencySettings(agencyId),
-    params.list ? loadEditingList(new SmartListService(supabase), viewer, params.list) : null,
+    params.list ? new SmartListService(supabase).findEditable(viewer, params.list, "inquiry") : null,
   ]);
 
   const inquiries = paged.rows;
@@ -118,11 +118,4 @@ async function loadInquiryById(
   const inquiry = valid ? await new InquiryService(supabase).getById(id, agencyId) : null;
   const rows = inquiry ? [inquiry] : [];
   return { rows, total: rows.length, info: pageInfo(1, PAGE_SIZE, rows.length) };
-}
-
-/** The saved inquiry list opened from "Edit filters", if the viewer may change it; else none. */
-async function loadEditingList(service: SmartListService, viewer: Viewer, listId: string) {
-  const list = await service.resolve(viewer, listId, "mine");
-  if (list?.kind !== "saved" || list.entity !== "inquiry" || !canEditList(viewer, list.list)) return null;
-  return { id: list.id, name: list.list.name };
 }

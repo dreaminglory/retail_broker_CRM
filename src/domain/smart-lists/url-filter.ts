@@ -1,17 +1,18 @@
 /**
- * The opportunity list's URL filters as a saved list filter, and back (spec: smart-lists rule 3,
+ * The entity lists' URL filters as a saved list filter, and back (AD-063; spec: smart-lists rule 3,
  * "Save as list" and "Edit filters"). Saving goes through `toListFilter`, the same mapping the
  * list page reads with, so a saved list shows exactly the rows the page showed.
  */
 
 import { z } from 'zod';
-import { toListFilter } from '../opportunities/service';
+import { toListFilter } from '../opportunities/list-filter';
 import {
   opportunityStatusSchema,
   opportunityTypeSchema,
   parseOpportunityListFilters,
 } from '../opportunities/validation';
-import type { InquiryListFilter, OpportunityListFilter } from './validation';
+import type { ListFilter, SmartListEntity } from './types';
+import { inquiryStatusSchema, type InquiryListFilter, type OpportunityListFilter } from './validation';
 
 /** The opportunity list's search params, as the page reads them. */
 export type OpportunityListParams = {
@@ -86,7 +87,7 @@ export function opportunityParamsFromFilter(filter: OpportunityListFilter): URLS
 
 // ── Inquiries ───────────────────────────────────────────────────────────────
 
-const inquiryStatusSchema = z.enum(['new', 'contacted', 'converted', 'dismissed']);
+const INQUIRY_STATUSES = inquiryStatusSchema.options;
 
 /**
  * The inquiry list's URL filters (status and search, all it shows) as a filter, newest first as
@@ -108,4 +109,50 @@ export function inquiryParamsFromFilter(filter: InquiryListFilter): URLSearchPar
   if (filter.status?.length === 1) params.set('status', filter.status[0]);
   if (filter.search) params.set('search', filter.search);
   return params;
+}
+
+// ── Either entity ───────────────────────────────────────────────────────────
+
+/** The entity list's URL filters as that entity's saved filter. */
+export function listFilterFromParams(entity: SmartListEntity, params: Record<string, string | undefined>): ListFilter {
+  return entity === 'opportunity'
+    ? { entity, filter: opportunityFilterFromParams(params) }
+    : { entity, filter: inquiryFilterFromParams(params) };
+}
+
+/** A saved filter as its entity list's URL ("Edit filters"). */
+export function listParamsFromFilter(list: ListFilter): URLSearchParams {
+  return list.entity === 'opportunity' ? opportunityParamsFromFilter(list.filter) : inquiryParamsFromFilter(list.filter);
+}
+
+/**
+ * Whether the entity list can show this filter as it is. When it can't (`me`, `unassigned`,
+ * several values of a key, another sort), "Update list" would replace those parts with what the
+ * page shows, so the page warns first.
+ */
+export function shownExactly(list: ListFilter): boolean {
+  const roundTrip = listFilterFromParams(list.entity, Object.fromEntries(listParamsFromFilter(list)));
+  return canonical(list) === canonical(roundTrip);
+}
+
+/** The filter as the SQL reads it: defaults filled in, value arrays in one order. */
+function canonical(list: ListFilter): string {
+  const filter: Record<string, unknown> = { ...list.filter };
+  if (list.entity === 'opportunity') {
+    filter.status ??= ['active'];
+    filter.sort ??= 'created_desc';
+  } else {
+    filter.sort ??= 'received_desc';
+    // No status is every status on the inquiry list.
+    if (Array.isArray(filter.status) && INQUIRY_STATUSES.every((s) => (filter.status as string[]).includes(s))) {
+      delete filter.status;
+    }
+  }
+  if (typeof filter.search === 'string') filter.search = filter.search.trim() || undefined;
+  return JSON.stringify(
+    Object.keys(filter)
+      .filter((key) => filter[key] !== undefined)
+      .sort()
+      .map((key) => [key, Array.isArray(filter[key]) ? [...(filter[key] as string[])].sort() : filter[key]])
+  );
 }

@@ -343,34 +343,33 @@ describe('rename, updateFilter and remove', () => {
     expect(repo.update).not.toHaveBeenCalled();
   });
 
-  it('updates the filter with the schema of the list entity', async () => {
-    await service.updateFilter(broker, LIST_ID, { type: ['seller'], sort: 'created_desc' });
-    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { filter: { type: ['seller'], sort: 'created_desc' } });
-
-    repo.findById.mockResolvedValue(savedList({ entity: 'inquiry', filter: {} }));
-    await expect(service.updateFilter(broker, LIST_ID, { type: ['seller'] })).rejects.toHaveProperty('name', 'ZodError');
+  it('updates the filter from the list page URL', async () => {
+    await service.updateFilterFromParams(broker, LIST_ID, { type: 'seller' });
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, {
+      filter: { status: ['active'], type: ['seller'], sort: 'created_desc' },
+    });
   });
 
-  it('a stale list can be fixed by saving a filter of the current shape (rule 5)', async () => {
+  it('a stale list can be fixed by saving the filters the page shows (rule 5)', async () => {
     repo.findById.mockResolvedValue(savedList({ filter: { old_key: 1 } }));
-    await service.updateFilter(broker, LIST_ID, { status: ['active'] });
-    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { filter: { status: ['active'] } });
+    await service.updateFilterFromParams(broker, LIST_ID, {});
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { filter: { status: ['active'], sort: 'created_desc' } });
   });
 
   it('refuses turning on new matches past the creator cap, but not keeping it on', async () => {
     repo.countByMember.mockResolvedValue({ total: 6, matchLists: MAX_MATCH_LISTS_PER_MEMBER });
-    await expect(service.updateFilter(broker, LIST_ID, { has_new_matches: true })).rejects.toMatchObject({
+    await expect(service.updateFilterFromParams(broker, LIST_ID, { matches: 'new' })).rejects.toMatchObject({
       code: 'smartLists.errors.matchListLimit',
     });
 
     repo.findById.mockResolvedValue(savedList({ filter: { has_new_matches: true } }));
-    await service.updateFilter(broker, LIST_ID, { has_new_matches: true, type: ['buyer'] });
+    await service.updateFilterFromParams(broker, LIST_ID, { matches: 'new', type: 'buyer' });
     expect(repo.update).toHaveBeenCalledTimes(1);
   });
 
   it('counts the cap against the list creator when a manager edits a shared list', async () => {
     repo.findById.mockResolvedValue(savedList({ shared: true, created_by: 'u-broker' }));
-    await service.updateFilter(manager, LIST_ID, { has_new_matches: true });
+    await service.updateFilterFromParams(manager, LIST_ID, { matches: 'new' });
     expect(repo.countByMember).toHaveBeenCalledWith('a-1', 'u-broker');
   });
 
@@ -382,7 +381,7 @@ describe('rename, updateFilter and remove', () => {
   it('refuses a list the viewer cannot change and one they cannot see', async () => {
     repo.findById.mockResolvedValue(savedList({ shared: true }));
     await expect(service.rename(broker, LIST_ID, 'Mine now')).rejects.toMatchObject({ code: 'errors.forbidden' });
-    await expect(service.updateFilter(broker, LIST_ID, {})).rejects.toMatchObject({ code: 'errors.forbidden' });
+    await expect(service.updateFilterFromParams(broker, LIST_ID, {})).rejects.toMatchObject({ code: 'errors.forbidden' });
     await expect(service.remove(broker, LIST_ID)).rejects.toMatchObject({ code: 'errors.forbidden' });
 
     repo.findById.mockResolvedValue(null);
@@ -390,6 +389,38 @@ describe('rename, updateFilter and remove', () => {
     await expect(service.remove(broker, 'not-a-uuid')).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
     expect(repo.update).not.toHaveBeenCalled();
     expect(repo.remove).not.toHaveBeenCalled();
+  });
+});
+
+describe('findEditable and updateFilterFromParams (Edit filters, Update list)', () => {
+  beforeEach(() => {
+    repo.update.mockImplementation(async (_a: string, _id: string, patch: object) => savedList(patch));
+  });
+
+  it('gives the list the viewer may change, with whether the page can show its filter', async () => {
+    repo.findById.mockResolvedValue(savedList({ filter: { temperature: ['hot'] } }));
+    expect(await service.findEditable(broker, LIST_ID, 'opportunity')).toEqual({ id: LIST_ID, name: 'My hot deals', shownExactly: true });
+
+    repo.findById.mockResolvedValue(savedList({ filter: { temperature: ['hot'], assigned_to: 'me' } }));
+    expect(await service.findEditable(broker, LIST_ID, 'opportunity')).toMatchObject({ shownExactly: false });
+
+    // A stale filter can't be shown either: Update list replaces it (rule 5).
+    repo.findById.mockResolvedValue(savedList({ filter: { old_key: 1 } }));
+    expect(await service.findEditable(broker, LIST_ID, 'opportunity')).toMatchObject({ shownExactly: false });
+  });
+
+  it('gives null for another entity, a list the viewer cannot change, or a bad id', async () => {
+    repo.findById.mockResolvedValue(savedList());
+    expect(await service.findEditable(broker, LIST_ID, 'inquiry')).toBeNull();
+    expect(await service.findEditable(manager, LIST_ID, 'opportunity')).toBeNull();
+    expect(await service.findEditable(broker, 'nope', 'opportunity')).toBeNull();
+  });
+
+  it('maps the params by the list own entity, whatever the caller thinks it is', async () => {
+    repo.findById.mockResolvedValue(savedList({ entity: 'inquiry', filter: {} }));
+    await service.updateFilterFromParams(broker, LIST_ID, { status: 'new', type: 'buyer' });
+    expect(repo.update).toHaveBeenCalledWith('a-1', LIST_ID, { filter: { status: ['new'], sort: 'received_desc' } });
+    expect(repo.findById).toHaveBeenCalledTimes(1);
   });
 });
 

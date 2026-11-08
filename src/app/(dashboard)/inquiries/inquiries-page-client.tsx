@@ -57,7 +57,7 @@ interface InquiriesPageClientProps {
   /** Converted inquiries that joined a deal other than the one they started, by inquiry id. */
   joinedDeals: Record<string, { id: string; title: string }>;
   /** The saved list whose filters are being edited, if any. */
-  editingList: { id: string; name: string } | null;
+  editingList: { id: string; name: string; shownExactly: boolean } | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -183,7 +183,7 @@ export function InquiriesPageClient({
         </div>
       </div>
 
-      {editingList && <UpdateListBar entity="inquiry" list={editingList} />}
+      {editingList && <UpdateListBar list={editingList} />}
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="mb-4 flex gap-3">

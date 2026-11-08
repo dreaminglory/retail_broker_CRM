@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
-import { IntlMessageFormat } from 'intl-messageformat';
+import { createTranslator } from 'next-intl';
 import bg from '../messages/bg.json' with { type: 'json' };
 import en from '../messages/en.json' with { type: 'json' };
 
@@ -53,9 +53,9 @@ export function dateTimeLocal(days: number, hour: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
 }
 
-/** A UI string with ICU values (plurals), as next-intl renders it in this locale. */
+/** A UI string with ICU values (plurals), formatted by next-intl as the app does in this locale. */
 export function formatMessage(locale: AppLocale, message: string, values: Record<string, string | number>): string {
-  return String(new IntlMessageFormat(message, locale).format(values));
+  return createTranslator({ locale, messages: { message } })('message', values);
 }
 
 /**

@@ -418,6 +418,16 @@ After `npx supabase db reset`: test:db 717/717, test:services 1030/1030, test 79
 **Files likely touched:** `e2e/smart-lists.spec.ts`, `e2e/fixtures.ts`
 **Estimated scope:** S
 
+Notes (2026-11-08, Phase 3 review fixes): Edit filters now warns when the page can't show a
+list's filter as it is (`shownExactly`; seen on the seeded "SL My hot deals", which has
+`assigned_to: me`). Update list maps the params by the list's own entity (`updateFilterFromParams`;
+the client no longer sends it), both entity pages load the edited list with
+`SmartListService.findEditable`, `toListFilter` moved to the pure `opportunities/list-filter.ts`,
+`smartListEntitySchema` / `inquiryStatusSchema` are shared from `validation.ts`, and the E2E
+formats plurals with next-intl's `createTranslator` (no undeclared `intl-messageformat`).
+AD-063 records the URL-mapping decision. After `npx supabase db reset`: test:db 717/717,
+test:services 1037/1037, test 798 passed, test:e2e 76/76.
+
 ## Checkpoint 3: Complete
 - [ ] AC-1…AC-10 met; full Definition of Done (typecheck, lint, test, `db reset` + `test:db`, `test:services`, `test:e2e`, browser in bg and en)
 - [ ] `docs/domain-model.md` §2.10 and §4 as built; BRD FR-LST rows set
