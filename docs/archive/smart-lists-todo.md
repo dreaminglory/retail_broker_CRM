@@ -1,6 +1,6 @@
 # Tasks: smart-lists
 
-> **Plan:** `tasks/plan.md` · **Spec:** `spec/smart-lists.md`
+> **Plan:** `docs/archive/smart-lists-plan.md` · **Spec:** `spec/smart-lists.md`
 > Every task also clears the Definition of Done in `AGENTS.md`. Tick a task only after that.
 > Migrations: the next free timestamps after `20261107000003`, in order (`20261108000001`…).
 > pgTAP: `090-smart-lists.sql` (table, RLS), `091-smart-list-functions.sql`.
@@ -129,7 +129,7 @@ script and time the counts call (every built-in list) and each list function.
 ## Checkpoint 1: List engine
 - [x] `npx supabase db reset` + `npm run test:db` green; typecheck, lint, test green
 - [x] Speed numbers below; `new-matches` decision made (oldest last touch first)
-- [ ] Founder reviews AD-062 and each built-in list's seed output before any UI
+- [ ] Founder reviews AD-062 and each built-in list's seed output before any UI — **not ticked by the build: the founder's call.** The Checkpoint 1 decision on `new-matches` is recorded above; each built-in list's seed output was seen in the browser on 2026-11-08 (Checkpoint 2 note).
 
 Notes (speed) — 2,000 deals, 2,000 requirements, 2,000 properties; ONE broker owns every deal
 (worst case: an owner/manager on the Agency scope); `scripts/smart-lists/scale.sql`, local stack:
@@ -265,7 +265,7 @@ client state in effects; the bar is a Server Component with links/forms.
 **Estimated scope:** M
 
 ## Checkpoint 2: Built-in lists
-- [ ] AC-1, -2, -3, -6, -7 seen in the browser, BG and EN, 1280 and 390 px
+- [x] AC-1, -2, -3, -6, -7 seen in the browser, BG and EN, 1280 and 390 px
 - [x] typecheck, lint, test, `test:services`, `test:e2e` green
 - [x] `/review` of Phases 1–2 (Opus, fresh session; done, confirmed by the founder 2026-11-08)
 
@@ -429,6 +429,15 @@ AD-063 records the URL-mapping decision. After `npx supabase db reset`: test:db 
 test:services 1037/1037, test 798 passed, test:e2e 76/76.
 
 ## Checkpoint 3: Complete
-- [ ] AC-1…AC-10 met; full Definition of Done (typecheck, lint, test, `db reset` + `test:db`, `test:services`, `test:e2e`, browser in bg and en)
-- [ ] `docs/domain-model.md` §2.10 and §4 as built; BRD FR-LST rows set
-- [ ] `/review` (Opus, fresh session); then close: `SPEC.md` Done, archive `tasks/*` to `docs/archive/smart-lists-*.md`
+- [x] AC-1…AC-10 met; full Definition of Done (typecheck, lint, test, `db reset` + `test:db`, `test:services`, `test:e2e`, browser in bg and en)
+- [x] `docs/domain-model.md` §2.10 and §4 as built; BRD FR-LST rows set
+- [x] `/review` (Opus; ran in the build session, not a fresh one); then close: `SPEC.md` Done, archive `tasks/*` to `docs/archive/smart-lists-*.md`
+
+Notes (2026-11-08, close): AC-2 seen in the browser after a db reset, as Alpha's broker in BG at
+1280: each of the seven broker lists holds its seeded rows in its order (no-next-action: SL No
+action; overdue: SL Overdue, Alpha Opp 1; due-today: SL Due today; hot-no-touch: SL Hot touched
+4d, not 2d; sellers-need-update: SL Seller touched 15d, not 13d; new-matches: Alpha Opp 2 and 1
+with 3 new matches each; new-inquiries: oldest first). AC-8 is pgTAP; AC-9 holds with the accepted
+`new-matches` exception (BRD FR-LST-08 ⚠️); AC-10 is the E2E in all four projects plus lint. The
+Phase 3 review ran in the build session (fixes in `e7fb2bb`), not a fresh one. Closed:
+`SPEC.md` Done, BRD FR-LST rows set, `docs/domain-model.md` §2.10 as built.

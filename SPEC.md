@@ -31,7 +31,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Buyer/tenant requirements | `requirements` | Done |
 | Inquiry can create **or join** an opportunity | `conversion-join` | Done |
 | Requirement ↔ property matching | `matching` | Done |
-| Smart Lists | `smart-lists` | In progress |
+| Smart Lists | `smart-lists` | Done |
 | Onboarding dry run with a real agency export | `go-live` | Planned |
 
 ## 3. Capability map
@@ -48,7 +48,7 @@ starts; pilot evidence sets the order.
 | `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Done |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
-| `smart-lists` | Saved filters with counts, worked through one by one | `matching` | In progress |
+| `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Done |
 | `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Planned |
 | `go-live` | Domain, Resend domain, hosting, crons, prod env; E2E and coverage gate in CI; founder review of `bg.json`; dry run | `reminders`, `smart-lists`, `property-import` | Planned |
 | `lead-intake` | Portal inquiry emails (homes.bg, imot.bg, alo.bg) and a website form → inquiries; parser fixtures per portal | pilot | Later |
