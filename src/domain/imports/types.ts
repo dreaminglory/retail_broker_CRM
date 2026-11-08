@@ -23,9 +23,12 @@ export type ImportRowStatus =
 
 export type DuplicateStrategy = 'skip' | 'create';
 
+/** `properties` and `areas` are only present for property jobs (AD-064). */
+export type RevertCounts = { contacts: number; inquiries: number; properties?: number; areas?: number };
+
 export type RevertResult = {
-  deleted: { contacts: number; inquiries: number };
-  kept: { contacts: number; inquiries: number };
+  deleted: RevertCounts;
+  kept: RevertCounts;
 };
 
 export interface ImportJob {

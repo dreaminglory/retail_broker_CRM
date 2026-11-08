@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 69th migration
-(`20261109000003_import_commit_properties.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 70th migration
+(`20261109000004_import_revert_properties.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -746,8 +746,13 @@ stateDiagram-v2
 Revert deletes only created records nobody has worked on since (AD-036). A contact is kept if
 it was edited or gained a note, task, opportunity, participant, inquiry or merge; the note its
 own import row brought in doesn't count unless it was edited. An inquiry is kept if it was
-edited or converted. Rows that created a record become `reverted` or `revert_skipped`; rows
-that created nothing keep their status.
+edited or converted. A property (property jobs, AD-064) is kept if it was edited or archived,
+or has a note, a task, an opportunity link, a listing not from the job or changed since, or a
+party not from the job, ended or changed (M4). Properties go first (their listings and parties
+cascade), then the contact rule, which then finds their owners free; last, the job's areas no
+property or requirement uses. A property job's result also counts `properties` and `areas`.
+Rows that created a record become `reverted` or `revert_skipped`; rows that created nothing
+keep their status.
 
 A duplicate found only at commit (`match_reason = 'db_recheck'`) is `skipped`, or created
 under the `create` strategy. The "update existing" strategy isn't built and isn't offered;
@@ -910,8 +915,9 @@ The "Enforced by" column tells you which layer to change and test.
 | S2 | A smart list's `agency_id`, `created_by` and `entity` never change; `entity` is `opportunity` or `inquiry`; the name is 1–60 characters and unique per member ignoring case | trigger `smart_lists_immutable`, `CHECK`s, unique index `uq_smart_lists_member_name` + `090-smart-lists.sql` |
 | S3 | A member holds at most 50 smart lists, at most 5 of them opportunity lists with `has_new_matches` | triggers `smart_lists_limit` (`smartLists.errors.limit`) and `smart_lists_match_limit` (`smartLists.errors.matchListLimit`) + `090-smart-lists.sql`, `095-smart-list-review-fixes.sql` |
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
-| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql` |
+| M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18; for a property job, a party only on properties this revert deletes doesn't) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql`, `102-property-import-revert.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
+| M4 | A property import revert never deletes a worked-on property (edited, archived, or with a note, task, opportunity link, a listing not from the job or changed since, or a party not from the job, ended or changed), its owner, a contact that existed before the import, or an area a property or requirement uses | RPC `import_revert` + `102-property-import-revert.sql` |
 
 ---
 

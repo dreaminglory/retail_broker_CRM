@@ -77,7 +77,7 @@ These are the places where the plan makes the spec more concrete. Task 1 records
 - [x] Task 3: Validation: location, listings, assignee — Sonnet (Opus review)
 - [x] Task 4: Validation: duplicates and owners — **Opus**
 - [x] Task 5: `import_commit_properties` — **Opus**
-- [ ] Task 6: Revert for property jobs — **Opus**
+- [x] Task 6: Revert for property jobs — **Opus**
 - [ ] Task 7: Fixtures and the 2,000-row scale run — Sonnet
 
 ### Checkpoint 1 (founder)

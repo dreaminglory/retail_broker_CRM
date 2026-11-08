@@ -184,13 +184,13 @@ are updated, and M4 is added: a property revert never deletes a worked-on proper
 area.
 
 **Acceptance criteria:**
-- [ ] pgTAP, one kept case per kind of work: an edit, a note, a task, a candidate link, a new listing, a price change, an added or ended party, and an archive each keep the property, and its owner is kept too; untouched properties, their listings and parties, their owners and their unused areas are deleted.
-- [ ] An owner contact that existed before the import is never deleted. An area that a kept property or a requirement uses is kept.
-- [ ] A contact and an inquiry job revert exactly as before (existing pgTAP and integration tests green).
+- [x] pgTAP, one kept case per kind of work: an edit, a note, a task, a candidate link, a new listing, a price change, an added or ended party, and an archive each keep the property, and its owner is kept too; untouched properties, their listings and parties, their owners and their unused areas are deleted.
+- [x] An owner contact that existed before the import is never deleted. An area that a kept property or a requirement uses is kept.
+- [x] A contact and an inquiry job revert exactly as before (existing pgTAP and integration tests green).
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`; `npm run test:services`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`; `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 5
 **Files likely touched:** `supabase/migrations/<ts>_import_revert_properties.sql`, `supabase/tests/database/102-property-import-revert.sql`, `src/domain/imports/types.ts`, `src/domain/imports/service.integration.test.ts`, `docs/domain-model.md`

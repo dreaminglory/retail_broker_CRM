@@ -291,4 +291,43 @@ describeServices('Property import against the local stack', () => {
       expect(props!.every((p) => p.area_id === null)).toBe(true);
     });
   });
+
+  describe('revert (Task 6)', () => {
+    it('deletes the untouched property, its owner and area, and keeps the one with a note and its owner', async () => {
+      const rows = [
+        row({ Тип: 'гараж', Град: 'София', Квартал: 'Т6 Квартал', Адрес: 'ул. Т6 1', Площ: '18', Цена: '20000', Собственик: 'Т6 Едно', Телефон: '0899 666 001' }),
+        row({ Тип: 'гараж', Град: 'София', Квартал: 'Т6 Квартал', Адрес: 'ул. Т6 2', Площ: '18', Собственик: 'Т6 Две', Телефон: '0899 666 002' }),
+      ];
+      const { jobId, service } = await stage(rows);
+      await service.validate(owner.agencyId, jobId, owner.userId);
+      await service.commitBatch(owner.agencyId, jobId);
+
+      // Tracked first so cleanup removes what the revert keeps (it runs in reverse).
+      const { data: areas } = await owner.db.from('areas').select('id').eq('import_job_id', jobId);
+      areas!.forEach((a) => cleanup.track('areas', a.id));
+      const { data: contacts } = await owner.db.from('contacts').select('id').eq('import_job_id', jobId);
+      contacts!.forEach((c) => cleanup.track('contacts', c.id));
+      const [untouched, worked] = (await rowsOf(jobId)).map((r) => r.entity_id!);
+      cleanup.track('properties', untouched);
+      cleanup.track('properties', worked);
+
+      const { data: note, error } = await owner.db
+        .from('notes')
+        .insert({ agency_id: owner.agencyId, property_id: worked, content: 'Viewed it', created_by: owner.userId })
+        .select('id')
+        .single();
+      expect(error).toBeNull();
+      cleanup.track('notes', note!.id);
+
+      const result = await service.revert(owner.agencyId, jobId);
+
+      expect(result).toEqual({
+        deleted: { contacts: 1, inquiries: 0, properties: 1, areas: 0 },
+        kept: { contacts: 1, inquiries: 0, properties: 1, areas: 1 },
+      });
+      const { data: left } = await owner.db.from('properties').select('id').in('id', [untouched, worked]);
+      expect(left).toEqual([{ id: worked }]);
+      expect((await rowsOf(jobId)).map((r) => r.status)).toEqual(['reverted', 'revert_skipped']);
+    });
+  });
 });
