@@ -1423,6 +1423,8 @@
       "missingNameMapping": "Изберете колона за името.",
       "missingIdentifierMapping": "Изберете колона за телефон, имейл или външен ID.",
       "missingInquiryMapping": "Изберете колона за обаждащия се или темата.",
+      "missingPropertyTypeMapping": "Изберете колона за вида на имота.",
+      "missingSettlementMapping": "Изберете колона за населеното място.",
       "unknownSource": "Този ред е с непознат източник на лийдове.",
       "unknownAssignee": "Този ред е възложен на човек извън агенцията ви.",
       "dbWrite": "Този ред не можа да се запази."

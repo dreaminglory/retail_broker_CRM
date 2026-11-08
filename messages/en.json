@@ -1423,6 +1423,8 @@
       "missingNameMapping": "Map a column to a name.",
       "missingIdentifierMapping": "Map a column to a phone, email or external ID.",
       "missingInquiryMapping": "Map a column to the caller or the subject.",
+      "missingPropertyTypeMapping": "Map a column to the property type.",
+      "missingSettlementMapping": "Map a column to the settlement.",
       "unknownSource": "This row has an unknown lead source.",
       "unknownAssignee": "This row is assigned to someone who is not in your agency.",
       "dbWrite": "This row couldn't be saved."

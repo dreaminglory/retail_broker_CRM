@@ -63,13 +63,13 @@ In `docs/domain-model.md`, update §2.5 (new entity type and columns) and the mi
   `create_areas: string[]`) in `validation.ts`. `createImportJobSchema` accepts `property`.
 
 **Acceptance criteria:**
-- [ ] Contact and inquiry header mapping is unchanged (pinned test); a Bulgarian property header row maps every spec column.
-- [ ] Each resolver has table-driven tests for every example in the spec's Columns table, plus garbage input. `1 200 лв.` gives 613.55 with `converted: true`.
-- [ ] A row that is invalid for the property form is invalid here: the candidate goes through the property Zod schema from `src/domain/properties/validation.ts`, not a copy of it.
+- [x] Contact and inquiry header mapping is unchanged (pinned test); a Bulgarian property header row maps every spec column.
+- [x] Each resolver has table-driven tests for every example in the spec's Columns table, plus garbage input. `1 200 лв.` gives 613.55 with `converted: true`.
+- [x] A row that is invalid for the property form is invalid here: the candidate goes through the property Zod schema from `src/domain/properties/validation.ts`, not a copy of it.
 
 **Verification:**
-- [ ] `npx vitest run src/domain/imports`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx vitest run src/domain/imports`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 1 (types for the new entity type)
 **Files likely touched:** `src/domain/imports/csv/header-detection.ts`, `src/domain/imports/csv/property-resolvers.ts` (+ test), `src/domain/imports/csv/row-mapper.ts`, `src/domain/imports/types.ts`, `src/domain/imports/validation.ts`

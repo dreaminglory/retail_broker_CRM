@@ -73,7 +73,7 @@ These are the places where the plan makes the spec more concrete. Task 1 records
 
 ### Phase 1: Pipeline (no UI)
 - [x] Task 1: AD-064, schema, address key, audit metadata — **Opus**
-- [ ] Task 2: Parsers: header synonyms, value resolvers, row mapper — Sonnet
+- [x] Task 2: Parsers: header synonyms, value resolvers, row mapper — Sonnet
 - [ ] Task 3: Validation: location, listings, assignee — Sonnet (Opus review)
 - [ ] Task 4: Validation: duplicates and owners — **Opus**
 - [ ] Task 5: `import_commit_properties` — **Opus**

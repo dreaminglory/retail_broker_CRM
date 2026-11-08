@@ -1,4 +1,4 @@
-import { ContactImportField, InquiryImportField } from "../types";
+import type { ContactImportField, ImportEntityType, InquiryImportField, PropertyImportField } from "../types";
 
 // Synonym dictionaries for auto-mapping headers
 const CONTACT_HEADER_SYNONYMS: Record<ContactImportField, string[]> = {
@@ -30,7 +30,48 @@ const INQUIRY_HEADER_SYNONYMS: Record<InquiryImportField, string[]> = {
   status: ["status", "статус", "състояние"]
 };
 
-const HEADER_SYNONYMS = { ...CONTACT_HEADER_SYNONYMS, ...INQUIRY_HEADER_SYNONYMS };
+// Contacts and inquiries keep the merged dictionary they have always used (pinned in
+// header-detection.test.ts); changing it would change their auto-mapping.
+const LEGACY_HEADER_SYNONYMS = { ...CONTACT_HEADER_SYNONYMS, ...INQUIRY_HEADER_SYNONYMS };
+
+// Property columns (spec: property-import, Columns). Order matters: a header goes to the
+// first field it matches, and synonyms longer than four letters also match inside a header.
+// So the owner fields come before `address` ("имейл адрес") and `owner_name` ("телефон на
+// собственика"), rent before sale ("rent price"), floors_total before floor ("floors
+// total"), plot_m2 before area_m2, and year_built before construction ("година на
+// строителство").
+const PROPERTY_HEADER_SYNONYMS: Record<PropertyImportField, string[]> = {
+  owner_phone: ["owner phone", "телефон", "тел", "телефон на собственика", "phone", "gsm", "мобилен"],
+  owner_email: ["owner email", "email", "e-mail", "имейл", "е-поща"],
+  owner_name: ["owner", "owner name", "собственик", "продавач", "име на собственика"],
+  external_ref: ["external ref", "external id", "ref", "id", "reference", "референция", "реф. номер", "референтен номер", "номер на имот", "код", "ид"],
+  rent_price: ["rent price", "rent", "наем", "цена наем", "месечен наем"],
+  sale_price: ["sale price", "price", "цена", "продажна цена", "цена продажба"],
+  listing_status: ["listing status", "status", "статус", "състояние"],
+  listed_at: ["listed at", "listed", "date", "дата", "дата на обява", "дата на публикуване"],
+  assigned_to: ["assigned to", "broker", "agent", "брокер", "агент", "отговорник", "консултант"],
+  plot_m2: ["plot m2", "plot area", "land area", "площ парцел", "площ на парцела", "дворно място", "двор"],
+  area_m2: ["area m2", "size", "sqm", "m2", "м2", "кв.м", "квадратура", "площ", "застроена площ"],
+  floors_total: ["floors total", "total floors", "етажност", "брой етажи", "етажи"],
+  floor: ["floor", "етаж"],
+  year_built: ["year built", "year", "година", "година на строителство", "построен"],
+  construction: ["construction", "building type", "строителство", "конструкция", "тип строителство"],
+  type: ["type", "property type", "тип", "вид", "тип имот", "вид имот"],
+  rooms: ["rooms", "стаи", "брой стаи"],
+  settlement: ["settlement", "city", "town", "населено място", "град", "град/село", "селище"],
+  municipality: ["municipality", "община"],
+  province: ["province", "region", "област"],
+  area: ["area", "neighbourhood", "neighborhood", "район", "квартал", "кв.", "жк", "местност"],
+  address: ["address", "street", "адрес", "улица"],
+  location_note: ["location note", "location", "местоположение", "ориентир"],
+  description: ["description", "notes", "note", "описание", "бележка", "бележки"],
+};
+
+const SYNONYMS_BY_ENTITY: Record<ImportEntityType, Record<string, string[]>> = {
+  contact: LEGACY_HEADER_SYNONYMS,
+  inquiry: LEGACY_HEADER_SYNONYMS,
+  property: PROPERTY_HEADER_SYNONYMS,
+};
 
 // Remove accents/diacritics and normalize spacing/case
 function normalizeHeader(header: string): string {
@@ -48,12 +89,12 @@ function normalizeHeader(header: string): string {
  * Attempts to automatically map an array of raw CSV headers to known ImportField types.
  * Returns a mapping record where keys are Field strings and values are the exact original header strings.
  */
-export function detectHeaders(headers: string[]): Record<string, string> {
+export function detectHeaders(headers: string[], entity: ImportEntityType): Record<string, string> {
   const mapping: Record<string, string> = {};
   const usedHeaders = new Set<string>();
 
   // Check each field type against its synonyms
-  for (const [field, synonyms] of Object.entries(HEADER_SYNONYMS)) {
+  for (const [field, synonyms] of Object.entries(SYNONYMS_BY_ENTITY[entity])) {
     
     // Find the first header that matches a synonym for this field
     for (const originalHeader of headers) {

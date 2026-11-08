@@ -56,7 +56,7 @@ export function ColumnMappingTable({ headers, entityType, initialMapping, onChan
       return;
     }
 
-    const autoMapping = detectHeaders(headers);
+    const autoMapping = detectHeaders(headers, entityType);
     
     // Ensure all fields exist in mapping, even if null
     const fullMapping: Record<string, string | null> = {};

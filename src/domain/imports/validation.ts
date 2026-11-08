@@ -25,7 +25,7 @@ export const createImportJobSchema = z.object({
   delimiter: z.enum([",", ";", "\t", "|"], {
     errorMap: () => ({ message: "import.errors.invalidDelimiter" }),
   }),
-  entity_type: z.enum(["contact", "inquiry"]).default("contact"),
+  entity_type: z.enum(["contact", "inquiry", "property"]).default("contact"),
   headers: z
     .array(z.string())
     .max(IMPORT_LIMITS.MAX_HEADERS, { message: "import.errors.tooManyHeaders" }),
@@ -105,3 +105,27 @@ export const inquiryImportOptionsSchema = z.object({
 });
 
 export type InquiryImportOptionsInput = z.infer<typeof inquiryImportOptionsSchema>;
+
+// Property import (AD-064): only the type and the settlement are required columns.
+export const propertyMappingSchema = z
+  .record(z.string().nullable())
+  .refine((mapping) => !!mapping.type, {
+    message: "import.errors.missingPropertyTypeMapping",
+    path: ["type"],
+  })
+  .refine((mapping) => !!mapping.settlement, {
+    message: "import.errors.missingSettlementMapping",
+    path: ["settlement"],
+  });
+
+export type PropertyMappingInput = z.infer<typeof propertyMappingSchema>;
+
+export const propertyImportOptionsSchema = z.object({
+  duplicate_strategy: z.enum(["skip", "create"]).default("skip"),
+  default_assigned_to: z.string().uuid().nullable().optional(),
+  date_format: z.string().optional(),
+  /** The `settlement_id:name` keys of the new areas to create; absent means all of them. */
+  create_areas: z.array(z.string().max(400)).max(5000).optional(),
+});
+
+export type PropertyImportOptionsInput = z.infer<typeof propertyImportOptionsSchema>;
