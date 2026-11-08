@@ -1433,9 +1433,11 @@
       "invalidListingStatus": "The listing status isn't recognised.",
       "invalidDate": "The date couldn't be read.",
       "ownerPhoneInvalid": "The owner's phone isn't a valid number.",
-      "ownerNameRequired": "The owner would be a new contact with no name. Add their name.",
       "unknownDefaultAssignee": "The default broker is no longer an active member of the agency. Pick another one.",
       "dbWrite": "This row couldn't be saved."
+    },
+    "warnings": {
+      "ownerSkippedNoName": "The owner has no name and isn't in your contacts, so the property is imported without an owner. Add them on the property page."
     }
   },
   "ui": {

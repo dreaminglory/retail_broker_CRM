@@ -288,11 +288,41 @@ describe('classifyPropertyRow (Task 4)', () => {
     });
   });
 
-  it('makes a new owner with no name invalid, rather than inventing one', () => {
-    expect(classify(1, { phone: '0899 000 000' })).toMatchObject({
-      status: 'invalid', errors: [{ field: 'owner_name', code: 'import.errors.ownerNameRequired' }],
+  it('imports the property without an owner, with a warning, when an unmatched owner has no name', () => {
+    const phoneOnly = classify(1, { phone: '0899 000 000' });
+    expect(phoneOnly).toMatchObject({
+      status: 'valid',
+      errors: [],
+      normalized: {
+        owner_contact_id: null,
+        new_owner: null,
+        warnings: [{ field: 'owner_name', code: 'import.warnings.ownerSkippedNoName' }],
+      },
     });
-    expect(classify(1, { phone: '0888 123 456' }).status).toBe('valid');
+    expect(classify(1, { email: 'nobody@x.bg' }).normalized).toMatchObject({
+      new_owner: null,
+      warnings: [{ field: 'owner_name', code: 'import.warnings.ownerSkippedNoName' }],
+    });
+  });
+
+  it('still links a matched owner when the row has no name, with no warning', () => {
+    expect(classify(1, { phone: '0888 123 456' }).normalized).toMatchObject({
+      owner_contact_id: '33333333-3333-4333-8333-000000000001',
+      warnings: [],
+    });
+  });
+
+  it('carries no warnings on an ordinary row', () => {
+    expect(classify(1, { owner: 'Иван', phone: '0899 000 000' }).normalized!.warnings).toEqual([]);
+    expect(classify(1, {}).normalized!.warnings).toEqual([]);
+  });
+
+  it('keeps a skipped owner warning on a duplicate row', () => {
+    const l = lookups({ addresses: new Map([[3, { key: 'яворов12', property_id: 'existing-by-address' }]]) });
+    expect(classify(3, { address: 'ул Яворов 12', phone: '0899 000 000' }, l)).toMatchObject({
+      status: 'duplicate',
+      normalized: { warnings: [{ code: 'import.warnings.ownerSkippedNoName' }] },
+    });
   });
 
   it('adds the owner phone error to a row that is already invalid', () => {

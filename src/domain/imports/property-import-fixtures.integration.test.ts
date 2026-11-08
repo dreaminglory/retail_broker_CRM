@@ -135,10 +135,21 @@ describeServices('Property import fixtures against the local stack', () => {
       [19, 'valid', null], //                                 owner phone of seeded Ivan Ivanov
       [20, 'invalid', 'import.errors.unknownAssignee'],
       [21, 'invalid', 'import.errors.invalidPrice'],
+      [22, 'valid', null], //                                 owner phone only, not a contact: no owner, a warning
     ]);
-    expect(summary).toMatchObject({ total: 21, valid: 11, invalid: 7, duplicate: 2 });
+    expect(summary).toMatchObject({ total: 22, valid: 12, invalid: 7, duplicate: 2 });
 
-    const n = rows.map((r) => r.normalized as unknown as NormalizedPropertyRow & { owner_contact_id?: string | null });
+    const n = rows.map((r) => r.normalized as unknown as NormalizedPropertyRow & {
+      owner_contact_id?: string | null;
+      new_owner?: unknown;
+      warnings?: unknown[];
+    });
+    expect(n[21]).toMatchObject({
+      owner_contact_id: null,
+      new_owner: null,
+      warnings: [{ field: 'owner_name', code: 'import.warnings.ownerSkippedNoName' }],
+    });
+    expect(n[1].warnings).toEqual([]);
     expect(n[3]).toMatchObject({ bgn_converted: true, listings: [{ offer_type: 'rent', price: 613.55 }] });
     expect(n[4].property).toMatchObject({ type: 'apartment', rooms: 2 });
     expect(n[5].property.floor).toBe(0);
@@ -147,11 +158,11 @@ describeServices('Property import fixtures against the local stack', () => {
     expect(n[18].owner_contact_id).toEqual(expect.any(String));
 
     const { job, reverted, created } = await commitAndRevert(jobId);
-    expect(job).toEqual({ status: 'completed', created_count: 11 });
-    // Rows 8 and 9 share one new owner; row 19's owner existed before and stays.
+    expect(job).toEqual({ status: 'completed', created_count: 12 });
+    // Rows 8 and 9 share one new owner; row 19's owner existed before and stays; row 22 makes none.
     expect(created).toEqual({ areas: 1, contacts: 1 });
     expect(reverted).toEqual({
-      deleted: { contacts: 1, inquiries: 0, properties: 11, areas: 1 },
+      deleted: { contacts: 1, inquiries: 0, properties: 12, areas: 1 },
       kept: { contacts: 0, inquiries: 0, properties: 0, areas: 0 },
     });
   });

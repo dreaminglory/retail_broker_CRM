@@ -222,3 +222,8 @@ A column that maps to nothing is ignored. Unmapped required fields block the pre
   2026-11-08).
 - **Q2** A property's `created_at` is always the import time; a `listed_at` column fills only the
   listings' `listed_at` (founder, 2026-11-08).
+- **Q3** An owner with a phone or email but no name, who matches no contact, is not created (a
+  contact needs a name and we never invent one). The row stays valid: the property imports
+  without an owner party, and the preview shows the warning `import.warnings.ownerSkippedNoName`
+  so the owner can be added by hand (founder, 2026-11-08). A phone that doesn't parse still
+  makes the row invalid (rule 6).

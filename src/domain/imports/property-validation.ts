@@ -241,6 +241,11 @@ type OwnerFields = {
   owner_contact_id: string | null;
   owner_display_name: string | null;
   new_owner: NewOwner | null;
+  /**
+   * What the row imports without, as i18n codes for the preview. The row is still valid: today
+   * only `import.warnings.ownerSkippedNoName`, an unmatched owner with no name.
+   */
+  warnings: ImportError[];
 };
 
 /** The owner's phone as E.164 and email lowercase; `phoneInvalid` when a phone is there but doesn't parse. */
@@ -261,12 +266,13 @@ function splitName(name: string): { first_name: string; last_name: string | null
 
 /**
  * Rules 4 and 6, applied to a row in file order after `validatePropertyRow`:
- * 1. the owner phone must parse, and a new owner needs a name (we never invent one);
+ * 1. the owner phone must parse;
  * 2. an `external_ref` an existing property or an earlier row has → `skipped`;
  * 3. an address key an existing property in the settlement has → `duplicate` / `address`,
  *    or an earlier row with the same settlement and key → `duplicate` / `in_file`;
  * 4. the owner is matched by phone, then email; otherwise a new contact (name-only owners are
- *    never matched).
+ *    never matched). An unmatched owner with no name is not created (we never invent a name):
+ *    the property imports without an owner party and the row carries a warning.
  */
 export function classifyPropertyRow(
   rowNumber: number,
@@ -286,13 +292,13 @@ export function classifyPropertyRow(
 
   const matchedOwner =
     (methods.phone && lookups.phones.get(methods.phone)) || (methods.email && lookups.emails.get(methods.email)) || null;
-  let owner: OwnerFields = { owner_contact_id: null, owner_display_name: null, new_owner: null };
+  let owner: OwnerFields = { owner_contact_id: null, owner_display_name: null, new_owner: null, warnings: [] };
   if (matchedOwner) {
-    owner = { owner_contact_id: matchedOwner, owner_display_name: lookups.contactNames.get(matchedOwner) ?? null, new_owner: null };
+    owner = { ...owner, owner_contact_id: matchedOwner, owner_display_name: lookups.contactNames.get(matchedOwner) ?? null };
   } else if (candidate.owner_name) {
     owner = { ...owner, new_owner: { ...splitName(candidate.owner_name), phone: methods.phone, email: methods.email } };
   } else if (methods.phone || methods.email) {
-    return invalid([{ field: 'owner_name', code: 'import.errors.ownerNameRequired' }]);
+    owner = { ...owner, warnings: [{ field: 'owner_name', code: 'import.warnings.ownerSkippedNoName' }] };
   }
 
   const normalized = { ...validated.normalized, ...owner };

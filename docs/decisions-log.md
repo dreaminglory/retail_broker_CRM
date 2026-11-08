@@ -494,6 +494,10 @@ warning case).
   against `contact_methods` before creating a contact, and inserts a new area with `ON CONFLICT`
   on `(agency_id, settlement_id, lower(name))` before selecting it, so rows of one file share
   them without in-file bookkeeping. The preview groups them so its counts match.
+- **An unmatched owner with no name is skipped, not refused** (spec Q3). The property still
+  imports, with no owner party, and `normalized.warnings` carries
+  `import.warnings.ownerSkippedNoName` for the preview. A row-level warning is a valid row's
+  note, never an error: `errors` stays empty and the row commits.
 - **Unticked new areas** live in `import_jobs.options.create_areas` as the kept
   `settlement_id:name` keys; the commit creates only those and imports the other rows without an
   area. No re-validation.
