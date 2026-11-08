@@ -132,3 +132,20 @@ export const propertyImportOptionsSchema = z.object({
 });
 
 export type PropertyImportOptionsInput = z.infer<typeof propertyImportOptionsSchema>;
+
+/**
+ * Fields that must each have a column before the preview. Contacts and inquiries have
+ * either-or rules instead (their mapping schemas), so they list none.
+ */
+export const REQUIRED_MAPPING_FIELDS = {
+  contact: [],
+  inquiry: [],
+  property: ["type", "settlement"],
+} as const satisfies Record<"contact" | "inquiry" | "property", readonly string[]>;
+
+export function missingRequiredFields(
+  entity: keyof typeof REQUIRED_MAPPING_FIELDS,
+  mapping: Record<string, string | null | undefined>,
+): string[] {
+  return REQUIRED_MAPPING_FIELDS[entity].filter((field) => !mapping[field]);
+}

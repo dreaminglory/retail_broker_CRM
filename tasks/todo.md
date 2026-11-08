@@ -241,12 +241,12 @@ in `tasks/plan.md`.
 Every string is in both message files.
 
 **Acceptance criteria:**
-- [ ] An owner or manager picks Properties, uploads `properties-basic.csv`, and sees every column mapped; continuing with `type` or `settlement` unmapped is blocked with a translated message.
-- [ ] A broker can't open `/settings/import/new?type=property` (the existing layout guard), and the action refuses the broker (action test).
+- [x] An owner or manager picks Properties, uploads `properties-basic.csv`, and sees every column mapped; continuing with `type` or `settlement` unmapped is blocked with a translated message.
+- [x] A broker can't open `/settings/import/new?type=property` (the existing layout guard), and the action refuses the broker (action test).
 
 **Verification:**
-- [ ] `npx vitest run src/app/(dashboard)/settings/import`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`
+- [x] `npx vitest run src/app/(dashboard)/settings/import`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`
 
 **Dependencies:** Checkpoint 1
 **Files likely touched:** `src/app/(dashboard)/settings/import/new-import-menu.tsx`, `src/app/(dashboard)/settings/import/new/page.tsx`, `src/app/(dashboard)/settings/import/actions.ts`, `src/components/domain/imports/import-wizard.tsx`, `src/components/domain/imports/property-import-options-form.tsx`, `messages/*.json`

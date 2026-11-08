@@ -177,7 +177,8 @@
       "step2": {
         "title": "Map Columns",
         "desc": "Map the columns from your CSV to CRM fields.",
-        "previousUploadAlert": "This file was previously uploaded. Re-importing it with \"Skip duplicates\" will not create duplicates."
+        "previousUploadAlert": "This file was previously uploaded. Re-importing it with \"Skip duplicates\" will not create duplicates.",
+        "missingRequired": "Map a column to these required fields: {fields}."
       },
       "step3": {
         "title": "Review Validation",
@@ -211,7 +212,8 @@
       "contactsType": "Contacts",
       "createFailed": "The import couldn't be started.",
       "validateFailed": "The file couldn't be validated.",
-      "commitFailed": "The import didn't finish. Check the import history."
+      "commitFailed": "The import didn't finish. Check the import history.",
+      "propertiesType": "properties"
     },
     "dropzone": {
       "title": "Drag & drop your CSV file here",
@@ -250,8 +252,31 @@
         "source": "Source",
         "received_at": "Date Received",
         "assigned_to": "Assigned To",
-        "status": "Status"
-      }
+        "status": "Status",
+        "type": "Property type",
+        "settlement": "Settlement",
+        "municipality": "Municipality",
+        "province": "Province",
+        "area": "Area / neighbourhood",
+        "address": "Address",
+        "location_note": "Location note",
+        "rooms": "Rooms",
+        "area_m2": "Floor area (m²)",
+        "plot_m2": "Plot area (m²)",
+        "floor": "Floor",
+        "floors_total": "Total floors",
+        "year_built": "Year built",
+        "construction": "Construction",
+        "sale_price": "Sale price",
+        "rent_price": "Rent price",
+        "listing_status": "Listing status",
+        "listed_at": "Listed on",
+        "owner_name": "Owner name",
+        "owner_phone": "Owner phone",
+        "owner_email": "Owner email"
+      },
+      "required": "Required",
+      "sample": "e.g. {value}"
     },
     "options": {
       "duplicateStrategy": {
@@ -285,6 +310,18 @@
         "contacted": "Contacted",
         "converted": "Converted",
         "dismissed": "Dismissed"
+      },
+      "propertyDuplicates": {
+        "desc": "What should happen if a property in the file has the same settlement and address as one already in the CRM? A matching external ID is always skipped."
+      },
+      "defaultBroker": {
+        "title": "Default broker",
+        "desc": "Who is assigned the properties whose row names no broker?",
+        "importer": "Me (the importer)"
+      },
+      "dateFormat": {
+        "title": "Date format",
+        "desc": "How the file writes listing dates. ISO dates (2025-03-15) are always read."
       }
     },
     "entityType": {
@@ -300,7 +337,8 @@
       "failed": "Failed",
       "reverted": "Reverted"
     },
-    "errorReportReason": "Error reason"
+    "errorReportReason": "Error reason",
+    "importProperties": "Import properties"
   },
   "SettingsStages": {
     "settings": "Settings",

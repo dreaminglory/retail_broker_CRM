@@ -9,6 +9,8 @@ import {
   contactImportOptionsSchema,
   inquiryMappingSchema,
   inquiryImportOptionsSchema,
+  propertyMappingSchema,
+  propertyImportOptionsSchema,
   stageRowsSchema 
 } from "@/domain/imports/validation";
 import { ImportRepository } from "@/domain/imports/repository";
@@ -57,7 +59,14 @@ export async function saveImportMappingAction(
     let parsedMapping;
     let parsedOptions;
 
-    if (job.entity_type === "inquiry") {
+    if (job.entity_type === "property") {
+      parsedMapping = propertyMappingSchema.safeParse(mappingInput);
+      parsedOptions = propertyImportOptionsSchema.safeParse(optionsInput);
+      // Name the missing required column rather than a generic "check the mapping".
+      if (!parsedMapping.success) {
+        return toActionError(new DomainError(parsedMapping.error.issues[0]?.message ?? "import.errors.invalidMapping"));
+      }
+    } else if (job.entity_type === "inquiry") {
       parsedMapping = inquiryMappingSchema.safeParse(mappingInput);
       parsedOptions = inquiryImportOptionsSchema.safeParse(optionsInput);
     } else {

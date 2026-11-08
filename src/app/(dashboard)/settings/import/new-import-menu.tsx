@@ -29,6 +29,9 @@ export function NewImportMenu() {
         <DropdownMenuItem render={<Link href="/settings/import/new?type=inquiry" className="w-full" />}>
           {t("importInquiries")}
         </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/settings/import/new?type=property" className="w-full" />}>
+          {t("importProperties")}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -9,7 +9,8 @@ import { FileDropZone } from "./file-drop-zone";
 import { ColumnMappingTable } from "./column-mapping-table";
 import { ImportOptionsForm } from "./import-options-form";
 import { InquiryImportOptionsForm } from "./inquiry-import-options-form";
-import { ContactImportOptionsInput, InquiryImportOptionsInput } from "@/domain/imports/validation";
+import { PropertyImportOptionsForm, type ImportBrokerOption } from "./property-import-options-form";
+import { missingRequiredFields } from "@/domain/imports/validation";
 import { 
   createImportJobAction, 
   saveImportMappingAction, 
@@ -23,8 +24,39 @@ import { AlertCircle } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 
-export function ImportWizard({ entityType = "contact" }: { entityType?: "contact" | "inquiry" }) {
+export type ImportWizardEntity = "contact" | "inquiry" | "property";
+
+const TYPE_LABEL_KEY = { contact: "contactsType", inquiry: "inquiriesType", property: "propertiesType" } as const;
+const LIST_PATH = { contact: "/contacts", inquiry: "/inquiries", property: "/properties" } as const;
+
+function defaultOptions(entityType: ImportWizardEntity) {
+  if (entityType === "inquiry") {
+    return {
+      unknown_source: "use_default",
+      default_source_id: null,
+      default_assigned_to: null,
+      default_status: "new",
+      link_contacts: true,
+      create_missing_contacts: false,
+    };
+  }
+  if (entityType === "property") {
+    return { duplicate_strategy: "skip", default_assigned_to: null, date_format: "dd.MM.yyyy" };
+  }
+  return { duplicate_strategy: "skip", default_contact_type: "person" };
+}
+
+export function ImportWizard({
+  entityType = "contact",
+  brokers = [],
+}: {
+  entityType?: ImportWizardEntity;
+  /** Property jobs: the agency's active members, for the default broker. */
+  brokers?: ImportBrokerOption[];
+}) {
   const t = useTranslations("SettingsImport.wizard");
+  const tMapping = useTranslations("SettingsImport.mapping");
+  const typeLabel = t(TYPE_LABEL_KEY[entityType]);
   const router = useRouter();
   const [step, setStep] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -39,21 +71,9 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
   
   // Mapping State
   const [mapping, setMapping] = useState<Record<string, string | null>>({});
-  const [options, setOptions] = useState<any>(
-    entityType === "inquiry"
-      ? {
-          unknown_source: "use_default",
-          default_source_id: null,
-          default_assigned_to: null,
-          default_status: "new",
-          link_contacts: true,
-          create_missing_contacts: false,
-        }
-      : {
-          duplicate_strategy: "skip",
-          default_contact_type: "person",
-        }
-  );
+  const [options, setOptions] = useState<any>(() => defaultOptions(entityType));
+  const [sampleRows, setSampleRows] = useState<string[][]>([]);
+  const missingRequired = missingRequiredFields(entityType, mapping);
 
   // Validation State
   const [summary, setSummary] = useState<any>(null);
@@ -69,9 +89,10 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
     return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
   };
 
-  const handleFileAccepted = async (acceptedFile: File, detectedHeaders: string[], detectedEncoding: 'utf-8' | 'windows-1251', detectedDelimiter: string) => {
+  const handleFileAccepted = async (acceptedFile: File, detectedHeaders: string[], detectedEncoding: 'utf-8' | 'windows-1251', detectedDelimiter: string, detectedSampleRows: string[][]) => {
     try {
       setIsProcessing(true);
+      setSampleRows(detectedSampleRows);
       setFile(acceptedFile);
       setHeaders(detectedHeaders);
       setEncoding(detectedEncoding);
@@ -200,7 +221,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">{t("title", { type: entityType === "inquiry" ? t("inquiriesType") : t("contactsType") })}</h1>
+        <h1 className="text-3xl font-bold">{t("title", { type: typeLabel })}</h1>
         <div className="text-sm text-muted-foreground">{t("stepCount", { step })}</div>
       </div>
 
@@ -208,7 +229,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
         <Card>
           <CardHeader>
             <CardTitle>{t("step1.title")}</CardTitle>
-            <CardDescription>{t("step1.desc", { type: entityType === "inquiry" ? t("inquiriesType") : t("contactsType") })}</CardDescription>
+            <CardDescription>{t("step1.desc", { type: typeLabel })}</CardDescription>
           </CardHeader>
           <CardContent>
             <FileDropZone onFileAccepted={handleFileAccepted} maxSizeMB={5} />
@@ -231,8 +252,20 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
                 </AlertDescription>
               </Alert>
             )}
-            <ColumnMappingTable headers={headers} entityType={entityType} onChange={setMapping} />
-            {entityType === "inquiry" ? (
+            <ColumnMappingTable headers={headers} entityType={entityType} sampleRows={sampleRows} onChange={setMapping} />
+            {missingRequired.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {t("step2.missingRequired", {
+                    fields: missingRequired.map((field) => tMapping(`fields.${field}` as never)).join(", "),
+                  })}
+                </AlertDescription>
+              </Alert>
+            )}
+            {entityType === "property" ? (
+              <PropertyImportOptionsForm options={options} brokers={brokers} onChange={setOptions} />
+            ) : entityType === "inquiry" ? (
               <InquiryImportOptionsForm options={options} onChange={setOptions} />
             ) : (
               <ImportOptionsForm options={options} onChange={setOptions} />
@@ -240,7 +273,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(1)} disabled={isProcessing}>{t("back")}</Button>
-            <Button onClick={handleSaveMapping} disabled={isProcessing || Object.keys(mapping).length === 0}>
+            <Button onClick={handleSaveMapping} disabled={isProcessing || Object.keys(mapping).length === 0 || missingRequired.length > 0}>
               {isProcessing ? t("validating") : t("nextReview")}
             </Button>
           </CardFooter>
@@ -305,7 +338,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
         <Card>
           <CardHeader>
             <CardTitle>{t("step4.title")}</CardTitle>
-            <CardDescription>{t("step4.desc", { type: entityType === "inquiry" ? t("inquiriesType") : t("contactsType") })}</CardDescription>
+            <CardDescription>{t("step4.desc", { type: typeLabel })}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="w-full bg-secondary h-4 rounded-full overflow-hidden">
@@ -325,7 +358,7 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
         <Card>
           <CardHeader>
             <CardTitle>{t("step5.title")}</CardTitle>
-            <CardDescription>{t("step5.desc", { type: entityType === "inquiry" ? t("inquiriesType") : t("contactsType") })}</CardDescription>
+            <CardDescription>{t("step5.desc", { type: typeLabel })}</CardDescription>
           </CardHeader>
           <CardContent>
              <p>{t("step5.success")}</p>
@@ -336,8 +369,8 @@ export function ImportWizard({ entityType = "contact" }: { entityType?: "contact
              )}
           </CardContent>
           <CardFooter>
-            <Button onClick={() => router.push(entityType === "inquiry" ? "/inquiries" : "/contacts")}>
-              {t("step5.goTo", { type: entityType === "inquiry" ? t("inquiriesType") : t("contactsType") })}
+            <Button onClick={() => router.push(LIST_PATH[entityType])}>
+              {t("step5.goTo", { type: typeLabel })}
             </Button>
           </CardFooter>
         </Card>

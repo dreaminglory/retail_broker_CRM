@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { detectEncoding, type CsvEncoding } from "@/domain/imports/csv/detect-encoding";
 
 interface FileDropZoneProps {
-  onFileAccepted: (file: File, headers: string[], encoding: 'utf-8' | 'windows-1251', delimiter: string) => void;
+  onFileAccepted: (file: File, headers: string[], encoding: 'utf-8' | 'windows-1251', delimiter: string, sampleRows: string[][]) => void;
   maxSizeMB?: number;
 }
 
@@ -61,7 +61,7 @@ export function FileDropZone({ onFileAccepted, maxSizeMB = 5 }: FileDropZoneProp
 
         const headers = results.data[0];
 
-        onFileAccepted(file, headers, encoding, results.meta.delimiter || ',');
+        onFileAccepted(file, headers, encoding, results.meta.delimiter || ',', results.data.slice(1));
       },
       error: () => {
         setError(t("parseFailed"));
