@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { opportunityFilterFromParams, opportunityParamsFromFilter } from './url-filter';
-import { opportunityListFilterSchema } from './validation';
+import {
+  inquiryFilterFromParams,
+  inquiryParamsFromFilter,
+  opportunityFilterFromParams,
+  opportunityParamsFromFilter,
+} from './url-filter';
+import { inquiryListFilterSchema, opportunityListFilterSchema } from './validation';
 
 const STAGE = '6f1c2b0e-8c1a-4a57-9f3e-1d2c3b4a5f60';
 const BROKER = '0b8d3c1e-2f4a-4b6c-8d9e-0a1b2c3d4e5f';
@@ -95,5 +100,25 @@ describe('opportunityParamsFromFilter: Edit filters opens the list with the save
     });
     expect(params.toString()).toBe('');
     expect(opportunityParamsFromFilter({ assigned_to: 'unassigned' }).toString()).toBe('');
+  });
+});
+
+describe('inquiry lists: the inquiry list URL as a saved filter and back', () => {
+  it('no params is every inquiry, newest first, as the inquiry list shows', () => {
+    expect(inquiryFilterFromParams({})).toEqual({ sort: 'received_desc' });
+    expect(inquiryFilterFromParams({ status: 'all' })).toEqual({ sort: 'received_desc' });
+  });
+
+  it('maps status and search; bad values and the page are ignored', () => {
+    const filter = inquiryFilterFromParams({ status: 'new', search: ' imot.bg ', page: '2', id: STAGE });
+    expect(filter).toEqual({ status: ['new'], search: 'imot.bg', sort: 'received_desc' });
+    expect(inquiryListFilterSchema.parse(filter)).toEqual(filter);
+    expect(inquiryFilterFromParams({ status: 'gone', search: '   ' })).toEqual({ sort: 'received_desc' });
+  });
+
+  it('round-trips through the URL', () => {
+    const params = { status: 'contacted', search: 'Ivan' };
+    expect(Object.fromEntries(inquiryParamsFromFilter(inquiryFilterFromParams(params)))).toEqual(params);
+    expect(inquiryParamsFromFilter({ status: ['new', 'contacted'], assigned_to: 'me' }).toString()).toBe('');
   });
 });

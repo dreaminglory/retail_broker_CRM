@@ -8,13 +8,13 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { SmartListService } from '@/domain/smart-lists/service';
-import { opportunityFilterFromParams } from '@/domain/smart-lists/url-filter';
+import { inquiryFilterFromParams, opportunityFilterFromParams } from '@/domain/smart-lists/url-filter';
 import type { SmartListEntity } from '@/domain/smart-lists/types';
 import { getAuthContext, requireRole, toActionError, type ActionResult } from '@/lib/actions';
 import { MANAGER_ROLES } from '@/lib/roles';
 
 const idSchema = z.string().uuid();
-const entitySchema = z.enum(['opportunity']);
+const entitySchema = z.enum(['opportunity', 'inquiry']);
 const paramsSchema = z.record(z.string().max(40), z.string().max(400)).refine((p) => Object.keys(p).length <= 30);
 
 const saveSchema = z.object({ name: z.string(), entity: entitySchema, params: paramsSchema });
@@ -22,8 +22,8 @@ const renameSchema = z.object({ id: idSchema, name: z.string() });
 const updateFilterSchema = z.object({ id: idSchema, entity: entitySchema, params: paramsSchema });
 const idInputSchema = z.object({ id: idSchema });
 
-function filterFromParams(_entity: SmartListEntity, params: Record<string, string>) {
-  return opportunityFilterFromParams(params);
+function filterFromParams(entity: SmartListEntity, params: Record<string, string>) {
+  return entity === 'opportunity' ? opportunityFilterFromParams(params) : inquiryFilterFromParams(params);
 }
 
 function revalidateList(id?: string) {

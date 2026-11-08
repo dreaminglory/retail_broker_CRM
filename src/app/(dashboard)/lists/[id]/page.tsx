@@ -10,7 +10,7 @@ import { pageInfo, parsePage } from "@/lib/pagination";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 import { SmartListService, canEditList, shareState, type ListPage, type ResolvedList } from "@/domain/smart-lists/service";
 import { Badge } from "@/components/ui/badge";
-import { opportunityParamsFromFilter } from "@/domain/smart-lists/url-filter";
+import { inquiryParamsFromFilter, opportunityParamsFromFilter } from "@/domain/smart-lists/url-filter";
 import { SavedListControls } from "@/components/domain/smart-lists/saved-list-controls";
 import { canSwitchListScope } from "@/domain/smart-lists/built-in";
 import type { InquiryListRow, OpportunityListRow } from "@/domain/smart-lists/types";
@@ -124,10 +124,13 @@ export default async function SmartListPage({
 
 /** "Edit filters": the entity list with the saved filters applied and "Update list" (a stale list opens with none). */
 function editFiltersHref(list: Extract<ResolvedList, { kind: "saved" }>): string {
-  const params =
-    list.filter?.entity === "opportunity" ? opportunityParamsFromFilter(list.filter.filter) : new URLSearchParams();
+  const params = !list.filter
+    ? new URLSearchParams()
+    : list.filter.entity === "opportunity"
+      ? opportunityParamsFromFilter(list.filter.filter)
+      : inquiryParamsFromFilter(list.filter.filter);
   params.set("list", list.id);
-  return `/opportunities?${params.toString()}`;
+  return `/${list.entity === "opportunity" ? "opportunities" : "inquiries"}?${params.toString()}`;
 }
 
 type RowsProps<Row> = { ctx: AuthContext; data: ListPage; rows: Row[]; total: number };

@@ -374,13 +374,20 @@ assigned-to and source if the page shows them), stored as `InquiryListFilter`; t
 overview handle `entity = inquiry` saved lists. Reuses Task 11's dialog and actions.
 
 **Acceptance criteria:**
-- [ ] A broker saves "New from imot.bg" and sees the right rows and count
-- [ ] Edit filters opens the inquiry list with the filters applied
-- [ ] BG and EN, both widths
+- [x] A broker saves "New from imot.bg" and sees the right rows and count
+- [x] Edit filters opens the inquiry list with the filters applied
+- [x] BG and EN, both widths
 
 **Verification:**
-- [ ] `npx vitest run src/domain/smart-lists`, typecheck, lint
-- [ ] Browser in BG and EN
+- [x] `npx vitest run src/domain/smart-lists`, typecheck, lint
+- [x] Browser in BG and EN
+
+Notes (2026-11-08): the inquiry list shows only status and search, so that is what a saved
+inquiry list stores (`inquiryFilterFromParams`, newest first as the list); assigned-to and
+source are not on the page and were not added. "From imot.bg" is therefore a search, not a
+source filter. Counts equal the inquiry page's for three filters against the stack. Seen: save
+`status=new` as the broker in EN at 390 (7 = the page), Edit filters → contacted → Update list in
+BG at 1280 (1 = the page). No new files in `validation.ts` were needed.
 
 **Dependencies:** Task 11
 **Files likely touched:** `src/app/(dashboard)/inquiries/{page,inquiries-page-client}.tsx`, `src/domain/smart-lists/validation.ts`, `messages/{bg,en}.json`

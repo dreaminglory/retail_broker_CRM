@@ -8,7 +8,8 @@ import { findBuiltInList, scopedFilter } from './built-in';
 import { SmartListRepository } from './repository';
 import { SmartListService, type Viewer } from './service';
 import type { OpportunityListFilter } from './types';
-import { opportunityFilterFromParams } from './url-filter';
+import { inquiryFilterFromParams, opportunityFilterFromParams } from './url-filter';
+import { InquiryService } from '../inquiries/service';
 
 // Today reads the agency timezone through the request's Supabase client; the seed uses Sofia.
 vi.mock('@/domain/agencies/settings', () => ({
@@ -359,6 +360,28 @@ describeServices('SmartListService against the local stack', () => {
 
       await service.remove(viewer, list.id);
       expect(await service.page(viewer, list.id, undefined)).toBeNull();
+    });
+  });
+
+  describe('inquiry lists (cut 1)', () => {
+    it('a list saved from the inquiry URL counts what the inquiry list shows', async () => {
+      const service = new SmartListService(broker.db);
+      const viewer = viewerOf(broker, 'broker');
+      for (const params of [{ status: 'new' }, {}, { status: 'contacted', search: 'a' }]) {
+        const list = await service.save(viewer, {
+          name: `SLI ${RUN} ${JSON.stringify(params)}`,
+          entity: 'inquiry',
+          filter: inquiryFilterFromParams(params),
+        });
+        cleanup.track('smart_lists', list.id);
+        const shown = await new InquiryService(broker.db).listPage(broker.agencyId, {
+          status: params.status as never,
+          search: params.search,
+          limit: 1,
+        });
+        const page = await service.page(viewer, list.id, undefined);
+        expect(page?.result?.total, JSON.stringify(params)).toBe(shown.total);
+      }
     });
   });
 

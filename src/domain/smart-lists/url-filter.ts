@@ -11,7 +11,7 @@ import {
   opportunityTypeSchema,
   parseOpportunityListFilters,
 } from '../opportunities/validation';
-import type { OpportunityListFilter } from './validation';
+import type { InquiryListFilter, OpportunityListFilter } from './validation';
 
 /** The opportunity list's search params, as the page reads them. */
 export type OpportunityListParams = {
@@ -81,5 +81,31 @@ export function opportunityParamsFromFilter(filter: OpportunityListFilter): URLS
   if (filter.next_action) params.set('next', filter.next_action);
   if (filter.no_touch_days) params.set('untouched', String(filter.no_touch_days));
   if (filter.has_new_matches) params.set('matches', 'new');
+  return params;
+}
+
+// ── Inquiries ───────────────────────────────────────────────────────────────
+
+const inquiryStatusSchema = z.enum(['new', 'contacted', 'converted', 'dismissed']);
+
+/**
+ * The inquiry list's URL filters (status and search, all it shows) as a filter, newest first as
+ * the list is. Absent status is every inquiry, as on the list.
+ */
+export function inquiryFilterFromParams(params: { status?: string; search?: string; [key: string]: string | undefined }): InquiryListFilter {
+  const filter: InquiryListFilter = {};
+  const status = inquiryStatusSchema.safeParse(params.status);
+  if (status.success) filter.status = [status.data];
+  const search = params.search?.trim();
+  if (search) filter.search = search;
+  filter.sort = 'received_desc';
+  return filter;
+}
+
+/** A saved inquiry filter as the inquiry list's URL; what the list can't show is left out. */
+export function inquiryParamsFromFilter(filter: InquiryListFilter): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filter.status?.length === 1) params.set('status', filter.status[0]);
+  if (filter.search) params.set('search', filter.search);
   return params;
 }

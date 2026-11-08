@@ -79,6 +79,17 @@ describe('saveListAction', () => {
   });
 });
 
+describe('saveListAction for inquiries (cut 1)', () => {
+  it('saves the inquiry list URL filters, newest first', async () => {
+    await saveListAction({ name: 'New from imot.bg', entity: 'inquiry', params: { status: 'new', search: 'imot.bg' } });
+    expect(lists.save).toHaveBeenCalledWith(expect.objectContaining(viewer), {
+      name: 'New from imot.bg',
+      entity: 'inquiry',
+      filter: { status: ['new'], search: 'imot.bg', sort: 'received_desc' },
+    });
+  });
+});
+
 describe('renameListAction, updateListFilterAction, deleteListAction', () => {
   it('renames and refreshes the overview and the list', async () => {
     expect(await renameListAction({ id: LIST_ID, name: 'Hot' })).toEqual({ success: true, data: undefined });
