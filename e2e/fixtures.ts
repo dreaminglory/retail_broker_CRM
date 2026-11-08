@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { test as base, expect, type Page } from '@playwright/test';
+import { IntlMessageFormat } from 'intl-messageformat';
 import bg from '../messages/bg.json' with { type: 'json' };
 import en from '../messages/en.json' with { type: 'json' };
 
@@ -52,28 +53,51 @@ export function dateTimeLocal(days: number, hour: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
 }
 
+/** A UI string with ICU values (plurals), as next-intl renders it in this locale. */
+export function formatMessage(locale: AppLocale, message: string, values: Record<string, string | number>): string {
+  return String(new IntlMessageFormat(message, locale).format(values));
+}
+
+/**
+ * The local stack's REST API as the service role, for test setup and cleanup that has no UI path.
+ * Local stack only: it uses the service role key from .env.local.
+ */
+export async function serviceRest<T = unknown>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+  const env = localEnv();
+  const response = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/${path}`, {
+    method: init.method ?? "GET",
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  });
+  if (!response.ok) throw new Error(`${init.method ?? "GET"} ${path} failed: ${response.status} ${await response.text()}`);
+  const text = await response.text();
+  return (text ? JSON.parse(text) : null) as T;
+}
+
 /**
  * Makes a pending invitation look sent a day ago, so it can be resent now. The 5-minute cooldown
  * has no other way around it, and a fresh invitation always starts inside it. Local stack only:
  * it uses the service role key from .env.local.
  */
 export async function backdateInvitation(email: string): Promise<void> {
-  const env = Object.fromEntries(
+  await serviceRest(`agency_memberships?invitation_email=eq.${encodeURIComponent(email)}`, {
+    method: "PATCH",
+    body: { invitation_sent_at: new Date(Date.now() - 24 * 3_600_000).toISOString() },
+  });
+}
+
+function localEnv(): Record<string, string> {
+  return Object.fromEntries(
     readFileSync(".env.local", "utf8")
       .split(/\r?\n/)
       .filter((line) => line.includes("=") && !line.startsWith("#"))
       .map((line) => [line.slice(0, line.indexOf("=")), line.slice(line.indexOf("=") + 1)])
   );
-  const response = await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/agency_memberships?invitation_email=eq.${encodeURIComponent(email)}`, {
-    method: "PATCH",
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ invitation_sent_at: new Date(Date.now() - 24 * 3_600_000).toISOString() }),
-  });
-  if (!response.ok) throw new Error(`Could not backdate the invitation: ${response.status}`);
 }
 
 export { expect };

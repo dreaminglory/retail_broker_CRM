@@ -400,12 +400,19 @@ list); save a custom list from the opportunity filters and reopen it; a manager 
 a broker sees it read-only. BG and EN, 1280 and 390 px, using `e2e/fixtures.ts`.
 
 **Acceptance criteria:**
-- [ ] The spec passes in all four projects (bg/en × 1280/390)
-- [ ] It leaves the seed as it found it or runs on rows no other spec asserts
-- [ ] The full `npm run test:e2e` passes
+- [x] The spec passes in all four projects (bg/en × 1280/390)
+- [x] It leaves the seed as it found it or runs on rows no other spec asserts
+- [x] The full `npm run test:e2e` passes
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e`
+
+Notes (2026-11-08): working through the seeded `no-next-action` would move the seeded rows other
+suites count, so each run creates two tagged deals with no next action (service role, local
+stack, `serviceRest` in `e2e/fixtures.ts`), saves a list from them, works it through to List
+done, deletes the list in the UI and archives its deals. The share test deletes its list
+afterwards. The spec ran twice (alone after a reset, then in the full suite): test:e2e 72/72.
+After `npx supabase db reset`: test:db 717/717, test:services 1030/1030, test 791 passed.
 
 **Dependencies:** Tasks 9, 12
 **Files likely touched:** `e2e/smart-lists.spec.ts`, `e2e/fixtures.ts`
