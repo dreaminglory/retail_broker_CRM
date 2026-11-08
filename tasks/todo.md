@@ -222,9 +222,9 @@ in `tasks/plan.md`.
 **Estimated scope:** M
 
 ## Checkpoint 1 (founder)
-- [ ] Every Phase 1 test is green: `npm run test:db`, `npm run test:services`, `npm run test`
-- [ ] Scale numbers and the edge-fixture outcomes reviewed; tune the address key if needed
-- [ ] `/review` of Phase 1; founder go for Phase 2 (fresh session)
+- [x] Every Phase 1 test is green: `npm run test:db`, `npm run test:services`, `npm run test`
+- [x] Scale numbers and the edge-fixture outcomes reviewed; tune the address key if needed
+- [x] `/review` of Phase 1; founder go for Phase 2 (fresh session)
 
 ## Phase 2: Screens
 

@@ -99,9 +99,9 @@ file, not a `tsx` script: it needs the `@/` aliases and the test client, and the
 TypeScript runner.
 
 ### Checkpoint 1 (founder)
-- [ ] Integration suite stages, validates, commits and reverts every fixture
-- [ ] Scale numbers against rule 11; address and settlement results on the edge-case fixture
-- [ ] `/review` of Phase 1, then founder go for the UI
+- [x] Integration suite stages, validates, commits and reverts every fixture
+- [x] Scale numbers against rule 11; address and settlement results on the edge-case fixture
+- [x] `/review` of Phase 1, then founder go for the UI
 
 ### Phase 2: Screens
 - [ ] Task 8: Start and map a property import — Sonnet
