@@ -122,4 +122,33 @@ export class SmartListRepository {
     if (error) throw sqlFailure(error, 'errors.saveFailed');
     return data as SmartList;
   }
+
+  /** No row back means RLS hid it or refused the change. */
+  async update(
+    agencyId: string,
+    id: string,
+    patch: Partial<Pick<SmartList, 'name' | 'shared'>> & { filter?: Record<string, unknown> }
+  ): Promise<SmartList> {
+    const { data, error } = await this.db
+      .from('smart_lists')
+      .update(patch)
+      .eq('agency_id', agencyId)
+      .eq('id', id)
+      .select(SMART_LIST_COLUMNS)
+      .maybeSingle();
+    if (error) throw sqlFailure(error, 'errors.saveFailed');
+    if (!data) throw new DomainError('smartLists.errors.notFound');
+    return data as SmartList;
+  }
+
+  async remove(agencyId: string, id: string): Promise<void> {
+    const { data, error } = await this.db
+      .from('smart_lists')
+      .delete()
+      .eq('agency_id', agencyId)
+      .eq('id', id)
+      .select('id');
+    if (error) throw new DomainError('errors.deleteFailed', `Failed to delete smart list: ${error.message}`);
+    if (!data || data.length === 0) throw new DomainError('smartLists.errors.notFound');
+  }
 }

@@ -322,13 +322,22 @@ with the filters and an "Update list" button. A stored filter that doesn't parse
 this list" state (rule 5).
 
 **Acceptance criteria:**
-- [ ] AC-4: a broker saves a list from filters, sees it with the right count after reload; another broker doesn't see it
-- [ ] Rename to a duplicate name and the 51st list show the i18n error toast; delete removes it
-- [ ] Service tests: save, rename, update filter, delete, stale filter; BG and EN, both widths
+- [x] AC-4: a broker saves a list from filters, sees it with the right count after reload; another broker doesn't see it
+- [x] Rename to a duplicate name and the 51st list show the i18n error toast; delete removes it
+- [x] Service tests: save, rename, update filter, delete, stale filter; BG and EN, both widths
 
 **Verification:**
-- [ ] `npx vitest run src/domain/smart-lists`, `npm run test:services`, typecheck, lint
-- [ ] Browser: save, rename, edit, delete in BG and EN
+- [x] `npx vitest run src/domain/smart-lists`, `npm run test:services`, typecheck, lint
+- [x] Browser: save, rename, edit, delete in BG and EN
+
+Notes (2026-11-08): the filters are saved from the URL params on the server through the list
+page's own mapping (`url-filter.ts` → `toListFilter`), so a saved list counts what the page
+showed. "Edit filters" opens `/opportunities?…&list=<id>`; what the page can't show (several
+values, `me`, `unassigned`) is left out and "Update list" saves what it shows. Each seeded agency
+has one broker, so "another broker doesn't see it" is asserted with the agency's manager (RLS:
+personal lists are the creator's only). The 51st-list toast is the same `toActionError` path as
+the duplicate name (seen in the browser) and is covered by the service tests. test:services
+1016/1016.
 
 **Dependencies:** Tasks 8, 10
 **Files likely touched:** `src/app/(dashboard)/lists/actions.ts` (+ test), `src/domain/smart-lists/service.ts`, `src/components/domain/smart-lists/save-list-dialog.tsx`, `src/app/(dashboard)/opportunities/opportunities-page-client.tsx`, `messages/{bg,en}.json`

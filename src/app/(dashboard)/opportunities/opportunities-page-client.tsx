@@ -30,6 +30,7 @@ import type { LeadSource } from "@/domain/lead-sources/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { SaveListDialog, UpdateListBar } from "@/components/domain/smart-lists/save-list-dialog";
 
 const STATUS_FILTER_KEYS = ["allStatuses", "active", "won", "lost", "nurture", "archived"];
 const TEMPERATURE_FILTER_KEYS = ["allTemperatures", "hot", "warm", "cold"] as const;
@@ -62,6 +63,8 @@ interface OpportunitiesPageClientProps {
   /** Days as a string, or "all". */
   initialUntouched: string;
   initialMatches: string;
+  /** The saved list whose filters are being edited, if any. */
+  editingList: { id: string; name: string } | null;
 }
 
 export function OpportunitiesPageClient({
@@ -81,6 +84,7 @@ export function OpportunitiesPageClient({
   initialNextAction,
   initialUntouched,
   initialMatches,
+  editingList,
 }: OpportunitiesPageClientProps) {
   // A day count from a link that isn't a preset still shows as selected.
   const untouchedOptions =
@@ -137,7 +141,7 @@ export function OpportunitiesPageClient({
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -145,6 +149,8 @@ export function OpportunitiesPageClient({
           </p>
         </div>
 
+        <div className="flex flex-wrap items-center justify-end gap-2">
+        <SaveListDialog entity="opportunity" />
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger
             render={
@@ -174,7 +180,10 @@ export function OpportunitiesPageClient({
             />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {editingList && <UpdateListBar entity="opportunity" list={editingList} />}
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="mb-4 flex flex-wrap gap-3">

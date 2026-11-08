@@ -1946,7 +1946,8 @@
       "invalidEntity": "This list has an unknown record type.",
       "invalidLists": "The lists could not be counted.",
       "tooManyLists": "Too many lists to count at once.",
-      "immutable": "The owner and record type of a list cannot change."
+      "immutable": "The owner and record type of a list cannot change.",
+      "notFound": "This list no longer exists or you can't change it."
     },
     "entity": {
       "opportunity": "Deals",
@@ -1985,6 +1986,27 @@
       "exit": "Exit",
       "doneTitle": "List done — nothing left to work through.",
       "backToLists": "Back to lists"
+    },
+    "saved": {
+      "saveAsList": "Save as list",
+      "saveTitle": "Save these filters as a list",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Warm buyers in Lozenets",
+      "saveHint": "Only you see this list. Its count is live in Lists.",
+      "save": "Save",
+      "cancel": "Cancel",
+      "savedToast": "List saved",
+      "editing": "Editing the filters of “{name}”. Change them, then update the list.",
+      "updateList": "Update list",
+      "updatedToast": "List updated",
+      "rename": "Rename",
+      "renameTitle": "Rename the list",
+      "renamedToast": "List renamed",
+      "editFilters": "Edit filters",
+      "delete": "Delete",
+      "deleteTitle": "Delete “{name}”?",
+      "deleteDescription": "Only the list is deleted; its deals and inquiries stay as they are.",
+      "deletedToast": "List deleted"
     }
   }
 }

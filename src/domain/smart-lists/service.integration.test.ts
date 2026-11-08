@@ -8,6 +8,7 @@ import { findBuiltInList, scopedFilter } from './built-in';
 import { SmartListRepository } from './repository';
 import { SmartListService, type Viewer } from './service';
 import type { OpportunityListFilter } from './types';
+import { opportunityFilterFromParams } from './url-filter';
 
 // Today reads the agency timezone through the request's Supabase client; the seed uses Sofia.
 vi.mock('@/domain/agencies/settings', () => ({
@@ -323,6 +324,41 @@ describeServices('SmartListService against the local stack', () => {
       await expect(
         service.save(viewer, { name: `sld ${RUN}`, entity: 'inquiry', filter: {} })
       ).rejects.toMatchObject({ code: 'smartLists.errors.duplicateName' });
+    });
+
+    it('a list saved from the URL counts what the deal list shows; only its creator sees or changes it (AC-4)', async () => {
+      const deal = await createDeal(broker, `SLS ${RUN} warm`);
+      await broker.db.from('opportunities').update({ temperature: 'warm' }).eq('id', deal.id);
+      const service = new SmartListService(broker.db);
+      const viewer = viewerOf(broker, 'broker');
+      const params = { search: `SLS ${RUN}`, temperature: 'warm', type: 'buyer' };
+
+      const list = await service.save(viewer, { name: `SLS ${RUN}`, entity: 'opportunity', filter: opportunityFilterFromParams(params) });
+      cleanup.track('smart_lists', list.id);
+
+      const shown = await new OpportunityService(broker.db).listPage(broker.agencyId, {
+        search: params.search, temperature: 'warm', type: 'buyer',
+      });
+      const overview = await service.overview(viewer);
+      expect(overview.saved.find((s) => s.list.id === list.id)?.count).toBe(shown.total);
+      expect(shown.total).toBe(1);
+
+      // Another member of the agency, a manager included, neither sees nor changes it.
+      const managerView = viewerOf(manager, 'manager');
+      const other = new SmartListService(manager.db);
+      expect((await other.overview(managerView)).saved.map((s) => s.list.id)).not.toContain(list.id);
+      await expect(other.rename(managerView, list.id, 'Taken')).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
+      await expect(other.remove(managerView, list.id)).rejects.toMatchObject({ code: 'smartLists.errors.notFound' });
+
+      // Rename, then widen the filter: the count follows.
+      await service.rename(viewer, list.id, `SLS ${RUN} renamed`);
+      await service.updateFilter(viewer, list.id, opportunityFilterFromParams({ search: `SLS ${RUN}`, temperature: 'hot' }));
+      const after = await service.page(viewer, list.id, undefined);
+      expect(after?.list.kind === 'saved' && after.list.list.name).toBe(`SLS ${RUN} renamed`);
+      expect(after?.result?.total).toBe(0);
+
+      await service.remove(viewer, list.id);
+      expect(await service.page(viewer, list.id, undefined)).toBeNull();
     });
   });
 

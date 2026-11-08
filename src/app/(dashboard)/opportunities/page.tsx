@@ -10,6 +10,7 @@ import { OpportunitiesPageClient } from "./opportunities-page-client";
 import type { OpportunityType } from "@/domain/opportunities/types";
 import { PAGE_SIZE, loadPage, parsePage } from "@/lib/pagination";
 import { parseOpportunityListFilters } from "@/domain/opportunities/validation";
+import { SmartListService, canEditList, type Viewer } from "@/domain/smart-lists/service";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -29,6 +30,8 @@ interface SearchParams {
   untouched?: string;
   matches?: string;
   page?: string;
+  /** A saved list being edited ("Edit filters"): the page shows "Update list". */
+  list?: string;
 }
 
 export default async function OpportunitiesPage({
@@ -52,7 +55,7 @@ export default async function OpportunitiesPage({
 
   const { data: membership } = await supabase
     .from("agency_memberships")
-    .select("agency_id")
+    .select("agency_id, role")
     .eq("user_id", user!.id)
     .eq("status", "active")
     .single();
@@ -89,12 +92,14 @@ export default async function OpportunitiesPage({
   );
 
   // Fetch all required data in parallel; the rows' summary lines (FR-REQ-05) as soon as the page is in.
-  const [paged, requirementSummaries, stages, leadSources, brokers] = await Promise.all([
+  const viewer: Viewer = { userId: user!.id, agencyId, role: membership?.role ?? "" };
+  const [paged, requirementSummaries, stages, leadSources, brokers, editingList] = await Promise.all([
     pagedPromise,
     pagedPromise.then((paged) => new RequirementService(supabase).getSummaries(paged.rows, agencyId, locale)),
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
+    params.list ? loadEditingList(new SmartListService(supabase), viewer, params.list) : null,
   ]);
 
   return (
@@ -116,7 +121,15 @@ export default async function OpportunitiesPage({
         initialNextAction={nextAction ?? "all"}
         initialUntouched={noTouchDays ? String(noTouchDays) : "all"}
         initialMatches={hasNewMatches ? "new" : "all"}
+        editingList={editingList}
       />
     </div>
   );
+}
+
+/** The saved deal list opened from "Edit filters", if the viewer may change it; else none. */
+async function loadEditingList(service: SmartListService, viewer: Viewer, listId: string) {
+  const list = await service.resolve(viewer, listId, "mine");
+  if (list?.kind !== "saved" || list.entity !== "opportunity" || !canEditList(viewer, list.list)) return null;
+  return { id: list.id, name: list.list.name };
 }

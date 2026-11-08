@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
+import { hasRole, MANAGER_ROLES } from '@/lib/roles';
 import { ProfileRepository } from '../profiles/repository';
 import {
   canSwitchListScope,
@@ -67,6 +68,14 @@ export type ListPage = {
 export type QueueStep =
   | { done: true; total: number; scope: ListScope }
   | { done: false; id: string; sortKey: SortKey; pos: number; total: number; scope: ListScope };
+
+/**
+ * Who may rename, edit, share or delete a saved list (rule 4, as RLS says it): the creator of a
+ * personal list; owners and managers for a shared one.
+ */
+export function canEditList(viewer: Viewer, list: Pick<SmartList, 'created_by' | 'shared'>): boolean {
+  return list.shared ? hasRole(viewer.role, MANAGER_ROLES) : list.created_by === viewer.userId;
+}
 
 const UUID_RE =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -203,5 +212,42 @@ export class SmartListService {
     }
 
     return this.repo.insert(viewer.agencyId, viewer.userId, { name, entity: input.entity, filter, shared: false });
+  }
+
+  async rename(viewer: Viewer, listId: string, name: string): Promise<SmartList> {
+    const parsed = listNameSchema.parse(name);
+    await this.editable(viewer, listId);
+    return this.repo.update(viewer.agencyId, listId, { name: parsed });
+  }
+
+  /**
+   * Replaces a list's filter with one of its entity's current shape; this also fixes a stale
+   * list (rule 5). Turning on new matches is held to the creator's cap (rule 3).
+   */
+  async updateFilter(viewer: Viewer, listId: string, filter: unknown): Promise<SmartList> {
+    const list = await this.editable(viewer, listId);
+    const parsed: Record<string, unknown> =
+      list.entity === 'opportunity' ? opportunityListFilterSchema.parse(filter) : inquiryListFilterSchema.parse(filter);
+
+    const hadMatches = (list.filter as { has_new_matches?: unknown } | null)?.has_new_matches === true;
+    if (list.entity === 'opportunity' && parsed.has_new_matches === true && !hadMatches) {
+      const creator = await this.repo.countByMember(viewer.agencyId, list.created_by);
+      if (creator.matchLists >= MAX_MATCH_LISTS_PER_MEMBER) throw new DomainError('smartLists.errors.matchListLimit');
+    }
+    return this.repo.update(viewer.agencyId, listId, { filter: parsed });
+  }
+
+  /** A hard delete: a list is only a view (rule 4). */
+  async remove(viewer: Viewer, listId: string): Promise<void> {
+    await this.editable(viewer, listId);
+    await this.repo.remove(viewer.agencyId, listId);
+  }
+
+  /** The saved list, if the viewer sees it and may change it (RLS says the same). */
+  private async editable(viewer: Viewer, listId: string): Promise<SmartList> {
+    const list = UUID_RE.test(listId) ? await this.repo.findById(viewer.agencyId, listId) : null;
+    if (!list) throw new DomainError('smartLists.errors.notFound');
+    if (!canEditList(viewer, list)) throw new DomainError('errors.forbidden');
+    return list;
   }
 }
