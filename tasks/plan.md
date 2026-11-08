@@ -105,7 +105,7 @@ TypeScript runner.
 
 ### Phase 2: Screens
 - [x] Task 8: Start and map a property import — Sonnet
-- [ ] Task 9: Property preview — Sonnet
+- [x] Task 9: Property preview — Sonnet
 - [ ] Task 10: Commit, results and revert on the job page — Sonnet
 - [ ] Task 11: "Imported from" on the property timeline, matches right after import — Sonnet
 

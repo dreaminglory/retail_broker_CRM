@@ -166,4 +166,76 @@ describeServices('Property import fixtures against the local stack', () => {
       kept: { contacts: 0, inquiries: 0, properties: 0, areas: 0 },
     });
   });
+
+  // Task 9: what the preview shows, read back from the validated rows.
+  it('previews the edge-case file with the same counts as the expected table', async () => {
+    const { jobId } = await stageFixture('properties-edge.csv');
+    await imports.validate(owner.agencyId, jobId, owner.userId);
+
+    const preview = await imports.getPropertyPreview(owner.agencyId, jobId);
+
+    expect(preview.counts).toEqual({ new: 12, duplicate: 2, invalid: 7, skipped: 1 });
+    expect(preview.newAreas).toEqual([
+      expect.objectContaining({ name: 'Бояна', settlementName: 'София', rows: 1, checked: true }),
+    ]);
+    expect(preview.bgnConverted).toBe(1);
+    // Row 19's owner exists; rows 8 and 9 share one new owner.
+    expect(preview.owners).toEqual({ matched: 1, created: 1 });
+    expect(preview.rows).toHaveLength(22);
+    expect(preview.rows[0]).toMatchObject({
+      rowNumber: 1,
+      status: 'invalid',
+      label: 'гараж, с. Лозен, ул. Ръб 1',
+      errors: [expect.objectContaining({ code: 'import.errors.settlementAmbiguous' })],
+    });
+    expect(preview.rows[21].warnings).toEqual([{ field: 'owner_name', code: 'import.warnings.ownerSkippedNoName' }]);
+  });
+
+  it('imports the rows of an unticked new area without one, as saved from the preview', async () => {
+    const { jobId } = await stageFixture('properties-basic.csv');
+    await imports.validate(owner.agencyId, jobId, owner.userId);
+    const preview = await imports.getPropertyPreview(owner.agencyId, jobId);
+    const vitosha = preview.newAreas.find((a) => a.name.toLowerCase() === 'витоша');
+    expect(vitosha).toMatchObject({ rows: 3, checked: true });
+
+    await imports.setCreateAreas(owner.agencyId, jobId, preview.newAreas.filter((a) => a !== vitosha).map((a) => a.key));
+    expect((await imports.getPropertyPreview(owner.agencyId, jobId)).newAreas.find((a) => a.key === vitosha!.key)?.checked).toBe(false);
+
+    const { job, created } = await commitAndRevert(jobId);
+    expect(job).toEqual({ status: 'completed', created_count: 20 });
+    expect(created.areas).toBe(0);
+  });
+
+  it('refuses to change the kept areas of a job that is not a validated property job', async () => {
+    const { jobId } = await stageFixture('properties-basic.csv');
+    await expect(imports.setCreateAreas(owner.agencyId, jobId, [])).rejects.toMatchObject({ code: 'import.errors.invalidStatus' });
+  });
+
+  it('lists every invalid row in the error report, past the first 1,000 rows, with its reason', async () => {
+    const headers = ['Тип имот', 'Населено място', 'Адрес', 'Квадратура', 'Продажна цена'];
+    const data = Array.from({ length: 1050 }, (_, i) => ({
+      'Тип имот': 'гараж',
+      'Населено място': i === 4 || i === 1049 ? 'Атлантида' : 'София',
+      'Адрес': `ул. Отчет ${i + 1}`,
+      'Квадратура': '18',
+      'Продажна цена': '10000',
+    }));
+    const { jobId } = await imports.createJob(owner.agencyId, {
+      file_name: 'report.csv', file_sha256: 'e'.repeat(64), file_size_bytes: 1, encoding: 'utf-8',
+      delimiter: ',', entity_type: 'property', headers,
+    });
+    cleanup.track('import_jobs', jobId);
+    await imports.saveMapping(owner.agencyId, jobId, detectHeaders(headers, 'property'), { duplicate_strategy: 'skip' });
+    for (let i = 0; i < data.length; i += 500) {
+      await imports.stageRows(owner.agencyId, jobId, { startRow: i + 1, rows: data.slice(i, i + 500) });
+    }
+    await imports.validate(owner.agencyId, jobId, owner.userId);
+
+    const csv = await imports.buildErrorReportCsv(owner.agencyId, jobId, { reasonHeader: 'Причина', reason: (code) => `<${code}>` });
+    const lines = csv.trim().split('\n');
+    expect(lines).toHaveLength(3);
+    expect(lines[1]).toContain('ул. Отчет 5');
+    expect(lines[2]).toContain('ул. Отчет 1050');
+    expect(lines[2]).toContain('<import.errors.settlementNotFound>');
+  });
 });

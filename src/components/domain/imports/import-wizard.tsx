@@ -16,8 +16,12 @@ import {
   saveImportMappingAction, 
   stageImportRowsAction, 
   validateImportJobAction,
-  commitImportBatchAction
+  commitImportBatchAction,
+  getPropertyPreviewAction,
+  savePropertyImportAreasAction,
 } from "@/app/(dashboard)/settings/import/actions";
+import { PropertyImportPreview } from "./property-import-preview";
+import type { PropertyPreview } from "@/domain/imports/property-preview";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -77,6 +81,8 @@ export function ImportWizard({
 
   // Validation State
   const [summary, setSummary] = useState<any>(null);
+  const [propertyPreview, setPropertyPreview] = useState<PropertyPreview | null>(null);
+  const [keptAreas, setKeptAreas] = useState<Set<string>>(new Set());
   const [isStaged, setIsStaged] = useState(false);
 
   // Commit State
@@ -178,6 +184,16 @@ export function ImportWizard({
         return;
       }
 
+      if (entityType === "property") {
+        const previewRes = await getPropertyPreviewAction(jobId);
+        if (!previewRes.success || !previewRes.data) {
+          toast.error((!previewRes.success && previewRes.error) || t("validateFailed"));
+          return;
+        }
+        setPropertyPreview(previewRes.data);
+        setKeptAreas(new Set(previewRes.data.newAreas.filter((a) => a.checked).map((a) => a.key)));
+      }
+
       setSummary(validateRes.data);
       setProgress({ processed: 0, remaining: validateRes.data.valid });
       setStep(3);
@@ -193,6 +209,15 @@ export function ImportWizard({
     if (!jobId) return;
     try {
       setIsProcessing(true);
+      if (entityType === "property" && propertyPreview) {
+        // Only the ticked new areas are created; the rows of the others import without an area.
+        const kept = propertyPreview.newAreas.filter((a) => keptAreas.has(a.key)).map((a) => a.key);
+        const saveRes = await savePropertyImportAreasAction(jobId, kept);
+        if (!saveRes.success) {
+          toast.error(saveRes.error || t("commitFailed"));
+          return;
+        }
+      }
       setStep(4);
       
       let currentRemaining = summary.valid;
@@ -287,6 +312,22 @@ export function ImportWizard({
             <CardDescription>{t("step3.desc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {entityType === "property" && propertyPreview && jobId ? (
+              <PropertyImportPreview
+                jobId={jobId}
+                preview={propertyPreview}
+                duplicateStrategy={options.duplicate_strategy}
+                keptAreas={keptAreas}
+                onToggleArea={(key, keep) =>
+                  setKeptAreas((prev) => {
+                    const next = new Set(prev);
+                    if (keep) next.add(key);
+                    else next.delete(key);
+                    return next;
+                  })
+                }
+              />
+            ) : (<>
             <div className="grid grid-cols-4 gap-4 text-center">
               <div className="p-4 border rounded-md">
                 <div className="text-2xl font-bold">{summary.total}</div>
@@ -324,6 +365,7 @@ export function ImportWizard({
                 </div>
               </div>
             )}
+            </>)}
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(2)} disabled={isProcessing}>{t("back")}</Button>

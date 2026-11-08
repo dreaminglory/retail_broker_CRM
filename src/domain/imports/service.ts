@@ -14,17 +14,11 @@ import { areaKey, classifyPropertyRow, ownerMethods, resolveDefaultAssignee, set
 import { SettlementRepository } from "../settlements/repository";
 import { AreaRepository } from "../areas/repository";
 import type { PropertyImportOptionsInput, PropertyMappingInput } from "./validation";
-import type { ImportError } from "./types";
+import type { ImportError, ImportRow } from "./types";
+import { buildPropertyPreview, type PropertyPreview } from "./property-preview";
 
-/**
- * One row error as the error CSV writes it: the translated reason, plus its `detail` (such as
- * an ambiguous settlement's municipalities). A database error's detail is the raw Postgres
- * message, kept for support but never shown.
- */
-export function describeRowError(error: ImportError, reason: (code: string) => string): string {
-  const text = reason(error.code);
-  return error.detail && error.code !== "import.errors.dbWrite" ? `${text} (${error.detail})` : text;
-}
+export { describeRowError } from "./row-error";
+import { describeRowError } from "./row-error";
 
 export class ImportService {
   private repository: ImportRepository;
@@ -530,6 +524,61 @@ export class ImportService {
     return await this.repository.revertJob(jobId);
   }
 
+  /** Every row of the job in file order, page by page: one read is capped at 1,000 rows by PostgREST. */
+  private async listAllRows(agencyId: string, jobId: string): Promise<ImportRow[]> {
+    const pageSize = 1000;
+    const all: ImportRow[] = [];
+    for (let offset = 0; ; offset += pageSize) {
+      const page = await this.repository.listRows(agencyId, jobId, { offset, limit: pageSize });
+      all.push(...page);
+      if (page.length < pageSize) return all;
+    }
+  }
+
+  private async getValidatedPropertyJob(agencyId: string, jobId: string): Promise<ImportJob> {
+    const job = await this.repository.getJob(agencyId, jobId);
+    if (!job) throw new DomainError("import.errors.notFound", "Job not found");
+    if (job.entity_type !== "property" || job.status !== "validated") {
+      throw new DomainError("import.errors.invalidStatus", "Not a validated property job");
+    }
+    return job;
+  }
+
+  /** The property preview (spec: property-import, "Preview"), read from the validated rows. */
+  async getPropertyPreview(agencyId: string, jobId: string, locale: "bg" | "en" = "bg"): Promise<PropertyPreview> {
+    const job = await this.getValidatedPropertyJob(agencyId, jobId);
+    const rows = await this.listAllRows(agencyId, jobId);
+
+    const settlementIds = new Set<string>();
+    for (const row of rows) {
+      const area = (row.normalized as { new_area?: { settlement_id: string } | null } | null)?.new_area;
+      if (area) settlementIds.add(area.settlement_id);
+    }
+    const [settlements, areas] = await Promise.all([
+      new SettlementRepository(this.db).findByIds([...settlementIds]),
+      new AreaRepository(this.db).findBySettlements(agencyId, [...settlementIds]),
+    ]);
+    const existingAreas = new Map<string, string[]>();
+    for (const area of areas) {
+      existingAreas.set(area.settlement_id, [...(existingAreas.get(area.settlement_id) ?? []), area.name]);
+    }
+    const options = job.options as PropertyImportOptionsInput;
+
+    return buildPropertyPreview(rows, {
+      mapping: job.column_mapping,
+      duplicateStrategy: options.duplicate_strategy ?? "skip",
+      createAreas: options.create_areas,
+      settlementNames: new Map(settlements.map((s) => [s.id, locale === "en" ? s.name_en : s.name_bg])),
+      existingAreas,
+    });
+  }
+
+  /** The new areas the user kept in the preview (`options.create_areas`); the commit creates only these. */
+  async setCreateAreas(agencyId: string, jobId: string, keys: string[]): Promise<void> {
+    const job = await this.getValidatedPropertyJob(agencyId, jobId);
+    await this.repository.updateJob(agencyId, jobId, { options: { ...job.options, create_areas: keys } });
+  }
+
   async getSummary(agencyId: string, jobId: string): Promise<ImportSummary> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
@@ -551,8 +600,8 @@ export class ImportService {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
 
-    const rows = await this.repository.listRows(agencyId, jobId);
-    const errorRows = rows.filter(r => r.status === 'invalid' || r.status === 'error');
+    const errorRows = (await this.listAllRows(agencyId, jobId))
+      .filter(r => r.status === 'invalid' || r.status === 'error');
 
     if (errorRows.length === 0) return "";
 

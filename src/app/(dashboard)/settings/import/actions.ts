@@ -17,6 +17,9 @@ import { ImportRepository } from "@/domain/imports/repository";
 import { notifyAfterResponse } from "../../notify-after";
 import { DomainError } from "@/lib/errors";
 import type { RevertResult } from "@/domain/imports/types";
+import type { PropertyPreview } from "@/domain/imports/property-preview";
+import { getLocale } from "next-intl/server";
+import { z } from "zod";
 
 function assertManagerOrOwner(role: string) {
   if (role !== "owner" && role !== "manager") {
@@ -162,5 +165,33 @@ export async function revertImportJobAction(
     revalidatePath("/settings/import");
 
     return { success: true, data: result };
+  } catch (error) { return toActionError(error); }
+}
+
+const createAreasSchema = z.array(z.string().max(400)).max(5000);
+
+/** The property preview (spec: property-import, "Preview"), settlements named in the user's language. */
+export async function getPropertyPreviewAction(jobId: string): Promise<ActionResult<PropertyPreview>> {
+  try {
+    const ctx = await getAuthContext();
+    assertManagerOrOwner(ctx.role);
+
+    const locale = (await getLocale()) === "en" ? "en" : "bg";
+    const preview = await new ImportService(ctx.supabase).getPropertyPreview(ctx.agencyId, jobId, locale);
+    return { success: true, data: preview };
+  } catch (error) { return toActionError(error); }
+}
+
+/** The new areas the user kept ticked in the preview; the commit creates only these. */
+export async function savePropertyImportAreasAction(jobId: string, keys: string[]): Promise<ActionResult> {
+  try {
+    const ctx = await getAuthContext();
+    assertManagerOrOwner(ctx.role);
+
+    const parsed = createAreasSchema.safeParse(keys);
+    if (!parsed.success) return toActionError(new DomainError("import.errors.invalidOptions"));
+
+    await new ImportService(ctx.supabase).setCreateAreas(ctx.agencyId, jobId, parsed.data);
+    return { success: true, data: undefined };
   } catch (error) { return toActionError(error); }
 }

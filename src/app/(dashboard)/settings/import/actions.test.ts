@@ -7,6 +7,8 @@ const commitBatch = vi.fn();
 const saveMapping = vi.fn();
 const createJob = vi.fn();
 const getJob = vi.fn();
+const getPropertyPreview = vi.fn();
+const setCreateAreas = vi.fn();
 const notifyImportCompleted = vi.fn();
 let scheduled: Array<() => Promise<void>> = [];
 
@@ -15,6 +17,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 vi.mock('next-intl/server', () => ({
   getTranslations: async () => Object.assign((key: string) => key, { has: () => true }),
+  getLocale: async () => 'en',
 }));
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
 vi.mock('@/domain/imports/service', () => ({
@@ -22,6 +25,8 @@ vi.mock('@/domain/imports/service', () => ({
     commitBatch = commitBatch;
     saveMapping = saveMapping;
     createJob = createJob;
+    getPropertyPreview = getPropertyPreview;
+    setCreateAreas = setCreateAreas;
   },
 }));
 vi.mock('@/domain/imports/repository', () => ({
@@ -35,7 +40,13 @@ vi.mock('../../notify-after', () => ({
   },
 }));
 
-const { commitImportBatchAction, createImportJobAction, saveImportMappingAction } = await import('./actions');
+const {
+  commitImportBatchAction,
+  createImportJobAction,
+  saveImportMappingAction,
+  getPropertyPreviewAction,
+  savePropertyImportAreasAction,
+} = await import('./actions');
 
 describe('commitImportBatchAction', () => {
   beforeEach(() => {
@@ -154,5 +165,45 @@ describe('property import actions', () => {
     );
 
     expect(result).toMatchObject({ success: false, error: 'import.errors.invalidOptions' });
+  });
+});
+
+describe('property preview actions', () => {
+  beforeEach(() => {
+    fake = createFakeSupabase({ role: 'manager', userId: 'user-me', agencyId: 'agency-1' });
+    getPropertyPreview.mockReset();
+    setCreateAreas.mockReset();
+  });
+
+  it("reads the preview in the user's language", async () => {
+    getPropertyPreview.mockResolvedValue({ counts: { new: 1, duplicate: 0, invalid: 0, skipped: 0 } });
+
+    const result = await getPropertyPreviewAction('job-1');
+
+    expect(result.success).toBe(true);
+    expect(getPropertyPreview).toHaveBeenCalledWith('agency-1', 'job-1', 'en');
+  });
+
+  it('saves the kept areas', async () => {
+    const result = await savePropertyImportAreasAction('job-1', ['s-1:витоша']);
+
+    expect(result.success).toBe(true);
+    expect(setCreateAreas).toHaveBeenCalledWith('agency-1', 'job-1', ['s-1:витоша']);
+  });
+
+  it('refuses keys that are not strings', async () => {
+    const result = await savePropertyImportAreasAction('job-1', [42] as unknown as string[]);
+
+    expect(result.success).toBe(false);
+    expect(setCreateAreas).not.toHaveBeenCalled();
+  });
+
+  it('refuses a broker both', async () => {
+    fake = createFakeSupabase({ role: 'broker', userId: 'user-me', agencyId: 'agency-1' });
+
+    expect((await getPropertyPreviewAction('job-1')).success).toBe(false);
+    expect((await savePropertyImportAreasAction('job-1', [])).success).toBe(false);
+    expect(getPropertyPreview).not.toHaveBeenCalled();
+    expect(setCreateAreas).not.toHaveBeenCalled();
   });
 });

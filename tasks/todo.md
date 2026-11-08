@@ -267,12 +267,12 @@ Every string is in both message files.
 On 390 px the tables become cards.
 
 **Acceptance criteria:**
-- [ ] With `properties-edge.csv`, the preview counts equal the Task 7 expected table; unticking "Витоша" and committing imports its 3 rows without an area (integration test on the saved option).
-- [ ] The error CSV lists each invalid row with its translated reason in the user's language.
+- [x] With `properties-edge.csv`, the preview counts equal the Task 7 expected table; unticking "Витоша" and committing imports its 3 rows without an area (integration test on the saved option).
+- [x] The error CSV lists each invalid row with its translated reason in the user's language.
 
 **Verification:**
-- [ ] `npx vitest run src/components/domain/imports src/domain/imports`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`, 1280 and 390 px
+- [x] `npx vitest run src/components/domain/imports src/domain/imports`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`, 1280 and 390 px
 
 **Dependencies:** Task 8
 **Files likely touched:** `src/components/domain/imports/property-import-preview.tsx`, `src/components/domain/imports/import-wizard.tsx`, `src/domain/imports/area-similarity.ts` (+ test), `src/app/(dashboard)/settings/import/actions.ts`, `messages/*.json`

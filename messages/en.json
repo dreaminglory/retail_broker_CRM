@@ -338,7 +338,53 @@
       "reverted": "Reverted"
     },
     "errorReportReason": "Error reason",
-    "importProperties": "Import properties"
+    "importProperties": "Import properties",
+    "propertyPreview": {
+      "counts": {
+        "new": "New",
+        "duplicate": "Duplicates",
+        "invalid": "Invalid",
+        "skipped": "Already imported"
+      },
+      "strategy": {
+        "skip": "Duplicates (same settlement and address) will be skipped.",
+        "create": "Duplicates (same settlement and address) will be imported anyway."
+      },
+      "owners": "Owners: {matched, plural, one {# matched to an existing contact} other {# matched to existing contacts}}, {created, plural, one {# new contact} other {# new contacts}}.",
+      "bgnConverted": "{count, plural, one {# row has prices} other {# rows have prices}} in BGN, converted to EUR at 1.95583.",
+      "newAreas": {
+        "title": "New areas",
+        "desc": "These areas aren't in your list yet. Ticked areas are created; untick a misspelt one.",
+        "rows": "{count, plural, one {# property} other {# properties}}",
+        "similar": "Close to the existing area \"{name}\". A typo?",
+        "unticked": "Properties in an unticked area are imported without an area."
+      },
+      "rows": {
+        "title": "Rows",
+        "filter": "Show rows",
+        "row": "Row",
+        "property": "Property",
+        "outcome": "Outcome",
+        "notes": "Notes",
+        "rowNumber": "Row {row}",
+        "downloadErrors": "Download the error report",
+        "showingFirst": "Showing the first {shown} of {total} rows. The error report lists every invalid row.",
+        "filters": {
+          "all": "All rows",
+          "valid": "New",
+          "duplicate": "Duplicates",
+          "invalid": "Invalid",
+          "skipped": "Already imported"
+        }
+      },
+      "outcome": {
+        "valid": "New",
+        "duplicate": "Duplicate address",
+        "duplicateInFile": "Duplicate in the file",
+        "skipped": "Already imported (reference)",
+        "invalid": "Invalid"
+      }
+    }
   },
   "SettingsStages": {
     "settings": "Settings",
