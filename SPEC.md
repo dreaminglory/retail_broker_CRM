@@ -1,6 +1,6 @@
 # Spec: BrokerCRM
 
-> Last updated 2026-11-05. The product spec: what we build, in which order, and where it stands.
+> Last updated 2026-11-08. The product spec: what we build, in which order, and where it stands.
 > Module specs: `spec/<module-id>.md`. Active plan: `tasks/plan.md` + `tasks/todo.md`.
 
 ## 1. Objective
@@ -97,8 +97,8 @@ AD-050 RPCs. Leaked-password protection is still off
 **Go-live prerequisites (founder):** a domain verified in Resend, hosting that allows two daily
 crons (or the pg_cron fallback, AD-042), production env vars.
 
-**Open decisions:** none. Smart Lists stay in the gate (founder, 2026-11-07); scope in
-`spec/smart-lists.md`.
+**Open decisions:** none. `property-import` scope approved (founder, 2026-11-08) in
+`spec/property-import.md`; next step is `/plan`.
 
 ## 6. Pilot evidence
 
