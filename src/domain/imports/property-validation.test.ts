@@ -6,6 +6,7 @@ import {
   classifyPropertyRow,
   type ClassifyState,
   type PropertyLookups,
+  resolveDefaultAssignee,
   resolveSettlement,
   settlementLookup,
   validatePropertyRow,
@@ -67,6 +68,11 @@ describe('resolveSettlement', () => {
 
   it('stays ambiguous when the municipality matches none of them', () => {
     const result = resolveSettlement({ settlement: 'Лозен', municipality: 'Варна', province: null }, ALL);
+    expect(result).toMatchObject({ error: 'import.errors.settlementAmbiguous' });
+  });
+
+  it('stays ambiguous when the municipality contradicts, even if the province would pick one', () => {
+    const result = resolveSettlement({ settlement: 'Лозен', municipality: 'Варна', province: 'Хасково' }, ALL);
     expect(result).toMatchObject({ error: 'import.errors.settlementAmbiguous' });
   });
 
@@ -141,6 +147,21 @@ describe('validatePropertyRow', () => {
       new_area: { settlement_id: '00000000-0000-4000-8000-000000000005', name: 'Витоша', key: areaKey('00000000-0000-4000-8000-000000000005', 'Витоша') },
     });
     expect(areaKey('00000000-0000-4000-8000-000000000005', 'ВИТОША')).toBe(areaKey('00000000-0000-4000-8000-000000000005', 'Витоша'));
+  });
+
+  it('reads listed_at with the job date format, and ISO dates always', () => {
+    const us = context({ dateFormat: 'MM/dd/yyyy' });
+    // The same instant however the zone is written.
+    const listedAt = (cells: Record<string, string>, ctx = context()) =>
+      new Date(validate({ type: 'гараж', settlement: 'София', sale: '1000', ...cells }, ctx).normalized!.listings[0].listed_at!).toISOString();
+    // 5 March 2025, midnight in Sofia (UTC+2).
+    expect(listedAt({ listed: '03/05/2025' }, us)).toBe('2025-03-04T22:00:00.000Z');
+    expect(listedAt({ listed: '2025-03-05' }, us)).toBe('2025-03-04T22:00:00.000Z');
+    // A day over 12 doesn't fit MM/dd: an error, never a silent swap.
+    expect(validate({ type: 'гараж', settlement: 'София', sale: '1000', listed: '15/03/2025' }, us).errors)
+      .toEqual([{ field: 'listed_at', code: 'import.errors.invalidDate' }]);
+    // Without a format, slashes are day first.
+    expect(listedAt({ listed: '03/05/2025' })).toBe('2025-05-02T21:00:00.000Z');
   });
 
   it('defaults the assignee to the job default', () => {
@@ -277,5 +298,21 @@ describe('classifyPropertyRow (Task 4)', () => {
   it('adds the owner phone error to a row that is already invalid', () => {
     const result = classify(1, { settlement: 'Атлантида', phone: 'xx' });
     expect(result.errors.map((e) => e.code)).toEqual(['import.errors.settlementNotFound', 'import.errors.ownerPhoneInvalid']);
+  });
+});
+
+describe('resolveDefaultAssignee', () => {
+  const members = [{ user_id: '22222222-2222-4222-8222-000000000001' }];
+
+  it('takes the job default when it is an active member, else the importer', () => {
+    expect(resolveDefaultAssignee('22222222-2222-4222-8222-000000000001', 'importer', members)).toBe('22222222-2222-4222-8222-000000000001');
+    expect(resolveDefaultAssignee(null, 'importer', members)).toBe('importer');
+    expect(resolveDefaultAssignee(undefined, 'importer', members)).toBe('importer');
+  });
+
+  it('refuses a job default who is not an active member of the agency', () => {
+    expect(() => resolveDefaultAssignee('22222222-2222-4222-8222-000000000099', 'importer', members)).toThrow(
+      expect.objectContaining({ code: 'import.errors.unknownDefaultAssignee' }),
+    );
   });
 });

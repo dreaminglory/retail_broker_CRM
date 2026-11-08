@@ -92,4 +92,11 @@ describe('property schemas', () => {
     expect(propertyImportOptionsSchema.parse({})).toEqual({ duplicate_strategy: 'skip' });
     expect(propertyImportOptionsSchema.parse({ create_areas: ['x:Витоша'] }).create_areas).toEqual(['x:Витоша']);
   });
+
+  it('accepts only the supported date formats', () => {
+    for (const format of ['dd.MM.yyyy', 'dd/MM/yyyy', 'MM/dd/yyyy', 'yyyy-MM-dd']) {
+      expect(propertyImportOptionsSchema.parse({ date_format: format }).date_format).toBe(format);
+    }
+    expect(propertyImportOptionsSchema.safeParse({ date_format: 'yyyy' }).success).toBe(false);
+  });
 });

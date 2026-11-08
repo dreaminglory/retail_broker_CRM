@@ -10,10 +10,21 @@ import { MemberRepository } from "../members/repository";
 import { parseDate } from "./csv/date-parse";
 import { resolveSource, resolveAssignee, resolveStatus } from "./csv/value-resolvers";
 import { mapRowToPropertyCandidate } from "./csv/row-mapper";
-import { areaKey, classifyPropertyRow, ownerMethods, settlementLookup, validatePropertyRow, type ClassifyState, type PropertyLookups } from "./property-validation";
+import { areaKey, classifyPropertyRow, ownerMethods, resolveDefaultAssignee, settlementLookup, validatePropertyRow, type ClassifyState, type PropertyLookups } from "./property-validation";
 import { SettlementRepository } from "../settlements/repository";
 import { AreaRepository } from "../areas/repository";
 import type { PropertyImportOptionsInput, PropertyMappingInput } from "./validation";
+import type { ImportError } from "./types";
+
+/**
+ * One row error as the error CSV writes it: the translated reason, plus its `detail` (such as
+ * an ambiguous settlement's municipalities). A database error's detail is the raw Postgres
+ * message, kept for support but never shown.
+ */
+export function describeRowError(error: ImportError, reason: (code: string) => string): string {
+  const text = reason(error.code);
+  return error.detail && error.code !== "import.errors.dbWrite" ? `${text} (${error.detail})` : text;
+}
 
 export class ImportService {
   private repository: ImportRepository;
@@ -96,7 +107,7 @@ export class ImportService {
   }
 
   /** `userId` is the importer: property rows with no assignee and no job default go to them. */
-  async validate(agencyId: string, jobId: string, userId?: string): Promise<ImportSummary> {
+  async validate(agencyId: string, jobId: string, userId: string): Promise<ImportSummary> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
 
@@ -104,7 +115,7 @@ export class ImportService {
       return this.validateInquiries(agencyId, job);
     }
     if (job.entity_type === "property") {
-      return this.validateProperties(agencyId, job, userId ?? null);
+      return this.validateProperties(agencyId, job, userId);
     }
     
     const pageSize = 1000;
@@ -398,7 +409,7 @@ export class ImportService {
    * `normalized` payload with every id resolved, so the commit RPC never looks anything up by
    * name. Only the caller's agency's areas and members are loaded.
    */
-  private async validateProperties(agencyId: string, job: ImportJob, importerId: string | null): Promise<ImportSummary> {
+  private async validateProperties(agencyId: string, job: ImportJob, importerId: string): Promise<ImportSummary> {
     const pageSize = 1000;
     const options = job.options as PropertyImportOptionsInput;
     const settlementRepo = new SettlementRepository(this.db);
@@ -409,7 +420,7 @@ export class ImportService {
       email: m.email,
       display_name: m.display_name,
     }));
-    const defaultAssignee = options.default_assigned_to ?? importerId;
+    const defaultAssignee = resolveDefaultAssignee(options.default_assigned_to, importerId, members);
     // Earlier rows of the file, across pages: in-file external_ref and address duplicates.
     const state: ClassifyState = { refs: new Set(), addresses: new Set() };
 
@@ -431,7 +442,7 @@ export class ImportService {
       const areaIds = new Map(areas.map((a) => [areaKey(a.settlement_id, a.name), a.id]));
 
       const validated = candidates.map((candidate) =>
-        validatePropertyRow(candidate, { settlements, areas: areaIds, members, defaultAssignee })
+        validatePropertyRow(candidate, { settlements, areas: areaIds, members, defaultAssignee, dateFormat: options.date_format })
       );
 
       const refs: string[] = [];
@@ -552,7 +563,7 @@ export class ImportService {
     csv += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(delimiter) + '\n';
 
     for (const row of errorRows) {
-      const errorMsg = row.errors.map(e => labels.reason(e.code).replace(/"/g, '""')).join(", ");
+      const errorMsg = row.errors.map(e => describeRowError(e, labels.reason).replace(/"/g, '""')).join(", ");
       const rowValues = job.headers.map(h => {
         const val = row.raw[h] || "";
         return `"${val.replace(/"/g, '""')}"`;

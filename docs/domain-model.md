@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 70th migration
-(`20261109000004_import_revert_properties.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 71st migration
+(`20261109000005_property_import_review_fixes.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -90,6 +90,9 @@ Every table except `agencies`, `profiles` and the global reference table `settle
 Only keys and columns that carry business meaning are shown. `id`, `created_at`,
 `updated_at` exist on every table (except: `opportunity_participants`, `merge_history`,
 `import_rows`, `requirement_locations` have no `updated_at`; `audit_log` uses `performed_at`).
+On `properties`, `updated_at` moves only when an editable column changes: refreshing the
+derived `search_vector` (an area rename) or `address_key`, or an update that changes nothing,
+leaves it alone (AD-064).
 
 ### 2.1 Tenancy & access
 
@@ -748,7 +751,8 @@ it was edited or gained a note, task, opportunity, participant, inquiry or merge
 own import row brought in doesn't count unless it was edited. An inquiry is kept if it was
 edited or converted. A property (property jobs, AD-064) is kept if it was edited or archived,
 or has a note, a task, an opportunity link, a listing not from the job or changed since, or a
-party not from the job, ended or changed (M4). Properties go first (their listings and parties
+party not from the job, ended or changed, or lost a listing or the owner party its row created
+(deleted by hand) (M4). Properties go first (their listings and parties
 cascade), then the contact rule, which then finds their owners free; last, the job's areas no
 property or requirement uses. A property job's result also counts `properties` and `areas`.
 Rows that created a record become `reverted` or `revert_skipped`; rows that created nothing
@@ -917,7 +921,7 @@ The "Enforced by" column tells you which layer to change and test.
 | M1 | Import file ≤ 5 MB, UTF-8 or Windows-1251 | `CHECK` on `import_jobs` |
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18; for a property job, a party only on properties this revert deletes doesn't) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql`, `102-property-import-revert.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
-| M4 | A property import revert never deletes a worked-on property (edited, archived, or with a note, task, opportunity link, a listing not from the job or changed since, or a party not from the job, ended or changed), its owner, a contact that existed before the import, or an area a property or requirement uses | RPC `import_revert` + `102-property-import-revert.sql` |
+| M4 | A property import revert never deletes a worked-on property (edited, archived, or with a note, task, opportunity link, a listing not from the job or changed since, a party not from the job, ended or changed, or a listing or owner party of its row deleted by hand), its owner, a contact that existed before the import, or an area a property or requirement uses. Renaming an area is not work on its properties | RPC `import_revert`, trigger `set_properties_updated_at` + `102-property-import-revert.sql`, `103-property-import-review-fixes.sql` |
 
 ---
 

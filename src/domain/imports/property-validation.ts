@@ -7,6 +7,7 @@ import { parsePropertyAttributes, type PropertyCandidate } from './csv/row-mappe
 import { resolveAssignee } from './csv/value-resolvers';
 import { normalizePhone } from '@/domain/contacts/phone';
 import type { ImportError } from './types';
+import { DomainError } from '@/lib/errors';
 
 /**
  * Property row validation (spec: property-import rules 1–3 and 5, AD-064). Pure: the service
@@ -69,9 +70,10 @@ export function resolveSettlement(
   if (byName.length === 0) return { error: 'import.errors.settlementNotFound', candidates: [] };
   if (byName.length === 1) return { id: byName[0].id };
 
-  let narrowed = narrow(byName, row.municipality, MUNICIPALITY_PREFIX, (s) => [s.municipality_bg, s.municipality_en]);
-  if (narrowed.length === 0) narrowed = byName;
-  narrowed = narrow(narrowed, row.province, PROVINCE_PREFIX, (s) => [s.province_bg, s.province_en]);
+  // A municipality or province that matches none of the candidates contradicts the name: it
+  // is never dropped so the other one can pick (that would be a guess).
+  const byMunicipality = narrow(byName, row.municipality, MUNICIPALITY_PREFIX, (s) => [s.municipality_bg, s.municipality_en]);
+  const narrowed = narrow(byMunicipality, row.province, PROVINCE_PREFIX, (s) => [s.province_bg, s.province_en]);
   if (narrowed.length === 1) return { id: narrowed[0].id };
 
   const left = narrowed.length > 0 ? narrowed : byName;
@@ -102,9 +104,27 @@ export type PropertyRowContext = {
   /** Existing areas of the agency, keyed by `areaKey`, active or not. */
   areas: Map<string, string>;
   members: { user_id: string; email?: string | null; display_name?: string | null }[];
-  /** `options.default_assigned_to`, else the importer. */
-  defaultAssignee: string | null;
+  /** `options.default_assigned_to`, else the importer (`resolveDefaultAssignee`). */
+  defaultAssignee: string;
+  /** `options.date_format`; without it, slashed dates are read day first. */
+  dateFormat?: string;
 };
+
+/**
+ * The assignee of rows without their own: the job default, which must be an active member of
+ * the agency (a stale id would fail every row at commit), else the importer.
+ */
+export function resolveDefaultAssignee(
+  jobDefault: string | null | undefined,
+  importerId: string,
+  members: { user_id: string }[],
+): string {
+  if (!jobDefault) return importerId;
+  if (!members.some((m) => m.user_id === jobDefault)) {
+    throw new DomainError('import.errors.unknownDefaultAssignee', `Default assignee ${jobDefault} is not an active member`);
+  }
+  return jobDefault;
+}
 
 export type PropertyRowResult = {
   status: 'valid' | 'invalid';
@@ -150,7 +170,7 @@ export function validatePropertyRow(candidate: PropertyCandidate, ctx: PropertyR
 
   let listedAt: string | null = null;
   if (hasPrice && candidate.listed_at) {
-    const parsed = parseDate(candidate.listed_at);
+    const parsed = parseDate(candidate.listed_at, undefined, ctx.dateFormat);
     if (parsed) listedAt = parsed.toISOString();
     else errors.push({ field: 'listed_at', code: 'import.errors.invalidDate' });
   }

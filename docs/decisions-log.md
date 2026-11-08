@@ -505,10 +505,18 @@ warning case).
 - **Audit carries the job.** The property and listing `created` audit rows get `import_job_id` in
   `metadata` when the record has one; the timeline shows "Imported from <file>".
 - **Revert "untouched"**: the property's `updated_at` ≤ the job's `completed_at`, and no note,
-  task or opportunity link, no listing outside the job or changed after it, and no party ended,
-  added later or from outside the job. Properties go first (listings and parties cascade), then
+  task or opportunity link, no listing outside the job or changed after it, no party ended,
+  added later or from outside the job, and none of the row's listings or its owner party deleted
+  by hand. `properties.updated_at` moves only when an editable column changes (a trigger `WHEN`
+  that ignores `search_vector` and `address_key`), so renaming an area isn't work on its
+  properties (Checkpoint 1 review). Properties go first (listings and parties cascade), then
   the existing contact rule, then the job's areas no property or `requirement_locations` row uses.
 - **Limits** unchanged: 5 MB, 5,000 rows, 500-row chunks.
+- **Numbers and dates.** A dot or comma before exactly three digits is a thousands separator
+  (`185.000` and `185,000` are both 185 000). `options.date_format` is one of `dd.MM.yyyy`,
+  `dd/MM/yyyy`, `MM/dd/yyyy`, `yyyy-MM-dd` and replaces the day-first guesses; ISO dates are
+  always accepted. A job default assignee must be an active member, or validation refuses the
+  job (`import.errors.unknownDefaultAssignee`).
 **Why:** one validation path shared with the property form and contacts, one address rule the
 preview and the commit can't disagree on, and a per-row all-or-nothing write that a revert can
 undo precisely.

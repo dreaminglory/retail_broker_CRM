@@ -120,10 +120,13 @@ export const propertyMappingSchema = z
 
 export type PropertyMappingInput = z.infer<typeof propertyMappingSchema>;
 
+/** How a property file writes `listed_at`; ISO dates are always accepted as well. */
+export const PROPERTY_DATE_FORMATS = ["dd.MM.yyyy", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"] as const;
+
 export const propertyImportOptionsSchema = z.object({
   duplicate_strategy: z.enum(["skip", "create"]).default("skip"),
   default_assigned_to: z.string().uuid().nullable().optional(),
-  date_format: z.string().optional(),
+  date_format: z.enum(PROPERTY_DATE_FORMATS).optional(),
   /** The `settlement_id:name` keys of the new areas to create; absent means all of them. */
   create_areas: z.array(z.string().max(400)).max(5000).optional(),
 });

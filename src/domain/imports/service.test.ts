@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeSupabase } from '@/test/fake-supabase';
-import { ImportService } from './service';
+import { describeRowError, ImportService } from './service';
 
 vi.mock('../members/repository', () => ({
   MemberRepository: class {
@@ -19,8 +19,23 @@ describe('ImportService.validate', () => {
       failingTables: ['lead_sources'],
     });
 
-    await expect(new ImportService(client as SupabaseClient).validate('agency-1', 'job-1')).rejects.toMatchObject({
+    await expect(new ImportService(client as SupabaseClient).validate('agency-1', 'job-1', 'user-1')).rejects.toMatchObject({
       code: 'errors.loadFailed',
     });
+  });
+});
+
+describe('describeRowError', () => {
+  const reason = (code: string) => `[${code}]`;
+
+  it('adds the detail, such as the candidate municipalities', () => {
+    expect(describeRowError({ field: 'settlement', code: 'import.errors.settlementAmbiguous', detail: 'Столична, Любимец' }, reason))
+      .toBe('[import.errors.settlementAmbiguous] (Столична, Любимец)');
+    expect(describeRowError({ field: 'type', code: 'import.errors.invalidPrice' }, reason)).toBe('[import.errors.invalidPrice]');
+  });
+
+  it('never shows the raw database message of a failed write', () => {
+    expect(describeRowError({ field: 'row', code: 'import.errors.dbWrite', detail: 'violates check constraint "x"' }, reason))
+      .toBe('[import.errors.dbWrite]');
   });
 });

@@ -50,6 +50,12 @@ describe('parseNumber', () => {
     ['1 200', 1200],
     ['1 200', 1200],
     ['185,000', 185000],
+    // A dot before exactly three digits is a thousands separator, as a comma is.
+    ['185.000', 185000],
+    ['1.200', 1200],
+    ['1.250.000', 1250000],
+    ['2.5', 2.5],
+    ['68.50', 68.5],
     ['1.200,50', 1200.5],
     ['1,200.50', 1200.5],
   ])('%s → %d', (value, expected) => {
@@ -109,6 +115,9 @@ describe('parsePrice', () => {
     ['1 200 лв.', { ok: true, amount: 613.55, converted: true }],
     ['1200 BGN', { ok: true, amount: 613.55, converted: true }],
     ['250000 лева', { ok: true, amount: 127822.97, converted: true }],
+    ['185.000', { ok: true, amount: 185000, converted: false }],
+    ['185.000 €', { ok: true, amount: 185000, converted: false }],
+    ['1.200 лв.', { ok: true, amount: 613.55, converted: true }],
   ])('%s', (value, expected) => {
     expect(parsePrice(value)).toEqual(expected);
   });

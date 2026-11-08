@@ -51,7 +51,7 @@ export function resolvePropertyType(
 const UNIT_SUFFIX = /\s*(кв\.?\s*м\.?|кв\.?|m²|м²|m2|м2|sqm)\s*$/i;
 
 /**
- * A number as spreadsheets write it: `68,5`, `68.5 кв.м`, `1 200`, `185,000`, `1.200,50`.
+ * A number as spreadsheets write it: `68,5`, `68.5 кв.м`, `1 200`, `185,000`, `185.000`, `1.200,50`.
  * Blank is null; anything else that isn't a number is NaN, so the property schema reports
  * its own `validation.number_invalid`.
  */
@@ -68,7 +68,8 @@ export function parseNumber(value: string | null | undefined): number | null {
     s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
   } else if (hasComma) {
     s = /^-?\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, '') : s.replace(',', '.');
-  } else if (hasDot && /^-?\d{1,3}(\.\d{3}){2,}$/.test(s)) {
+  } else if (hasDot && /^-?\d{1,3}(\.\d{3})+$/.test(s)) {
+    // `185.000` is 185 000, as `185,000` is: nothing we import has three decimals.
     s = s.replace(/\./g, '');
   }
 
