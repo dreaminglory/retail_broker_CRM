@@ -3,6 +3,9 @@ import type { SettlementRow } from '@/domain/settlements/types';
 import { mapRowToPropertyCandidate } from './csv/row-mapper';
 import {
   areaKey,
+  classifyPropertyRow,
+  type ClassifyState,
+  type PropertyLookups,
   resolveSettlement,
   settlementLookup,
   validatePropertyRow,
@@ -179,5 +182,100 @@ describe('validatePropertyRow', () => {
   it('never matches an area of another settlement', () => {
     const result = validate({ type: 'гараж', settlement: 'Лозен', municipality: 'Столична', area: 'Лозенец' });
     expect(result.normalized).toMatchObject({ property: { area_id: null }, new_area: { settlement_id: '00000000-0000-4000-8000-000000000001' } });
+  });
+});
+
+describe('classifyPropertyRow (Task 4)', () => {
+  const OWNER_A = '33333333-3333-4333-8333-000000000001';
+  const OWNER_B = '33333333-3333-4333-8333-000000000002';
+
+  const fullMapping = { ...mapping, owner_name: 'owner', owner_phone: 'phone', owner_email: 'email' };
+  const lookups = (over: Partial<PropertyLookups> = {}): PropertyLookups => ({
+    refs: new Map([['A-1', 'existing-by-ref']]),
+    addresses: new Map(),
+    phones: new Map([['+359888123456', OWNER_A]]),
+    emails: new Map([['owner@b.bg', OWNER_B]]),
+    contactNames: new Map([[OWNER_A, 'Иван Петров'], [OWNER_B, 'Мария Б']]),
+    ...over,
+  });
+  const fresh = (): ClassifyState => ({ refs: new Set(), addresses: new Set() });
+
+  const classify = (rowNumber: number, cells: Record<string, string>, l = lookups(), state = fresh()) => {
+    const candidate = mapRowToPropertyCandidate({ type: 'гараж', settlement: 'София', ...cells }, fullMapping);
+    const validated = validatePropertyRow(candidate, context());
+    return classifyPropertyRow(rowNumber, candidate, validated, l, state);
+  };
+
+  it('skips a row whose external_ref an existing property has', () => {
+    expect(classify(1, { ref: 'A-1' })).toMatchObject({ status: 'skipped', match_reason: 'external_ref', matched_entity_id: 'existing-by-ref' });
+  });
+
+  it('skips a row whose external_ref an earlier row has', () => {
+    const state = fresh();
+    expect(classify(1, { ref: 'NEW-1' }, lookups(), state).status).toBe('valid');
+    expect(classify(2, { ref: 'NEW-1' }, lookups(), state)).toMatchObject({ status: 'skipped', match_reason: 'external_ref', matched_entity_id: null });
+  });
+
+  it('marks an address an existing property has a duplicate', () => {
+    const l = lookups({ addresses: new Map([[3, { key: 'яворов12', property_id: 'existing-by-address' }]]) });
+    expect(classify(3, { address: 'ул Яворов 12' }, l)).toMatchObject({ status: 'duplicate', match_reason: 'address', matched_entity_id: 'existing-by-address' });
+  });
+
+  it('marks the second row with the same settlement and address in_file', () => {
+    const l = lookups({ addresses: new Map([[1, { key: 'яворов12', property_id: null }], [2, { key: 'яворов12', property_id: null }]]) });
+    const state = fresh();
+    expect(classify(1, { address: 'ул. Яворов 12' }, l, state).status).toBe('valid');
+    expect(classify(2, { address: 'ул Яворов 12' }, l, state)).toMatchObject({ status: 'duplicate', match_reason: 'in_file' });
+  });
+
+  it('never calls rows in different settlements or without an address in-file duplicates', () => {
+    const l = lookups({ addresses: new Map([[1, { key: 'яворов12', property_id: null }], [2, { key: 'яворов12', property_id: null }]]) });
+    const state = fresh();
+    classify(1, { address: 'ул. Яворов 12' }, l, state);
+    expect(classify(2, { settlement: 'Лозен', municipality: 'Столична', address: 'ул. Яворов 12' }, l, state).status).toBe('valid');
+    expect(classify(3, {}, l, state).status).toBe('valid');
+    expect(classify(4, {}, l, state).status).toBe('valid');
+  });
+
+  it('links an owner matched by phone, then by email', () => {
+    expect(classify(1, { owner: 'Иван', phone: '0888 123 456' }).normalized).toMatchObject({
+      owner_contact_id: OWNER_A, owner_display_name: 'Иван Петров', new_owner: null,
+    });
+    expect(classify(1, { phone: '0899 000 000', email: 'OWNER@b.bg', owner: 'Мария' }).normalized).toMatchObject({ owner_contact_id: OWNER_B });
+  });
+
+  it('creates a new owner, split into first and last name, when nothing matches', () => {
+    expect(classify(1, { owner: 'Петър Иванов Петров', phone: '0899 000 000', email: 'P@x.bg' }).normalized).toMatchObject({
+      owner_contact_id: null,
+      new_owner: { first_name: 'Петър', last_name: 'Иванов Петров', phone: '+359899000000', email: 'p@x.bg' },
+    });
+  });
+
+  it('never matches a name-only owner', () => {
+    expect(classify(1, { owner: 'Иван Петров' }).normalized).toMatchObject({
+      owner_contact_id: null, new_owner: { first_name: 'Иван', last_name: 'Петров', phone: null, email: null },
+    });
+  });
+
+  it('has no owner when the row has none', () => {
+    expect(classify(1, {}).normalized).toMatchObject({ owner_contact_id: null, new_owner: null });
+  });
+
+  it('makes an owner phone that does not parse invalid', () => {
+    expect(classify(1, { owner: 'Иван', phone: '12' })).toMatchObject({
+      status: 'invalid', errors: [{ field: 'owner_phone', code: 'import.errors.ownerPhoneInvalid' }],
+    });
+  });
+
+  it('makes a new owner with no name invalid, rather than inventing one', () => {
+    expect(classify(1, { phone: '0899 000 000' })).toMatchObject({
+      status: 'invalid', errors: [{ field: 'owner_name', code: 'import.errors.ownerNameRequired' }],
+    });
+    expect(classify(1, { phone: '0888 123 456' }).status).toBe('valid');
+  });
+
+  it('adds the owner phone error to a row that is already invalid', () => {
+    const result = classify(1, { settlement: 'Атлантида', phone: 'xx' });
+    expect(result.errors.map((e) => e.code)).toEqual(['import.errors.settlementNotFound', 'import.errors.ownerPhoneInvalid']);
   });
 });

@@ -75,7 +75,7 @@ These are the places where the plan makes the spec more concrete. Task 1 records
 - [x] Task 1: AD-064, schema, address key, audit metadata — **Opus**
 - [x] Task 2: Parsers: header synonyms, value resolvers, row mapper — Sonnet
 - [x] Task 3: Validation: location, listings, assignee — Sonnet (Opus review)
-- [ ] Task 4: Validation: duplicates and owners — **Opus**
+- [x] Task 4: Validation: duplicates and owners — **Opus**
 - [ ] Task 5: `import_commit_properties` — **Opus**
 - [ ] Task 6: Revert for property jobs — **Opus**
 - [ ] Task 7: Fixtures and the 2,000-row scale run — Sonnet

@@ -5,6 +5,7 @@ import { parseDate } from './csv/date-parse';
 import { normalizeSettlementName } from './csv/property-resolvers';
 import { parsePropertyAttributes, type PropertyCandidate } from './csv/row-mapper';
 import { resolveAssignee } from './csv/value-resolvers';
+import { normalizePhone } from '@/domain/contacts/phone';
 import type { ImportError } from './types';
 
 /**
@@ -187,4 +188,117 @@ export function validatePropertyRow(candidate: PropertyCandidate, ctx: PropertyR
     },
     errors: [],
   };
+}
+
+// ── Duplicates and owners (Task 4) ───────────────────────────────────────────
+
+export type NewOwner = { first_name: string; last_name: string | null; phone: string | null; email: string | null };
+
+/** What the service looked up for one page of rows, all in the caller's agency. */
+export type PropertyLookups = {
+  /** external_ref → existing property id. */
+  refs: Map<string, string>;
+  /** row number → its address key and the existing property with that key in its settlement. */
+  addresses: Map<number, { key: string; property_id: string | null }>;
+  /** E.164 phone → contact id, and lowercase email → contact id. */
+  phones: Map<string, string>;
+  emails: Map<string, string>;
+  contactNames: Map<string, string>;
+};
+
+/** What earlier rows of the same file claimed, carried across pages. */
+export type ClassifyState = { refs: Set<string>; addresses: Set<string> };
+
+export type ClassifiedPropertyRow = {
+  status: 'valid' | 'invalid' | 'duplicate' | 'skipped';
+  normalized: (NormalizedPropertyRow & OwnerFields) | null;
+  errors: ImportError[];
+  match_reason: 'external_ref' | 'address' | 'in_file' | null;
+  matched_entity_id: string | null;
+};
+
+type OwnerFields = {
+  owner_contact_id: string | null;
+  owner_display_name: string | null;
+  new_owner: NewOwner | null;
+};
+
+/** The owner's phone as E.164 and email lowercase; `phoneInvalid` when a phone is there but doesn't parse. */
+export function ownerMethods(candidate: PropertyCandidate): { phone: string | null; email: string | null; phoneInvalid: boolean } {
+  const phone = candidate.owner_phone ? normalizePhone(candidate.owner_phone) : null;
+  return {
+    phone,
+    email: candidate.owner_email ? candidate.owner_email.trim().toLowerCase() : null,
+    phoneInvalid: !!candidate.owner_phone && phone === null,
+  };
+}
+
+/** Split as the contact import does: the first word is the first name, the rest the last name. */
+function splitName(name: string): { first_name: string; last_name: string | null } {
+  const parts = name.trim().split(/\s+/);
+  return { first_name: parts[0], last_name: parts.length > 1 ? parts.slice(1).join(' ') : null };
+}
+
+/**
+ * Rules 4 and 6, applied to a row in file order after `validatePropertyRow`:
+ * 1. the owner phone must parse, and a new owner needs a name (we never invent one);
+ * 2. an `external_ref` an existing property or an earlier row has → `skipped`;
+ * 3. an address key an existing property in the settlement has → `duplicate` / `address`,
+ *    or an earlier row with the same settlement and key → `duplicate` / `in_file`;
+ * 4. the owner is matched by phone, then email; otherwise a new contact (name-only owners are
+ *    never matched).
+ */
+export function classifyPropertyRow(
+  rowNumber: number,
+  candidate: PropertyCandidate,
+  validated: PropertyRowResult,
+  lookups: PropertyLookups,
+  state: ClassifyState,
+): ClassifiedPropertyRow {
+  const invalid = (errors: ImportError[]): ClassifiedPropertyRow => ({
+    status: 'invalid', normalized: null, errors, match_reason: null, matched_entity_id: null,
+  });
+
+  const methods = ownerMethods(candidate);
+  const errors = [...validated.errors];
+  if (methods.phoneInvalid) errors.push({ field: 'owner_phone', code: 'import.errors.ownerPhoneInvalid' });
+  if (validated.status === 'invalid' || !validated.normalized || errors.length > 0) return invalid(errors);
+
+  const matchedOwner =
+    (methods.phone && lookups.phones.get(methods.phone)) || (methods.email && lookups.emails.get(methods.email)) || null;
+  let owner: OwnerFields = { owner_contact_id: null, owner_display_name: null, new_owner: null };
+  if (matchedOwner) {
+    owner = { owner_contact_id: matchedOwner, owner_display_name: lookups.contactNames.get(matchedOwner) ?? null, new_owner: null };
+  } else if (candidate.owner_name) {
+    owner = { ...owner, new_owner: { ...splitName(candidate.owner_name), phone: methods.phone, email: methods.email } };
+  } else if (methods.phone || methods.email) {
+    return invalid([{ field: 'owner_name', code: 'import.errors.ownerNameRequired' }]);
+  }
+
+  const normalized = { ...validated.normalized, ...owner };
+  const result = (
+    status: ClassifiedPropertyRow['status'],
+    match_reason: ClassifiedPropertyRow['match_reason'] = null,
+    matched_entity_id: string | null = null,
+  ): ClassifiedPropertyRow => ({ status, normalized, errors: [], match_reason, matched_entity_id });
+
+  const ref = candidate.external_ref;
+  if (ref) {
+    const existing = lookups.refs.get(ref);
+    const earlier = state.refs.has(ref);
+    state.refs.add(ref);
+    if (existing) return result('skipped', 'external_ref', existing);
+    if (earlier) return result('skipped', 'external_ref');
+  }
+
+  const address = lookups.addresses.get(rowNumber);
+  if (address) {
+    const key = `${normalized.property.settlement_id}|${address.key}`;
+    const earlier = state.addresses.has(key);
+    state.addresses.add(key);
+    if (address.property_id) return result('duplicate', 'address', address.property_id);
+    if (earlier) return result('duplicate', 'in_file');
+  }
+
+  return result('valid');
 }

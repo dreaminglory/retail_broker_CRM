@@ -123,13 +123,13 @@ In `validateProperties`:
 - The job counts gain `skipped_count` for `external_ref` skips.
 
 **Acceptance criteria:**
-- [ ] pgTAP: the address function finds Alpha's property for `ул Яворов 12` and never Beta's, refuses `anon`, and returns nothing for a blank address.
-- [ ] Integration: re-validating an already imported file marks every row `skipped`; a row with an existing settlement and address is `duplicate`; two rows with the same address in one file make the second `in_file`; an owner phone that exists links that contact; an unparseable phone is invalid.
-- [ ] An address duplicate never fires across different settlements, or for rows without an address.
+- [x] pgTAP: the address function finds Alpha's property for `ул Яворов 12` and never Beta's, refuses `anon`, and returns nothing for a blank address.
+- [x] Integration: re-validating an already imported file marks every row `skipped`; a row with an existing settlement and address is `duplicate`; two rows with the same address in one file make the second `in_file`; an owner phone that exists links that contact; an unparseable phone is invalid.
+- [x] An address duplicate never fires across different settlements, or for rows without an address.
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`; `npm run test:services`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`; `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Tasks 1, 3
 **Files likely touched:** `supabase/migrations/<ts>_import_property_address_matches.sql`, `supabase/tests/database/100-property-import.sql`, `src/domain/imports/service.ts`, `src/domain/imports/repository.ts`, `src/domain/imports/service.integration.test.ts`

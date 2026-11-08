@@ -242,6 +242,70 @@ export class ImportRepository {
     return results;
   }
 
+  /** Existing properties of the agency with one of these `external_ref`s (rule 4). */
+  async lookupPropertyExternalRefs(agencyId: string, refs: string[]): Promise<{ id: string; external_ref: string }[]> {
+    const unique = [...new Set(refs)];
+    const results: { id: string; external_ref: string }[] = [];
+    for (let i = 0; i < unique.length; i += 500) {
+      const { data, error } = await this.db
+        .from("properties")
+        .select("id, external_ref")
+        .eq("agency_id", agencyId)
+        .in("external_ref", unique.slice(i, i + 500));
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up property external refs: ${error.message}`);
+      results.push(...((data ?? []) as { id: string; external_ref: string }[]));
+    }
+    return results;
+  }
+
+  /**
+   * Each row's address key and the caller's agency's property with that key in the row's
+   * settlement (`import_property_address_matches`, the one copy of the address rule, AD-064).
+   */
+  async matchPropertyAddresses(
+    items: { row: number; settlement_id: string; address: string }[]
+  ): Promise<{ row_index: number; address_key: string; property_id: string | null }[]> {
+    const results: { row_index: number; address_key: string; property_id: string | null }[] = [];
+    for (let i = 0; i < items.length; i += 500) {
+      const { data, error } = await this.db.rpc("import_property_address_matches", { p_items: items.slice(i, i + 500) });
+      if (error) throw new DomainError('errors.loadFailed', `Failed to match property addresses: ${error.message}`);
+      results.push(...((data ?? []) as typeof results));
+    }
+    return results;
+  }
+
+  /** Contact methods of one type with these values, in the agency (owner matching, rule 6). */
+  async lookupMethodsOfType(agencyId: string, type: "phone" | "email", values: string[]): Promise<{ contact_id: string; value: string }[]> {
+    const unique = [...new Set(values)];
+    const results: { contact_id: string; value: string }[] = [];
+    for (let i = 0; i < unique.length; i += 500) {
+      const { data, error } = await this.db
+        .from("contact_methods")
+        .select("contact_id, value")
+        .eq("agency_id", agencyId)
+        .eq("type", type)
+        .in("value", unique.slice(i, i + 500));
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up contact methods: ${error.message}`);
+      results.push(...((data ?? []) as { contact_id: string; value: string }[]));
+    }
+    return results;
+  }
+
+  async lookupContactNames(agencyId: string, ids: string[]): Promise<Map<string, string>> {
+    const unique = [...new Set(ids)];
+    const names = new Map<string, string>();
+    for (let i = 0; i < unique.length; i += 200) {
+      const { data, error } = await this.db
+        .from("contacts")
+        .select("id, display_name")
+        .eq("agency_id", agencyId)
+        .in("id", unique.slice(i, i + 200));
+      if (error) throw new DomainError('errors.loadFailed', `Failed to look up contacts: ${error.message}`);
+      (data ?? []).forEach((c) => names.set(c.id as string, c.display_name as string));
+    }
+    return names;
+  }
+
   async commitContactsBatch(jobId: string, limit: number = 200): Promise<{ processed: number; remaining: number }> {
     const { data, error } = await this.db.rpc("import_commit_contacts", {
       p_job_id: jobId,

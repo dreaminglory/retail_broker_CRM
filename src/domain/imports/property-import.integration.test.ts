@@ -4,11 +4,11 @@ import { areaKey, type NormalizedPropertyRow } from './property-validation';
 import { ImportService } from './service';
 import type { ImportRow } from './types';
 
-const HEADERS = ['Тип', 'Град', 'Община', 'Квартал', 'Адрес', 'Площ', 'Етаж', 'Цена', 'Наем', 'Статус', 'Брокер', 'Реф'];
+const HEADERS = ['Тип', 'Град', 'Община', 'Квартал', 'Адрес', 'Площ', 'Етаж', 'Цена', 'Наем', 'Статус', 'Брокер', 'Реф', 'Собственик', 'Телефон', 'Имейл'];
 const MAPPING = {
   type: 'Тип', settlement: 'Град', municipality: 'Община', area: 'Квартал', address: 'Адрес', area_m2: 'Площ',
   floor: 'Етаж', sale_price: 'Цена', rent_price: 'Наем', listing_status: 'Статус', assigned_to: 'Брокер',
-  external_ref: 'Реф',
+  external_ref: 'Реф', owner_name: 'Собственик', owner_phone: 'Телефон', owner_email: 'Имейл',
 };
 
 describeServices('Property import against the local stack', () => {
@@ -140,6 +140,81 @@ describeServices('Property import against the local stack', () => {
       expect((area.normalized as unknown as NormalizedPropertyRow).new_area).toMatchObject({ settlement_id: sofiaId, name: 'Бета Парк' });
       expect(member.status).toBe('invalid');
       expect(member.errors).toEqual([{ field: 'assigned_to', code: 'import.errors.unknownAssignee' }]);
+    });
+  });
+
+  describe('duplicates and owners (Task 4)', () => {
+    it('skips every row whose external_ref an existing property has, so a re-run creates nothing', async () => {
+      const refs = ['T4-REF-1', 'T4-REF-2'];
+      const { data: made, error } = await owner.db
+        .from('properties')
+        .insert(refs.map((external_ref) => ({ agency_id: owner.agencyId, code: 0, type: 'garage', settlement_id: plovdivId, external_ref })))
+        .select('id');
+      expect(error).toBeNull();
+      made!.forEach((p) => cleanup.track('properties', p.id));
+
+      const { jobId, service } = await stage(refs.map((ref) => row({ Тип: 'гараж', Град: 'Пловдив', Реф: ref })));
+      await service.validate(owner.agencyId, jobId, owner.userId);
+
+      const result = await rowsOf(jobId);
+      expect(result.map((r) => [r.status, r.match_reason])).toEqual([['skipped', 'external_ref'], ['skipped', 'external_ref']]);
+      const { data: job } = await owner.db.from('import_jobs').select('skipped_count, valid_count').eq('id', jobId).single();
+      expect(job).toEqual({ skipped_count: 2, valid_count: 0 });
+    });
+
+    it('finds address duplicates against the database and within the file, only in the same settlement', async () => {
+      // Seeded Alpha property: "ул. Кричим 12, вх. А, ап. 9" in Sofia.
+      const { data: seeded } = await owner.db.from('properties').select('id').eq('agency_id', owner.agencyId).eq('address', 'ул. Кричим 12, вх. А, ап. 9').single();
+      const { jobId, service } = await stage([
+        row({ Тип: 'гараж', Град: 'София', Адрес: 'ул Кричим 12 вх А ап 9' }),
+        row({ Тип: 'гараж', Град: 'София', Адрес: 'бул. Тест 1' }),
+        row({ Тип: 'гараж', Град: 'гр. София', Адрес: 'Тест 1' }),
+        row({ Тип: 'гараж', Град: 'Пловдив', Адрес: 'бул. Тест 1' }),
+        row({ Тип: 'гараж', Град: 'София' }),
+        row({ Тип: 'гараж', Град: 'София' }),
+      ]);
+
+      const summary = await service.validate(owner.agencyId, jobId, owner.userId);
+
+      const result = await rowsOf(jobId);
+      expect(result.map((r) => [r.status, r.match_reason])).toEqual([
+        ['duplicate', 'address'],
+        ['valid', null],
+        ['duplicate', 'in_file'],
+        ['valid', null],
+        ['valid', null],
+        ['valid', null],
+      ]);
+      expect(result[0].matched_entity_id).toBe(seeded!.id);
+      expect(summary).toMatchObject({ valid: 4, duplicate: 2 });
+    });
+
+    it('links an owner whose phone exists, creates a new one otherwise, and refuses a bad phone', async () => {
+      // Seeded Alpha contact Ivan Ivanov, +359888111222.
+      const { data: ivan } = await owner.db.from('contact_methods').select('contact_id').eq('agency_id', owner.agencyId).eq('value', '+359888111222').single();
+      const { jobId, service } = await stage([
+        row({ Тип: 'гараж', Град: 'София', Собственик: 'Иван', Телефон: '0888 111 222' }),
+        row({ Тип: 'гараж', Град: 'София', Собственик: 'Нов Собственик', Телефон: '0899 765 432' }),
+        row({ Тип: 'гараж', Град: 'София', Собственик: 'Грешен', Телефон: '12' }),
+      ]);
+
+      await service.validate(owner.agencyId, jobId, owner.userId);
+
+      const [linked, created, bad] = await rowsOf(jobId);
+      expect(linked.normalized).toMatchObject({ owner_contact_id: ivan!.contact_id, owner_display_name: 'Ivan Ivanov', new_owner: null });
+      expect(created.normalized).toMatchObject({
+        owner_contact_id: null,
+        new_owner: { first_name: 'Нов', last_name: 'Собственик', phone: '+359899765432', email: null },
+      });
+      expect(bad).toMatchObject({ status: 'invalid', errors: [{ field: 'owner_phone', code: 'import.errors.ownerPhoneInvalid' }] });
+    });
+
+    it("never links another agency's contact as owner", async () => {
+      // Seeded Beta contact Maria Petrova, +359888333444.
+      const { jobId, service } = await stage([row({ Тип: 'гараж', Град: 'София', Собственик: 'Мария', Телефон: '0888 333 444' })]);
+      await service.validate(owner.agencyId, jobId, owner.userId);
+      const [result] = await rowsOf(jobId);
+      expect(result.normalized).toMatchObject({ owner_contact_id: null, new_owner: { first_name: 'Мария' } });
     });
   });
 });

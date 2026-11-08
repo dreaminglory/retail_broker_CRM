@@ -1,6 +1,7 @@
--- spec: property-import, Task 1 (AD-064). Entity type, job ids, address key, audit metadata.
+-- spec: property-import, Tasks 1 and 4 (AD-064). Entity type, job ids, address key, audit
+-- metadata, and the address match function used by validation.
 BEGIN;
-SELECT plan(16);
+SELECT plan(23);
 
 SELECT set_config('test.a1', gen_random_uuid()::text, true);
 SELECT set_config('test.u1', gen_random_uuid()::text, true);
@@ -116,6 +117,85 @@ SELECT ok(
    WHERE a.entity_type = 'listing' AND a.action = 'created' AND l.property_id = current_setting('test.p_hand')::uuid),
   'A listing made by hand keeps its metadata and has no job id'
 );
+
+-- ── import_property_address_matches (Task 4) ─────────────────────────────────
+
+RESET ROLE;
+SELECT set_config('test.a2', gen_random_uuid()::text, true);
+SELECT set_config('test.u2', gen_random_uuid()::text, true);
+INSERT INTO auth.users (id, email) VALUES (current_setting('test.u2')::uuid, 'pim-beta@example.com');
+INSERT INTO agencies (id, name, slug) VALUES (current_setting('test.a2')::uuid, 'Agency PIM 2', 'pim2');
+INSERT INTO agency_memberships (agency_id, user_id, role, status) VALUES
+  (current_setting('test.a2')::uuid, current_setting('test.u2')::uuid, 'owner', 'active');
+SELECT set_config('test.plovdiv', (SELECT id FROM settlements WHERE ekatte = '56784')::text, true);
+
+-- Alpha and Beta both have "ул. Яворов 12" in Sofia; only Beta has "ул. Шипка 3".
+INSERT INTO properties (agency_id, code, type, settlement_id, address) VALUES
+  (current_setting('test.a1')::uuid, 0, 'garage', current_setting('test.sofia')::uuid, 'ул. Яворов 12'),
+  (current_setting('test.a2')::uuid, 0, 'garage', current_setting('test.sofia')::uuid, 'ул. "Яворов" № 12'),
+  (current_setting('test.a2')::uuid, 0, 'garage', current_setting('test.sofia')::uuid, 'ул. Шипка 3');
+SELECT set_config('test.p_alpha_yavorov',
+  (SELECT id FROM properties WHERE agency_id = current_setting('test.a1')::uuid AND address = 'ул. Яворов 12')::text, true);
+
+SELECT set_config('request.jwt.claims',
+  format('{"sub": "%s", "role": "authenticated"}', current_setting('test.u1')), true);
+SET ROLE authenticated;
+
+SELECT results_eq(
+  format($$ SELECT row_index, address_key, property_id FROM import_property_address_matches(
+              jsonb_build_array(jsonb_build_object('row', 1, 'settlement_id', %L, 'address', 'ул Яворов 12'))) $$,
+         current_setting('test.sofia')),
+  format($$ VALUES (1, 'яворов12'::text, %L::uuid) $$, current_setting('test.p_alpha_yavorov')),
+  'The address function finds the caller agency''s property for "ул Яворов 12"'
+);
+
+SELECT results_eq(
+  format($$ SELECT property_id FROM import_property_address_matches(
+              jsonb_build_array(jsonb_build_object('row', 2, 'settlement_id', %L, 'address', 'ул. Шипка 3'))) $$,
+         current_setting('test.sofia')),
+  $$ VALUES (NULL::uuid) $$,
+  'Another agency''s property is never matched; the key is still returned'
+);
+
+SELECT results_eq(
+  format($$ SELECT property_id FROM import_property_address_matches(
+              jsonb_build_array(jsonb_build_object('row', 3, 'settlement_id', %L, 'address', 'ул. Яворов 12'))) $$,
+         current_setting('test.plovdiv')),
+  $$ VALUES (NULL::uuid) $$,
+  'The same address in another settlement is not a match'
+);
+
+SELECT is_empty(
+  format($$ SELECT * FROM import_property_address_matches(jsonb_build_array(
+              jsonb_build_object('row', 4, 'settlement_id', %1$L, 'address', '  '),
+              jsonb_build_object('row', 5, 'settlement_id', %1$L))) $$,
+         current_setting('test.sofia')),
+  'A blank or missing address returns nothing'
+);
+
+SELECT is_empty(
+  $$ SELECT * FROM import_property_address_matches(NULL) $$,
+  'No items return nothing'
+);
+
+SELECT set_config('request.jwt.claims',
+  format('{"sub": "%s", "role": "authenticated"}', current_setting('test.u2')), true);
+SELECT results_eq(
+  format($$ SELECT property_id FROM import_property_address_matches(
+              jsonb_build_array(jsonb_build_object('row', 1, 'settlement_id', %L, 'address', 'ул Яворов 12'))) $$,
+         current_setting('test.sofia')),
+  $$ SELECT id FROM properties WHERE address = 'ул. "Яворов" № 12' $$,
+  'Beta gets its own property for the same key, never Alpha''s'
+);
+
+RESET ROLE;
+SET ROLE anon;
+SELECT throws_ok(
+  $$ SELECT * FROM import_property_address_matches('[]'::jsonb) $$,
+  '42501', NULL,
+  'anon cannot call the address function'
+);
+RESET ROLE;
 
 SELECT * FROM finish();
 ROLLBACK;

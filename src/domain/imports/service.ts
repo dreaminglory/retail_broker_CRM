@@ -10,7 +10,7 @@ import { MemberRepository } from "../members/repository";
 import { parseDate } from "./csv/date-parse";
 import { resolveSource, resolveAssignee, resolveStatus } from "./csv/value-resolvers";
 import { mapRowToPropertyCandidate } from "./csv/row-mapper";
-import { areaKey, settlementLookup, validatePropertyRow } from "./property-validation";
+import { areaKey, classifyPropertyRow, ownerMethods, settlementLookup, validatePropertyRow, type ClassifyState, type PropertyLookups } from "./property-validation";
 import { SettlementRepository } from "../settlements/repository";
 import { AreaRepository } from "../areas/repository";
 import type { PropertyImportOptionsInput, PropertyMappingInput } from "./validation";
@@ -410,6 +410,8 @@ export class ImportService {
       display_name: m.display_name,
     }));
     const defaultAssignee = options.default_assigned_to ?? importerId;
+    // Earlier rows of the file, across pages: in-file external_ref and address duplicates.
+    const state: ClassifyState = { refs: new Set(), addresses: new Set() };
 
     for (let offset = 0; ; offset += pageSize) {
       const rows = await this.repository.listRows(agencyId, job.id, { offset, limit: pageSize });
@@ -428,15 +430,51 @@ export class ImportService {
       const areas = await areaRepo.findBySettlements(agencyId, settlements.map((s) => s.id));
       const areaIds = new Map(areas.map((a) => [areaKey(a.settlement_id, a.name), a.id]));
 
+      const validated = candidates.map((candidate) =>
+        validatePropertyRow(candidate, { settlements, areas: areaIds, members, defaultAssignee })
+      );
+
+      const refs: string[] = [];
+      const phones: string[] = [];
+      const emails: string[] = [];
+      const addressItems: { row: number; settlement_id: string; address: string }[] = [];
+      candidates.forEach((candidate, i) => {
+        const methods = ownerMethods(candidate);
+        if (methods.phone) phones.push(methods.phone);
+        if (methods.email) emails.push(methods.email);
+        if (candidate.external_ref) refs.push(candidate.external_ref);
+        const property = validated[i].normalized?.property;
+        if (property?.address) addressItems.push({ row: rows[i].row_number, settlement_id: property.settlement_id, address: property.address });
+      });
+
+      const [refRows, addressRows, phoneRows, emailRows] = await Promise.all([
+        this.repository.lookupPropertyExternalRefs(agencyId, refs),
+        this.repository.matchPropertyAddresses(addressItems),
+        this.repository.lookupMethodsOfType(agencyId, "phone", phones),
+        this.repository.lookupMethodsOfType(agencyId, "email", emails),
+      ]);
+      const contactNames = await this.repository.lookupContactNames(
+        agencyId,
+        [...phoneRows, ...emailRows].map((m) => m.contact_id)
+      );
+      const lookups: PropertyLookups = {
+        refs: new Map(refRows.map((r) => [r.external_ref, r.id])),
+        addresses: new Map(addressRows.map((a) => [a.row_index, { key: a.address_key, property_id: a.property_id }])),
+        phones: new Map(phoneRows.map((m) => [m.value, m.contact_id])),
+        emails: new Map(emailRows.map((m) => [m.value, m.contact_id])),
+        contactNames,
+      };
+
+      // In file order, so "an earlier row" means the same thing as in the spreadsheet.
       const updates = rows.map((row, i) => {
-        const result = validatePropertyRow(candidates[i], { settlements, areas: areaIds, members, defaultAssignee });
+        const result = classifyPropertyRow(row.row_number, candidates[i], validated[i], lookups, state);
         return {
           id: row.id,
           status: result.status,
           normalized: result.normalized as Record<string, unknown> | null,
           errors: result.errors,
-          match_reason: null,
-          matched_entity_id: null,
+          match_reason: result.match_reason,
+          matched_entity_id: result.matched_entity_id,
         };
       });
 
