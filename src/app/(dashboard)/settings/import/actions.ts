@@ -107,7 +107,7 @@ export async function validateImportJobAction(
     assertManagerOrOwner(ctx.role);
 
     const service = new ImportService(ctx.supabase);
-    const summary = await service.validate(ctx.agencyId, jobId);
+    const summary = await service.validate(ctx.agencyId, jobId, ctx.userId);
 
     return { success: true, data: summary };
   } catch (error) { return toActionError(error); }

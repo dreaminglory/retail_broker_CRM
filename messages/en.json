@@ -1427,6 +1427,11 @@
       "missingSettlementMapping": "Map a column to the settlement.",
       "unknownSource": "This row has an unknown lead source.",
       "unknownAssignee": "This row is assigned to someone who is not in your agency.",
+      "settlementNotFound": "The settlement wasn't found. Check the name or use its EKATTE code.",
+      "settlementAmbiguous": "Several settlements have this name. Add the municipality or province.",
+      "invalidPrice": "The price must be a positive amount.",
+      "invalidListingStatus": "The listing status isn't recognised.",
+      "invalidDate": "The date couldn't be read.",
       "dbWrite": "This row couldn't be saved."
     }
   },

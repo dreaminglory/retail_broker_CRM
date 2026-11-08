@@ -92,13 +92,13 @@ In `docs/domain-model.md`, update §2.5 (new entity type and columns) and the mi
 Duplicates and owners come in Task 4: in this task, every row that passes is `valid`.
 
 **Acceptance criteria:**
-- [ ] Unit: "Лозен" (several matches) is ambiguous with the municipalities listed; with municipality "Столична" it resolves; an EKATTE code resolves; an unknown name is not found; nothing is ever picked by order.
-- [ ] Integration (local stack): a staged 20-row file validates with the right `settlement_id`, `area_id` or `new_area`, the listings, and `assigned_to`; three rows with an unknown "Витоша" all carry the same `new_area`; Beta's areas and members never match an Alpha job.
-- [ ] Every new error code exists in `messages/bg.json` and `messages/en.json`.
+- [x] Unit: "Лозен" (several matches) is ambiguous with the municipalities listed; with municipality "Столична" it resolves; an EKATTE code resolves; an unknown name is not found; nothing is ever picked by order.
+- [x] Integration (local stack): a staged 20-row file validates with the right `settlement_id`, `area_id` or `new_area`, the listings, and `assigned_to`; three rows with an unknown "Витоша" all carry the same `new_area`; Beta's areas and members never match an Alpha job.
+- [x] Every new error code exists in `messages/bg.json` and `messages/en.json`.
 
 **Verification:**
-- [ ] `npx vitest run src/domain/imports`, `npm run test:services`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx vitest run src/domain/imports`, `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 2
 **Files likely touched:** `src/domain/imports/service.ts`, `src/domain/imports/property-validation.ts` (+ test), `src/domain/settlements/repository.ts`, `src/domain/imports/service.integration.test.ts`, `messages/bg.json`, `messages/en.json`

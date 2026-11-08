@@ -37,6 +37,19 @@ export class AreaRepository {
     return (data ?? []) as Area[];
   }
 
+  /** The agency's areas, active and inactive, in any of these settlements (property import). */
+  async findBySettlements(agencyId: string, settlementIds: string[]): Promise<Area[]> {
+    if (settlementIds.length === 0) return [];
+    const { data, error } = await this.db
+      .from('areas')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .in('settlement_id', settlementIds);
+
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch areas: ${error.message}`);
+    return (data ?? []) as Area[];
+  }
+
   /** The settlement of every area, for the per-settlement counts. */
   async findSettlementIds(agencyId: string): Promise<string[]> {
     const { data, error } = await this.db.from('areas').select('settlement_id').eq('agency_id', agencyId);
