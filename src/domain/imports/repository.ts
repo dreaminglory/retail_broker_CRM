@@ -316,6 +316,16 @@ export class ImportRepository {
     return data as { processed: number; remaining: number };
   }
 
+  async commitPropertiesBatch(jobId: string, limit: number = 200): Promise<{ processed: number; remaining: number }> {
+    const { data, error } = await this.db.rpc("import_commit_properties", {
+      p_job_id: jobId,
+      p_limit: limit,
+    });
+
+    if (error) throw new DomainError('errors.saveFailed', `Failed to commit properties: ${error.message}`);
+    return data as { processed: number; remaining: number };
+  }
+
   async commitInquiriesBatch(jobId: string, limit: number = 200): Promise<{ processed: number; remaining: number }> {
     const { data, error } = await this.db.rpc("import_commit_inquiries", {
       p_job_id: jobId,

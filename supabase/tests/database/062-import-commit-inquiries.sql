@@ -5,8 +5,10 @@ SELECT plan(5);
 
 -- Get a test agency and user
 
-SELECT set_config('test.a1', (SELECT id FROM agencies LIMIT 1)::text, true);
-SELECT set_config('test.u1', (SELECT id FROM auth.users LIMIT 1)::text, true);
+-- Ordered: an unordered LIMIT 1 follows heap order, which changes whenever an agency row is
+-- updated (every new property bumps property_code_seq), and Beta already has caller 2's phone.
+SELECT set_config('test.a1', (SELECT id FROM agencies ORDER BY id LIMIT 1)::text, true);
+SELECT set_config('test.u1', (SELECT id FROM auth.users ORDER BY id LIMIT 1)::text, true);
 SELECT set_config('test.s1', (SELECT id FROM lead_sources WHERE agency_id = current_setting('test.a1')::uuid LIMIT 1)::text, true);
 
 -- Seed import job

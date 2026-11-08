@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 68th migration
-(`20261109000002_import_property_address_matches.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 69th migration
+(`20261109000003_import_commit_properties.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -329,7 +329,15 @@ Validation classifies a property row, in file order: owner phone must parse and 
 needs a name (else `invalid`); an `external_ref` an existing property or earlier row has →
 `skipped` / `external_ref`; the same settlement and key as an existing property →
 `duplicate` / `address`, as an earlier row → `duplicate` / `in_file`. The owner is matched by
-phone, then email, in the agency; a name-only owner is always a new contact. The `created` audit rows of a property and a listing carry `import_job_id`
+phone, then email, in the agency; a name-only owner is always a new contact.
+
+`import_commit_properties(job, limit)` writes each row in its own savepoint (AD-050): it
+re-checks `external_ref` (always skips) and the address (skips unless the strategy is
+`create`) as `db_recheck`; creates a kept new area (`options.create_areas`, absent = all) with
+`ON CONFLICT` so rows share it; re-matches a new owner by phone, then email, before creating
+the contact, so rows share it; then inserts the property (code in file order), its listings
+(`closed_at` = now for closed or withdrawn) and an `owner` party, all with `import_job_id`.
+Under `create`, `duplicate` rows are committed too; under `skip` they stay `duplicate`. The `created` audit rows of a property and a listing carry `import_job_id`
 in `metadata` when the record came from an import.
 
 ### 2.6 Notifications

@@ -506,6 +506,8 @@ export class ImportService {
 
     if (job.entity_type === "inquiry") {
       return await this.repository.commitInquiriesBatch(jobId);
+    } else if (job.entity_type === "property") {
+      return await this.repository.commitPropertiesBatch(jobId);
     } else {
       return await this.repository.commitContactsBatch(jobId);
     }

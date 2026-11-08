@@ -217,4 +217,78 @@ describeServices('Property import against the local stack', () => {
       expect(result.normalized).toMatchObject({ owner_contact_id: null, new_owner: { first_name: 'Мария' } });
     });
   });
+
+  describe('commit (Task 5)', () => {
+    async function commitAll(service: ImportService, jobId: string) {
+      for (let i = 0; i < 50; i++) {
+        const { remaining } = await service.commitBatch(owner.agencyId, jobId);
+        if (remaining === 0) return;
+      }
+      throw new Error('commit did not finish');
+    }
+
+    async function trackCreated(jobId: string) {
+      // Cleanup runs in reverse: areas and contacts are tracked first, so they go after the properties.
+      const { data: areas } = await owner.db.from('areas').select('id').eq('import_job_id', jobId);
+      areas!.forEach((a) => cleanup.track('areas', a.id));
+      const { data: contacts } = await owner.db.from('contacts').select('id').eq('import_job_id', jobId);
+      contacts!.forEach((c) => cleanup.track('contacts', c.id));
+      const { data: props } = await owner.db.from('properties').select('id').eq('import_job_id', jobId);
+      props!.forEach((p) => cleanup.track('properties', p.id));
+      return { props: props!, contacts: contacts!, areas: areas! };
+    }
+
+    it('commits a validated file: shared new owner and area, listings, then a re-run creates nothing', async () => {
+      const rows = [
+        row({ Тип: 'двустаен', Град: 'София', Квартал: 'Т5 Квартал', Адрес: 'ул. Т5 1', Площ: '60', Цена: '185 000', Наем: '900', Собственик: 'Нов Т5', Телефон: '0899 555 001', Реф: 'T5-1' }),
+        row({ Тип: 'гараж', Град: 'София', Квартал: 'т5 квартал', Адрес: 'ул. Т5 2', Площ: '18', Собственик: 'Нов Т5', Телефон: '0899 555 001', Реф: 'T5-2' }),
+        row({ Тип: 'гараж', Град: 'Пловдив', Адрес: 'ул. Т5 3', Площ: '18', Наем: '1 200 лв.', Реф: 'T5-3' }),
+      ];
+      const { jobId, service } = await stage(rows);
+      await service.validate(owner.agencyId, jobId, owner.userId);
+      await commitAll(service, jobId);
+
+      const { data: areas } = await owner.db.from('areas').select('id, name').eq('import_job_id', jobId);
+      const created = await trackCreated(jobId);
+
+      const { data: job } = await owner.db.from('import_jobs').select('status, created_count').eq('id', jobId).single();
+      expect(job).toEqual({ status: 'completed', created_count: 3 });
+      expect(areas).toEqual([expect.objectContaining({ name: 'Т5 Квартал' })]);
+      expect(created.contacts).toHaveLength(1);
+
+      const { data: parties } = await owner.db.from('property_parties').select('contact_id, role').eq('import_job_id', jobId);
+      expect(parties).toEqual([
+        { contact_id: created.contacts[0].id, role: 'owner' },
+        { contact_id: created.contacts[0].id, role: 'owner' },
+      ]);
+      const { data: listings } = await owner.db.from('listings').select('offer_type, price, currency').eq('import_job_id', jobId).order('price');
+      expect(listings).toEqual([
+        { offer_type: 'rent', price: 613.55, currency: 'EUR' },
+        { offer_type: 'rent', price: 900, currency: 'EUR' },
+        { offer_type: 'sale', price: 185000, currency: 'EUR' },
+      ]);
+
+      const again = await stage(rows);
+      const summary = await again.service.validate(owner.agencyId, again.jobId, owner.userId);
+      expect(summary).toMatchObject({ valid: 0 });
+      const result = await rowsOf(again.jobId);
+      expect(result.map((r) => r.status)).toEqual(['skipped', 'skipped', 'skipped']);
+    });
+
+    it('imports the rows of an unticked new area without an area', async () => {
+      const rows = [1, 2, 3].map((i) => row({ Тип: 'гараж', Град: 'София', Квартал: 'Т5 Витоша', Площ: '18', Адрес: `ул. Т5 Витоша ${i}` }));
+      const { jobId, service } = await stage(rows);
+      await service.validate(owner.agencyId, jobId, owner.userId);
+      const { error } = await owner.db.from('import_jobs').update({ options: { duplicate_strategy: 'skip', create_areas: [] } }).eq('id', jobId);
+      expect(error).toBeNull();
+
+      await commitAll(service, jobId);
+      const created = await trackCreated(jobId);
+
+      expect(created.props).toHaveLength(3);
+      expect(created.areas).toEqual([]);
+      const { data: props } = await owner.db.from('properties').select('area_id').eq('import_job_id', jobId);
+      expect(props!.every((p) => p.area_id === null)).toBe(true);
+    });
+  });
 });

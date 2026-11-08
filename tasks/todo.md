@@ -157,13 +157,13 @@ At `remaining = 0` the job becomes `completed` with its counts. The service's `c
 `property` jobs here.
 
 **Acceptance criteria:**
-- [ ] pgTAP: one call commits the fixture rows; a row whose listing insert fails (forced) leaves no property, area, contact or party and becomes `error`; a broker and `anon` are refused; another agency's job is refused.
-- [ ] pgTAP or integration: two rows with the same new owner phone create one contact with two parties; two rows with the same new area create one area; an unticked area imports its rows without one; a second commit of the same file creates nothing.
-- [ ] Property codes follow file order; audit rows exist for each property and listing with the job id; no app code writes `audit_log`.
+- [x] pgTAP: one call commits the fixture rows; a row whose listing insert fails (forced) leaves no property, area, contact or party and becomes `error`; a broker and `anon` are refused; another agency's job is refused.
+- [x] pgTAP or integration: two rows with the same new owner phone create one contact with two parties; two rows with the same new area create one area; an unticked area imports its rows without one; a second commit of the same file creates nothing.
+- [x] Property codes follow file order; audit rows exist for each property and listing with the job id; no app code writes `audit_log`.
 
 **Verification:**
-- [ ] `npx supabase db reset` then `npm run test:db`; `npm run test:services`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npx supabase db reset` then `npm run test:db`; `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Tasks 1, 4
 **Files likely touched:** `supabase/migrations/<ts>_import_commit_properties.sql`, `supabase/tests/database/101-property-import-commit.sql`, `src/domain/imports/repository.ts`, `src/domain/imports/service.ts`, `src/domain/imports/service.integration.test.ts`
