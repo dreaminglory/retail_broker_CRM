@@ -267,7 +267,7 @@ client state in effects; the bar is a Server Component with links/forms.
 ## Checkpoint 2: Built-in lists
 - [ ] AC-1, -2, -3, -6, -7 seen in the browser, BG and EN, 1280 and 390 px
 - [x] typecheck, lint, test, `test:services`, `test:e2e` green
-- [ ] `/review` of Phases 1–2 (Opus, fresh session)
+- [x] `/review` of Phases 1–2 (Opus, fresh session; done, confirmed by the founder 2026-11-08)
 
 Notes (2026-11-07, build session): seen in the browser — AC-1 (broker 7 lists, manager 9 with
 Mine / Agency), AC-6 (Skip, Previous, Next after a scheduled task: count 2 -> 1, List done), AC-7
