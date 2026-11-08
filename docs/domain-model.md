@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 71st migration
-(`20261109000005_property_import_review_fixes.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 72nd migration
+(`20261109000006_property_import_audit_file_name.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -343,7 +343,9 @@ re-checks `external_ref` (always skips) and the address (skips unless the strate
 the contact, so rows share it; then inserts the property (code in file order), its listings
 (`closed_at` = now for closed or withdrawn) and an `owner` party, all with `import_job_id`.
 Under `create`, `duplicate` rows are committed too; under `skip` they stay `duplicate`. The `created` audit rows of a property and a listing carry `import_job_id`
-in `metadata` when the record came from an import.
+in `metadata` when the record came from an import; the property's also carries the job's
+`file_name` (only from a job of the same agency), so its timeline says "Imported from <file>" to
+brokers, who can't read `import_jobs` (Task 11, as for imported contacts).
 
 ### 2.6 Notifications
 

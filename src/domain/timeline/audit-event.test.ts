@@ -81,12 +81,19 @@ describe('describeAudit', () => {
   });
 
   it('reads property creation, status and archiving', () => {
-    expect(describeAudit(row({ entity_type: 'property', action: 'created', metadata: { code: 1042 } }))).toEqual({ kind: 'propertyCreated', code: 1042 });
+    expect(describeAudit(row({ entity_type: 'property', action: 'created', metadata: { code: 1042 } }))).toEqual({ kind: 'propertyCreated', code: 1042, imported: false, importFile: null });
     expect(describeAudit(row({ entity_type: 'property', action: 'archived', field_name: 'status', old_value: 'active', new_value: 'archived' }))).toEqual({
       kind: 'propertyStatus',
       from: 'active',
       to: 'archived',
     });
+  });
+
+  it('reads an imported property with its file, or without it when the trigger had none', () => {
+    expect(describeAudit(row({ entity_type: 'property', action: 'created', metadata: { code: 7, import_job_id: 'job-1', file_name: 'properties-basic.csv' } })))
+      .toEqual({ kind: 'propertyCreated', code: 7, imported: true, importFile: 'properties-basic.csv' });
+    expect(describeAudit(row({ entity_type: 'property', action: 'created', metadata: { code: 8, import_job_id: 'job-1' } })))
+      .toEqual({ kind: 'propertyCreated', code: 8, imported: true, importFile: null });
   });
 
   it('reads an assignment change from the e-mails the trigger stores', () => {

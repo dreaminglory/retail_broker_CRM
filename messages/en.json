@@ -1325,7 +1325,8 @@
       "propertyLinkRemoved": "Property unlinked",
       "requirementCreated": "Requirements added",
       "requirementChanged": "Requirements changed",
-      "requirementRemoved": "Requirements removed"
+      "requirementRemoved": "Requirements removed",
+      "propertyImported": "Property imported"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",

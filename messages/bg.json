@@ -1325,7 +1325,8 @@
       "propertyLinkRemoved": "Имотът е премахнат от сделката",
       "requirementCreated": "Изискванията са добавени",
       "requirementChanged": "Изискванията са променени",
-      "requirementRemoved": "Изискванията са премахнати"
+      "requirementRemoved": "Изискванията са премахнати",
+      "propertyImported": "Имотът е импортиран"
     },
     "outcomeLabel": "Резултат",
     "unassigned": "Невъзложен(а)",

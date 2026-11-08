@@ -7,6 +7,9 @@ import { detectEncoding } from './csv/detect-encoding';
 import { detectHeaders } from './csv/header-detection';
 import type { NormalizedPropertyRow } from './property-validation';
 import { ImportService } from './service';
+import { MatchingRepository } from '../matching/repository';
+import { TimelineService } from '../timeline/service';
+import { describeAudit } from '../timeline/audit-event';
 import type { ImportRow } from './types';
 
 // spec: property-import, Task 7. The fixtures through the whole pipeline, read as the wizard
@@ -240,5 +243,40 @@ describeServices('Property import fixtures against the local stack', () => {
     expect(lines[1]).toContain('ул. Отчет 5');
     expect(lines[2]).toContain('ул. Отчет 1050');
     expect(lines[2]).toContain('<import.errors.settlementNotFound>');
+  });
+
+  // Task 11: the property timeline names the file (for a broker, who can't read import_jobs),
+  // and an imported property matches a buyer right away (AC-7).
+  it("names the file on an imported property's timeline and matches it to a seeded buyer at once", async () => {
+    const { jobId } = await stageFixture('properties-basic.csv');
+    await imports.validate(owner.agencyId, jobId, owner.userId);
+    for (let i = 0; i < 10; i++) {
+      if ((await imports.commitBatch(owner.agencyId, jobId)).remaining === 0) break;
+    }
+    const { data: props } = await owner.db.from('properties').select('id, external_ref').eq('import_job_id', jobId);
+    const { data: areas } = await owner.db.from('areas').select('id').eq('import_job_id', jobId);
+    const { data: contacts } = await owner.db.from('contacts').select('id').eq('import_job_id', jobId);
+    areas!.forEach((a) => cleanup.track('areas', a.id));
+    contacts!.forEach((c) => cleanup.track('contacts', c.id));
+    props!.forEach((p) => cleanup.track('properties', p.id));
+    // A 2-room brick flat in Лозенец, floor 3 of 6, for €185,000: Alpha Opp 1's requirement.
+    const flat = props!.find((p) => p.external_ref === 'BAS-001')!;
+
+    const broker = await signInAs('broker@alpha.bg');
+    const timeline = await new TimelineService(broker.db).getPropertyTimeline(flat.id, broker.agencyId, 50);
+    const created = timeline.find((e) => e.type === 'audit' && e.data.entity_type === 'property' && e.data.action === 'created');
+    expect(created && created.type === 'audit' ? describeAudit(created.data) : null).toEqual({
+      kind: 'propertyCreated',
+      code: expect.any(Number),
+      imported: true,
+      importFile: 'properties-basic.csv',
+    });
+    expect(created && created.type === 'audit' ? created.data.author?.email : null).toBe('owner@alpha.bg');
+
+    const { data: deal } = await owner.db.from('opportunities').select('id').eq('agency_id', owner.agencyId).eq('title', 'Alpha Opp 1').single();
+    const matches = await new MatchingRepository(owner.db).propertiesForOpportunity(deal!.id, { includeLinked: true, limit: 200, offset: 0 });
+    expect(matches.map((m) => m.property_id)).toContain(flat.id);
+
+    await imports.revert(owner.agencyId, jobId);
   });
 });

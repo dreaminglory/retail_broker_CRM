@@ -306,12 +306,12 @@ imported apartment that fits Alpha's seeded buyer requirement appears in that de
 `match_properties` results.
 
 **Acceptance criteria:**
-- [ ] An imported property's timeline shows its first entry as "Imported from properties-basic.csv"; a hand-made property's timeline is unchanged.
-- [ ] AC-7 integration test green.
+- [x] An imported property's timeline shows its first entry as "Imported from properties-basic.csv"; a hand-made property's timeline is unchanged.
+- [x] AC-7 integration test green.
 
 **Verification:**
-- [ ] `npx vitest run src/domain/timeline`, `npm run test:services`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`
+- [x] `npx vitest run src/domain/timeline`, `npm run test:services`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`; browser in `bg` and `en`
 
 **Dependencies:** Task 10
 **Files likely touched:** `src/domain/timeline/audit-event.ts` (+ test), `src/domain/timeline/repository.ts`, `src/domain/imports/property-import.integration.test.ts`, `messages/*.json`

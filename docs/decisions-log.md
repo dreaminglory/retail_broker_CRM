@@ -507,7 +507,9 @@ warning case).
 - **Header detection takes the entity**, with one synonym dictionary per entity, so property
   columns ("type", "description", "id") can't change contact or inquiry mapping.
 - **Audit carries the job.** The property and listing `created` audit rows get `import_job_id` in
-  `metadata` when the record has one; the timeline shows "Imported from <file>".
+  `metadata` when the record has one. The property row also stores the job's `file_name` (from a
+  job of the same agency only), because brokers can't read `import_jobs`; the timeline shows
+  "Imported from <file>" from the audit row alone (Task 11, 20261109000006).
 - **Revert "untouched"**: the property's `updated_at` ≤ the job's `completed_at`, and no note,
   task or opportunity link, no listing outside the job or changed after it, no party ended,
   added later or from outside the job, and none of the row's listings or its owner party deleted
