@@ -111,6 +111,21 @@ describe('buildPropertyPreview', () => {
     expect(preview.owners).toEqual({ matched: 1, created: 4 });
   });
 
+  it('only shares a new owner by the phone and email of a contact the commit created', () => {
+    const owner = (first_name: string, phone: string | null, email: string | null) => ({ first_name, last_name: null, phone, email });
+    // Row 2 reuses row 1's contact by email; its own phone is never saved, so row 3, which
+    // shares only that phone, gets a contact of its own (import_commit_properties step 3).
+    const preview = buildPropertyPreview(
+      [
+        row(1, 'valid', valid({ new_owner: owner('А', '+359899400001', 'a@example.test') })),
+        row(2, 'valid', valid({ new_owner: owner('А', '+359899400002', 'a@example.test') })),
+        row(3, 'valid', valid({ new_owner: owner('Б', '+359899400002', 'b@example.test') })),
+      ],
+      context,
+    );
+    expect(preview.owners).toEqual({ matched: 0, created: 2 });
+  });
+
   it('gives each row its outcome, a label from the file, its errors and warnings', () => {
     const warning = { field: 'owner_name', code: 'import.warnings.ownerSkippedNoName' };
     const error = { field: 'settlement', code: 'import.errors.settlementNotFound' };

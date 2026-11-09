@@ -97,13 +97,16 @@ export function buildPropertyPreview(rows: PreviewInputRow[], ctx: PropertyPrevi
       }
 
       // The commit re-matches a new owner by phone, then email, against the owners it made earlier.
+      // Only a created contact saves its phone and email: a row that reuses one adds nothing.
       if (normalized.owner_contact_id) owners.matched.add(normalized.owner_contact_id);
       else if (normalized.new_owner) {
         const { phone, email } = normalized.new_owner;
         const earlier = (phone && seenPhones.has(phone)) || (email && seenEmails.has(email));
-        if (!earlier) owners.created++;
-        if (phone) seenPhones.add(phone);
-        if (email) seenEmails.add(email);
+        if (!earlier) {
+          owners.created++;
+          if (phone) seenPhones.add(phone);
+          if (email) seenEmails.add(email);
+        }
       }
     }
 
