@@ -62,6 +62,7 @@ for (const [encoding, header] of Object.entries(BROKER_HEADER)) {
 // new area, commits, finds a property in the list and in ⌘K, then reverts the import.
 
 const PROPERTIES_BASIC = readFileSync('src/domain/imports/__fixtures__/properties-basic.csv');
+const ALPHA_AGENCY = '11111111-1111-1111-1111-111111111111'; // seeded "Alpha Imoti"
 
 /** Deletes what an interrupted run left behind, so the next project starts from the seed. */
 async function removeLeftoverPropertyImports() {
@@ -82,9 +83,14 @@ test('a manager imports properties, unticks a new area and reverts the import', 
   const preview = m.SettingsImport.propertyPreview;
 
   await signInAs('manager@alpha.bg');
-  // The list shows no address; the basic file has one Кършияка property, so that count goes up by one.
+  // The list shows no address; the basic file has one Кършияка property, so the list filtered to
+  // that area (one short page, however many properties the agency has) gains one row.
+  const [area] = await serviceRest<{ id: string; settlement_id: string }[]>(
+    `areas?select=id,settlement_id&agency_id=eq.${ALPHA_AGENCY}&name=eq.${encodeURIComponent('Кършияка')}`
+  );
+  const karshiyakaList = `/properties?settlement=${area.settlement_id}&area=${area.id}`;
   const karshiyaka = page.getByText(/Кършияка/).locator('visible=true');
-  await page.goto('/properties');
+  await page.goto(karshiyakaList);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   const karshiyakaBefore = await karshiyaka.count();
 
@@ -119,7 +125,6 @@ test('a manager imports properties, unticks a new area and reverts the import', 
   ).toBeVisible({ timeout: 60_000 });
   await page.getByRole('button', { name: formatMessage(appLocale, m.SettingsImport.wizard.step5.goTo, { type: m.SettingsImport.wizard.propertiesType }) }).click();
   await page.waitForURL('**/properties');
-  await expect(karshiyaka).toHaveCount(karshiyakaBefore + 1);
 
   // ⌘K finds an imported property by its address.
   await page.keyboard.press('ControlOrMeta+k');
@@ -127,6 +132,9 @@ test('a manager imports properties, unticks a new area and reverts the import', 
   await page.getByRole('option', { name: /Фикция 20/ }).click();
   await page.waitForURL(/\/properties\/[0-9a-f-]{36}$/);
   await expect(page.getByText('ул. Фикция 20').first()).toBeVisible();
+
+  await page.goto(karshiyakaList);
+  await expect(karshiyaka).toHaveCount(karshiyakaBefore + 1);
 
   // Revert: all 20 properties and 4 owners go; no area was created.
   await page.goto('/settings/import');
