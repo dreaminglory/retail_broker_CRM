@@ -7,6 +7,7 @@ import { settlementNameColumn } from './validation';
 // Each name is two percent-encoded Cyrillic filters (~20 bytes a letter): 10 keep the URL short.
 const NAME_CHUNK = 10;
 const CODE_CHUNK = 200;
+const ID_CHUNK = 100;
 
 /** Settlements are global: no agency filter, RLS lets every signed-in user read them. */
 export class SettlementRepository {
@@ -30,11 +31,15 @@ export class SettlementRepository {
   }
 
   async findByIds(ids: string[]): Promise<SettlementRow[]> {
-    if (ids.length === 0) return [];
-    const { data, error } = await this.db.from('settlements').select('*').in('id', ids);
-
-    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch settlements: ${error.message}`);
-    return (data ?? []) as SettlementRow[];
+    const found: SettlementRow[] = [];
+    const unique = [...new Set(ids)];
+    // Ids go in the URL: 100 at a time keeps it short (a property import names many villages).
+    for (let i = 0; i < unique.length; i += ID_CHUNK) {
+      const { data, error } = await this.db.from('settlements').select('*').in('id', unique.slice(i, i + ID_CHUNK));
+      if (error) throw new DomainError('errors.loadFailed', `Failed to fetch settlements: ${error.message}`);
+      found.push(...((data ?? []) as SettlementRow[]));
+    }
+    return found;
   }
 
   /**
