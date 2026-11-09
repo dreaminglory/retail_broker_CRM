@@ -14,7 +14,7 @@ import { areaKey, classifyPropertyRow, ownerMethods, resolveDefaultAssignee, set
 import { SettlementRepository } from "../settlements/repository";
 import { AreaRepository } from "../areas/repository";
 import type { PropertyImportOptionsInput, PropertyMappingInput } from "./validation";
-import type { ImportError, ImportRow } from "./types";
+import type { ImportRow } from "./types";
 import { buildPropertyPreview, type PropertyPreview } from "./property-preview";
 
 export { describeRowError } from "./row-error";
