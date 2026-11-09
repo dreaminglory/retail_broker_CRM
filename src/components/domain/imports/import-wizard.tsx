@@ -23,6 +23,7 @@ import {
 } from "@/app/(dashboard)/settings/import/actions";
 import { PropertyImportPreview } from "./property-import-preview";
 import type { PropertyPreview } from "@/domain/imports/property-preview";
+import { runCommitBatches } from "@/domain/imports/commit-loop";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -94,6 +95,7 @@ export function ImportWizard({
 
   // Commit State
   const [progress, setProgress] = useState<{ processed: number, remaining: number }>({ processed: 0, remaining: 0 });
+  const [commitStopped, setCommitStopped] = useState(false);
 
   const calculateSha256 = async (file: File): Promise<string> => {
     const buffer = await file.arrayBuffer();
@@ -226,30 +228,40 @@ export function ImportWizard({
         }
       }
       setStep(4);
-      
-      let currentRemaining = rowsToCommit;
-      while (currentRemaining > 0) {
-        const res = await commitImportBatchAction(jobId);
-        if (!res.success) {
-          toast.error(res.error || t("commitFailed"));
-          break;
-        }
-        if (!res.data) {
-          toast.error(t("commitFailed"));
-          break;
-        }
-        setProgress(prev => ({ processed: prev.processed + res.data!.processed, remaining: res.data!.remaining }));
-        currentRemaining = res.data.remaining;
-      }
-
-      if (entityType === "property") {
-        const resultRes = await getImportResultAction(jobId);
-        if (resultRes.success && resultRes.data) setResult(resultRes.data);
-      }
-
-      setStep(5);
+      setProgress({ processed: 0, remaining: rowsToCommit });
+      await runBatches(rowsToCommit);
     } catch (e: any) {
       toast.error(e.message || t("commitFailed"));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Step 5 only once every batch went through; otherwise stay on step 4 with a retry, since the
+  // job is still `committing` and the RPC carries on from the rows left.
+  const runBatches = async (remaining: number) => {
+    if (!jobId) return;
+    setCommitStopped(false);
+    const outcome = await runCommitBatches(() => commitImportBatchAction(jobId), remaining, (processed, left) =>
+      setProgress((prev) => ({ processed: prev.processed + processed, remaining: left }))
+    );
+    if (!outcome.done) {
+      toast.error(outcome.error || t("commitFailed"));
+      setCommitStopped(true);
+      return;
+    }
+
+    if (entityType === "property") {
+      const resultRes = await getImportResultAction(jobId);
+      if (resultRes.success && resultRes.data) setResult(resultRes.data);
+    }
+    setStep(5);
+  };
+
+  const handleRetryCommit = async () => {
+    try {
+      setIsProcessing(true);
+      await runBatches(progress.remaining);
     } finally {
       setIsProcessing(false);
     }
@@ -404,7 +416,20 @@ export function ImportWizard({
             <div className="text-sm text-center text-muted-foreground">
               {t("step4.progress", { processed: progress.processed, total: rowsToCommit })}
             </div>
+            {commitStopped && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{t("step4.stopped")}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
+          {commitStopped && (
+            <CardFooter className="justify-end">
+              <Button onClick={handleRetryCommit} disabled={isProcessing}>
+                {isProcessing ? t("starting") : t("step4.resume")}
+              </Button>
+            </CardFooter>
+          )}
         </Card>
       )}
 

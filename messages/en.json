@@ -194,7 +194,9 @@
       "step4": {
         "title": "Importing...",
         "desc": "Please wait while we import your {type}.",
-        "progress": "{processed} of {total} rows imported"
+        "progress": "{processed} of {total} rows imported",
+        "stopped": "The import stopped before it finished. The rows already imported are saved; resume to import the rest.",
+        "resume": "Resume import"
       },
       "step5": {
         "title": "Import Complete",

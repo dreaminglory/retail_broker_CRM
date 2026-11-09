@@ -67,7 +67,7 @@ const ALPHA_AGENCY = '11111111-1111-1111-1111-111111111111'; // seeded "Alpha Im
 /** Deletes what an interrupted run left behind, so the next project starts from the seed. */
 async function removeLeftoverPropertyImports() {
   const jobs = await serviceRest<{ id: string }[]>(
-    'import_jobs?select=id&status=eq.completed&file_name=like.e2e-properties-*'
+    'import_jobs?select=id&status=in.(completed,committing)&file_name=like.e2e-properties-*'
   );
   for (const { id } of jobs) {
     await serviceRest(`properties?import_job_id=eq.${id}`, { method: 'DELETE' });
@@ -150,4 +150,37 @@ test('a manager imports properties, unticks a new area and reverts the import', 
     )
   ).toBeVisible();
   await expect(page.getByRole('row', { name: new RegExp(fileName) })).toContainText(m.SettingsImport.jobStatus.reverted);
+});
+
+// Review fix: a commit batch that fails leaves the wizard on the importing step with a resume
+// button, never on "Import Complete"; resuming finishes the job.
+test('a property import that stops halfway can be resumed', async ({ page, m, appLocale, signInAs }, testInfo) => {
+  await removeLeftoverPropertyImports();
+  const fileName = `e2e-properties-resume-${testInfo.project.name}-${Date.now()}.csv`;
+
+  await signInAs('manager@alpha.bg');
+  await page.goto('/settings/import/new?type=property');
+  await page.locator('input[type="file"]').setInputFiles({ name: fileName, mimeType: 'text/csv', buffer: PROPERTIES_BASIC });
+  await page.getByRole('button', { name: m.SettingsImport.wizard.nextReview }).click();
+  await expect(page.getByText(m.SettingsImport.wizard.step3.title)).toBeVisible();
+
+  // After Start: the first Server Action saves the kept areas, the second is the first batch.
+  let actions = 0;
+  await page.route('**/settings/import/new**', async (route) => {
+    const request = route.request();
+    if (request.method() === 'POST' && request.headers()['next-action'] && ++actions === 2) return route.abort();
+    return route.continue();
+  });
+  await page.getByRole('button', { name: m.SettingsImport.wizard.startImport }).click();
+
+  await expect(page.getByText(m.SettingsImport.wizard.step4.stopped)).toBeVisible();
+  await expect(page.getByText(m.SettingsImport.wizard.step5.title)).toBeHidden();
+  await page.unrouteAll();
+
+  await page.getByRole('button', { name: m.SettingsImport.wizard.step4.resume }).click();
+  await expect(
+    page.getByText(formatMessage(appLocale, m.SettingsImport.wizard.step5.result, { created: 20, skipped: 0, errors: 0 }))
+  ).toBeVisible({ timeout: 60_000 });
+
+  await removeLeftoverPropertyImports();
 });
