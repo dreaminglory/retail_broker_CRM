@@ -318,7 +318,7 @@ imported apartment that fits Alpha's seeded buyer requirement appears in that de
 **Estimated scope:** S
 
 ## Checkpoint 2
-- [ ] Import, preview, commit and revert done in the browser in `bg` and `en`, at 1280 and 390 px
+- [x] Import, preview, commit and revert done in the browser in `bg` and `en`, at 1280 and 390 px (Task 12 E2E, all four projects)
 - [x] All tests green; `/review` of Phase 2 (2026-11-09: two fixes, c0a1c24 and 6a45245; mapping, commit, done and revert also checked at 390 px in `bg` and `en`)
 
 ## Phase 3: Proof and close
@@ -329,10 +329,10 @@ checks the preview counts and unticks a new area, commits, finds the property in
 and ⌘K, then reverts and sees the counts. Run it in `bg` and `en`, at 1280 and 390 px.
 
 **Acceptance criteria:**
-- [ ] The E2E passes in all four projects; the existing import E2E is unchanged.
+- [x] The E2E passes in all four projects; the existing import E2E is unchanged.
 
 **Verification:**
-- [ ] `npm run test:e2e`
+- [x] `npm run test:e2e` (80 passed, 2026-11-09)
 
 **Dependencies:** Task 11
 **Files likely touched:** `e2e/settings-import.spec.ts`, `e2e/fixtures.ts`
