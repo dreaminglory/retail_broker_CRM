@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeSupabase } from '@/test/fake-supabase';
-import { describeRowError, ImportService } from './service';
+import { ImportService } from './service';
+import { describeRowError } from './row-error';
 
 vi.mock('../members/repository', () => ({
   MemberRepository: class {

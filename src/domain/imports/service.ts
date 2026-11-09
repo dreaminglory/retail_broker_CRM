@@ -16,8 +16,6 @@ import { AreaRepository } from "../areas/repository";
 import type { PropertyImportOptionsInput, PropertyMappingInput } from "./validation";
 import type { ImportRow } from "./types";
 import { buildPropertyPreview, type PropertyPreview } from "./property-preview";
-
-export { describeRowError } from "./row-error";
 import { describeRowError } from "./row-error";
 
 export class ImportService {
