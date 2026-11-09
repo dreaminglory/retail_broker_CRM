@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileDropZone } from "./file-drop-zone";
-import { ColumnMappingTable } from "./column-mapping-table";
+import { ColumnMappingTable, initialColumnMapping } from "./column-mapping-table";
 import { ImportOptionsForm } from "./import-options-form";
 import { InquiryImportOptionsForm } from "./inquiry-import-options-form";
 import { PropertyImportOptionsForm, type ImportBrokerOption } from "./property-import-options-form";
@@ -110,6 +110,7 @@ export function ImportWizard({
       setSampleRows(detectedSampleRows);
       setFile(acceptedFile);
       setHeaders(detectedHeaders);
+      setMapping(initialColumnMapping(detectedHeaders, entityType));
       setEncoding(detectedEncoding);
       setDelimiter(detectedDelimiter);
 
@@ -301,7 +302,7 @@ export function ImportWizard({
                 </AlertDescription>
               </Alert>
             )}
-            <ColumnMappingTable headers={headers} entityType={entityType} sampleRows={sampleRows} onChange={setMapping} />
+            <ColumnMappingTable headers={headers} entityType={entityType} sampleRows={sampleRows} mapping={mapping} onChange={setMapping} />
             {missingRequired.length > 0 && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />

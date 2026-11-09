@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ContactImportField, InquiryImportField, PropertyImportField } from "@/domain/imports/types";
@@ -13,7 +12,8 @@ interface ColumnMappingTableProps {
   entityType: "contact" | "inquiry" | "property";
   /** The first data rows of the file, for a sample value per mapped column. */
   sampleRows?: string[][];
-  initialMapping?: Record<string, string | null>;
+  /** Controlled: start it with `initialColumnMapping`. */
+  mapping: Record<string, string | null>;
   onChange: (mapping: Record<string, string | null>) => void;
 }
 
@@ -62,36 +62,24 @@ const FIELD_OPTIONS = {
 
 import { useTranslations } from "next-intl";
 
-export function ColumnMappingTable({ headers, entityType, sampleRows = [], initialMapping, onChange }: ColumnMappingTableProps) {
+/**
+ * The mapping a file starts with: every field of the entity, auto-mapped where a header matches
+ * (`detectHeaders`), null otherwise. The wizard computes it when it reads the headers, so the
+ * table is controlled and never sets state from an effect.
+ */
+export function initialColumnMapping(headers: string[], entityType: ColumnMappingTableProps["entityType"]): Record<string, string | null> {
+  const autoMapping = detectHeaders(headers, entityType);
+  return Object.fromEntries(FIELD_OPTIONS[entityType].map((opt) => [opt.value, autoMapping[opt.value] || null]));
+}
+
+export function ColumnMappingTable({ headers, entityType, sampleRows = [], mapping, onChange }: ColumnMappingTableProps) {
   const t = useTranslations("SettingsImport.mapping");
-  const [mapping, setMapping] = useState<Record<string, string | null>>({});
 
   const fieldOptions: { value: string }[] = FIELD_OPTIONS[entityType];
   const required = new Set<string>(REQUIRED_MAPPING_FIELDS[entityType]);
 
-  useEffect(() => {
-    if (initialMapping && Object.keys(initialMapping).length > 0) {
-      setMapping(initialMapping);
-      return;
-    }
-
-    const autoMapping = detectHeaders(headers, entityType);
-    
-    // Ensure all fields exist in mapping, even if null
-    const fullMapping: Record<string, string | null> = {};
-    fieldOptions.forEach(opt => {
-      fullMapping[opt.value] = autoMapping[opt.value] || null;
-    });
-
-    setMapping(fullMapping);
-    onChange(fullMapping);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [headers, entityType]);
-
   const handleMappingChange = (field: string, headerValue: string | null) => {
-    const newMapping = { ...mapping, [field]: headerValue === "none" ? null : headerValue };
-    setMapping(newMapping);
-    onChange(newMapping);
+    onChange({ ...mapping, [field]: headerValue === "none" ? null : headerValue });
   };
 
   return (
