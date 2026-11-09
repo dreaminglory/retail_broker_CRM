@@ -113,8 +113,8 @@ TypeScript runner.
 - [ ] The whole flow in the browser in `bg` and `en`, at 1280 and 390 px
 
 ### Phase 3: Proof and close
-- [ ] Task 12: E2E property import and revert — Sonnet
-- [ ] Task 13: Docs complete (domain model, BRD, spec as built) — Sonnet
+- [x] Task 12: E2E property import and revert — Sonnet
+- [x] Task 13: Docs complete (domain model, BRD, spec as built) — Sonnet
 
 ### Checkpoint 3
 - [ ] `/review` of the module; AC-1…AC-10 each traced to a test or a browser check

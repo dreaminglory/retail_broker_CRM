@@ -227,3 +227,24 @@ A column that maps to nothing is ignored. Unmapped required fields block the pre
   without an owner party, and the preview shows the warning `import.warnings.ownerSkippedNoName`
   so the owner can be added by hand (founder, 2026-11-08). A phone that doesn't parse still
   makes the row invalid (rule 6).
+
+## As built (2026-11-09)
+
+Where the module differs from this spec:
+
+- **No job page.** `/settings/import/[id]` holds only the error CSV. Result counts show on the
+  wizard's done step, and revert is the button on the `/settings/import` history row, as for
+  contacts and inquiries. Its confirmation names properties, contacts and areas, and the toast
+  shows deleted and kept for each.
+- **Timeline entry** reads "Imported from <file>" without "by <user>": the actor already shows
+  on the entry. The file name is copied into the audit row's `metadata`, because brokers can't
+  read `import_jobs` (AD-064).
+- **Owners in the preview** are counts only (matched, created); the per-row owner text was cut
+  item 3. Near-duplicate area warnings (cut item 1) and the BGN count (cut item 2) were built.
+- **"Untouched" for revert** is wider than rule 8 listed: a listing or owner party deleted by
+  hand, a party added later, or an ended party also counts as work, and `properties.updated_at`
+  ignores derived columns so renaming an area isn't work (M4, Checkpoint 1 review).
+- **Scale measure** is a gated Vitest file (`scripts/property-import/measure.test.ts`, run with
+  `PROPERTY_IMPORT_SCALE=1`), not a `tsx` script: it needs the `@/` aliases and the test client.
+- **Glossary:** the UI says **Импортиране**, the canonical term in `docs/domain-model.md`, not
+  Внасяне.

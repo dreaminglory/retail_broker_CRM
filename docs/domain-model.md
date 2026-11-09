@@ -403,6 +403,7 @@ erDiagram
     text name "UK lower(name) per agency and settlement"
     bool is_active
     int sort_order
+    uuid import_job_id FK "set by a property import"
   }
   properties {
     uuid agency_id FK
@@ -433,12 +434,14 @@ erDiagram
     text status "active | reserved | closed | withdrawn"
     timestamptz listed_at
     timestamptz closed_at
+    uuid import_job_id FK "set by a property import"
   }
   property_parties {
     uuid property_id FK
     uuid contact_id FK
     text role "owner | co_owner | representative | occupant"
     timestamptz ended_at "NULL = open"
+    uuid import_job_id FK "set by a property import"
   }
   opportunity_properties {
     uuid opportunity_id FK
@@ -926,6 +929,9 @@ The "Enforced by" column tells you which layer to change and test.
 | M2 | Import revert: owner/manager, `completed` job, within 7 days, and never deletes a record someone has worked on (a property party counts as work, L18; for a property job, a party only on properties this revert deletes doesn't) | RPC `import_revert` + `063-import-revert.sql`, `074-property-review-fixes.sql`, `102-property-import-revert.sql` |
 | M3 | An import row's assignee resolves by email, or by a name only one active member has. Anything else makes the row invalid rather than guessing | `resolveAssignee` + `value-resolvers.test.ts` |
 | M4 | A property import revert never deletes a worked-on property (edited, archived, or with a note, task, opportunity link, a listing not from the job or changed since, a party not from the job, ended or changed, or a listing or owner party of its row deleted by hand), its owner, a contact that existed before the import, or an area a property or requirement uses. Renaming an area is not work on its properties | RPC `import_revert`, trigger `set_properties_updated_at` + `102-property-import-revert.sql`, `103-property-import-review-fixes.sql` |
+| M5 | A property is an address duplicate only of a property in the same agency and settlement with the same `address_key`; a blank address is never a duplicate. The key has one definition, in SQL, used by validation and by the commit's re-check | generated column `properties.address_key` from `property_address_key()`, RPCs `import_property_address_matches` and `import_commit_properties` + `100-property-import.sql`, `101-property-import-commit.sql` |
+| M6 | An import creates a new area only when the user kept it (`options.create_areas`), once per agency, settlement and name ignoring case, shared by every row that names it; an unkept area's rows import without one | `ON CONFLICT` on `uq_areas_agency_settlement_name` in `import_commit_properties` + `101-property-import-commit.sql`, `property-import.integration.test.ts` |
+| M7 | An import's owner is matched by phone, then email, in the caller's agency only, and re-matched at commit, so rows of one file share a new owner; a name-only owner is always new, an unmatched owner with no name is never created, and an owner phone that doesn't parse makes the row invalid | `ImportService.validateProperties` (`normalizePhone()`, `lookupExistingMethods`) and `import_commit_properties` + `property-import.integration.test.ts`, `101-property-import-commit.sql` |
 
 ---
 
@@ -988,6 +994,7 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Listing | Обява | A sale or rent offering of a property, with a price | |
 | Area | Квартал | Agency-defined district of a settlement | |
 | Party | Страна | Contact with a role on a property (owner, co-owner, representative, occupant) | |
+| Owner (of a property) | Собственик | A party role on a property, not the membership role of the same name; the import preview says "owners" in this sense | |
 | Candidate | Кандидат | Property proposed on a buyer or tenant deal | |
 | Subject property | Обект на сделката | The property a seller or landlord deal is about | |
 | Requirement | Изисквания | What a buyer or tenant is looking for, on the opportunity (plural, as brokers say it) | |

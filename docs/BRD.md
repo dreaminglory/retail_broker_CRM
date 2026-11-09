@@ -309,16 +309,16 @@ active opportunity has an owner, a next action and a complete history.
 
 | ID | Requirement |
 |----|------------|
-| FR-PIM-01 | ❌ Properties: upload a CSV, map columns from Bulgarian and English headers, validate, preview, commit on the AD-034 pipeline |
-| FR-PIM-02 | ❌ A row becomes a property with the same rules as the property form (type, rooms, m², floor, construction, location) |
-| FR-PIM-03 | ❌ Settlement resolved by name (Bulgarian or English, without `гр.`/`с.`) or EKATTE code; ambiguity narrowed by municipality or province, never guessed |
-| FR-PIM-04 | ❌ `sale_price` and `rent_price` create sale and rent listings in EUR; BGN amounts converted at 1.95583 and counted in the preview |
-| FR-PIM-05 | ❌ Unknown areas are created per settlement, shared by the file's rows, listed in the preview and can be unticked |
-| FR-PIM-06 | ❌ The owner is matched by phone or email or created as a new contact, linked as an `owner` party; an unparseable phone makes the row invalid |
-| FR-PIM-07 | ❌ Duplicates by `external_ref` (always skipped) and by settlement plus normalised address (skip or create), re-checked at commit; a re-run creates nothing |
-| FR-PIM-08 | ❌ Imported properties are normal properties: in `/properties`, ⌘K and matching right after the commit |
-| FR-PIM-09 | ❌ Revert within 7 days deletes only untouched properties, their listings and parties, unworked imported owners and unused new areas |
-| FR-PIM-10 | ❌ Owner and manager only; jobs, settlements' areas, members and contacts come only from the caller's agency |
+| FR-PIM-01 | ✅ Properties: upload a CSV, map columns from Bulgarian and English headers, validate, preview, commit on the AD-034 pipeline. AC-1: `property-import-fixtures.integration.test.ts` (both encodings, 20 committed), E2E `settings-import.spec.ts` (four projects) |
+| FR-PIM-02 | ✅ A row becomes a property with the same rules as the property form (type, rooms, m², floor, construction, location). AC-1: `property-resolvers.test.ts`, `property-row-mapper.test.ts` (through the property Zod schema), the fixtures test, edge rows 14–16 |
+| FR-PIM-03 | ✅ Settlement resolved by name (Bulgarian or English, without `гр.`/`с.`) or EKATTE code; ambiguity narrowed by municipality or province, never guessed. AC-3: `property-validation.test.ts`, `property-import.integration.test.ts` (validation), edge rows 1–3 and 17 |
+| FR-PIM-04 | ✅ `sale_price` and `rent_price` create sale and rent listings in EUR; BGN amounts converted at 1.95583 and counted in the preview. AC-2: `property-resolvers.test.ts`, `property-import.integration.test.ts` (commit: sale and rent listings, €613.55), E2E preview line |
+| FR-PIM-05 | ✅ Unknown areas are created per settlement, shared by the file's rows, listed in the preview and can be unticked. AC-4: `property-import.integration.test.ts` (validation, commit, unticked area), fixtures test (unticked "Витоша" from the preview), `area-similarity.test.ts`, E2E |
+| FR-PIM-06 | ✅ The owner is matched by phone or email or created as a new contact, linked as an `owner` party; an unparseable phone makes the row invalid. AC-5: `property-import.integration.test.ts` (owners, shared new owner at commit), `101-property-import-commit.sql`, edge rows 8, 9, 13, 19 |
+| FR-PIM-07 | ✅ Duplicates by `external_ref` (always skipped) and by settlement plus normalised address (skip or create), re-checked at commit; a re-run creates nothing. AC-6: `100-property-import.sql` (address key and function), `101-property-import-commit.sql` (`db_recheck`, `create`), `property-import.integration.test.ts` (re-run, address and in-file duplicates) |
+| FR-PIM-08 | ✅ Imported properties are normal properties: in `/properties`, ⌘K and matching right after the commit. AC-7: fixtures test (seeded buyer's `match_properties`), E2E (list and ⌘K) |
+| FR-PIM-09 | ✅ Revert within 7 days deletes only untouched properties, their listings and parties, unworked imported owners and unused new areas. AC-8: `102-property-import-revert.sql` (one kept case per kind of work), `103-property-import-review-fixes.sql`, `property-import.integration.test.ts` (revert), E2E counts |
+| FR-PIM-10 | ✅ Owner and manager only; jobs, settlements' areas, members and contacts come only from the caller's agency. AC-9: `100`/`101`/`102` pgTAP (broker, `anon`, other agency refused), `actions.test.ts` (broker refused), `property-import.integration.test.ts` (Beta's areas, members, contacts never matched). AC-10: E2E in bg and en at 1280 and 390 px; scale run in AD-064 |
 
 ## 4. Non-functional requirements
 

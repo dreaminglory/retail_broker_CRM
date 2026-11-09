@@ -518,6 +518,9 @@ warning case).
   properties (Checkpoint 1 review). Properties go first (listings and parties cascade), then
   the existing contact rule, then the job's areas no property or `requirement_locations` row uses.
 - **Limits** unchanged: 5 MB, 5,000 rows, 500-row chunks.
+- **Scale (final, local stack, 2,000 rows):** validate 3.3 s plus preview 0.2 s (rule 11: < 30 s),
+  commit 8.0 s in 10 × 200-row batches (< 2 min), stage 0.4 s, revert 2.7 s. The E2E commits and
+  reverts the 20-row file in about 8 s per project.
 - **Numbers and dates.** A dot or comma before exactly three digits is a thousands separator
   (`185.000` and `185,000` are both 185 000). `options.date_format` is one of `dd.MM.yyyy`,
   `dd/MM/yyyy`, `MM/dd/yyyy`, `yyyy-MM-dd` and replaces the day-first guesses; ISO dates are

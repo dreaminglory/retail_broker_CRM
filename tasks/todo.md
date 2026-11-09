@@ -347,11 +347,11 @@ and ⌘K, then reverts and sees the counts. Run it in `bg` and `en`, at 1280 and
 - Record the final scale numbers in AD-064.
 
 **Acceptance criteria:**
-- [ ] Every AC-1…AC-10 is traced in the BRD rows to a test or a browser check.
-- [ ] The docs match the code: `rg import_job_id docs/domain-model.md` lists all four tables.
+- [x] Every AC-1…AC-10 is traced in the BRD rows to a test or a browser check.
+- [x] The docs match the code: `rg import_job_id docs/domain-model.md` lists all four tables.
 
 **Verification:**
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 12
 **Files likely touched:** `docs/domain-model.md`, `docs/BRD.md`, `spec/property-import.md`, `docs/decisions-log.md`
