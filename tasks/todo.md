@@ -319,7 +319,7 @@ imported apartment that fits Alpha's seeded buyer requirement appears in that de
 
 ## Checkpoint 2
 - [ ] Import, preview, commit and revert done in the browser in `bg` and `en`, at 1280 and 390 px
-- [ ] All tests green; `/review` of Phase 2
+- [x] All tests green; `/review` of Phase 2 (2026-11-09: two fixes, c0a1c24 and 6a45245; mapping, commit, done and revert also checked at 390 px in `bg` and `en`)
 
 ## Phase 3: Proof and close
 
