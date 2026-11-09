@@ -9,7 +9,7 @@ export type AuditEvent =
   | { kind: 'stage'; from: string; to: string }
   | { kind: 'assignment'; from: string | null; to: string | null }
   | { kind: 'opportunityStatus'; from: string | null; to: string | null }
-  | { kind: 'propertyCreated'; code: number | null }
+  | { kind: 'propertyCreated'; code: number | null; imported: boolean; importFile: string | null }
   | { kind: 'propertyStatus'; from: string | null; to: string | null }
   | { kind: 'listingCreated'; offerType: string | null; price: number | null }
   | { kind: 'listingPrice'; offerType: string | null; from: number | null; to: number | null }
@@ -115,7 +115,9 @@ export function describeAudit(row: AuditLogEntry): AuditEvent {
   }
 
   if (row.entity_type === 'property') {
-    if (row.action === 'created') return { kind: 'propertyCreated', code: num(meta.code) };
+    if (row.action === 'created') {
+      return { kind: 'propertyCreated', code: num(meta.code), imported: Boolean(meta.import_job_id), importFile: text(meta.file_name) };
+    }
     if (row.field_name === 'status') return { kind: 'propertyStatus', from: row.old_value, to: row.new_value };
     return { kind: 'other' };
   }

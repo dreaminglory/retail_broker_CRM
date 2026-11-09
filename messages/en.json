@@ -177,7 +177,8 @@
       "step2": {
         "title": "Map Columns",
         "desc": "Map the columns from your CSV to CRM fields.",
-        "previousUploadAlert": "This file was previously uploaded. Re-importing it with \"Skip duplicates\" will not create duplicates."
+        "previousUploadAlert": "This file was previously uploaded. Re-importing it with \"Skip duplicates\" will not create duplicates.",
+        "missingRequired": "Map a column to these required fields: {fields}."
       },
       "step3": {
         "title": "Review Validation",
@@ -193,14 +194,17 @@
       "step4": {
         "title": "Importing...",
         "desc": "Please wait while we import your {type}.",
-        "progress": "{processed} of {total} rows imported"
+        "progress": "{processed} of {total} rows imported",
+        "stopped": "The import stopped before it finished. The rows already imported are saved; resume to import the rest.",
+        "resume": "Resume import"
       },
       "step5": {
         "title": "Import Complete",
         "desc": "Your {type} have been successfully imported.",
         "success": "The import process finished successfully.",
         "downloadError": "Download Error Report",
-        "goTo": "Go to {type}"
+        "goTo": "Go to {type}",
+        "result": "{created, plural, one {# record} other {# records}} created, {skipped} skipped, {errors} failed."
       },
       "back": "Back",
       "validating": "Validating...",
@@ -211,7 +215,8 @@
       "contactsType": "Contacts",
       "createFailed": "The import couldn't be started.",
       "validateFailed": "The file couldn't be validated.",
-      "commitFailed": "The import didn't finish. Check the import history."
+      "commitFailed": "The import didn't finish. Check the import history.",
+      "propertiesType": "properties"
     },
     "dropzone": {
       "title": "Drag & drop your CSV file here",
@@ -250,8 +255,31 @@
         "source": "Source",
         "received_at": "Date Received",
         "assigned_to": "Assigned To",
-        "status": "Status"
-      }
+        "status": "Status",
+        "type": "Property type",
+        "settlement": "Settlement",
+        "municipality": "Municipality",
+        "province": "Province",
+        "area": "Area / neighbourhood",
+        "address": "Address",
+        "location_note": "Location note",
+        "rooms": "Rooms",
+        "area_m2": "Floor area (m²)",
+        "plot_m2": "Plot area (m²)",
+        "floor": "Floor",
+        "floors_total": "Total floors",
+        "year_built": "Year built",
+        "construction": "Construction",
+        "sale_price": "Sale price",
+        "rent_price": "Rent price",
+        "listing_status": "Listing status",
+        "listed_at": "Listed on",
+        "owner_name": "Owner name",
+        "owner_phone": "Owner phone",
+        "owner_email": "Owner email"
+      },
+      "required": "Required",
+      "sample": "e.g. {value}"
     },
     "options": {
       "duplicateStrategy": {
@@ -285,11 +313,24 @@
         "contacted": "Contacted",
         "converted": "Converted",
         "dismissed": "Dismissed"
+      },
+      "propertyDuplicates": {
+        "desc": "What should happen if a property in the file has the same settlement and address as one already in the CRM? A matching external ID is always skipped."
+      },
+      "defaultBroker": {
+        "title": "Default broker",
+        "desc": "Who is assigned the properties whose row names no broker?",
+        "importer": "Me (the importer)"
+      },
+      "dateFormat": {
+        "title": "Date format",
+        "desc": "How the file writes listing dates. ISO dates (2025-03-15) are always read."
       }
     },
     "entityType": {
       "contact": "Contacts",
-      "inquiry": "Inquiries"
+      "inquiry": "Inquiries",
+      "property": "Properties"
     },
     "jobStatus": {
       "draft": "Draft",
@@ -300,7 +341,56 @@
       "failed": "Failed",
       "reverted": "Reverted"
     },
-    "errorReportReason": "Error reason"
+    "errorReportReason": "Error reason",
+    "importProperties": "Import properties",
+    "propertyPreview": {
+      "counts": {
+        "new": "New",
+        "duplicate": "Duplicates",
+        "invalid": "Invalid",
+        "skipped": "Already imported"
+      },
+      "strategy": {
+        "skip": "Duplicates (same settlement and address) will be skipped.",
+        "create": "Duplicates (same settlement and address) will be imported anyway."
+      },
+      "owners": "Owners: {matched, plural, one {# matched to an existing contact} other {# matched to existing contacts}}, {created, plural, one {# new contact} other {# new contacts}}.",
+      "bgnConverted": "{count, plural, one {# row has prices} other {# rows have prices}} in BGN, converted to EUR at 1.95583.",
+      "newAreas": {
+        "title": "New areas",
+        "desc": "These areas aren't in your list yet. Ticked areas are created; untick a misspelt one.",
+        "rows": "{count, plural, one {# property} other {# properties}}",
+        "similar": "Close to the existing area \"{name}\". A typo?",
+        "unticked": "Properties in an unticked area are imported without an area."
+      },
+      "rows": {
+        "title": "Rows",
+        "filter": "Show rows",
+        "row": "Row",
+        "property": "Property",
+        "outcome": "Outcome",
+        "notes": "Notes",
+        "rowNumber": "Row {row}",
+        "downloadErrors": "Download the error report",
+        "showingFirst": "Showing the first {shown} of {total} rows. The error report lists every invalid row.",
+        "filters": {
+          "all": "All rows",
+          "valid": "New",
+          "duplicate": "Duplicates",
+          "invalid": "Invalid",
+          "skipped": "Already imported"
+        }
+      },
+      "outcome": {
+        "valid": "New",
+        "duplicate": "Duplicate address",
+        "duplicateInFile": "Duplicate in the file",
+        "skipped": "Already imported (reference)",
+        "invalid": "Invalid"
+      }
+    },
+    "revertDescProperty": "This permanently deletes the properties this import created (with their listings and owner links), and the owner contacts and areas it created, unless they were worked on since. A property that was edited, archived or worked on (a note, task, candidate link, listing, price or owner change) is kept with its owner; an area that a kept property or a buyer requirement uses is kept.",
+    "revertSuccessProperty": "Import reverted. Deleted: {properties, plural, one {# property} other {# properties}}, {contacts, plural, one {# contact} other {# contacts}}, {areas, plural, one {# area} other {# areas}}. Kept because they were worked on or are in use: {keptProperties, plural, one {# property} other {# properties}}, {keptContacts, plural, one {# contact} other {# contacts}}, {keptAreas, plural, one {# area} other {# areas}}."
   },
   "SettingsStages": {
     "settings": "Settings",
@@ -1237,7 +1327,8 @@
       "propertyLinkRemoved": "Property unlinked",
       "requirementCreated": "Requirements added",
       "requirementChanged": "Requirements changed",
-      "requirementRemoved": "Requirements removed"
+      "requirementRemoved": "Requirements removed",
+      "propertyImported": "Property imported"
     },
     "outcomeLabel": "Outcome",
     "unassigned": "Unassigned",
@@ -1423,9 +1514,21 @@
       "missingNameMapping": "Map a column to a name.",
       "missingIdentifierMapping": "Map a column to a phone, email or external ID.",
       "missingInquiryMapping": "Map a column to the caller or the subject.",
+      "missingPropertyTypeMapping": "Map a column to the property type.",
+      "missingSettlementMapping": "Map a column to the settlement.",
       "unknownSource": "This row has an unknown lead source.",
       "unknownAssignee": "This row is assigned to someone who is not in your agency.",
+      "settlementNotFound": "The settlement wasn't found. Check the name or use its EKATTE code.",
+      "settlementAmbiguous": "Several settlements have this name. Add the municipality or province.",
+      "invalidPrice": "The price must be a positive amount.",
+      "invalidListingStatus": "The listing status isn't recognised.",
+      "invalidDate": "The date couldn't be read.",
+      "ownerPhoneInvalid": "The owner's phone isn't a valid number.",
+      "unknownDefaultAssignee": "The default broker is no longer an active member of the agency. Pick another one.",
       "dbWrite": "This row couldn't be saved."
+    },
+    "warnings": {
+      "ownerSkippedNoName": "The owner has no name and isn't in your contacts, so the property is imported without an owner. Add them on the property page."
     }
   },
   "ui": {

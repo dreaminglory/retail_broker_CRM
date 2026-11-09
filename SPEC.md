@@ -1,6 +1,6 @@
 # Spec: BrokerCRM
 
-> Last updated 2026-11-05. The product spec: what we build, in which order, and where it stands.
+> Last updated 2026-11-08. The product spec: what we build, in which order, and where it stands.
 > Module specs: `spec/<module-id>.md`. Active plan: `tasks/plan.md` + `tasks/todo.md`.
 
 ## 1. Objective
@@ -49,7 +49,7 @@ starts; pilot evidence sets the order.
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Done |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Done |
-| `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Planned |
+| `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Done |
 | `go-live` | Domain, Resend domain, hosting, crons, prod env; E2E and coverage gate in CI; founder review of `bg.json`; dry run | `reminders`, `smart-lists`, `property-import` | Planned |
 | `lead-intake` | Portal inquiry emails (homes.bg, imot.bg, alo.bg) and a website form → inquiries; parser fixtures per portal | pilot | Later |
 | `routing` | Round robin, on-duty broker, escalation, shared pool | `lead-intake` | Later |
@@ -97,8 +97,8 @@ AD-050 RPCs. Leaked-password protection is still off
 **Go-live prerequisites (founder):** a domain verified in Resend, hosting that allows two daily
 crons (or the pg_cron fallback, AD-042), production env vars.
 
-**Open decisions:** none. Smart Lists stay in the gate (founder, 2026-11-07); scope in
-`spec/smart-lists.md`.
+**Open decisions:** none. `property-import` is Done (2026-11-09, `spec/property-import.md`, plan in
+`docs/archive/property-import-plan.md`); its migrations run through `20261109000007`. Next: `go-live`.
 
 ## 6. Pilot evidence
 

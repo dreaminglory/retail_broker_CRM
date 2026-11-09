@@ -1,4 +1,4 @@
-export type ImportEntityType = 'contact' | 'inquiry';
+export type ImportEntityType = 'contact' | 'inquiry' | 'property';
 
 export type ImportJobStatus = 
   | 'draft'
@@ -23,9 +23,12 @@ export type ImportRowStatus =
 
 export type DuplicateStrategy = 'skip' | 'create';
 
+/** `properties` and `areas` are only present for property jobs (AD-064). */
+export type RevertCounts = { contacts: number; inquiries: number; properties?: number; areas?: number };
+
 export type RevertResult = {
-  deleted: { contacts: number; inquiries: number };
-  kept: { contacts: number; inquiries: number };
+  deleted: RevertCounts;
+  kept: RevertCounts;
 };
 
 export interface ImportJob {
@@ -50,6 +53,8 @@ export interface ImportJob {
     link_contacts?: boolean;
     create_missing_contacts?: boolean;
     date_format?: string;
+    /** Property jobs: the `settlement_id:name` keys of the new areas the user kept (AD-064). */
+    create_areas?: string[];
   };
   total_rows: number;
   valid_count: number;
@@ -73,7 +78,7 @@ export interface ImportError {
   detail?: string;
 }
 
-export type MatchReason = 'phone' | 'email' | 'external_ref' | 'in_file' | 'name_similar' | 'db_recheck';
+export type MatchReason = 'phone' | 'email' | 'external_ref' | 'in_file' | 'name_similar' | 'db_recheck' | 'address';
 
 export interface ImportRow {
   id: string;
@@ -114,7 +119,33 @@ export interface ImportSummary {
   brokerImpact?: { userId: string; name: string; newInquiries: number }[];
 }
 
-export type InquiryImportField = 
+export type PropertyImportField =
+  | 'type'
+  | 'settlement'
+  | 'municipality'
+  | 'province'
+  | 'area'
+  | 'address'
+  | 'location_note'
+  | 'rooms'
+  | 'area_m2'
+  | 'plot_m2'
+  | 'floor'
+  | 'floors_total'
+  | 'year_built'
+  | 'construction'
+  | 'sale_price'
+  | 'rent_price'
+  | 'listing_status'
+  | 'listed_at'
+  | 'assigned_to'
+  | 'description'
+  | 'external_ref'
+  | 'owner_name'
+  | 'owner_phone'
+  | 'owner_email';
+
+export type InquiryImportField =
   | 'caller_name'
   | 'caller_phone'
   | 'caller_email'

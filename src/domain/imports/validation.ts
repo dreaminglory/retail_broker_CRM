@@ -25,7 +25,7 @@ export const createImportJobSchema = z.object({
   delimiter: z.enum([",", ";", "\t", "|"], {
     errorMap: () => ({ message: "import.errors.invalidDelimiter" }),
   }),
-  entity_type: z.enum(["contact", "inquiry"]).default("contact"),
+  entity_type: z.enum(["contact", "inquiry", "property"]).default("contact"),
   headers: z
     .array(z.string())
     .max(IMPORT_LIMITS.MAX_HEADERS, { message: "import.errors.tooManyHeaders" }),
@@ -105,3 +105,47 @@ export const inquiryImportOptionsSchema = z.object({
 });
 
 export type InquiryImportOptionsInput = z.infer<typeof inquiryImportOptionsSchema>;
+
+// Property import (AD-064): only the type and the settlement are required columns.
+export const propertyMappingSchema = z
+  .record(z.string().nullable())
+  .refine((mapping) => !!mapping.type, {
+    message: "import.errors.missingPropertyTypeMapping",
+    path: ["type"],
+  })
+  .refine((mapping) => !!mapping.settlement, {
+    message: "import.errors.missingSettlementMapping",
+    path: ["settlement"],
+  });
+
+export type PropertyMappingInput = z.infer<typeof propertyMappingSchema>;
+
+/** How a property file writes `listed_at`; ISO dates are always accepted as well. */
+export const PROPERTY_DATE_FORMATS = ["dd.MM.yyyy", "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd"] as const;
+
+export const propertyImportOptionsSchema = z.object({
+  duplicate_strategy: z.enum(["skip", "create"]).default("skip"),
+  default_assigned_to: z.string().uuid().nullable().optional(),
+  date_format: z.enum(PROPERTY_DATE_FORMATS).optional(),
+  /** The `settlement_id:name` keys of the new areas to create; absent means all of them. */
+  create_areas: z.array(z.string().max(400)).max(5000).optional(),
+});
+
+export type PropertyImportOptionsInput = z.infer<typeof propertyImportOptionsSchema>;
+
+/**
+ * Fields that must each have a column before the preview. Contacts and inquiries have
+ * either-or rules instead (their mapping schemas), so they list none.
+ */
+export const REQUIRED_MAPPING_FIELDS = {
+  contact: [],
+  inquiry: [],
+  property: ["type", "settlement"],
+} as const satisfies Record<"contact" | "inquiry" | "property", readonly string[]>;
+
+export function missingRequiredFields(
+  entity: keyof typeof REQUIRED_MAPPING_FIELDS,
+  mapping: Record<string, string | null | undefined>,
+): string[] {
+  return REQUIRED_MAPPING_FIELDS[entity].filter((field) => !mapping[field]);
+}

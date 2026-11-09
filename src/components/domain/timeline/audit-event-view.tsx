@@ -38,7 +38,7 @@ export function auditEventTitle(t: Translator, event: AuditEvent): string {
     case "opportunityStatus":
       return t("events.statusChanged");
     case "propertyCreated":
-      return t("events.propertyCreated");
+      return event.imported ? t("events.propertyImported") : t("events.propertyCreated");
     case "propertyStatus":
       return t("events.propertyStatusChanged");
     case "listingCreated":
@@ -104,6 +104,13 @@ export function AuditEventBody({ event, data, showDeal }: { event: AuditEvent; d
           )}
         </div>
       );
+    case "propertyCreated":
+      // The file is in the audit row (20261109000006); rows written before it say "Imported" only.
+      return event.imported && event.importFile ? (
+        <div className="text-sm">
+          {t("importedFrom")} <strong>{event.importFile}</strong>
+        </div>
+      ) : null;
     case "propertyStatus":
       return (
         <Change

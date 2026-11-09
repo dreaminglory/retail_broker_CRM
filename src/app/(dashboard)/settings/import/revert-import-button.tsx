@@ -16,15 +16,18 @@ import {
 import { Undo2 } from "lucide-react";
 import { revertImportJobAction } from "./actions";
 import { toast } from "sonner";
+import { revertSummary } from "@/domain/imports/revert-summary";
+import type { ImportEntityType } from "@/domain/imports/types";
 
 interface RevertImportButtonProps {
   jobId: string;
   fileName: string;
+  entityType: ImportEntityType;
 }
 
 import { useTranslations } from "next-intl";
 
-export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps) {
+export function RevertImportButton({ jobId, fileName, entityType }: RevertImportButtonProps) {
   const t = useTranslations("SettingsImport");
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -34,11 +37,12 @@ export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps)
       try {
         const result = await revertImportJobAction(jobId);
         if (result.success) {
-          const { deleted, kept } = result.data;
-          toast.success(t("revertSuccess", {
-            deleted: deleted.contacts + deleted.inquiries,
-            kept: kept.contacts + kept.inquiries,
-          }));
+          const summary = revertSummary(entityType, result.data);
+          toast.success(
+            summary.key === "revertSuccessProperty"
+              ? t("revertSuccessProperty", summary.values)
+              : t("revertSuccess", summary.values)
+          );
           setOpen(false);
         } else {
           toast.error(result.error);
@@ -61,7 +65,7 @@ export function RevertImportButton({ jobId, fileName }: RevertImportButtonProps)
           <AlertDialogTitle>{t("revertImport")}</AlertDialogTitle>
           <AlertDialogDescription>
             {t.rich("revertConfirm", { fileName, strong: (c) => <strong>{c}</strong> })}{" "}
-            {t("revertDesc")}
+            {entityType === "property" ? t("revertDescProperty") : t("revertDesc")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

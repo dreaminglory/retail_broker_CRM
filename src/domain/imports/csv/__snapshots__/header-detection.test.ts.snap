@@ -1,0 +1,113 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`detectHeaders: contact and inquiry mapping is pinned > maps contact headers as before 1`] = `
+[
+  {
+    "company_name": "Фирма",
+    "email": "Имейл",
+    "external_ref": "ID",
+    "first_name": "Име",
+    "last_name": "Фамилия",
+    "note": "Бележка",
+    "phone": "Телефон",
+  },
+  {
+    "company_name": "Company",
+    "contact_type": "Type",
+    "email": "Email",
+    "external_ref": "Reference",
+    "full_name": "Full name",
+    "note": "Notes",
+    "phone": "Phone",
+  },
+  {
+    "contact_type": "Тип",
+    "email": "Е-поща",
+    "full_name": "Пълно име",
+    "phone": "Тел",
+    "phone_2": "Телефон 2",
+    "viber": "Viber",
+    "whatsapp": "WhatsApp",
+  },
+  {
+    "assigned_to": "Брокер",
+    "email": "Имейл",
+    "external_ref": "Референция",
+    "first_name": "Име",
+    "note": "Описание",
+    "phone": "Телефон",
+    "received_at": "Дата",
+    "source": "Източник",
+    "status": "Статус",
+    "subject": "Тема",
+  },
+  {
+    "assigned_to": "Assigned to",
+    "caller_name": "Caller name",
+    "email": "Caller email",
+    "external_ref": "External ref",
+    "note": "Description",
+    "phone": "Caller phone",
+    "received_at": "Received at",
+    "source": "Source",
+    "status": "Status",
+    "subject": "Subject",
+  },
+]
+`;
+
+exports[`detectHeaders: contact and inquiry mapping is pinned > maps inquiry headers as before 1`] = `
+[
+  {
+    "company_name": "Фирма",
+    "email": "Имейл",
+    "external_ref": "ID",
+    "first_name": "Име",
+    "last_name": "Фамилия",
+    "note": "Бележка",
+    "phone": "Телефон",
+  },
+  {
+    "company_name": "Company",
+    "contact_type": "Type",
+    "email": "Email",
+    "external_ref": "Reference",
+    "full_name": "Full name",
+    "note": "Notes",
+    "phone": "Phone",
+  },
+  {
+    "contact_type": "Тип",
+    "email": "Е-поща",
+    "full_name": "Пълно име",
+    "phone": "Тел",
+    "phone_2": "Телефон 2",
+    "viber": "Viber",
+    "whatsapp": "WhatsApp",
+  },
+  {
+    "assigned_to": "Брокер",
+    "email": "Имейл",
+    "external_ref": "Референция",
+    "first_name": "Име",
+    "note": "Описание",
+    "phone": "Телефон",
+    "received_at": "Дата",
+    "source": "Източник",
+    "status": "Статус",
+    "subject": "Тема",
+  },
+  {
+    "assigned_to": "Assigned to",
+    "caller_name": "Caller name",
+    "email": "Caller email",
+    "external_ref": "External ref",
+    "note": "Description",
+    "phone": "Caller phone",
+    "received_at": "Received at",
+    "source": "Source",
+    "status": "Status",
+    "subject": "Subject",
+  },
+]
+`;

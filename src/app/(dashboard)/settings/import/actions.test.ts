@@ -4,6 +4,12 @@ import { createFakeSupabase, type FakeSupabase } from '@/test/fake-supabase';
 let fake: FakeSupabase;
 
 const commitBatch = vi.fn();
+const saveMapping = vi.fn();
+const createJob = vi.fn();
+const getJob = vi.fn();
+const getPropertyPreview = vi.fn();
+const setCreateAreas = vi.fn();
+const getResult = vi.fn();
 const notifyImportCompleted = vi.fn();
 let scheduled: Array<() => Promise<void>> = [];
 
@@ -12,11 +18,22 @@ vi.mock('@/lib/supabase/server', () => ({
 }));
 vi.mock('next-intl/server', () => ({
   getTranslations: async () => Object.assign((key: string) => key, { has: () => true }),
+  getLocale: async () => 'en',
 }));
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
 vi.mock('@/domain/imports/service', () => ({
   ImportService: class {
     commitBatch = commitBatch;
+    saveMapping = saveMapping;
+    createJob = createJob;
+    getPropertyPreview = getPropertyPreview;
+    setCreateAreas = setCreateAreas;
+    getResult = getResult;
+  },
+}));
+vi.mock('@/domain/imports/repository', () => ({
+  ImportRepository: class {
+    getJob = getJob;
   },
 }));
 vi.mock('../../notify-after', () => ({
@@ -25,7 +42,14 @@ vi.mock('../../notify-after', () => ({
   },
 }));
 
-const { commitImportBatchAction } = await import('./actions');
+const {
+  commitImportBatchAction,
+  createImportJobAction,
+  saveImportMappingAction,
+  getPropertyPreviewAction,
+  savePropertyImportAreasAction,
+  getImportResultAction,
+} = await import('./actions');
 
 describe('commitImportBatchAction', () => {
   beforeEach(() => {
@@ -70,5 +94,142 @@ describe('commitImportBatchAction', () => {
     expect(result.success).toBe(false);
     expect(commitBatch).not.toHaveBeenCalled();
     expect(scheduled).toHaveLength(0);
+  });
+});
+
+const PROPERTY_JOB_INPUT = {
+  file_name: 'properties-basic.csv',
+  file_sha256: 'a'.repeat(64),
+  file_size_bytes: 100,
+  encoding: 'utf-8',
+  delimiter: ',',
+  headers: ['Тип имот', 'Населено място'],
+  entity_type: 'property',
+};
+
+describe('property import actions', () => {
+  beforeEach(() => {
+    fake = createFakeSupabase({ role: 'manager', userId: 'user-me', agencyId: 'agency-1' });
+    saveMapping.mockReset();
+    createJob.mockReset();
+    getJob.mockReset();
+    getJob.mockResolvedValue({ id: 'job-1', entity_type: 'property' });
+  });
+
+  it('creates a property job for a manager', async () => {
+    createJob.mockResolvedValue({ jobId: 'job-1', previousJobs: [] });
+
+    const result = await createImportJobAction(PROPERTY_JOB_INPUT);
+
+    expect(result.success).toBe(true);
+    expect(createJob).toHaveBeenCalledWith('agency-1', expect.objectContaining({ entity_type: 'property' }));
+  });
+
+  it('refuses a broker a property job', async () => {
+    fake = createFakeSupabase({ role: 'broker', userId: 'user-me', agencyId: 'agency-1' });
+
+    const create = await createImportJobAction(PROPERTY_JOB_INPUT);
+    const save = await saveImportMappingAction('job-1', { type: 'Тип имот', settlement: 'Населено място' }, {});
+
+    expect(create.success).toBe(false);
+    expect(save.success).toBe(false);
+    expect(createJob).not.toHaveBeenCalled();
+    expect(saveMapping).not.toHaveBeenCalled();
+  });
+
+  it('saves a property mapping with the property options', async () => {
+    const result = await saveImportMappingAction(
+      'job-1',
+      { type: 'Тип имот', settlement: 'Населено място', area: null },
+      { duplicate_strategy: 'create', default_assigned_to: null, date_format: 'dd.MM.yyyy' },
+    );
+
+    expect(result.success).toBe(true);
+    expect(saveMapping).toHaveBeenCalledWith(
+      'agency-1',
+      'job-1',
+      { type: 'Тип имот', settlement: 'Населено място', area: null },
+      { duplicate_strategy: 'create', default_assigned_to: null, date_format: 'dd.MM.yyyy' },
+    );
+  });
+
+  it('blocks a property mapping without the settlement, naming the missing field', async () => {
+    const result = await saveImportMappingAction('job-1', { type: 'Тип имот', settlement: null }, {});
+
+    expect(result).toMatchObject({ success: false, error: 'import.errors.missingSettlementMapping' });
+    expect(saveMapping).not.toHaveBeenCalled();
+  });
+
+  it('refuses property options that are not property options', async () => {
+    const result = await saveImportMappingAction(
+      'job-1',
+      { type: 'Тип имот', settlement: 'Населено място' },
+      { date_format: 'yyyy' },
+    );
+
+    expect(result).toMatchObject({ success: false, error: 'import.errors.invalidOptions' });
+  });
+});
+
+describe('property preview actions', () => {
+  beforeEach(() => {
+    fake = createFakeSupabase({ role: 'manager', userId: 'user-me', agencyId: 'agency-1' });
+    getPropertyPreview.mockReset();
+    setCreateAreas.mockReset();
+  });
+
+  it("reads the preview in the user's language", async () => {
+    getPropertyPreview.mockResolvedValue({ counts: { new: 1, duplicate: 0, invalid: 0, skipped: 0 } });
+
+    const result = await getPropertyPreviewAction('job-1');
+
+    expect(result.success).toBe(true);
+    expect(getPropertyPreview).toHaveBeenCalledWith('agency-1', 'job-1', 'en');
+  });
+
+  it('saves the kept areas', async () => {
+    const result = await savePropertyImportAreasAction('job-1', ['s-1:витоша']);
+
+    expect(result.success).toBe(true);
+    expect(setCreateAreas).toHaveBeenCalledWith('agency-1', 'job-1', ['s-1:витоша']);
+  });
+
+  it('refuses keys that are not strings', async () => {
+    const result = await savePropertyImportAreasAction('job-1', [42] as unknown as string[]);
+
+    expect(result.success).toBe(false);
+    expect(setCreateAreas).not.toHaveBeenCalled();
+  });
+
+  it('refuses a broker both', async () => {
+    fake = createFakeSupabase({ role: 'broker', userId: 'user-me', agencyId: 'agency-1' });
+
+    expect((await getPropertyPreviewAction('job-1')).success).toBe(false);
+    expect((await savePropertyImportAreasAction('job-1', [])).success).toBe(false);
+    expect(getPropertyPreview).not.toHaveBeenCalled();
+    expect(setCreateAreas).not.toHaveBeenCalled();
+  });
+});
+
+describe('getImportResultAction', () => {
+  beforeEach(() => {
+    getResult.mockReset();
+  });
+
+  it('reads what the import created, skipped and failed', async () => {
+    fake = createFakeSupabase({ role: 'owner', userId: 'user-me', agencyId: 'agency-1' });
+    getResult.mockResolvedValue({ created: 20, skipped: 0, errors: 0 });
+
+    const result = await getImportResultAction('job-1');
+
+    expect(result).toEqual({ success: true, data: { created: 20, skipped: 0, errors: 0 } });
+    expect(getResult).toHaveBeenCalledWith('agency-1', 'job-1');
+  });
+
+  it('refuses a broker', async () => {
+    fake = createFakeSupabase({ role: 'broker', userId: 'user-me', agencyId: 'agency-1' });
+
+    expect((await getImportResultAction('job-1')).success).toBe(false);
+    expect(getResult).not.toHaveBeenCalled();
   });
 });

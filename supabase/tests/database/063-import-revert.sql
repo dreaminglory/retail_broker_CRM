@@ -42,7 +42,10 @@ ALTER TABLE inquiries DISABLE TRIGGER set_inquiries_updated_at;
 UPDATE inquiries SET status = 'contacted', updated_at = now() + INTERVAL '2 minutes' WHERE caller_name = 'Test Revert 1';
 ALTER TABLE inquiries ENABLE TRIGGER set_inquiries_updated_at;
 
--- Revert job
+-- Revert job, as the agency's owner: the guards refuse a caller with no agency (20261109000005).
+SELECT set_config('request.jwt.claims', format('{"sub": "%s", "role": "authenticated"}',
+  (SELECT user_id FROM agency_memberships
+   WHERE agency_id = current_setting('test.a1')::uuid AND role = 'owner' AND status = 'active' LIMIT 1)), true);
 SELECT * FROM import_revert('00000000-0000-0000-0000-000000000002');
 
 SELECT is(

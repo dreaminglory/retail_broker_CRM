@@ -9,12 +9,17 @@ import {
   contactImportOptionsSchema,
   inquiryMappingSchema,
   inquiryImportOptionsSchema,
+  propertyMappingSchema,
+  propertyImportOptionsSchema,
   stageRowsSchema 
 } from "@/domain/imports/validation";
 import { ImportRepository } from "@/domain/imports/repository";
 import { notifyAfterResponse } from "../../notify-after";
 import { DomainError } from "@/lib/errors";
 import type { RevertResult } from "@/domain/imports/types";
+import type { PropertyPreview } from "@/domain/imports/property-preview";
+import { getLocale } from "next-intl/server";
+import { z } from "zod";
 
 function assertManagerOrOwner(role: string) {
   if (role !== "owner" && role !== "manager") {
@@ -57,7 +62,14 @@ export async function saveImportMappingAction(
     let parsedMapping;
     let parsedOptions;
 
-    if (job.entity_type === "inquiry") {
+    if (job.entity_type === "property") {
+      parsedMapping = propertyMappingSchema.safeParse(mappingInput);
+      parsedOptions = propertyImportOptionsSchema.safeParse(optionsInput);
+      // Name the missing required column rather than a generic "check the mapping".
+      if (!parsedMapping.success) {
+        return toActionError(new DomainError(parsedMapping.error.issues[0]?.message ?? "import.errors.invalidMapping"));
+      }
+    } else if (job.entity_type === "inquiry") {
       parsedMapping = inquiryMappingSchema.safeParse(mappingInput);
       parsedOptions = inquiryImportOptionsSchema.safeParse(optionsInput);
     } else {
@@ -107,7 +119,7 @@ export async function validateImportJobAction(
     assertManagerOrOwner(ctx.role);
 
     const service = new ImportService(ctx.supabase);
-    const summary = await service.validate(ctx.agencyId, jobId);
+    const summary = await service.validate(ctx.agencyId, jobId, ctx.userId);
 
     return { success: true, data: summary };
   } catch (error) { return toActionError(error); }
@@ -126,6 +138,7 @@ export async function commitImportBatchAction(
     if (result.remaining === 0) {
       revalidatePath("/contacts");
       revalidatePath("/inquiries");
+      revalidatePath("/properties");
       revalidatePath("/");
       // A contact job has no inquiries, so it sends nothing.
       notifyAfterResponse((notifications) =>
@@ -149,9 +162,50 @@ export async function revertImportJobAction(
 
     revalidatePath("/contacts");
     revalidatePath("/inquiries");
+    revalidatePath("/properties");
     revalidatePath("/");
     revalidatePath("/settings/import");
 
     return { success: true, data: result };
+  } catch (error) { return toActionError(error); }
+}
+
+const createAreasSchema = z.array(z.string().max(400)).max(5000);
+
+/** The property preview (spec: property-import, "Preview"), settlements named in the user's language. */
+export async function getPropertyPreviewAction(jobId: string): Promise<ActionResult<PropertyPreview>> {
+  try {
+    const ctx = await getAuthContext();
+    assertManagerOrOwner(ctx.role);
+
+    const locale = (await getLocale()) === "en" ? "en" : "bg";
+    const preview = await new ImportService(ctx.supabase).getPropertyPreview(ctx.agencyId, jobId, locale);
+    return { success: true, data: preview };
+  } catch (error) { return toActionError(error); }
+}
+
+/** The new areas the user kept ticked in the preview; the commit creates only these. */
+export async function savePropertyImportAreasAction(jobId: string, keys: string[]): Promise<ActionResult> {
+  try {
+    const ctx = await getAuthContext();
+    assertManagerOrOwner(ctx.role);
+
+    const parsed = createAreasSchema.safeParse(keys);
+    if (!parsed.success) return toActionError(new DomainError("import.errors.invalidOptions"));
+
+    await new ImportService(ctx.supabase).setCreateAreas(ctx.agencyId, jobId, parsed.data);
+    return { success: true, data: undefined };
+  } catch (error) { return toActionError(error); }
+}
+
+/** What a committed job created, skipped and failed, for the wizard's last step. */
+export async function getImportResultAction(
+  jobId: string
+): Promise<ActionResult<{ created: number; skipped: number; errors: number }>> {
+  try {
+    const ctx = await getAuthContext();
+    assertManagerOrOwner(ctx.role);
+
+    return { success: true, data: await new ImportService(ctx.supabase).getResult(ctx.agencyId, jobId) };
   } catch (error) { return toActionError(error); }
 }

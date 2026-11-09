@@ -477,6 +477,61 @@ can't drift, and nothing the user can't see is changed without a warning.
 `me` / several values from the list page (add them to the page's URL filters, which removes the
 warning case).
 
+### AD-064: Property import validates in TypeScript and writes per row in one RPC
+**Accepted** (property-import plan, 2026-11-08).
+- **Validation in TypeScript, writes in one RPC.** As for contacts (AD-034): the service
+  validates each page of rows and stores a `normalized` payload with every id resolved
+  (`settlement_id`, `area_id` or `new_area: { settlement_id, name }`, `assigned_to`, the
+  listings, `owner_contact_id` or `new_owner`). `import_commit_properties(p_job_id, p_limit)`
+  writes each row in its own `BEGIN … EXCEPTION` block, so a failed row is `error` and leaves
+  nothing behind (AD-050).
+- **One address rule, in SQL.** `property_address_key(text)` is `IMMUTABLE`; `properties.address_key`
+  is a stored generated column from it, indexed `(agency_id, settlement_id, address_key)`.
+  Validation asks `import_property_address_matches(p_items)` for each row's key and existing
+  match, finds in-file duplicates from those keys, and the commit re-checks with the same column.
+  No copy of the rule exists in TypeScript.
+- **Owners and areas are shared at commit.** The RPC re-matches the owner by phone and email
+  against `contact_methods` before creating a contact, and inserts a new area with `ON CONFLICT`
+  on `(agency_id, settlement_id, lower(name))` before selecting it, so rows of one file share
+  them without in-file bookkeeping. The preview groups them so its counts match.
+- **An unmatched owner with no name is skipped, not refused** (spec Q3). The property still
+  imports, with no owner party, and `normalized.warnings` carries
+  `import.warnings.ownerSkippedNoName` for the preview. A row-level warning is a valid row's
+  note, never an error: `errors` stays empty and the row commits.
+- **Unticked new areas** live in `import_jobs.options.create_areas` as the kept
+  `settlement_id:name` keys; the commit creates only those and imports the other rows without an
+  area. No re-validation.
+- **Settlement lookup** loads candidates by `lower(name_bg|name_en)` (after stripping
+  `гр.`/`с.`/`град`/`село`) and by EKATTE code; a pure function resolves unique, ambiguous,
+  narrowed by municipality or province, or not found. Never by order.
+- **Header detection takes the entity**, with one synonym dictionary per entity, so property
+  columns ("type", "description", "id") can't change contact or inquiry mapping.
+- **Audit carries the job.** The property and listing `created` audit rows get `import_job_id` in
+  `metadata` when the record has one. The property row also stores the job's `file_name` (from a
+  job of the same agency only), because brokers can't read `import_jobs`; the timeline shows
+  "Imported from <file>" from the audit row alone (Task 11, 20261109000006).
+- **Revert "untouched"**: the property's `updated_at` ≤ the job's `completed_at`, and no note,
+  task or opportunity link, no listing outside the job or changed after it, no party ended,
+  added later or from outside the job, and none of the row's listings or its owner party deleted
+  by hand. `properties.updated_at` moves only when an editable column changes (a trigger `WHEN`
+  that ignores `search_vector` and `address_key`), so renaming an area isn't work on its
+  properties (Checkpoint 1 review). Properties go first (listings and parties cascade), then
+  the existing contact rule, then the job's areas no property or `requirement_locations` row uses.
+- **Limits** unchanged: 5 MB, 5,000 rows, 500-row chunks.
+- **Scale (final, local stack, 2,000 rows):** validate 3.3 s plus preview 0.2 s (rule 11: < 30 s),
+  commit 8.0 s in 10 × 200-row batches (< 2 min), stage 0.4 s, revert 2.7 s. The E2E commits and
+  reverts the 20-row file in about 8 s per project.
+- **Numbers and dates.** A dot or comma before exactly three digits is a thousands separator
+  (`185.000` and `185,000` are both 185 000). `options.date_format` is one of `dd.MM.yyyy`,
+  `dd/MM/yyyy`, `MM/dd/yyyy`, `yyyy-MM-dd` and replaces the day-first guesses; ISO dates are
+  always accepted. A job default assignee must be an active member, or validation refuses the
+  job (`import.errors.unknownDefaultAssignee`).
+**Why:** one validation path shared with the property form and contacts, one address rule the
+preview and the commit can't disagree on, and a per-row all-or-nothing write that a revert can
+undo precisely.
+**Revisit if:** the scale run misses rule 11 (batch the RPC differently), or the address key
+proves too loose or too strict on a real export (tune the one function).
+
 ---
 
 ## Retired

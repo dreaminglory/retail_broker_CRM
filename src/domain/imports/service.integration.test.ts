@@ -105,7 +105,7 @@ describeServices('ImportService against the local stack', () => {
       { status: 'pending', raw: { Name: 'Unknown', Broker: 'No Such Person' } },
     ]);
 
-    const summary = await imports.validate(owner.agencyId, jobId);
+    const summary = await imports.validate(owner.agencyId, jobId, owner.userId);
 
     const { data: rows } = await owner.db
       .from('import_rows')

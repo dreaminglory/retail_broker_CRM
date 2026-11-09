@@ -1,6 +1,7 @@
 import { beforeAll, expect, it } from 'vitest';
 import { describeServices, signInAs } from '@/test/supabase-test-client';
 import { SettlementService } from './service';
+import { SettlementRepository } from './repository';
 
 describeServices('SettlementService search against the local stack', () => {
   let settlements: SettlementService;
@@ -33,5 +34,16 @@ describeServices('SettlementService search against the local stack', () => {
   it('loads one settlement by id in the locale', async () => {
     const [plovdiv] = await settlements.search('Пловдив', 'bg');
     expect(await settlements.getById(plovdiv.id, 'en')).toMatchObject({ id: plovdiv.id, name: 'Plovdiv' });
+  });
+
+  it('loads 1,000 settlements by id: the ids go in the URL a chunk at a time', async () => {
+    const broker = await signInAs('broker@alpha.bg');
+    const { data, error } = await broker.db.from('settlements').select('id').order('ekatte').limit(1000);
+    expect(error).toBeNull();
+    const ids = (data ?? []).map((row) => row.id as string);
+    expect(ids).toHaveLength(1000);
+
+    const found = await new SettlementRepository(broker.db).findByIds(ids);
+    expect(new Set(found.map((s) => s.id))).toEqual(new Set(ids));
   });
 });

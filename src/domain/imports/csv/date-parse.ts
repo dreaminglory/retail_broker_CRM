@@ -5,15 +5,19 @@ import { parse, isValid, isAfter, addDays } from "date-fns";
  * Parses a date string in various Bulgarian or ISO formats.
  * Interprets the wall-clock time in the given timezone (default Europe/Sofia).
  * Rejects dates that are strictly more than 1 day in the future.
+ * `format` (a job's date format) replaces the day-first guesses: only it and the ISO forms
+ * are tried, so `03/05/2025` is never read the other way round.
  */
 export function parseDate(
   value: string | null | undefined,
-  tz: string = "Europe/Sofia"
+  tz: string = "Europe/Sofia",
+  format?: string
 ): Date | null {
   if (!value || !value.trim()) return null;
 
   const trimmed = value.trim();
-  const formats = [
+  const iso = ["yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm"];
+  const formats = format ? [format, ...iso.filter((f) => f !== format)] : [
     "dd.MM.yyyy HH:mm:ss",
     "dd.MM.yyyy HH:mm",
     "dd.MM.yyyy",

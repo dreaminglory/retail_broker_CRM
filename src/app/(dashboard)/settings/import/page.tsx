@@ -102,7 +102,7 @@ export default async function ImportHistoryPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   {job.status === "completed" && differenceInDays(new Date(), new Date(job.created_at)) <= 7 && (
-                    <RevertImportButton jobId={job.id} fileName={job.file_name} />
+                    <RevertImportButton jobId={job.id} fileName={job.file_name} entityType={job.entity_type} />
                   )}
                 </TableCell>
               </TableRow>

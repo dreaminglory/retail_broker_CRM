@@ -9,6 +9,14 @@ import { normalizePhone } from "../contacts/phone";
 import { MemberRepository } from "../members/repository";
 import { parseDate } from "./csv/date-parse";
 import { resolveSource, resolveAssignee, resolveStatus } from "./csv/value-resolvers";
+import { mapRowToPropertyCandidate } from "./csv/row-mapper";
+import { areaKey, classifyPropertyRow, ownerMethods, resolveDefaultAssignee, settlementLookup, validatePropertyRow, type ClassifyState, type PropertyLookups } from "./property-validation";
+import { SettlementRepository } from "../settlements/repository";
+import { AreaRepository } from "../areas/repository";
+import type { PropertyImportOptionsInput, PropertyMappingInput } from "./validation";
+import type { ImportRow } from "./types";
+import { buildPropertyPreview, type PropertyPreview } from "./property-preview";
+import { describeRowError } from "./row-error";
 
 export class ImportService {
   private repository: ImportRepository;
@@ -47,8 +55,8 @@ export class ImportService {
   async saveMapping(
     agencyId: string, 
     jobId: string, 
-    mapping: ContactMappingInput | InquiryMappingInput, 
-    options: ContactImportOptionsInput | InquiryImportOptionsInput
+    mapping: ContactMappingInput | InquiryMappingInput | PropertyMappingInput,
+    options: ContactImportOptionsInput | InquiryImportOptionsInput | PropertyImportOptionsInput
   ): Promise<ImportJob> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
@@ -90,12 +98,16 @@ export class ImportService {
     await this.repository.updateJob(agencyId, jobId, { total_rows: newTotalRows, status: "staged" });
   }
 
-  async validate(agencyId: string, jobId: string): Promise<ImportSummary> {
+  /** `userId` is the importer: property rows with no assignee and no job default go to them. */
+  async validate(agencyId: string, jobId: string, userId: string): Promise<ImportSummary> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
-    
+
     if (job.entity_type === "inquiry") {
       return this.validateInquiries(agencyId, job);
+    }
+    if (job.entity_type === "property") {
+      return this.validateProperties(agencyId, job, userId);
     }
     
     const pageSize = 1000;
@@ -384,6 +396,110 @@ export class ImportService {
     return { total: allRows.length, valid: validCount, invalid: invalidCount, duplicate: duplicateCount, completed: false, brokerImpact };
   }
 
+  /**
+   * Property rows (AD-064): each page resolves settlements, areas and the assignee and stores a
+   * `normalized` payload with every id resolved, so the commit RPC never looks anything up by
+   * name. Only the caller's agency's areas and members are loaded.
+   */
+  private async validateProperties(agencyId: string, job: ImportJob, importerId: string): Promise<ImportSummary> {
+    const pageSize = 1000;
+    const options = job.options as PropertyImportOptionsInput;
+    const settlementRepo = new SettlementRepository(this.db);
+    const areaRepo = new AreaRepository(this.db);
+
+    const members = (await new MemberRepository(this.db).getActiveBrokers(agencyId)).map((m) => ({
+      user_id: m.id,
+      email: m.email,
+      display_name: m.display_name,
+    }));
+    const defaultAssignee = resolveDefaultAssignee(options.default_assigned_to, importerId, members);
+    // Earlier rows of the file, across pages: in-file external_ref and address duplicates.
+    const state: ClassifyState = { refs: new Set(), addresses: new Set() };
+
+    for (let offset = 0; ; offset += pageSize) {
+      const rows = await this.repository.listRows(agencyId, job.id, { offset, limit: pageSize });
+      if (rows.length === 0) break;
+
+      const candidates = rows.map((row) => mapRowToPropertyCandidate(row.raw, job.column_mapping));
+
+      const names: string[] = [];
+      const codes: string[] = [];
+      for (const candidate of candidates) {
+        const query = settlementLookup(candidate.settlement);
+        if (query && "code" in query) codes.push(query.code);
+        else if (query) names.push(query.name);
+      }
+      const settlements = await settlementRepo.findByNamesOrCodes(names, codes);
+      const areas = await areaRepo.findBySettlements(agencyId, settlements.map((s) => s.id));
+      const areaIds = new Map(areas.map((a) => [areaKey(a.settlement_id, a.name), a.id]));
+
+      const validated = candidates.map((candidate) =>
+        validatePropertyRow(candidate, { settlements, areas: areaIds, members, defaultAssignee, dateFormat: options.date_format })
+      );
+
+      const refs: string[] = [];
+      const phones: string[] = [];
+      const emails: string[] = [];
+      const addressItems: { row: number; settlement_id: string; address: string }[] = [];
+      candidates.forEach((candidate, i) => {
+        const methods = ownerMethods(candidate);
+        if (methods.phone) phones.push(methods.phone);
+        if (methods.email) emails.push(methods.email);
+        if (candidate.external_ref) refs.push(candidate.external_ref);
+        const property = validated[i].normalized?.property;
+        if (property?.address) addressItems.push({ row: rows[i].row_number, settlement_id: property.settlement_id, address: property.address });
+      });
+
+      const [refRows, addressRows, phoneRows, emailRows] = await Promise.all([
+        this.repository.lookupPropertyExternalRefs(agencyId, refs),
+        this.repository.matchPropertyAddresses(addressItems),
+        this.repository.lookupMethodsOfType(agencyId, "phone", phones),
+        this.repository.lookupMethodsOfType(agencyId, "email", emails),
+      ]);
+      const contactNames = await this.repository.lookupContactNames(
+        agencyId,
+        [...phoneRows, ...emailRows].map((m) => m.contact_id)
+      );
+      const lookups: PropertyLookups = {
+        refs: new Map(refRows.map((r) => [r.external_ref, r.id])),
+        addresses: new Map(addressRows.map((a) => [a.row_index, { key: a.address_key, property_id: a.property_id }])),
+        phones: new Map(phoneRows.map((m) => [m.value, m.contact_id])),
+        emails: new Map(emailRows.map((m) => [m.value, m.contact_id])),
+        contactNames,
+      };
+
+      // In file order, so "an earlier row" means the same thing as in the spreadsheet.
+      const updates = rows.map((row, i) => {
+        const result = classifyPropertyRow(row.row_number, candidates[i], validated[i], lookups, state);
+        return {
+          id: row.id,
+          status: result.status,
+          normalized: result.normalized as Record<string, unknown> | null,
+          errors: result.errors,
+          match_reason: result.match_reason,
+          matched_entity_id: result.matched_entity_id,
+        };
+      });
+
+      await this.repository.updateRowsBulk(agencyId, job.id, updates);
+      if (rows.length < pageSize) break;
+    }
+
+    // Counted in the database: reading the rows back is capped at 1,000 by PostgREST.
+    const counts = await this.repository.countRowsByStatus(agencyId, job.id, ["valid", "invalid", "duplicate", "skipped"]);
+    const total = counts.valid + counts.invalid + counts.duplicate + counts.skipped;
+
+    await this.repository.updateJob(agencyId, job.id, {
+      status: "validated",
+      valid_count: counts.valid,
+      invalid_count: counts.invalid,
+      duplicate_count: counts.duplicate,
+      skipped_count: counts.skipped,
+    });
+
+    return { total, valid: counts.valid, invalid: counts.invalid, duplicate: counts.duplicate, completed: false };
+  }
+
   async commitBatch(agencyId: string, jobId: string): Promise<{ processed: number; remaining: number }> {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
@@ -393,6 +509,8 @@ export class ImportService {
 
     if (job.entity_type === "inquiry") {
       return await this.repository.commitInquiriesBatch(jobId);
+    } else if (job.entity_type === "property") {
+      return await this.repository.commitPropertiesBatch(jobId);
     } else {
       return await this.repository.commitContactsBatch(jobId);
     }
@@ -402,6 +520,68 @@ export class ImportService {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
     return await this.repository.revertJob(jobId);
+  }
+
+  /** Every row of the job in file order, page by page: one read is capped at 1,000 rows by PostgREST. */
+  private async listAllRows(agencyId: string, jobId: string): Promise<ImportRow[]> {
+    const pageSize = 1000;
+    const all: ImportRow[] = [];
+    for (let offset = 0; ; offset += pageSize) {
+      const page = await this.repository.listRows(agencyId, jobId, { offset, limit: pageSize });
+      all.push(...page);
+      if (page.length < pageSize) return all;
+    }
+  }
+
+  private async getValidatedPropertyJob(agencyId: string, jobId: string): Promise<ImportJob> {
+    const job = await this.repository.getJob(agencyId, jobId);
+    if (!job) throw new DomainError("import.errors.notFound", "Job not found");
+    if (job.entity_type !== "property" || job.status !== "validated") {
+      throw new DomainError("import.errors.invalidStatus", "Not a validated property job");
+    }
+    return job;
+  }
+
+  /** The property preview (spec: property-import, "Preview"), read from the validated rows. */
+  async getPropertyPreview(agencyId: string, jobId: string, locale: "bg" | "en" = "bg"): Promise<PropertyPreview> {
+    const job = await this.getValidatedPropertyJob(agencyId, jobId);
+    const rows = await this.listAllRows(agencyId, jobId);
+
+    const settlementIds = new Set<string>();
+    for (const row of rows) {
+      const area = (row.normalized as { new_area?: { settlement_id: string } | null } | null)?.new_area;
+      if (area) settlementIds.add(area.settlement_id);
+    }
+    const [settlements, areas] = await Promise.all([
+      new SettlementRepository(this.db).findByIds([...settlementIds]),
+      new AreaRepository(this.db).findBySettlements(agencyId, [...settlementIds]),
+    ]);
+    const existingAreas = new Map<string, string[]>();
+    for (const area of areas) {
+      existingAreas.set(area.settlement_id, [...(existingAreas.get(area.settlement_id) ?? []), area.name]);
+    }
+    const options = job.options as PropertyImportOptionsInput;
+
+    return buildPropertyPreview(rows, {
+      mapping: job.column_mapping,
+      duplicateStrategy: options.duplicate_strategy ?? "skip",
+      createAreas: options.create_areas,
+      settlementNames: new Map(settlements.map((s) => [s.id, locale === "en" ? s.name_en : s.name_bg])),
+      existingAreas,
+    });
+  }
+
+  /** The new areas the user kept in the preview (`options.create_areas`); the commit creates only these. */
+  async setCreateAreas(agencyId: string, jobId: string, keys: string[]): Promise<void> {
+    const job = await this.getValidatedPropertyJob(agencyId, jobId);
+    await this.repository.updateJob(agencyId, jobId, { options: { ...job.options, create_areas: keys } });
+  }
+
+  /** What a committed job did, for the wizard's last step. */
+  async getResult(agencyId: string, jobId: string): Promise<{ created: number; skipped: number; errors: number }> {
+    const job = await this.repository.getJob(agencyId, jobId);
+    if (!job) throw new DomainError("import.errors.notFound", "Job not found");
+    return { created: job.created_count, skipped: job.skipped_count, errors: job.error_count };
   }
 
   async getSummary(agencyId: string, jobId: string): Promise<ImportSummary> {
@@ -425,8 +605,8 @@ export class ImportService {
     const job = await this.repository.getJob(agencyId, jobId);
     if (!job) throw new DomainError("import.errors.notFound", "Job not found");
 
-    const rows = await this.repository.listRows(agencyId, jobId);
-    const errorRows = rows.filter(r => r.status === 'invalid' || r.status === 'error');
+    const errorRows = (await this.listAllRows(agencyId, jobId))
+      .filter(r => r.status === 'invalid' || r.status === 'error');
 
     if (errorRows.length === 0) return "";
 
@@ -437,7 +617,7 @@ export class ImportService {
     csv += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(delimiter) + '\n';
 
     for (const row of errorRows) {
-      const errorMsg = row.errors.map(e => labels.reason(e.code).replace(/"/g, '""')).join(", ");
+      const errorMsg = row.errors.map(e => describeRowError(e, labels.reason).replace(/"/g, '""')).join(", ");
       const rowValues = job.headers.map(h => {
         const val = row.raw[h] || "";
         return `"${val.replace(/"/g, '""')}"`;
