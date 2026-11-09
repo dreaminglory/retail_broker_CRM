@@ -34,15 +34,14 @@ const INQUIRY_HEADER_SYNONYMS: Record<InquiryImportField, string[]> = {
 // header-detection.test.ts); changing it would change their auto-mapping.
 const LEGACY_HEADER_SYNONYMS = { ...CONTACT_HEADER_SYNONYMS, ...INQUIRY_HEADER_SYNONYMS };
 
-// Property columns (spec: property-import, Columns). Order matters: a header goes to the
-// first field it matches, and synonyms longer than four letters also match inside a header.
-// So the owner fields come before `address` ("имейл адрес") and `owner_name` ("телефон на
-// собственика"), rent before sale ("rent price"), floors_total before floor ("floors
-// total"), plot_m2 before area_m2, and year_built before construction ("година на
-// строителство").
+// Property columns (spec: property-import, Columns). Exact matches come first; then a synonym
+// longer than four letters also matches inside a header, but only when the header names one
+// field, or when one matching synonym contains all the others ("година на строителство" over
+// "строителство"). A header naming two fields ("Телефон на брокера", "Описание на квартала")
+// is left for the user to map, never decided by the order below.
 const PROPERTY_HEADER_SYNONYMS: Record<PropertyImportField, string[]> = {
   owner_phone: ["owner phone", "телефон", "тел", "телефон на собственика", "phone", "gsm", "мобилен"],
-  owner_email: ["owner email", "email", "e-mail", "имейл", "е-поща"],
+  owner_email: ["owner email", "email", "e-mail", "имейл", "е-поща", "имейл адрес", "имейл на собственика"],
   owner_name: ["owner", "owner name", "собственик", "продавач", "име на собственика"],
   external_ref: ["external ref", "external id", "ref", "id", "reference", "референция", "реф. номер", "референтен номер", "номер на имот", "код", "ид"],
   rent_price: ["rent price", "rent", "наем", "цена наем", "месечен наем"],
@@ -90,6 +89,7 @@ function normalizeHeader(header: string): string {
  * Returns a mapping record where keys are Field strings and values are the exact original header strings.
  */
 export function detectHeaders(headers: string[], entity: ImportEntityType): Record<string, string> {
+  if (entity === "property") return detectPropertyHeaders(headers);
   const mapping: Record<string, string> = {};
   const usedHeaders = new Set<string>();
 
@@ -121,6 +121,52 @@ export function detectHeaders(headers: string[], entity: ImportEntityType): Reco
   // We prioritize full_name in the dictionary iteration order, but if they have 
   // both 'first name' and 'last name', we shouldn't map 'full name'.
   // We'll trust the order of HEADER_SYNONYMS for now (full_name is checked first).
+
+  return mapping;
+}
+
+/** The synonyms of each property field that a header contains (partial matches, over four letters). */
+function partialMatches(header: string): { field: string; synonym: string }[] {
+  const matches: { field: string; synonym: string }[] = [];
+  for (const [field, synonyms] of Object.entries(PROPERTY_HEADER_SYNONYMS)) {
+    for (const synonym of synonyms.map(normalizeHeader)) {
+      if (synonym.length > 4 && header.includes(synonym)) matches.push({ field, synonym });
+    }
+  }
+  return matches;
+}
+
+/** The one field a header names, or null when it names none or several (see PROPERTY_HEADER_SYNONYMS). */
+function partialField(header: string): string | null {
+  const matches = partialMatches(header);
+  const fields = new Set(matches.map((m) => m.field));
+  if (fields.size === 1) return matches[0].field;
+  const covering = matches.find((m) => matches.every((other) => m.synonym.includes(other.synonym)));
+  return covering?.field ?? null;
+}
+
+function detectPropertyHeaders(headers: string[]): Record<string, string> {
+  const mapping: Record<string, string> = {};
+  const used = new Set<string>();
+  const fields = Object.entries(PROPERTY_HEADER_SYNONYMS);
+
+  for (const [field, synonyms] of fields) {
+    const wanted = new Set(synonyms.map(normalizeHeader));
+    const header = headers.find((h) => !used.has(h) && wanted.has(normalizeHeader(h)));
+    if (header) {
+      mapping[field] = header;
+      used.add(header);
+    }
+  }
+
+  for (const [field] of fields) {
+    if (mapping[field]) continue;
+    const header = headers.find((h) => !used.has(h) && partialField(normalizeHeader(h)) === field);
+    if (header) {
+      mapping[field] = header;
+      used.add(header);
+    }
+  }
 
   return mapping;
 }

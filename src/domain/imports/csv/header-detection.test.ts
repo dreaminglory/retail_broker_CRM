@@ -68,6 +68,22 @@ describe('detectHeaders: property', () => {
     });
   });
 
+  it('leaves a header that names two fields unmapped instead of picking by order', () => {
+    const mapping = detectHeaders(
+      ['Телефон на брокера', 'Broker email', 'Описание на квартала', 'Телефон на собственика', 'Квартал'],
+      'property'
+    );
+    expect(mapping).toEqual({ owner_phone: 'Телефон на собственика', area: 'Квартал' });
+  });
+
+  it('maps a header whose longer synonym contains the other match', () => {
+    expect(detectHeaders(['Година на строителство (г.)', 'Цена наем (EUR)', 'Имейл адрес'], 'property')).toEqual({
+      year_built: 'Година на строителство (г.)',
+      rent_price: 'Цена наем (EUR)',
+      owner_email: 'Имейл адрес',
+    });
+  });
+
   it('does not use contact or inquiry fields for a property file', () => {
     const mapping = detectHeaders(['Име', 'Тема', 'Източник'], 'property');
     expect(Object.keys(mapping)).not.toContain('first_name');
