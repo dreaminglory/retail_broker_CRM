@@ -1,6 +1,6 @@
 # Tasks: property-import
 
-> **Plan:** `tasks/plan.md` · **Spec:** `spec/property-import.md`
+> **Plan:** `docs/archive/property-import-plan.md` · **Spec:** `spec/property-import.md`
 > Every task also clears the Definition of Done in `AGENTS.md`. Tick a task only after that.
 > Migrations: the next free timestamps after `20261108000008`, in order (`20261109000001`…).
 > pgTAP: `100-property-import.sql` (schema, address key, audit), `101-property-import-commit.sql`,
@@ -207,7 +207,7 @@ Add `scripts/property-import/generate-scale.ts` (2,000 fake rows) and
 `scripts/property-import/measure.ts`. The measure script stages, validates and commits through
 the service on the local stack and prints the timings. The integration suite runs the whole
 pipeline on the basic and edge fixtures, from stage through revert. Record the measured numbers
-in `tasks/plan.md`.
+in `docs/archive/property-import-plan.md`.
 
 **Acceptance criteria:**
 - [x] The integration suite stages, validates, commits and reverts both basic fixtures with the expected counts. The edge fixture gives the expected outcome on every row (a table in the test).
@@ -218,7 +218,7 @@ in `tasks/plan.md`.
 - [x] `npm run typecheck`, `npm run lint`, `npm run test`
 
 **Dependencies:** Task 6
-**Files likely touched:** `src/domain/imports/__fixtures__/properties-*.csv`, `scripts/property-import/generate-scale.ts`, `scripts/property-import/measure.ts`, `src/domain/imports/property-import.integration.test.ts`, `tasks/plan.md`
+**Files likely touched:** `src/domain/imports/__fixtures__/properties-*.csv`, `scripts/property-import/generate-scale.ts`, `scripts/property-import/measure.ts`, `src/domain/imports/property-import.integration.test.ts`, `docs/archive/property-import-plan.md`
 **Estimated scope:** M
 
 ## Checkpoint 1 (founder)
@@ -358,5 +358,5 @@ and ⌘K, then reverts and sees the counts. Run it in `bg` and `en`, at 1280 and
 **Estimated scope:** S
 
 ## Checkpoint 3
-- [ ] `/review` of the module, with findings fixed
-- [ ] Founder go to close: mark Done in `SPEC.md`, move `tasks/*` to `docs/archive/property-import-*.md`
+- [x] `/review` of the module, with findings fixed (2026-11-09: 7 findings, all fixed, c80faf1…126cdf3)
+- [x] Founder go to close (2026-11-09): Done in `SPEC.md`, `tasks/*` moved to `docs/archive/property-import-*.md`

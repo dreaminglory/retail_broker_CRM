@@ -1,6 +1,6 @@
 # Implementation Plan: property-import
 
-> **Spec:** `spec/property-import.md` · **Checklist:** `tasks/todo.md`
+> **Spec:** `spec/property-import.md` · **Checklist:** `docs/archive/property-import-todo.md`
 > **Status:** Plan approved (founder, 2026-11-08). Approved scope (founder, 2026-11-08).
 > Decisions: AD-064 (written in Task 1). Branch: `feat/property-import`, cut from
 > `feat/smart-lists` (that branch isn't in `main` yet, so it merges first or with this one).
@@ -110,14 +110,14 @@ TypeScript runner.
 - [x] Task 11: "Imported from" on the property timeline, matches right after import — Sonnet
 
 ### Checkpoint 2
-- [ ] The whole flow in the browser in `bg` and `en`, at 1280 and 390 px
+- [x] The whole flow in the browser in `bg` and `en`, at 1280 and 390 px (Task 12 E2E, four projects)
 
 ### Phase 3: Proof and close
 - [x] Task 12: E2E property import and revert — Sonnet
 - [x] Task 13: Docs complete (domain model, BRD, spec as built) — Sonnet
 
 ### Checkpoint 3
-- [ ] `/review` of the module; AC-1…AC-10 each traced to a test or a browser check
+- [x] `/review` of the module; AC-1…AC-10 each traced to a test or a browser check (2026-11-09: 7 findings fixed, c80faf1…126cdf3)
 
 ## Cut list (if time runs short, in this order)
 1. Near-duplicate area warning (rule 3, A1). The new areas list still shows every name.
