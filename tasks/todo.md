@@ -47,8 +47,8 @@
     `supabase/tests/database/106-phone-loop.sql`, `docs/domain-model.md`.
 
 ### Checkpoint: Foundation
-- [ ] typecheck, lint, test, `db reset`, `test:db` green
-- [ ] `/mobile` decision (approved 2026-11-19) and bundle delta recorded in AD-065
+- [x] typecheck, lint, test, `db reset`, `test:db` green
+- [x] `/mobile` decision (approved 2026-11-19) and bundle delta recorded in AD-065
 - [ ] `/review` of the migration before Phase 2
 
 ## Phase 2 — The loop on inquiries
