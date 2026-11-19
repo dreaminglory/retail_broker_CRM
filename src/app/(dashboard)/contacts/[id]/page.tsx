@@ -153,6 +153,7 @@ export default async function ContactDetailPage({
             <div className="rounded-lg border bg-card p-4">
               <ContactMethodList
                 contactId={contact.id}
+                contactName={contact.display_name}
                 methods={contact.contact_methods}
               />
             </div>

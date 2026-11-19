@@ -35,9 +35,12 @@ import {
 } from "lucide-react";
 import type { ActionResult } from "@/lib/actions";
 import { useTranslations } from "next-intl";
+import { ContactLinks } from "@/components/domain/calls/contact-links";
 
 interface ContactMethodListProps {
   contactId: string;
+  /** For the links' aria-labels. */
+  contactName: string;
   methods: ContactMethod[];
 }
 
@@ -62,6 +65,7 @@ const addInitialState: AddMethodResult = { success: false, error: "" };
 
 export function ContactMethodList({
   contactId,
+  contactName,
   methods,
 }: ContactMethodListProps) {
   const t = useTranslations("ContactMethodList");
@@ -81,6 +85,7 @@ export function ContactMethodList({
               key={method.id}
               method={method}
               contactId={contactId}
+              contactName={contactName}
             />
           ))}
         </div>
@@ -113,9 +118,11 @@ export function ContactMethodList({
 function MethodRow({
   method,
   contactId,
+  contactName,
 }: {
   method: ContactMethod;
   contactId: string;
+  contactName: string;
 }) {
   const t = useTranslations("ContactMethodList");
   const tEnum = useTranslations("Enums");
@@ -142,7 +149,7 @@ function MethodRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-md border bg-card px-3 py-2.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border bg-card px-3 py-2.5">
       <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{method.value}</p>
@@ -181,6 +188,13 @@ function MethodRow({
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
+      <ContactLinks
+        value={method.value}
+        type={method.type}
+        name={contactName}
+        showLabels
+        className="basis-full flex-wrap pl-7 empty:hidden"
+      />
     </div>
   );
 }

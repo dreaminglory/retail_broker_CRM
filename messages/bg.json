@@ -2116,5 +2116,17 @@
       "unsharedToast": "Сега само вие виждате този списък",
       "notShownExactly": "Списъкът има филтри, които тази страница не може да покаже (например „мои“, няколко стойности или подредбата му). Обновяването ги заменя с показаните тук филтри."
     }
+  },
+  "phoneLoop": {
+    "links": {
+      "call": "Обаждане",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "email": "Имейл",
+      "callAria": "Обаждане до {name}",
+      "viberAria": "Viber чат с {name}",
+      "whatsappAria": "WhatsApp чат с {name}",
+      "emailAria": "Имейл до {name}"
+    }
   }
 }

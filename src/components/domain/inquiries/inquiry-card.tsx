@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
+import { ContactLinks } from "@/components/domain/calls/contact-links";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
@@ -203,17 +204,23 @@ export function InquiryCard({
       </div>
 
       {/* Contact details row */}
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 pl-11 text-xs text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 pl-11 text-xs text-muted-foreground">
         {inquiry.caller_phone && (
-          <span className="flex items-center gap-1">
-            <Phone className="h-3 w-3" />
-            {inquiry.caller_phone}
+          <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <Phone className="h-3 w-3" />
+              {inquiry.caller_phone}
+            </span>
+            <ContactLinks value={inquiry.caller_phone} type="phone" name={callerDisplay} />
           </span>
         )}
         {inquiry.caller_email && (
-          <span className="flex items-center gap-1">
-            <Mail className="h-3 w-3" />
-            {inquiry.caller_email}
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="flex min-w-0 items-center gap-1">
+              <Mail className="h-3 w-3 shrink-0" />
+              <span className="truncate">{inquiry.caller_email}</span>
+            </span>
+            <ContactLinks value={inquiry.caller_email} type="email" name={callerDisplay} />
           </span>
         )}
       </div>

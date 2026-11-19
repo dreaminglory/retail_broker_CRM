@@ -53,7 +53,9 @@
 
 ## Phase 2 — The loop on inquiries
 
-- [ ] **T4: `ContactLinks` on the contact page and the inquiry card** (M)
+- [x] **T4: `ContactLinks` on the contact page and the inquiry card** (M)
+  - Done 2026-11-19; **the manual Android/iPhone check below is still open** (no devices in
+    the build session).
   - Acceptance:
     - `src/components/domain/calls/contact-links.tsx`: real `<a href>` buttons, ≥ 44 px at
       390 px, `aria-label` with action and name; icon-only on cards, icon + label on the
