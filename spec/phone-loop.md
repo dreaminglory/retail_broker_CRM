@@ -55,14 +55,16 @@ inquiries.contacted_at           (NEW, nullable timestamptz: first outreach, set
   the task (checked in the trigger and RLS, FKs don't see RLS). Index `(agency_id, inquiry_id)`
   partial on `inquiry_id IS NOT NULL`.
 - **`inquiries.contacted_at`** is set by triggers only (like `next_action_at`), never from app
-  code:
+  code. *As built:* it is stamped `now()`, never taken from `completed_at` (the caller writes
+  that, so a backdated call would give a negative speed to lead):
   - `trg_task_marks_inquiry_contacted` (AFTER INSERT OR UPDATE OF status on `tasks`): a task that
-    is `completed`, has `inquiry_id` and `task_type IN ('call','email')` sets
-    `contacted_at = COALESCE(contacted_at, completed_at)` and moves `new → contacted`. It never
-    touches a `converted` or `dismissed` inquiry's status.
-  - `trg_inquiry_contacted_at` (BEFORE UPDATE OF status on `inquiries`): a move to `contacted`
-    or `converted` with `contacted_at` still `NULL` sets it to `now()`. So the existing "Mark
-    contacted" and a conversion without a logged call still give a time (A3).
+    is `completed`, has `inquiry_id` and `task_type IN ('call','email')` moves the inquiry
+    `new → contacted`; the inquiry trigger below then stamps the time. It never touches a
+    `contacted`, `converted` or `dismissed` inquiry.
+  - `trg_inquiry_contacted_at` (BEFORE INSERT OR UPDATE on `inquiries`): when the inquiry leaves
+    `new` for `contacted` or `converted`, `contacted_at` is set once to `now()`; any written
+    value is ignored and a set time never moves. So the existing "Mark contacted" and a
+    conversion without a logged call still give a time (A3).
   - No backfill: existing `contacted` and `converted` inquiries keep `NULL` ("unknown"); their
     `updated_at` is moved by edits and merges and would lie.
 - **Conversion carries the calls along.** `trg_inquiry_tasks_follow` (AFTER UPDATE OF
