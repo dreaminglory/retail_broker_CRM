@@ -151,9 +151,10 @@ export function PostCallForm({ target, timeZone, onDone, initialResult }: PostCa
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <DialogHeader>
-        <DialogTitle>{t("title", { name: target.name })}</DialogTitle>
+        {/* A name or deal title may be one long word: let it break, never widen the sheet. */}
+        <DialogTitle className="pr-6 [overflow-wrap:anywhere]">{t("title", { name: target.name })}</DialogTitle>
         <DialogDescription className="sr-only">{t("description")}</DialogDescription>
       </DialogHeader>
 
@@ -323,7 +324,7 @@ function ChoiceRow<T extends string>({
             aria-checked={value === option}
             onClick={() => onChange(option)}
             className={cn(
-              "min-h-11 rounded-full border px-3 text-sm transition-colors sm:min-h-8",
+              "min-h-11 max-w-full rounded-full border px-3 text-left text-sm transition-colors [overflow-wrap:anywhere] sm:min-h-8",
               value === option ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-muted",
             )}
           >
