@@ -9,6 +9,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
 import type { Task, CreateTaskInput, CompleteTaskInput, TaskChannel, TaskType } from './types';
+import { callPhoneFor } from './call-phone';
 
 /** Where a logged call and its next task hang (AD-065). */
 export type CallScope = { opportunity_id?: string | null; contact_id?: string | null; inquiry_id?: string | null };
@@ -47,6 +48,13 @@ function pendingWriteResult(data: unknown, error: { message: string } | null, ve
 
 /** The viewing's property, embedded in task lists (spec: properties). */
 const PROPERTY_EMBED = 'property:properties!fk_tasks_property(id, code, address)';
+
+/** Today's call tasks: who to call and on which number (spec phone-loop rule 1). */
+const CALL_PHONE_EMBED =
+  'contact:contacts!tasks_contact_id_fkey(display_name, contact_methods(type, value, is_primary)), inquiry:inquiries!fk_tasks_inquiry(caller_name, caller_phone)';
+/** Inside the opportunities embed: the deal's primary contact, for tasks with no contact. */
+const DEAL_CONTACT_EMBED =
+  'primary_contact:contacts!opportunities_primary_contact_id_fkey(display_name, contact_methods(type, value, is_primary))';
 
 /** A failed task insert: the i18n keys the task triggers raise (rule 8, AD-032), else saveFailed. */
 function createFailure(error: { code?: string; message: string }): DomainError {
@@ -125,7 +133,7 @@ export class TaskRepository {
   ): Promise<Task[]> {
     let query = this.db
       .from('tasks')
-      .select(`*, opportunities(title, stages(name)), ${PROPERTY_EMBED}`)
+      .select(`*, opportunities(title, status, stages(name), ${DEAL_CONTACT_EMBED}), ${PROPERTY_EMBED}, ${CALL_PHONE_EMBED}`)
       .eq('agency_id', agencyId)
       .eq('status', 'pending')
       .lt('due_at', range.before)
@@ -143,10 +151,12 @@ export class TaskRepository {
 
     // Map joined fields to flat TaskWithOpportunity structure
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []).map((row: any) => ({
+    return (data ?? []).map(({ contact, inquiry, ...row }: any) => ({
       ...row,
       opportunity_title: row.opportunities?.title ?? null,
       opportunity_stage: row.opportunities?.stages?.name ?? null,
+      opportunity_status: row.opportunities?.status ?? null,
+      call_phone: callPhoneFor({ contact, dealContact: row.opportunities?.primary_contact, inquiry }),
       opportunities: undefined,
     })) as Task[];
   }

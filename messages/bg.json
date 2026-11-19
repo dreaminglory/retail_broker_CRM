@@ -2118,6 +2118,7 @@
     }
   },
   "phoneLoop": {
+    "unknownName": "клиента",
     "links": {
       "call": "Обаждане",
       "viber": "Viber",

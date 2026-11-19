@@ -2118,6 +2118,7 @@
     }
   },
   "phoneLoop": {
+    "unknownName": "the client",
     "links": {
       "call": "Call",
       "viber": "Viber",

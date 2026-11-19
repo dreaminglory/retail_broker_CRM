@@ -6,6 +6,7 @@
  */
 
 import type { ReschedulePreset } from './reschedule';
+import type { TaskCallPhone } from './call-phone';
 
 export type TaskStatus = 'pending' | 'completed' | 'cancelled';
 
@@ -58,6 +59,12 @@ export interface Task {
 
   /** The viewing's property, when the list query embeds it. */
   property?: TaskProperty | null;
+
+  /** Today only: the phone a call task offers to call (spec phone-loop rule 1). */
+  call_phone?: TaskCallPhone | null;
+
+  /** Today only: the deal's status, for a call logged on a closed deal (rule 8). */
+  opportunity_status?: string | null;
 
   created_by: string | null;
   created_at: string;

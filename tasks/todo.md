@@ -54,8 +54,8 @@
 ## Phase 2 — The loop on inquiries
 
 - [x] **T4: `ContactLinks` on the contact page and the inquiry card** (M)
-  - Done 2026-11-19; **the manual Android/iPhone check below is still open** (no devices in
-    the build session).
+  - Done 2026-11-19; Android/iPhone check done by the founder 2026-11-19 (Viber and WhatsApp
+    open the chat).
   - Acceptance:
     - `src/components/domain/calls/contact-links.tsx`: real `<a href>` buttons, ≥ 44 px at
       390 px, `aria-label` with action and name; icon-only on cards, icon + label on the
@@ -98,8 +98,8 @@
     message files.
 
 - [x] **T7: Call intent: prompt on return, toast on desktop** (M) — **Opus**
-  - Done 2026-11-19; **the real-phone check below is still open** (iPhone Safari, Android
-    Chrome). Return and toast paths checked in the browser with simulated `visibilitychange`.
+  - Done 2026-11-19; real-phone check (iPhone Safari, Android Chrome) done by the founder
+    2026-11-19.
   - Acceptance:
     - `use-call-intent.ts` + a provider mounted once in `src/app/(dashboard)/layout.tsx`;
       `ContactLinks` registers the intent on tap (Call/Viber/WhatsApp, not mailto).
@@ -114,12 +114,14 @@
 
 ### Checkpoint: Loop on inquiries
 - [ ] Spec AC-1, AC-2, AC-3, AC-8 work on the inquiry card in bg and en, 390 and 1280
-- [ ] typecheck, lint, test, `test:services` green
-- [ ] `/review`; founder tries it on a phone
+- [x] typecheck, lint, test, `test:services` green
+- [x] `/review` (fixes in f20237a); founder tried it on a phone (2026-11-19)
 
 ## Phase 3 — Everywhere else
 
-- [ ] **T8: Today call tasks** (S)
+- [x] **T8: Today call tasks** (S)
+  - Done 2026-11-19. The phone falls back to the deal's primary contact (most deal tasks
+    carry no contact) before the inquiry caller; cards show the full rule 1 set (WhatsApp too).
   - Acceptance: `listToday` returns the task's contact primary phone, else the inquiry caller
     phone; `task-card.tsx` shows Call and Viber for `call` tasks; the prompt carries that
     task and completes it.

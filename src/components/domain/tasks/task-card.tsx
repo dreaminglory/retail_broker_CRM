@@ -20,6 +20,25 @@ import type { Task, TaskType } from "@/domain/tasks/types";
 import { todayBucket } from "@/lib/time/agency-day";
 import { cn } from "@/lib/utils";
 import { TaskPropertyLine } from "./task-property-line";
+import { ContactLinks } from "@/components/domain/calls/contact-links";
+import type { PostCallTarget } from "@/components/domain/calls/post-call-sheet";
+
+/**
+ * What a tap on a Today call task logs against (spec phone-loop rule 2): that task, so the
+ * prompt completes it, and its deal, contact and inquiry. A display name, never the number.
+ */
+export function taskCallTarget(task: Task, unknownName: string): Omit<PostCallTarget, "channel"> {
+  return {
+    context: {
+      opportunity_id: task.opportunity_id,
+      contact_id: task.contact_id,
+      inquiry_id: task.inquiry_id ?? null,
+      task_id: task.id,
+    },
+    name: task.call_phone?.name || unknownName,
+    closed: !!task.opportunity_id && !!task.opportunity_status && task.opportunity_status !== "active",
+  };
+}
 
 interface TaskCardProps {
   task: Task;
@@ -53,6 +72,7 @@ export function TaskCard({
   menu,
 }: TaskCardProps) {
   const t = useTranslations('TaskCard');
+  const tCall = useTranslations('phoneLoop');
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const bucket = task.due_at ? todayBucket(task.due_at, timeZone, now) : null;
@@ -64,6 +84,7 @@ export function TaskCard({
   const resolvedOppTitle = opportunityTitle || ("opportunity_title" in task ? (task as unknown as Record<string, string>).opportunity_title : undefined);
   const resolvedAssignee =
     assigneeName ?? ("assignee_name" in task ? (task as unknown as Record<string, string>).assignee_name : undefined);
+  const callPhone = task.task_type === "call" && task.status === "pending" ? task.call_phone : null;
 
   return (
     <div
@@ -121,6 +142,16 @@ export function TaskCard({
             </Badge>
           )}
         </div>
+
+        {callPhone && (
+          <ContactLinks
+            value={callPhone.value}
+            type={callPhone.type}
+            name={callPhone.name || tCall("unknownName")}
+            callTarget={taskCallTarget(task, tCall("unknownName"))}
+            className="mt-2"
+          />
+        )}
 
         {/* Due date + overdue indicator */}
         <div className="mt-2 flex items-center justify-between">
