@@ -49,7 +49,7 @@
 ### Checkpoint: Foundation
 - [x] typecheck, lint, test, `db reset`, `test:db` green
 - [x] `/mobile` decision (approved 2026-11-19) and bundle delta recorded in AD-065
-- [ ] `/review` of the migration before Phase 2
+- [x] `/review` of the migration before Phase 2 (fixes in 41892de)
 
 ## Phase 2 — The loop on inquiries
 
