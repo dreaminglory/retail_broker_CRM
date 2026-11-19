@@ -532,6 +532,34 @@ undo precisely.
 **Revisit if:** the scale run misses rule 11 (batch the RPC differently), or the address key
 proves too loose or too strict on a real export (tune the one function).
 
+### AD-065: A logged call is a completed task; first contact is stamped by trigger
+**Accepted** (phone-loop plan, 2026-11-19).
+- **No call table.** A logged call is a completed `call` (or `email`) task with `tasks.channel`
+  (`phone | viber | whatsapp`, or `email`; a `CHECK` ties the channel to the task type). An
+  inquiry's calls hang on `tasks.inquiry_id`, a composite FK `(agency_id, inquiry_id) →
+  inquiries (agency_id, id)` with `ON DELETE SET NULL (inquiry_id)`: the same tenant guard as
+  `tasks.property_id` (AD-057), stronger than the BEFORE trigger the plan named.
+- **`inquiries.contacted_at` is trigger-owned and set once.** It is stamped only when an inquiry
+  leaves `new`: by the first completed call/email task while `new` (its `completed_at`, and the
+  inquiry moves to `contacted`), or by "Mark contacted" or a conversion (`now()`). Once set it
+  never moves; a value written by app code is ignored (`pg_trigger_depth()`); an insert starts
+  `NULL`. A `contacted`, `converted` or `dismissed` inquiry without one stays `NULL` ("unknown"):
+  no backfill, and no late stamp that would date an earlier, unlogged contact wrongly.
+- **Conversion and join re-point an inquiry's tasks** by an AFTER trigger on `inquiries`;
+  dismissing cancels its pending ones. `convert_inquiry` and `join_inquiry` are not edited.
+- **No RPC for logging.** The insert path is one multi-row insert (atomic); the complete path
+  reuses `completeWithNext`, non-atomic as today.
+- **Mobile detection by `libphonenumber-js/mobile`** (founder, 2026-11-19), imported only in
+  `src/lib/contact-links.ts`. Measured with rolldown, minified: `min` alone 120.4 KB / 29.2 KB
+  gzip, `min` + `mobile` 218.9 KB / 53.3 KB, so +98.5 KB / +24.1 KB gzip on a client bundle that
+  renders links.
+- **The pending call intent lives in `sessionStorage`** with ids and a display name, never a
+  number (spec rule 12).
+**Why:** tasks already carry outcome, owner, timeline and next action; triggers keep
+`contacted_at` true whichever path (prompt, "Mark contacted", conversion) gets there first.
+**Revisit if:** calls need fields a task can't hold (duration, recording), or the `/mobile`
+bundle cost shows in page weight (move `normalizePhone()` to `/mobile` too, dropping `min`).
+
 ---
 
 ## Retired

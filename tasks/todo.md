@@ -17,7 +17,7 @@
   - Verify: `npx vitest run src/lib/contact-links.test.ts`; typecheck, lint.
   - Files: `src/lib/contact-links.ts`, `src/lib/contact-links.test.ts`.
 
-- [ ] **T2: Migration part 1: columns, tenant check, contacted_at** (M) — **Opus**
+- [x] **T2: Migration part 1: columns, tenant check, contacted_at** (M) — **Opus**
   - Acceptance:
     - AD-065 in `docs/decisions-log.md` before the SQL.
     - `tasks.inquiry_id` (FK, `ON DELETE SET NULL`, partial index), `tasks.channel` (check

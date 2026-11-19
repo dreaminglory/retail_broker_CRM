@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 73rd migration
-(`20261109000007_property_address_key_numbers.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 74th migration
+(`20261119000001_phone_loop.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -148,6 +148,7 @@ erDiagram
     uuid contact_id FK
     uuid opportunity_id FK "origin or joined deal, set on conversion"
     timestamptz joined_at "when it joined an existing deal (AD-061); NULL otherwise"
+    timestamptz contacted_at "first outreach, trigger-owned, set once (AD-065); NULL = unknown"
     uuid assigned_to FK
     text status "new | contacted | converted | dismissed"
     text dismissed_reason
@@ -190,6 +191,7 @@ erDiagram
   AUTH_USERS |o--o{ opportunity_participants : "user_id"
   opportunities |o--o{ tasks : "opportunity_id (CASCADE)"
   contacts |o--o{ tasks : "contact_id"
+  inquiries |o--o{ tasks : "inquiry_id (composite FK, SET NULL)"
   AUTH_USERS |o--o{ opportunities : "assigned_to (owner broker)"
   AUTH_USERS |o--o{ tasks : "assigned_to"
 
@@ -224,6 +226,8 @@ erDiagram
     text status "pending | completed | cancelled"
     text outcome "required to complete"
     timestamptz completed_at
+    uuid inquiry_id FK "a call made on an inquiry (AD-065)"
+    text channel "phone | viber | whatsapp (call) | email (email); NULL otherwise"
   }
 ```
 
@@ -671,6 +675,12 @@ A join (AD-061) also ends in `converted`: `inquiries.opportunity_id` is the join
 `opportunities.inquiry_id` stays the origin only, so an inquiry is "joined" when the two differ. `inquiries.joined_at` records when (not
 `updated_at`, which a contact merge moves).
 
+`inquiries.contacted_at` (AD-065) is stamped once, when the inquiry leaves `new`: a completed
+`call` or `email` task with its `inquiry_id` moves `new → contacted` at the task's
+`completed_at`; "Mark contacted" or a conversion without a logged call stamps `now()`. A
+dismissal from `new` leaves it `NULL`, and so does every inquiry already past `new` when the
+column was added (no backfill).
+
 ### 3.2 Opportunity: status and stage
 
 An opportunity has two independent axes: `stage_id` (position in the agency's pipeline)
@@ -880,6 +890,7 @@ The "Enforced by" column tells you which layer to change and test.
 | I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
 | I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
 | I7 | A join closes the inquiry into an open (`active`/`nurture`) deal that has the contact, reactivates a `nurture` deal and may create one `call` task, all or nothing (AD-061) | RPC `join_inquiry` + `082-conversion-join.sql` |
+| I8 | `contacted_at` is set once, only when an inquiry leaves `new` (first completed call/email task at its `completed_at`, else `now()` on "Mark contacted" or conversion), never moved and never written by app code; a call on a `contacted`, `converted` or `dismissed` inquiry changes neither status nor time (AD-065) | triggers `trg_inquiry_contacted_at` (`guard_inquiry_contacted_at` ignores writes at trigger depth 1) and `trg_task_marks_inquiry_contacted` + `106-phone-loop.sql` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
 | O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
@@ -889,6 +900,7 @@ The "Enforced by" column tells you which layer to change and test.
 | K1 | Completing a task requires an outcome | Zod `completeWithNext` in `taskSchemas()` |
 | K2 | Next task or stage change on completion | UI prompt only (AD-014, soft) |
 | K3 | Only a pending task can be edited, rescheduled, cancelled or completed (AD-046) | `TaskService` + `status = 'pending'` filter on the write |
+| K4 | A task's inquiry is in the task's agency; a `channel` is `phone`/`viber`/`whatsapp` on a `call` task or `email` on an `email` task, else `NULL` (AD-065) | composite FK `fk_tasks_inquiry`, `CHECK tasks_channel_check` + `106-phone-loop.sql` |
 | P1 | Participant has a contact or a user, each at most once per opportunity | `CHECK` + unique constraints |
 | N1 | A note has a contact, opportunity or property parent in its own agency, and non-blank content | `CHECK` on `notes`, composite FK; `createNoteSchema` (trimmed) and `NotesService.createNote` (property in the agency) give the friendly errors |
 | R1 | A new profile's name falls back from `display_name` to `full_name`, first + last name, then the email prefix | trigger `handle_new_user` |
