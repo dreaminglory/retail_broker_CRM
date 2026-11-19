@@ -28,9 +28,10 @@ ALTER TABLE tasks ADD COLUMN channel TEXT
 -- No backfill: existing contacted and converted inquiries keep NULL ("unknown").
 ALTER TABLE inquiries ADD COLUMN contacted_at TIMESTAMPTZ;
 
--- Set once, only when the inquiry leaves `new`. A direct write (app code, an RPC: trigger
--- depth 1) is ignored; only trg_task_marks_inquiry_contacted (depth ≥ 2) may supply the time,
--- the call's completed_at. Otherwise leaving `new` ("Mark contacted", a conversion) stamps now().
+-- Set once, to now(), when the inquiry leaves `new` for `contacted` or `converted` (a logged
+-- call, "Mark contacted", a conversion). A written value is always ignored: tasks.completed_at
+-- is the caller's to write, so it can't date the contact (a backdated call would give a
+-- negative speed to lead).
 CREATE OR REPLACE FUNCTION public.guard_inquiry_contacted_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -47,13 +48,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF pg_trigger_depth() < 2 THEN
-    NEW.contacted_at := NULL;
-  END IF;
-
-  IF NEW.status <> 'new' AND NEW.status <> 'dismissed' THEN
-    NEW.contacted_at := COALESCE(NEW.contacted_at, now());
-  END IF;
+  NEW.contacted_at := CASE WHEN NEW.status IN ('contacted', 'converted') THEN now() END;
 
   RETURN NEW;
 END;
@@ -65,7 +60,8 @@ CREATE TRIGGER trg_inquiry_contacted_at
   BEFORE INSERT OR UPDATE ON inquiries
   FOR EACH ROW EXECUTE FUNCTION guard_inquiry_contacted_at();
 
--- The first completed call or email on a `new` inquiry marks it contacted at the call's time.
+-- The first completed call or email on a `new` inquiry marks it contacted (the guard above stamps
+-- the time).
 -- Runs as the caller, so the inquiry update goes through RLS (as "Mark contacted" does).
 -- Converted, dismissed and already contacted inquiries are never touched.
 CREATE OR REPLACE FUNCTION public.mark_inquiry_contacted()
@@ -74,12 +70,8 @@ LANGUAGE plpgsql
 SET search_path = public
 AS $$
 BEGIN
-  IF TG_OP = 'UPDATE' AND OLD.status = 'completed' THEN
-    RETURN NEW;
-  END IF;
-
   UPDATE inquiries
-  SET status = 'contacted', contacted_at = COALESCE(NEW.completed_at, now())
+  SET status = 'contacted'
   WHERE id = NEW.inquiry_id
     AND agency_id = NEW.agency_id
     AND status = 'new';

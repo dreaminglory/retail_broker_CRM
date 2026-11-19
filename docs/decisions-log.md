@@ -539,10 +539,11 @@ proves too loose or too strict on a real export (tune the one function).
   inquiry's calls hang on `tasks.inquiry_id`, a composite FK `(agency_id, inquiry_id) →
   inquiries (agency_id, id)` with `ON DELETE SET NULL (inquiry_id)`: the same tenant guard as
   `tasks.property_id` (AD-057), stronger than the BEFORE trigger the plan named.
-- **`inquiries.contacted_at` is trigger-owned and set once.** It is stamped only when an inquiry
-  leaves `new`: by the first completed call/email task while `new` (its `completed_at`, and the
-  inquiry moves to `contacted`), or by "Mark contacted" or a conversion (`now()`). Once set it
-  never moves; a value written by app code is ignored (`pg_trigger_depth()`); an insert starts
+- **`inquiries.contacted_at` is trigger-owned and set once.** It is stamped `now()` only when an
+  inquiry leaves `new` for `contacted` or `converted`: by the first completed call/email task
+  while `new` (the inquiry moves to `contacted`), "Mark contacted" or a conversion. Never the
+  task's `completed_at`: members can write it, and a backdated call gave "contacted −3 days"
+  (Phase 1 review). Once set it never moves; a written value is always ignored; an insert starts
   `NULL`. A `contacted`, `converted` or `dismissed` inquiry without one stays `NULL` ("unknown"):
   no backfill, and no late stamp that would date an earlier, unlogged contact wrongly.
 - **Conversion and join re-point an inquiry's tasks** by an AFTER trigger on `inquiries`;
@@ -552,13 +553,15 @@ proves too loose or too strict on a real export (tune the one function).
 - **Mobile detection by `libphonenumber-js/mobile`** (founder, 2026-11-19), imported only in
   `src/lib/contact-links.ts`. Measured with rolldown, minified: `min` alone 120.4 KB / 29.2 KB
   gzip, `min` + `mobile` 218.9 KB / 53.3 KB, so +98.5 KB / +24.1 KB gzip on a client bundle that
-  renders links.
+  renders links. `normalizePhone()` stays on `min`: under `/mobile`, `isValid()` rejects BG
+  landlines `min` accepts (Sofia `02 860 0440`; 7,353 of 200,000 generated inputs differ), which
+  would break AD-041. Fewer bytes come from keeping `/mobile` out of the client (T4).
 - **The pending call intent lives in `sessionStorage`** with ids and a display name, never a
   number (spec rule 12).
 **Why:** tasks already carry outcome, owner, timeline and next action; triggers keep
 `contacted_at` true whichever path (prompt, "Mark contacted", conversion) gets there first.
 **Revisit if:** calls need fields a task can't hold (duration, recording), or the `/mobile`
-bundle cost shows in page weight (move `normalizePhone()` to `/mobile` too, dropping `min`).
+bundle cost shows in page weight (compute `isMobile` on the server, or import `/mobile` lazily).
 
 ---
 

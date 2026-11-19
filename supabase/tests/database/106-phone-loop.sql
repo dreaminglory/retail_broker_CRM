@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(36);
+SELECT plan(39);
 
 -- phone-loop (AD-065): tasks.inquiry_id and tasks.channel, inquiries.contacted_at and its
 -- triggers. Setup as the superuser. Ids: 106 + kind + n.
@@ -26,7 +26,14 @@ INSERT INTO inquiries (id, agency_id, status, caller_name, contacted_at) VALUES
   ('00000000-0000-0000-0000-106200000007', '00000000-0000-0000-0000-10610000000a', 'new', 'Converted without call', NULL),
   ('00000000-0000-0000-0000-106200000008', '00000000-0000-0000-0000-10610000000a', 'new', 'Other task types', NULL),
   ('00000000-0000-0000-0000-106200000009', '00000000-0000-0000-0000-10610000000a', 'new', 'Emailed', NULL),
+  ('00000000-0000-0000-0000-106200000014', '00000000-0000-0000-0000-10610000000a', 'contacted', 'Contacted earlier', NULL),
+  ('00000000-0000-0000-0000-106200000015', '00000000-0000-0000-0000-10610000000a', 'new', 'Dismissed from new', NULL),
   ('00000000-0000-0000-0000-10620000000b', '00000000-0000-0000-0000-10610000000b', 'new', 'Other agency', NULL);
+
+-- Plant a contacted_at the trigger would never accept, to prove a later call can't move it.
+ALTER TABLE inquiries DISABLE TRIGGER trg_inquiry_contacted_at;
+UPDATE inquiries SET contacted_at = '2026-11-18T10:00:00Z' WHERE id = '00000000-0000-0000-0000-106200000014';
+ALTER TABLE inquiries ENABLE TRIGGER trg_inquiry_contacted_at;
 
 SELECT has_column('tasks', 'inquiry_id', 'tasks.inquiry_id exists');
 SELECT has_column('tasks', 'channel', 'tasks.channel exists');
@@ -38,14 +45,15 @@ SELECT is(
 SELECT set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-106000000001", "role": "authenticated"}', true);
 SET ROLE authenticated;
 
--- AC-2: the first attempt, answered or not, marks a new inquiry contacted at the call's time
+-- AC-2: the first attempt, answered or not, marks a new inquiry contacted when it is logged.
+-- completed_at is the caller's to write, so it is not trusted: a backdated call stamps now().
 INSERT INTO tasks (agency_id, inquiry_id, title, task_type, channel, status, outcome, completed_at, assigned_to, created_by) VALUES
   ('00000000-0000-0000-0000-10610000000a', '00000000-0000-0000-0000-106200000001', 'Call with First call', 'call', 'phone',
-   'completed', 'No answer', '2026-11-19T10:00:00Z', '00000000-0000-0000-0000-106000000001', '00000000-0000-0000-0000-106000000001');
+   'completed', 'No answer', now() - interval '3 days', '00000000-0000-0000-0000-106000000001', '00000000-0000-0000-0000-106000000001');
 SELECT results_eq(
   $$ SELECT status, contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000001' $$,
-  $$ VALUES ('contacted'::text, '2026-11-19T10:00:00Z'::timestamptz) $$,
-  'a broker''s first logged call sets contacted and contacted_at'
+  $$ VALUES ('contacted'::text, now()) $$,
+  'a broker''s first logged call sets contacted and contacted_at = now(), even backdated'
 );
 
 -- AC-3: a second call doesn't move it
@@ -53,8 +61,14 @@ INSERT INTO tasks (agency_id, inquiry_id, title, task_type, channel, status, out
   ('00000000-0000-0000-0000-10610000000a', '00000000-0000-0000-0000-106200000001', 'Call with First call', 'call', 'viber',
    'completed', 'Answered', '2026-11-19T12:00:00Z');
 SELECT is(
-  (SELECT contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000001'),
-  '2026-11-19T10:00:00Z'::timestamptz, 'a second call does not move contacted_at'
+  (SELECT status FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000001'),
+  'contacted', 'a second call leaves the inquiry contacted'
+);
+INSERT INTO tasks (agency_id, inquiry_id, title, task_type, channel, status, outcome, completed_at) VALUES
+  ('00000000-0000-0000-0000-10610000000a', '00000000-0000-0000-0000-106200000014', 'Call', 'call', 'phone', 'completed', 'Hi', now());
+SELECT is(
+  (SELECT contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000014'),
+  '2026-11-18T10:00:00Z'::timestamptz, 'a later call does not move a set contacted_at'
 );
 
 -- Completing a pending call task (the update path) counts; the pending task alone doesn't
@@ -66,12 +80,12 @@ SELECT results_eq(
   $$ VALUES ('new'::text, NULL::timestamptz) $$,
   'a pending call does not mark the inquiry'
 );
-UPDATE tasks SET status = 'completed', outcome = 'Answered', completed_at = '2026-11-19T11:05:00Z', channel = 'phone'
+UPDATE tasks SET status = 'completed', outcome = 'Answered', completed_at = now() + interval '1 day', channel = 'phone'
 WHERE id = '00000000-0000-0000-0000-106300000001';
 SELECT results_eq(
   $$ SELECT status, contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000002' $$,
-  $$ VALUES ('contacted'::text, '2026-11-19T11:05:00Z'::timestamptz) $$,
-  'completing a pending call marks the inquiry at its completed_at'
+  $$ VALUES ('contacted'::text, now()) $$,
+  'completing a pending call marks the inquiry at now(), not a future completed_at'
 );
 
 -- A converted or dismissed inquiry keeps its status, and no late stamp is written
@@ -106,7 +120,7 @@ INSERT INTO tasks (agency_id, inquiry_id, title, task_type, channel, status, out
   ('00000000-0000-0000-0000-10610000000a', '00000000-0000-0000-0000-106200000009', 'Email', 'email', 'email', 'completed', 'Sent', '2026-11-19T09:00:00Z');
 SELECT results_eq(
   $$ SELECT status, contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000009' $$,
-  $$ VALUES ('contacted'::text, '2026-11-19T09:00:00Z'::timestamptz) $$,
+  $$ VALUES ('contacted'::text, now()) $$,
   'a logged email marks the inquiry'
 );
 
@@ -126,7 +140,7 @@ SELECT is(
 UPDATE inquiries SET contacted_at = '2020-01-01T00:00:00Z' WHERE id = '00000000-0000-0000-0000-106200000001';
 SELECT is(
   (SELECT contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000001'),
-  '2026-11-19T10:00:00Z'::timestamptz, 'a direct write does not move a set contacted_at'
+  now(), 'a direct write does not move a set contacted_at'
 );
 UPDATE inquiries SET contacted_at = '2020-01-01T00:00:00Z' WHERE id = '00000000-0000-0000-0000-106200000008';
 SELECT is(
@@ -137,6 +151,14 @@ UPDATE inquiries SET status = 'contacted', contacted_at = '2020-01-01T00:00:00Z'
 SELECT is(
   (SELECT contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000008'),
   now(), 'a direct write with Mark contacted gets now(), not the written time'
+);
+
+-- A dismissal straight from new never stamps a contact time
+UPDATE inquiries SET status = 'dismissed', dismissed_reason = 'spam' WHERE id = '00000000-0000-0000-0000-106200000015';
+SELECT results_eq(
+  $$ SELECT status, contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000015' $$,
+  $$ VALUES ('dismissed'::text, NULL::timestamptz) $$,
+  'dismissing a new inquiry leaves contacted_at NULL'
 );
 
 -- channel goes with the task type
@@ -201,7 +223,8 @@ INSERT INTO opportunities (id, agency_id, title, type, stage_id, primary_contact
 INSERT INTO inquiries (id, agency_id, status, caller_name) VALUES
   ('00000000-0000-0000-0000-106200000010', '00000000-0000-0000-0000-10610000000a', 'new', 'Convert me'),
   ('00000000-0000-0000-0000-106200000011', '00000000-0000-0000-0000-10610000000a', 'new', 'Join me'),
-  ('00000000-0000-0000-0000-106200000012', '00000000-0000-0000-0000-10610000000a', 'new', 'Dismiss me');
+  ('00000000-0000-0000-0000-106200000012', '00000000-0000-0000-0000-10610000000a', 'new', 'Dismiss me'),
+  ('00000000-0000-0000-0000-106200000016', '00000000-0000-0000-0000-10610000000a', 'new', 'Matched later');
 
 SELECT set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-106000000001", "role": "authenticated"}', true);
 SET ROLE authenticated;
@@ -242,7 +265,7 @@ SELECT is(
 );
 SELECT is(
   (SELECT contacted_at FROM inquiries WHERE id = '00000000-0000-0000-0000-106200000010'),
-  '2026-11-19T08:00:00Z'::timestamptz, 'conversion keeps the first call''s contacted_at'
+  now(), 'conversion keeps the first call''s contacted_at'
 );
 
 -- AC-4: join
@@ -285,6 +308,17 @@ SELECT results_eq(
   $$ VALUES ('00000000-0000-0000-0000-106600000002'::uuid, NULL::timestamptz),
             ('00000000-0000-0000-0000-106600000003'::uuid, '2026-11-25T09:00:00Z'::timestamptz) $$,
   'moving a task between deals recomputes the deal it left and the one it joined'
+);
+
+-- A contact alone (a match, or a contact merge) fills the tasks' empty contact, not a deal
+INSERT INTO tasks (id, agency_id, inquiry_id, title, task_type, due_at) VALUES
+  ('00000000-0000-0000-0000-106300000040', '00000000-0000-0000-0000-10610000000a', '00000000-0000-0000-0000-106200000016',
+   'Call again', 'call', '2026-11-23T09:00:00Z');
+UPDATE inquiries SET contact_id = '00000000-0000-0000-0000-106500000001' WHERE id = '00000000-0000-0000-0000-106200000016';
+SELECT results_eq(
+  $$ SELECT opportunity_id, contact_id FROM tasks WHERE id = '00000000-0000-0000-0000-106300000040' $$,
+  $$ VALUES (NULL::uuid, '00000000-0000-0000-0000-106500000001'::uuid) $$,
+  'giving the inquiry a contact fills its tasks'' empty contact'
 );
 
 SELECT * FROM finish();

@@ -675,9 +675,10 @@ A join (AD-061) also ends in `converted`: `inquiries.opportunity_id` is the join
 `opportunities.inquiry_id` stays the origin only, so an inquiry is "joined" when the two differ. `inquiries.joined_at` records when (not
 `updated_at`, which a contact merge moves).
 
-`inquiries.contacted_at` (AD-065) is stamped once, when the inquiry leaves `new`: a completed
-`call` or `email` task with its `inquiry_id` moves `new → contacted` at the task's
-`completed_at`; "Mark contacted" or a conversion without a logged call stamps `now()`. A
+`inquiries.contacted_at` (AD-065) is stamped `now()` once, when the inquiry leaves `new` for
+`contacted` or `converted`: a completed `call` or `email` task with its `inquiry_id` moves
+`new → contacted`, and so do "Mark contacted" and a conversion without a logged call. The task's
+`completed_at` is never used (members can write it). A
 dismissal from `new` leaves it `NULL`, and so does every inquiry already past `new` when the
 column was added (no backfill).
 
@@ -894,7 +895,7 @@ The "Enforced by" column tells you which layer to change and test.
 | I5 | Editing an inquiry never changes `raw_payload` or `received_at` | not in `editInquirySchema` or `updateInquirySchema` |
 | I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
 | I7 | A join closes the inquiry into an open (`active`/`nurture`) deal that has the contact, reactivates a `nurture` deal and may create one `call` task, all or nothing (AD-061) | RPC `join_inquiry` + `082-conversion-join.sql` |
-| I8 | `contacted_at` is set once, only when an inquiry leaves `new` (first completed call/email task at its `completed_at`, else `now()` on "Mark contacted" or conversion), never moved and never written by app code; a call on a `contacted`, `converted` or `dismissed` inquiry changes neither status nor time (AD-065) | triggers `trg_inquiry_contacted_at` (`guard_inquiry_contacted_at` ignores writes at trigger depth 1) and `trg_task_marks_inquiry_contacted` + `106-phone-loop.sql` |
+| I8 | `contacted_at` is set once, to `now()`, only when an inquiry leaves `new` for `contacted` or `converted` (first completed call/email task, "Mark contacted" or conversion), never moved, never taken from `completed_at` or any written value; a call on a `contacted`, `converted` or `dismissed` inquiry changes neither status nor time (AD-065) | triggers `trg_inquiry_contacted_at` (`guard_inquiry_contacted_at`) and `trg_task_marks_inquiry_contacted` + `106-phone-loop.sql` |
 | I9 | An inquiry's tasks follow it: a conversion or join fills their empty `opportunity_id` and `contact_id` (completed calls too, so the deal timeline shows them; a task already on a deal keeps it), and a dismissal cancels its pending tasks; `convert_inquiry` and `join_inquiry` are unchanged (AD-065) | trigger `trg_inquiry_tasks_follow` + `106-phone-loop.sql` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |

@@ -24,6 +24,12 @@ BEGIN
     v_ids := ARRAY[NEW.opportunity_id];
   END IF;
 
+  -- A task with no deal (an inquiry's call) has nothing to recompute.
+  v_ids := array_remove(v_ids, NULL);
+  IF cardinality(v_ids) = 0 THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
   UPDATE opportunities o
   SET next_action_at = (
     SELECT MIN(t.due_at)

@@ -88,6 +88,8 @@
       "Completes: <task>" with the switch; rule 7 warning (shown for deals, inert here).
     - "Log call" in the inquiry card menu opens it; saving a *No answer* on a `new` inquiry
       makes it `contacted` with a retry on Today.
+    - `phoneLoop.cancelledByDismiss` in both message files, and task outcomes that are that key
+      render translated (`task-list.tsx` prints `outcome` raw today; Phase 1 review).
   - Verify: component test (required outcome, presets, Not now writes nothing); typecheck,
     lint, test; browser bg/en 390 and 1280.
   - Files: `post-call-sheet.tsx` (+ test), `inquiry-card.tsx`, `inquiry-list.tsx`,
