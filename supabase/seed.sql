@@ -165,8 +165,8 @@ BEGIN
   -- (Alpha's are in 9b), a contact with a saved Viber method and one active deal (Ivan, Maria),
   -- and a pending call due today for the broker (Alpha's is "Confirm viewing with Ivan").
   INSERT INTO public.contact_methods (agency_id, contact_id, type, value, is_primary) VALUES
-  (v_agency_1, v_contact_1_1, 'viber', '+359888111222', false),
-  (v_agency_2, v_contact_2_1, 'viber', '+359888333444', false);
+  (v_agency_1, v_contact_1_1, 'viber', '+359898111222', false),
+  (v_agency_2, v_contact_2_1, 'viber', '+359898333444', false);
 
   INSERT INTO public.inquiries (agency_id, source_id, assigned_to, status, caller_name, caller_phone, caller_email, subject, received_at, raw_payload) VALUES
   (v_agency_2, v_source_2_portal, v_user_2_broker, 'new', 'Desislava Todorova', '+359878112233', NULL, 'Flat in Sea Garden', now() - interval '1 hour', '{"message": "Call me on my mobile."}'::jsonb),
