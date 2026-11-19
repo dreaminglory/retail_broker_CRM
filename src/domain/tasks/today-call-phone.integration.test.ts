@@ -89,4 +89,32 @@ describeServices("Today call tasks' phone against the local stack", () => {
     expect(row?.call_phone).toEqual({ value: inquiry.caller_phone, type: 'phone', name: 'Today Caller' });
     expect(row?.opportunity_status ?? null).toBeNull();
   });
+
+  it("counts each deal's pending tasks of anyone (rule 7 warning on the contact page)", async () => {
+    const opportunities = new OpportunityService(broker.db);
+    const deal = await opportunities.create(broker.agencyId, broker.userId, { title: 'Pending count deal', type: 'buyer', stage_id: stageId, assigned_to: broker.userId });
+    cleanup.track('opportunities', deal.id);
+    const empty = await opportunities.create(broker.agencyId, broker.userId, { title: 'No tasks deal', type: 'buyer', stage_id: stageId, assigned_to: broker.userId });
+    cleanup.track('opportunities', empty.id);
+    await pendingCallNow({ opportunity_id: deal.id });
+    await pendingCallNow({ opportunity_id: deal.id });
+
+    expect(await tasks.pendingCounts(broker.agencyId, [deal.id, empty.id])).toEqual({ [deal.id]: 2 });
+    expect(await tasks.pendingCounts(broker.agencyId, [])).toEqual({});
+  });
+
+  it("loads a deal's contacts with their methods (opportunity page links)", async () => {
+    const contacts = new ContactService(broker.db);
+    const contact = await contacts.create(broker.agencyId, broker.userId, {
+      type: 'person',
+      first_name: 'With',
+      last_name: 'Methods',
+      contact_methods: [{ type: 'phone', value: `+359889${suffix}`, label: null, is_primary: true }],
+    });
+    cleanup.track('contacts', contact.id);
+
+    const [loaded] = await contacts.getByIdsWithMethods([contact.id], broker.agencyId);
+    expect(loaded.contact_methods.map((m) => m.value)).toEqual([`+359889${suffix}`]);
+    expect(await contacts.getByIdsWithMethods([], broker.agencyId)).toEqual([]);
+  });
 });

@@ -72,8 +72,9 @@ export default async function OpportunityDetailPage({
   const [stages, leadSources, contacts, tasks, timeline, brokers, settings, propertyLinks, requirement, matches] = await Promise.all([
     new StageRepository(supabase).findActive(agencyId),
     new LeadSourceRepository(supabase).findActive(agencyId),
-    // Only the contacts this opportunity links to; pickers search the agency on demand.
-    new ContactService(supabase).getByIds(
+    // Only the contacts this opportunity links to, with their methods for the call links
+    // (spec phone-loop rule 1); pickers search the agency on demand.
+    new ContactService(supabase).getByIdsWithMethods(
       [
         ...new Set(
           [opportunity.primary_contact_id, ...opportunity.participants.map((p) => p.contact_id)].filter(

@@ -23,6 +23,9 @@ import { RequirementService } from "@/domain/requirements/service";
 import { StageRepository } from "@/domain/stages/repository";
 import { LinkedOpportunities } from "@/components/domain/contacts/linked-opportunities";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
+import { TaskService } from "@/domain/tasks/service";
+import { contactCallTarget } from "@/components/domain/calls/call-targets";
+import { LogCallButton } from "@/components/domain/calls/log-call-button";
 
 export default async function ContactDetailPage({
   params,
@@ -58,13 +61,25 @@ export default async function ContactDetailPage({
   const opportunitiesPromise = new OpportunityService(supabase).getByContactId(id, agencyId);
 
   // The linked deals' summary lines (FR-REQ-05) load as soon as the deals are in.
-  const [timeline, opportunities, requirementSummaries, stages, propertyParties] = await Promise.all([
+  const [timeline, opportunities, requirementSummaries, stages, propertyParties, pendingCounts] = await Promise.all([
     timelineService.getContactTimeline(id, agencyId),
     opportunitiesPromise,
     opportunitiesPromise.then((opportunities) => new RequirementService(supabase).getSummaries(opportunities, agencyId, locale)),
     new StageRepository(supabase).findActive(agencyId),
     new PropertyPartyService(supabase).listForContact(id, agencyId, locale),
+    // Pending tasks per active deal, for the post-call "no next action" warning (spec phone-loop rule 7).
+    opportunitiesPromise.then((opportunities) =>
+      new TaskService(supabase).pendingCounts(agencyId, opportunities.filter((o) => o.status === "active").map((o) => o.id))
+    ),
   ]);
+
+  // A call from this page: the contact, plus its one active deal or a picker (spec phone-loop rule 2).
+  const callTarget = contactCallTarget(
+    contact,
+    opportunities,
+    pendingCounts,
+    stages.map((s) => ({ id: s.id, name: s.name }))
+  );
 
   const isPerson = contact.type === "person";
   const initials = contact.display_name
@@ -100,11 +115,11 @@ export default async function ContactDetailPage({
         </div>
 
         {/* Profile header */}
-        <div className="mb-8 flex items-start gap-5">
+        <div className="mb-8 flex flex-wrap items-start gap-5">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
             {initials}
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-48">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight">
                 {contact.display_name}
@@ -137,11 +152,15 @@ export default async function ContactDetailPage({
           </div>
 
           {/* Actions: edit + archive */}
-          <ContactDetailClient
-            contact={contact}
-            agencyId={agencyId}
-            canMerge={hasRole(membership?.role, CONFIG_ROLES)}
-          />
+          {/* Actions wrap under the name on a phone (spec phone-loop Screens). */}
+          <div className="flex flex-wrap items-center gap-2">
+            <LogCallButton target={callTarget} />
+            <ContactDetailClient
+              contact={contact}
+              agencyId={agencyId}
+              canMerge={hasRole(membership?.role, CONFIG_ROLES)}
+            />
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -155,6 +174,7 @@ export default async function ContactDetailPage({
                 contactId={contact.id}
                 contactName={contact.display_name}
                 methods={contact.contact_methods}
+                callTarget={callTarget}
               />
             </div>
           </section>

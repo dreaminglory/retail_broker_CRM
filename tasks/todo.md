@@ -128,7 +128,9 @@
   - Verify: repository/service test for the phone join; typecheck, lint, test; browser bg/en.
   - Files: `src/domain/tasks/repository.ts`, `types.ts`, `task-card.tsx`, Today client.
 
-- [ ] **T9: Opportunity and contact pages** (M)
+- [x] **T9: Opportunity and contact pages** (M)
+  - Done 2026-11-19. The prompt gained the deal picker ("No deal" preselected) and a stage
+    row; the rule 7 warning counts the deal's pending tasks minus the one being completed.
   - Acceptance: links on the primary contact and contact participants; "Log call" in both
     page headers; contact page context per rule 2 (one active deal auto, several → picker,
     "no deal"); stage change in the prompt on active deals; closed deals per rule 8; rule 7

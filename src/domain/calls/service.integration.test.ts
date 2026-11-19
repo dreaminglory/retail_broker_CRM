@@ -6,6 +6,7 @@ import { InquiryService } from '@/domain/inquiries/service';
 import { OpportunityService } from '@/domain/opportunities/service';
 import { rescheduleDueAt } from '@/domain/tasks/reschedule';
 import type { Task } from '@/domain/tasks/types';
+import { TaskService } from '@/domain/tasks/service';
 import { CallService } from './service';
 import type { LogCallInput } from './types';
 
@@ -192,6 +193,16 @@ describeServices('CallService against the local stack', () => {
     const { data: after } = await broker.db.from('opportunities').select('next_action_at, stage_id').eq('id', deal.id).single();
     expect(new Date(after!.next_action_at).toISOString()).toBe(rescheduleDueAt('tomorrow_9', TZ, now).toISOString());
     expect(after!.stage_id).toBe(otherStageId);
+  });
+
+  it('leaves a deal on At risk after an answered call with no next action (AC-5, rule 7)', async () => {
+    const deal = await createDeal();
+    const planned = await pendingCall(broker, { opportunity_id: deal.id }, new Date(Date.now() + 3_600_000).toISOString());
+
+    await log({ context: { opportunity_id: deal.id }, channel: 'phone', complete_task_id: planned.id, result: 'answered', outcome: 'Thinking it over', next: null });
+
+    const atRisk = await new TaskService(broker.db, { timezone: TZ }).listAtRisk(broker.agencyId, broker.userId);
+    expect(atRisk.map((o) => o.id)).toContain(deal.id);
   });
 
   it('logs an email as a completed email task', async () => {

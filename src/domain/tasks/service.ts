@@ -81,6 +81,11 @@ export class TaskService {
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
+  /** Pending tasks of anyone per deal, for the post-call rule 7 warning (spec phone-loop). */
+  async pendingCounts(agencyId: string, opportunityIds: string[]): Promise<Record<string, number>> {
+    return this.repo.countPendingByOpportunity(agencyId, [...new Set(opportunityIds)]);
+  }
+
   /** Creates a new pending task after validation. */
   async create(
     agencyId: string,

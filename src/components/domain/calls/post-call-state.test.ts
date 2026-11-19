@@ -7,6 +7,8 @@ import {
   setOutcome,
   showNoNextWarning,
   toLogCallInput,
+  callDeal,
+  callContext,
 } from './post-call-state';
 
 const INQUIRY = '11111111-1111-4111-8111-111111111111';
@@ -83,10 +85,46 @@ describe('post-call prompt state (spec phone-loop rule 5)', () => {
 
   it('warns when an answered call leaves an active deal with no next action (rule 7)', () => {
     const answeredNone = { ...chooseResult(start, 'answered', opts), next: 'none' as const };
-    expect(showNoNextWarning(answeredNone, { active: true, hasOtherPendingTask: false })).toBe(true);
-    expect(showNoNextWarning(answeredNone, { active: true, hasOtherPendingTask: true })).toBe(false);
-    expect(showNoNextWarning(answeredNone, { active: false, hasOtherPendingTask: false })).toBe(false);
-    expect(showNoNextWarning(answeredNone, undefined)).toBe(false);
-    expect(showNoNextWarning({ ...answeredNone, next: 'tomorrow_9' }, { active: true, hasOtherPendingTask: false })).toBe(false);
+    const deal = (active: boolean, pendingTaskCount: number) => ({ id: 'd1', title: 'Deal', stageId: 's1', active, pendingTaskCount });
+    expect(showNoNextWarning(answeredNone, deal(true, 0), false)).toBe(true);
+    expect(showNoNextWarning(answeredNone, deal(true, 1), false)).toBe(false);
+    // Completing the deal's only pending task leaves nothing next.
+    expect(showNoNextWarning(answeredNone, deal(true, 1), true)).toBe(true);
+    expect(showNoNextWarning(answeredNone, deal(true, 2), true)).toBe(false);
+    expect(showNoNextWarning(answeredNone, deal(false, 0), false)).toBe(false);
+    expect(showNoNextWarning(answeredNone, undefined, false)).toBe(false);
+    expect(showNoNextWarning({ ...answeredNone, next: 'tomorrow_9' }, deal(true, 0), false)).toBe(false);
+  });
+});
+
+describe('post-call deal context (spec phone-loop rule 2)', () => {
+  const CONTACT = '22222222-2222-4222-8222-222222222222';
+  const a = { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', title: 'Flat', stageId: 's1', active: true, pendingTaskCount: 0 };
+  const b = { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', title: 'House', stageId: 's2', active: true, pendingTaskCount: 1 };
+
+  it("uses the target's own deal when there is no picker", () => {
+    const target = { context: { contact_id: CONTACT, opportunity_id: a.id }, name: 'Ivan', deal: a };
+    expect(callDeal(target, null)).toBe(a);
+    expect(callContext(target, null)).toEqual({ contact_id: CONTACT, opportunity_id: a.id });
+  });
+
+  it('logs against the picked deal, or the contact alone with "no deal"', () => {
+    const target = { context: { contact_id: CONTACT }, name: 'Ivan', dealChoices: [a, b] };
+    expect(callDeal(target, b.id)).toBe(b);
+    expect(callContext(target, b.id)).toEqual({ contact_id: CONTACT, opportunity_id: b.id });
+    expect(callDeal(target, null)).toBeUndefined();
+    expect(callContext(target, null)).toEqual({ contact_id: CONTACT });
+    // An id that is not one of the choices is ignored.
+    expect(callContext(target, 'x')).toEqual({ contact_id: CONTACT });
+  });
+
+  it("sends a stage change only when it differs from the deal's stage", () => {
+    const answered = { ...chooseResult(start, 'answered', opts), outcome: 'Ok' };
+    const base = { context: { opportunity_id: a.id }, name: 'Ivan', completeTaskId: null, currentStageId: 's1' };
+    expect(toLogCallInput({ ...answered, stageId: 's3' }, base)?.new_stage_id).toBe('s3');
+    expect(toLogCallInput({ ...answered, stageId: 's1' }, base)?.new_stage_id).toBeUndefined();
+    expect(toLogCallInput(answered, base)?.new_stage_id).toBeUndefined();
+    // No stage change after no answer.
+    expect(toLogCallInput({ ...chooseResult(start, 'no_answer', opts), stageId: 's3' }, base)?.new_stage_id).toBeUndefined();
   });
 });

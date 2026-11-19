@@ -198,6 +198,21 @@ export class TaskRepository {
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
+  /** Pending tasks of anyone per deal; deals with none are left out (spec phone-loop rule 7). */
+  async countPendingByOpportunity(agencyId: string, opportunityIds: string[]): Promise<Record<string, number>> {
+    if (opportunityIds.length === 0) return {};
+    const { data, error } = await this.db
+      .from('tasks')
+      .select('opportunity_id')
+      .eq('agency_id', agencyId)
+      .eq('status', 'pending')
+      .in('opportunity_id', opportunityIds);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to count pending tasks: ${error.message}`);
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) counts[row.opportunity_id] = (counts[row.opportunity_id] ?? 0) + 1;
+    return counts;
+  }
+
   async create(agencyId: string, userId: string, input: CreateTaskInput): Promise<Task> {
     const { data, error } = await this.db
       .from('tasks')

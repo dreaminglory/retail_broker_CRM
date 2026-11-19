@@ -2180,7 +2180,10 @@
       "noNextWarning": "This deal will have no next action.",
       "save": "Save",
       "saving": "Saving…",
-      "saved": "Call logged"
+      "saved": "Call logged",
+      "dealLabel": "Which deal?",
+      "noDeal": "No deal",
+      "stageLabel": "Stage"
     },
     "intent": {
       "toast": "Log the call with {name}",

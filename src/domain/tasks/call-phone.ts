@@ -23,7 +23,8 @@ export type CallPhoneRow = {
 
 const PHONE_TYPES = ['phone', 'viber', 'whatsapp'] as const;
 
-function fromContact(contact: ContactRow | undefined): TaskCallPhone | null {
+/** A contact's phone to call: the primary phone, any phone, then a saved Viber or WhatsApp. */
+export function contactPhone(contact: ContactRow | undefined): TaskCallPhone | null {
   const methods = contact?.contact_methods ?? [];
   for (const type of PHONE_TYPES) {
     const ofType = methods.filter((m) => m.type === type && m.value.trim() !== '');
@@ -34,11 +35,17 @@ function fromContact(contact: ContactRow | undefined): TaskCallPhone | null {
 }
 
 export function callPhoneFor(row: CallPhoneRow): TaskCallPhone | null {
-  const own = fromContact(row.contact) ?? fromContact(row.dealContact);
+  const own = contactPhone(row.contact) ?? contactPhone(row.dealContact);
   if (own) return own;
 
   const callerPhone = row.inquiry?.caller_phone?.trim();
   if (!callerPhone) return null;
   const name = row.contact?.display_name ?? row.dealContact?.display_name ?? row.inquiry?.caller_name ?? null;
   return { value: callerPhone, type: 'phone', name };
+}
+
+/** A contact's primary email, else its first one. */
+export function contactEmail(contact: ContactRow | undefined): string | null {
+  const emails = (contact?.contact_methods ?? []).filter((m) => m.type === 'email' && m.value.trim() !== '');
+  return (emails.find((m) => m.is_primary) ?? emails[0])?.value ?? null;
 }

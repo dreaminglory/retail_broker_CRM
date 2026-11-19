@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { callPhoneFor } from './call-phone';
+import { callPhoneFor, contactEmail, contactPhone } from './call-phone';
 
 const method = (type: string, value: string, is_primary = false) => ({ type, value, is_primary });
 
@@ -46,5 +46,22 @@ describe('callPhoneFor (spec phone-loop rule 1, Today call tasks)', () => {
   it('names the caller null when neither side has a name', () => {
     expect(callPhoneFor({ inquiry: { caller_name: null, caller_phone: '+359877000000' } }))
       .toEqual({ value: '+359877000000', type: 'phone', name: null });
+  });
+});
+
+describe('contactPhone and contactEmail (opportunity page links, T9)', () => {
+  it("picks a contact's primary phone and primary email", () => {
+    const contact = {
+      display_name: 'Ivan',
+      contact_methods: [method('email', 'old@b.bg'), method('email', 'main@b.bg', true), method('whatsapp', '+359888123456')],
+    };
+    expect(contactPhone(contact)).toEqual({ value: '+359888123456', type: 'whatsapp', name: 'Ivan' });
+    expect(contactEmail(contact)).toBe('main@b.bg');
+  });
+
+  it('is null without one', () => {
+    expect(contactPhone({ display_name: 'A', contact_methods: [] })).toBeNull();
+    expect(contactEmail({ display_name: 'A', contact_methods: [method('phone', '+359888123456')] })).toBeNull();
+    expect(contactEmail(null)).toBeNull();
   });
 });

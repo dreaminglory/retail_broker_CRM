@@ -40,7 +40,10 @@ import { createTaskAction, completeTaskAction } from "./tasks/actions";
 import type { OpportunityWithDetails } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
-import type { Contact } from "@/domain/contacts/types";
+import type { ContactWithMethods } from "@/domain/contacts/types";
+import { LogCallButton } from "@/components/domain/calls/log-call-button";
+import { ContactQuickLinks } from "@/components/domain/calls/contact-quick-links";
+import { opportunityCallTarget } from "@/components/domain/calls/call-targets";
 import type { Task } from "@/domain/tasks/types";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import type { ActiveBroker } from "@/domain/members/types";
@@ -52,7 +55,8 @@ interface OpportunityDetailClientProps {
   opportunity: OpportunityWithDetails;
   stages: Stage[];
   leadSources: LeadSource[];
-  contacts: Contact[];
+  /** The deal's primary contact and participants, with their methods for the call links. */
+  contacts: ContactWithMethods[];
   brokers: ActiveBroker[];
   tasks: Task[];
   timeline: TimelineEntry[];
@@ -97,6 +101,13 @@ export function OpportunityDetailClient({
   }
 
   const currentStage = stages.find((s) => s.id === opportunity.stage_id);
+  const primaryContact = contacts.find((c) => c.id === opportunity.primary_contact_id) ?? null;
+
+  // What a call from this page logs against (spec phone-loop rule 2): this deal and the contact.
+  const pendingTaskCount = tasks.filter((task) => task.status === "pending").length;
+  const stageOptions = stages.map((s) => ({ id: s.id, name: s.name }));
+  const callTargetFor = (contact: ContactWithMethods | null) =>
+    opportunityCallTarget(opportunity, contact, pendingTaskCount, stageOptions);
   const source = leadSources.find((s) => s.id === opportunity.source_id);
   
   const formatter = new Intl.NumberFormat("bg-BG", {
@@ -140,7 +151,9 @@ export function OpportunityDetailClient({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <LogCallButton target={callTargetFor(primaryContact)} />
+
           {opportunity.status === "active" && (
             <div className="flex items-center gap-2 mr-2">
               <span className="text-sm font-medium text-muted-foreground">{t("stageLabel")}</span>
@@ -203,10 +216,8 @@ export function OpportunityDetailClient({
               <div className="col-span-2">
                 <dt className="text-muted-foreground mb-1">{t("primaryContact")}</dt>
                 <dd className="font-medium text-base">
-                  {(() => {
-                    const primaryContact = contacts.find(c => c.id === opportunity.primary_contact_id);
-                    if (!primaryContact) return t("none");
-                    return (
+                  {primaryContact ? (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <Link
                         href={`/contacts/${primaryContact.id}`}
                         className="hover:underline text-primary flex items-center gap-1.5"
@@ -214,8 +225,11 @@ export function OpportunityDetailClient({
                         <Users className="h-4 w-4 text-muted-foreground" />
                         {primaryContact.display_name}
                       </Link>
-                    );
-                  })()}
+                      <ContactQuickLinks contact={primaryContact} callTarget={callTargetFor(primaryContact)} />
+                    </div>
+                  ) : (
+                    t("none")
+                  )}
                 </dd>
               </div>
               <div>
@@ -290,6 +304,7 @@ export function OpportunityDetailClient({
             contacts={contacts}
             addAction={addParticipantAction}
             removeAction={removeParticipantAction}
+            contactLinks={(contact) => <ContactQuickLinks contact={contact} callTarget={callTargetFor(contact)} />}
           />
         </div>
 
@@ -317,7 +332,7 @@ export function OpportunityDetailClient({
             opportunity={opportunity}
             stages={stages}
             leadSources={leadSources}
-            primaryContact={contacts.find((c) => c.id === opportunity.primary_contact_id) ?? null}
+            primaryContact={primaryContact}
             brokers={brokers}
             createAction={async () => ({ success: false, error: "Not used" })}
             updateAction={updateOpportunityAction.bind(null, opportunity.id)}

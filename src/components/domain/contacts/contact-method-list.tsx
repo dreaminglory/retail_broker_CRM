@@ -36,12 +36,15 @@ import {
 import type { ActionResult } from "@/lib/actions";
 import { useTranslations } from "next-intl";
 import { ContactLinks } from "@/components/domain/calls/contact-links";
+import type { CallTargetBase } from "@/components/domain/calls/call-targets";
 
 interface ContactMethodListProps {
   contactId: string;
   /** For the links' aria-labels. */
   contactName: string;
   methods: ContactMethod[];
+  /** What a tapped Call, Viber or WhatsApp logs against (spec phone-loop rule 2); the contact alone by default. */
+  callTarget?: CallTargetBase;
 }
 
 const METHOD_TYPE_LABELS: Record<string, string> = {
@@ -67,6 +70,7 @@ export function ContactMethodList({
   contactId,
   contactName,
   methods,
+  callTarget,
 }: ContactMethodListProps) {
   const t = useTranslations("ContactMethodList");
   const [addOpen, setAddOpen] = useState(false);
@@ -86,6 +90,7 @@ export function ContactMethodList({
               method={method}
               contactId={contactId}
               contactName={contactName}
+              callTarget={callTarget ?? { context: { contact_id: contactId }, name: contactName }}
             />
           ))}
         </div>
@@ -119,10 +124,12 @@ function MethodRow({
   method,
   contactId,
   contactName,
+  callTarget,
 }: {
   method: ContactMethod;
   contactId: string;
   contactName: string;
+  callTarget: CallTargetBase;
 }) {
   const t = useTranslations("ContactMethodList");
   const tEnum = useTranslations("Enums");
@@ -193,7 +200,7 @@ function MethodRow({
         type={method.type}
         name={contactName}
         showLabels
-        callTarget={{ context: { contact_id: contactId }, name: contactName }}
+        callTarget={callTarget}
         className="basis-full flex-wrap pl-7 empty:hidden"
       />
     </div>

@@ -18,6 +18,26 @@ export type PostCallState = {
   /** A `datetime-local` value, read in agency time by the server. */
   customDueAt: string;
   channel: CallChannel;
+  /** A new stage for the deal after an answered call (rule 5); null keeps it. */
+  stageId: string | null;
+};
+
+/** A deal a call can be logged on (rules 2, 7, 8). */
+export type CallDeal = {
+  id: string;
+  title: string;
+  stageId: string;
+  /** Status 'active': stage change and the rule 7 warning apply. */
+  active: boolean;
+  /** Its pending tasks of anyone, for the rule 7 warning. */
+  pendingTaskCount: number;
+};
+
+/** The deal side of a prompt target: one deal, or a contact's several active deals to pick from. */
+export type CallDealTarget = {
+  context: CallContext;
+  deal?: CallDeal;
+  dealChoices?: CallDeal[];
 };
 
 export type ResultOptions = {
@@ -30,7 +50,7 @@ export type ResultOptions = {
 };
 
 export function initialPostCallState(channel: CallChannel): PostCallState {
-  return { result: null, outcome: '', outcomePrefilled: false, next: 'none', customDueAt: '', channel };
+  return { result: null, outcome: '', outcomePrefilled: false, next: 'none', customDueAt: '', channel, stageId: null };
 }
 
 export function chooseResult(state: PostCallState, result: CallResult, opts: ResultOptions): PostCallState {
@@ -65,9 +85,10 @@ export function canSave(state: PostCallState): boolean {
 
 export function toLogCallInput(
   state: PostCallState,
-  target: { context: CallContext; name: string; completeTaskId: string | null }
+  target: { context: CallContext; name: string; completeTaskId: string | null; currentStageId?: string | null }
 ): LogCallInput | null {
   if (!state.result) return null;
+  const newStage = state.result === 'answered' && state.stageId && state.stageId !== target.currentStageId ? state.stageId : null;
   const next =
     state.next === 'none' ? null : state.next === 'custom' ? { due_at: state.customDueAt } : { preset: state.next };
   return {
@@ -78,13 +99,32 @@ export function toLogCallInput(
     outcome: state.outcome.trim(),
     complete_task_id: target.completeTaskId,
     next,
+    ...(newStage && { new_stage_id: newStage }),
   };
 }
 
-/** Rule 7 (AD-014, soft): an answered call that leaves an active deal with nothing next. */
+/** The deal the call is logged on: the picked one among the choices, else the target's own. */
+export function callDeal(target: CallDealTarget, pickedDealId: string | null): CallDeal | undefined {
+  if (target.dealChoices?.length) return target.dealChoices.find((d) => d.id === pickedDealId);
+  return target.deal;
+}
+
+/** The context sent to the server, with the picked deal (rule 2: "no deal" logs on the contact). */
+export function callContext(target: CallDealTarget, pickedDealId: string | null): CallContext {
+  if (!target.dealChoices?.length) return target.context;
+  const deal = callDeal(target, pickedDealId);
+  return deal ? { ...target.context, opportunity_id: deal.id } : target.context;
+}
+
+/**
+ * Rule 7 (AD-014, soft): an answered call that leaves an active deal with nothing next. The
+ * task the call completes no longer counts as next.
+ */
 export function showNoNextWarning(
   state: PostCallState,
-  deal: { active: boolean; hasOtherPendingTask: boolean } | undefined
+  deal: Pick<CallDeal, 'active' | 'pendingTaskCount'> | undefined,
+  completing: boolean
 ): boolean {
-  return state.result === 'answered' && state.next === 'none' && !!deal?.active && !deal.hasOtherPendingTask;
+  if (state.result !== 'answered' || state.next !== 'none' || !deal?.active) return false;
+  return deal.pendingTaskCount - (completing ? 1 : 0) <= 0;
 }
