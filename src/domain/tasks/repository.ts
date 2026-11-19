@@ -9,7 +9,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
 import type { Task, CreateTaskInput, CompleteTaskInput, TaskChannel, TaskType } from './types';
-import { callPhoneFor } from './call-phone';
+import { callPhoneFor, type TaskCallPhone } from './call-phone';
+
+/** Call tasks whose phones are loaded per request (a 36-char id each in the URL). */
+const CALL_PHONE_CHUNK = 100;
 
 /** Where a logged call and its next task hang (AD-065). */
 export type CallScope = { opportunity_id?: string | null; contact_id?: string | null; inquiry_id?: string | null };
@@ -133,7 +136,7 @@ export class TaskRepository {
   ): Promise<Task[]> {
     let query = this.db
       .from('tasks')
-      .select(`*, opportunities(title, status, stages(name), ${DEAL_CONTACT_EMBED}), ${PROPERTY_EMBED}, ${CALL_PHONE_EMBED}`)
+      .select(`*, opportunities(title, status, stages(name)), ${PROPERTY_EMBED}`)
       .eq('agency_id', agencyId)
       .eq('status', 'pending')
       .lt('due_at', range.before)
@@ -149,16 +152,42 @@ export class TaskRepository {
     const { data, error } = await query;
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch tasks: ${error.message}`);
 
+    const rows = (data ?? []) as Array<Task & { opportunities?: { title: string; status: string; stages?: { name: string } | null } | null }>;
+    const phones = await this.findCallPhones(
+      agencyId,
+      rows.filter((row) => row.task_type === 'call').map((row) => row.id)
+    );
+
     // Map joined fields to flat TaskWithOpportunity structure
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []).map(({ contact, inquiry, ...row }: any) => ({
+    return rows.map((row) => ({
       ...row,
       opportunity_title: row.opportunities?.title ?? null,
       opportunity_stage: row.opportunities?.stages?.name ?? null,
       opportunity_status: row.opportunities?.status ?? null,
-      call_phone: callPhoneFor({ contact, dealContact: row.opportunities?.primary_contact, inquiry }),
+      call_phone: phones.get(row.id) ?? null,
       opportunities: undefined,
     })) as Task[];
+  }
+
+  /**
+   * The phone each call task offers (spec phone-loop rule 1). Only call tasks need contact
+   * methods, so they are loaded for those ids alone, 100 at a time to keep the URL short.
+   */
+  private async findCallPhones(agencyId: string, taskIds: string[]): Promise<Map<string, TaskCallPhone | null>> {
+    const phones = new Map<string, TaskCallPhone | null>();
+    for (let i = 0; i < taskIds.length; i += CALL_PHONE_CHUNK) {
+      const { data, error } = await this.db
+        .from('tasks')
+        .select(`id, opportunities(${DEAL_CONTACT_EMBED}), ${CALL_PHONE_EMBED}`)
+        .eq('agency_id', agencyId)
+        .in('id', taskIds.slice(i, i + CALL_PHONE_CHUNK));
+      if (error) throw new DomainError('errors.loadFailed', `Failed to fetch call phones: ${error.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const row of (data ?? []) as any[]) {
+        phones.set(row.id, callPhoneFor({ contact: row.contact, dealContact: row.opportunities?.primary_contact, inquiry: row.inquiry }));
+      }
+    }
+    return phones;
   }
 
   /**

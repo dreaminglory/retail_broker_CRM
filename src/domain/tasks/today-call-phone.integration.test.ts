@@ -23,7 +23,7 @@ describeServices("Today call tasks' phone against the local stack", () => {
 
   afterAll(() => cleanup.run());
 
-  async function pendingCallNow(at: Partial<Pick<Task, 'opportunity_id' | 'contact_id' | 'inquiry_id'>>) {
+  async function pendingCallNow(at: Partial<Pick<Task, 'opportunity_id' | 'contact_id' | 'inquiry_id' | 'task_type'>>) {
     const { data, error } = await broker.db
       .from('tasks')
       .insert({
@@ -75,6 +75,13 @@ describeServices("Today call tasks' phone against the local stack", () => {
     expect(row?.call_phone).toEqual({ value: `+359888${suffix}`, type: 'phone', name: 'Today Phone' });
     expect(row?.opportunity_status).toBe('active');
     expect((await todayTask(dealOnly.id))?.call_phone).toEqual(row?.call_phone);
+
+    // Only call tasks load a phone: a follow-up on the same deal carries none.
+    const followUp = await pendingCallNow({ opportunity_id: deal.id, contact_id: contact.id, task_type: 'follow_up' });
+    const followUpRow = await todayTask(followUp.id);
+    expect(followUpRow).toBeDefined();
+    expect(followUpRow?.call_phone ?? null).toBeNull();
+    expect(followUpRow?.opportunity_status).toBe('active');
   });
 
   it("gives an inquiry's call task the caller phone", async () => {

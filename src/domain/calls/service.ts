@@ -112,6 +112,11 @@ export class CallService {
       return { callTask: completedTask as CallTask, nextTask: nextTask as CallTask | undefined };
     }
 
+    // Stage first: if it fails nothing is written, and a second save moves it again (a no-op)
+    // and logs the call once. The other order would leave a saved call behind an error.
+    if (parsed.new_stage_id && ctx.opportunity_id) {
+      await this.moveStage(ctx.opportunity_id, agencyId, parsed.new_stage_id);
+    }
     const saved = await this.repo.insertCallLog(
       agencyId,
       userId,
@@ -126,9 +131,6 @@ export class CallService {
       next,
       now
     );
-    if (parsed.new_stage_id && ctx.opportunity_id) {
-      await this.moveStage(ctx.opportunity_id, agencyId, parsed.new_stage_id);
-    }
     return { callTask: saved.call as CallTask, nextTask: saved.next as CallTask | undefined };
   }
 
@@ -195,11 +197,21 @@ export class CallService {
   private isCompletable(task: Task, userId: string, ctx: ResolvedContext, channel: CallChannel): boolean {
     if (task.status !== 'pending' || task.assigned_to !== userId) return false;
     if (task.task_type !== taskTypeFor(channel)) return false;
-    return (
-      task.id === ctx.task_id ||
-      (!!ctx.opportunity_id && task.opportunity_id === ctx.opportunity_id) ||
-      (!!ctx.inquiry_id && task.inquiry_id === ctx.inquiry_id)
-    );
+    return this.inContext(task, ctx);
+  }
+
+  /**
+   * The task sits where the call is logged, so its next task lands there too. Its deal must be
+   * the context's deal (both may be none) and its inquiry, when both have one, the same. Then a
+   * deal context matches; an inquiry one needs the task's inquiry; a tapped task with neither
+   * (a contact's task) needs the same contact.
+   */
+  private inContext(task: Task, ctx: ResolvedContext): boolean {
+    if ((task.opportunity_id ?? null) !== ctx.opportunity_id) return false;
+    if (task.inquiry_id && ctx.inquiry_id && task.inquiry_id !== ctx.inquiry_id) return false;
+    if (ctx.opportunity_id) return true;
+    if (ctx.inquiry_id) return task.inquiry_id === ctx.inquiry_id;
+    return task.id === ctx.task_id && !task.inquiry_id && !!ctx.contact_id && task.contact_id === ctx.contact_id;
   }
 
   private dueAt(next: { preset: DuePreset } | { due_at: string }, now: Date): string {

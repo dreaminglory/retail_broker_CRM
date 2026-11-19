@@ -179,6 +179,49 @@ describeServices('CallService against the local stack', () => {
     expect(await calls.findTaskToComplete(broker.agencyId, broker.userId, { opportunity_id: deal.id }, 'email')).toBeNull();
   });
 
+  it('never completes a tapped task of mine that belongs to another deal', async () => {
+    const dealA = await createDeal();
+    const dealB = await createDeal();
+    const onA = await pendingCall(broker, { opportunity_id: dealA.id }, new Date(Date.now() + 3_600_000).toISOString());
+
+    // Tapped task on A, context says B: nothing on B to complete.
+    expect(await calls.findTaskToComplete(broker.agencyId, broker.userId, { opportunity_id: dealB.id, task_id: onA.id }, 'phone')).toBeNull();
+
+    const refused = await log({
+      context: { opportunity_id: dealB.id, task_id: onA.id },
+      channel: 'phone',
+      complete_task_id: onA.id,
+      result: 'answered',
+      outcome: 'Spoke',
+      next: { preset: 'tomorrow_9' },
+    }).catch((e) => e);
+    expect(refused).toBeInstanceOf(DomainError);
+    expect(refused.message).toBe('phoneLoop.errors.taskNotCompletable');
+    expect((await tasksOf('opportunity_id', dealA.id)).map((t) => t.status)).toEqual(['pending']);
+    expect(await tasksOf('opportunity_id', dealB.id)).toEqual([]);
+  });
+
+  it('writes no call when the stage move fails, so a second save logs it once', async () => {
+    const deal = await createDeal();
+    const missingStage = '00000000-0000-4000-8000-000000000000';
+
+    const refused = await log({
+      context: { opportunity_id: deal.id },
+      channel: 'phone',
+      result: 'answered',
+      outcome: 'Agreed to view',
+      next: { preset: 'tomorrow_9' },
+      new_stage_id: missingStage,
+    }).catch((e) => e);
+    expect(refused).toBeInstanceOf(DomainError);
+    expect(await tasksOf('opportunity_id', deal.id)).toEqual([]);
+
+    await log({ context: { opportunity_id: deal.id }, channel: 'phone', result: 'answered', outcome: 'Agreed to view', next: { preset: 'tomorrow_9' }, new_stage_id: otherStageId });
+    expect((await tasksOf('opportunity_id', deal.id)).map((t) => t.status).sort()).toEqual(['completed', 'pending']);
+    const { data: after } = await broker.db.from('opportunities').select('stage_id').eq('id', deal.id).single();
+    expect(after!.stage_id).toBe(otherStageId);
+  });
+
   it("completes my call on a deal and sets the deal's next action to tomorrow 09:00 (AC-5)", async () => {
     const deal = await createDeal();
     const planned = await pendingCall(broker, { opportunity_id: deal.id }, new Date(Date.now() + 3_600_000).toISOString());
