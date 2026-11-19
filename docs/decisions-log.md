@@ -558,6 +558,11 @@ proves too loose or too strict on a real export (tune the one function).
   would break AD-041. Fewer bytes come from keeping `/mobile` out of the client (T4).
 - **The pending call intent lives in `sessionStorage`** with ids and a display name, never a
   number (spec rule 12).
+- **Where a call goes and what it shows** (build, 2026-11-19): a Today call task with no contact
+  of its own calls the deal's primary contact, else the inquiry's caller. A contact with several
+  active deals gets a picker in the prompt with "No deal" preselected, so a call is never filed
+  on the wrong deal by default. The rule 7 warning counts the deal's pending tasks of anyone,
+  minus the one the call completes. The timeline shows the channel on a call's completion only.
 **Why:** tasks already carry outcome, owner, timeline and next action; triggers keep
 `contacted_at` true whichever path (prompt, "Mark contacted", conversion) gets there first.
 **Revisit if:** calls need fields a task can't hold (duration, recording), or the `/mobile`

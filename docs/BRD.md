@@ -320,6 +320,16 @@ active opportunity has an owner, a next action and a complete history.
 | FR-PIM-09 | ✅ Revert within 7 days deletes only untouched properties, their listings and parties, unworked imported owners and unused new areas. AC-8: `102-property-import-revert.sql` (one kept case per kind of work), `103-property-import-review-fixes.sql`, `property-import.integration.test.ts` (revert), E2E counts |
 | FR-PIM-10 | ✅ Owner and manager only; jobs, settlements' areas, members and contacts come only from the caller's agency. AC-9: `100`/`101`/`102` pgTAP (broker, `anon`, other agency refused), `actions.test.ts` (broker refused), `property-import.integration.test.ts` (Beta's areas, members, contacts never matched). AC-10: E2E in bg and en at 1280 and 390 px; scale run in AD-064 |
 
+### FR-COM: Calls and messages (module `phone-loop`)
+
+| ID | Requirement |
+|----|------------|
+| FR-COM-01 | ✅ Every phone shown on the inquiry card, the contact page, a deal's primary contact and contact participants, and Today's call tasks is a Call link (`tel:` E.164); a mobile number or a saved Viber/WhatsApp method also gets Viber (`viber://chat?number=`) and WhatsApp (`wa.me`); an email is a `mailto:` link. Real `<a href>`, ≥ 44 px at 390 px, named for screen readers. AC-1: `contact-links.test.ts(x)`, `task-card.test.tsx`, E2E `core-loop.spec.ts` (four projects) |
+| FR-COM-02 | ✅ Coming back to the app after a Call, Viber or WhatsApp tap (hidden ≥ 5 s, within 2 h) asks "Did you reach <name>?" and one save logs the call (a completed `call`/`email` task with its channel) and the next action; on a desktop a "Log the call" toast opens it. "Not now" writes nothing. A pending call of mine is completed instead of logging a second one; on a deal the stage can change; a deal left with no next action is warned about. AC-2, AC-5, AC-8: `use-call-intent.test.ts`, `post-call-*.test.ts(x)`, `calls/service.integration.test.ts`, E2E |
+| FR-COM-03 | ✅ "No answer" prefills the outcome and offers a retry (in 1 h, today 18:00 before 17:00 agency time, tomorrow 09:00, none); the retry is a pending call on Today. AC-2: `post-call-state.test.ts`, `calls/service.integration.test.ts`, E2E |
+| FR-COM-04 | ✅ An inquiry records its first contact time once (`contacted_at`, by trigger: first logged call, "Mark contacted" or conversion); the card shows "Contacted after …", the last call and a pending retry; an inquiry's calls follow it to the deal on conversion or join and appear on the deal timeline with their channel. AC-3, AC-4, AC-6, AC-9: `106-phone-loop.sql`, `call-summary.test.ts`, `inquiry-call-line.test.tsx`, `timeline-entry.test.tsx`, E2E |
+| FR-COM-05 | ✅ "Log call" by hand (inquiry card menu, opportunity and contact page headers) with a channel picker, for inbound calls and calls made outside the app; on a contact page the call goes on its one active deal, or a picker when it has several. AC-7 (another agency's inquiry refused): `106-phone-loop.sql`, `calls/service.integration.test.ts`; `call-targets.test.ts`, `post-call-sheet.test.tsx` |
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Priority |

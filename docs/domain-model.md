@@ -1024,6 +1024,11 @@ The BG column is the **canonical** term. Use it for new strings. Variants found 
 | Close | Близо | A criterion missed by a small tolerance; half credit | |
 | Smart list | Списък (nav: Списъци) | A named filter of deals or inquiries with a live count; built-in or saved (AD-062) | |
 | Work through (a list) | Обработи | Open the list's deals one after another with a queue bar | |
+| Call (log entry) | Обаждане | A completed `call` or `email` task with a channel (AD-065) | |
+| Post-call prompt | Свързахте ли се? | The question after a Call, Viber or WhatsApp tap: answered, no answer, not now | |
+| Contacted (time) | Свързан (след …) | `inquiries.contacted_at`, shown as the time from receipt to first contact | |
+| No answer | Не вдига | A call attempt nobody picked up; offers a retry | |
+| Log call | Запиши разговор | Log a call by hand: inbound, or made outside the app | |
 
 ---
 

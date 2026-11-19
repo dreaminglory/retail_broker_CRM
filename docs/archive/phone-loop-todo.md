@@ -165,7 +165,7 @@
   - Verify: `npx supabase db reset`; `npm run test:e2e`.
   - Files: `supabase/seed.sql`, `e2e/core-loop.spec.ts`, `e2e/fixtures.ts`.
 
-- [ ] **T12: Close the module** (S)
+- [x] **T12: Close the module** (S)
   - Acceptance: AC-9 checked (no number in URLs, storage or logs; 44 px; no literal strings);
     BRD FR-COM-01…05 ✅; `SPEC.md` row Done and §5 updated; `smart-lists` A3 note; glossary
     lines; `tasks/*` moved to `docs/archive/phone-loop-*.md`.
@@ -173,5 +173,5 @@
   - Files: `docs/BRD.md`, `SPEC.md`, `docs/domain-model.md`, `docs/archive/`.
 
 ### Checkpoint: Complete
-- [ ] All spec success criteria AC-1…AC-9 met
+- [x] All spec success criteria AC-1…AC-9 met (2026-11-19)
 - [ ] `/ship` before any prod `db push`
