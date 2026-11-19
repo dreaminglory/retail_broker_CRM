@@ -34,7 +34,7 @@
     `supabase/tests/database/106-phone-loop.sql`, `docs/decisions-log.md`,
     `docs/domain-model.md`, generated types.
 
-- [ ] **T3: Migration part 2: calls follow conversion and dismiss** (S) — **Opus**
+- [x] **T3: Migration part 2: calls follow conversion and dismiss** (S) — **Opus**
   - Acceptance:
     - `trg_inquiry_tasks_follow`: convert and join give the inquiry's tasks the deal and
       contact; dismiss cancels pending ones with outcome `phoneLoop.cancelledByDismiss`.

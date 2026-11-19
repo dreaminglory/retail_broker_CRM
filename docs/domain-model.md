@@ -1,8 +1,8 @@
 # BrokerCRM Domain Model
 
 The single reference for entities, relationships, lifecycles, invariants and vocabulary.
-Built from `supabase/migrations/` and `src/domain/` as of the 74th migration
-(`20261119000001_phone_loop.sql`). It describes what is **built**;
+Built from `supabase/migrations/` and `src/domain/` as of the 75th migration
+(`20261119000002_phone_loop_follow.sql`). It describes what is **built**;
 planned modules add their area when their migrations land (`SPEC.md` §3).
 
 **Keep it current:** any migration that adds or changes a table, a status value, a
@@ -681,6 +681,10 @@ A join (AD-061) also ends in `converted`: `inquiries.opportunity_id` is the join
 dismissal from `new` leaves it `NULL`, and so does every inquiry already past `new` when the
 column was added (no backfill).
 
+An inquiry's tasks follow it (AD-065): when it gets a deal (conversion or join) or a contact,
+its tasks get them where theirs are empty, completed calls included; when it is dismissed, its
+pending tasks are cancelled with outcome `phoneLoop.cancelledByDismiss`.
+
 ### 3.2 Opportunity: status and stage
 
 An opportunity has two independent axes: `stage_id` (position in the agency's pipeline)
@@ -891,9 +895,10 @@ The "Enforced by" column tells you which layer to change and test.
 | I6 | Conversion creates the contact, its methods and the opportunity and closes the inquiry, all or nothing (AD-050) | RPC `convert_inquiry` + `070-atomic-convert-and-merge.sql` |
 | I7 | A join closes the inquiry into an open (`active`/`nurture`) deal that has the contact, reactivates a `nurture` deal and may create one `call` task, all or nothing (AD-061) | RPC `join_inquiry` + `082-conversion-join.sql` |
 | I8 | `contacted_at` is set once, only when an inquiry leaves `new` (first completed call/email task at its `completed_at`, else `now()` on "Mark contacted" or conversion), never moved and never written by app code; a call on a `contacted`, `converted` or `dismissed` inquiry changes neither status nor time (AD-065) | triggers `trg_inquiry_contacted_at` (`guard_inquiry_contacted_at` ignores writes at trigger depth 1) and `trg_task_marks_inquiry_contacted` + `106-phone-loop.sql` |
+| I9 | An inquiry's tasks follow it: a conversion or join fills their empty `opportunity_id` and `contact_id` (completed calls too, so the deal timeline shows them; a task already on a deal keeps it), and a dismissal cancels its pending tasks; `convert_inquiry` and `join_inquiry` are unchanged (AD-065) | trigger `trg_inquiry_tasks_follow` + `106-phone-loop.sql` |
 | O1 | Opportunity always has a stage | `NOT NULL` + FK `RESTRICT` |
 | O2 | Lost requires `lost_reason` | Zod `closeOpportunitySchema` |
-| O3 | `next_action_at` = earliest pending task due date | trigger `sync_opportunity_next_action` |
+| O3 | `next_action_at` = earliest pending task due date, recomputed when a task is added, deleted, or changes status, due date or deal (both deals) | trigger `sync_opportunity_next_action` + `106-phone-loop.sql` |
 | O4 | `active` with no `next_action_at` ⇒ at risk | derived view (section 4) |
 | S1 | `terminal_type` set iff `is_terminal` | `CHECK terminal_type_consistency` |
 | S2 | At least one won and one lost stage per agency | `StageService` |
