@@ -167,6 +167,58 @@ describe('call intent (spec phone-loop rule 3)', () => {
     });
   });
 
+  describe('an opportunity-page target with its deal and stages (rule 12)', () => {
+    const DEAL = '22222222-2222-4222-8222-222222222222';
+    const CONTACT = '33333333-3333-4333-8333-333333333333';
+    const richTarget = {
+      context: { opportunity_id: DEAL, contact_id: CONTACT },
+      name: 'Ivan Petrov',
+      channel: 'viber' as const,
+      // A broker-typed title can hold anything, a number included.
+      deal: { id: DEAL, title: 'Лозенец 3-стаен, тел. 0888123456', stageId: 's1', active: false, pendingTaskCount: 2 },
+      dealChoices: [{ id: DEAL, title: 'Лозенец 3-стаен', stageId: 's1', active: true, pendingTaskCount: 0 }],
+      stages: [{ id: 's1', name: 'Оглед' }],
+    };
+
+    it('stores the context, the name, the channel and the closed flag only', () => {
+      tracker().register(richTarget);
+      const [stored] = [...storage.data.values()];
+
+      expect(JSON.parse(stored).target).toEqual({
+        context: { opportunity_id: DEAL, contact_id: CONTACT },
+        name: 'Ivan Petrov',
+        channel: 'viber',
+        closed: true,
+      });
+      expect(stored).not.toContain('0888123456');
+    });
+
+    it('prompts with the full target on the same page', () => {
+      const t = tracker();
+      t.register(richTarget);
+      t.visibility(true);
+      vi.advanceTimersByTime(CALL_INTENT.minHiddenMs);
+      t.visibility(false);
+
+      expect(prompts).toEqual([expect.objectContaining({ target: richTarget })]);
+    });
+
+    it('prompts with the stored ids after a reload', () => {
+      const first = tracker();
+      first.register(richTarget);
+      first.visibility(true);
+      vi.advanceTimersByTime(30_000);
+
+      tracker().resume();
+
+      expect(prompts).toEqual([
+        expect.objectContaining({
+          target: { context: richTarget.context, name: 'Ivan Petrov', channel: 'viber', closed: true },
+        }),
+      ]);
+    });
+  });
+
   it('survives a storage that throws (private mode)', () => {
     storage.setItem = () => {
       throw new Error('QuotaExceededError');

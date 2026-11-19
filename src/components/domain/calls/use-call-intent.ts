@@ -35,15 +35,35 @@ type TrackerDeps = {
 
 export type CallIntentTracker = ReturnType<typeof createCallIntentTracker>;
 
+/**
+ * What may be stored (rule 12): ids, the display name, the channel and the closed and no-retry
+ * flags. Deal titles, stages and counts stay in memory: a title is broker-typed free text, and
+ * counts go stale. After a reload the prompt works from this alone (no stage change, no picker).
+ */
+export function storableTarget(target: CallIntentTarget): CallIntentTarget {
+  const closed = target.deal ? !target.deal.active : target.closed;
+  return {
+    context: target.context,
+    name: target.name,
+    channel: target.channel,
+    ...(closed && { closed }),
+    ...(target.noRetry && { noRetry: target.noRetry }),
+  };
+}
+
 export function createCallIntentTracker(deps: TrackerDeps) {
-  // Memory is the fallback when storage is missing or throws (private mode, blocked site data).
+  // Memory is the fallback when storage is missing or throws (private mode, blocked site data),
+  // and holds the full target of a tap on this page.
   let memory: CallIntent | null = null;
   let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   function read(): CallIntent | null {
     try {
       const raw = deps.storage?.getItem(CALL_INTENT.storageKey);
-      return raw ? (JSON.parse(raw) as CallIntent) : memory;
+      if (!raw) return memory;
+      const stored = JSON.parse(raw) as CallIntent;
+      // The same tap on this page: its full target, with the stored visibility.
+      return memory?.tappedAt === stored.tappedAt ? { ...stored, target: memory.target } : stored;
     } catch {
       return memory;
     }
@@ -52,7 +72,7 @@ export function createCallIntentTracker(deps: TrackerDeps) {
   function write(intent: CallIntent): void {
     memory = intent;
     try {
-      deps.storage?.setItem(CALL_INTENT.storageKey, JSON.stringify(intent));
+      deps.storage?.setItem(CALL_INTENT.storageKey, JSON.stringify({ ...intent, target: storableTarget(intent.target) }));
     } catch {
       // Memory keeps it for this page; drop an older stored tap so it can't win over memory.
       try {
