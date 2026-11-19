@@ -7,6 +7,7 @@ import { OpportunityService } from '@/domain/opportunities/service';
 import { rescheduleDueAt } from '@/domain/tasks/reschedule';
 import type { Task } from '@/domain/tasks/types';
 import { TaskService } from '@/domain/tasks/service';
+import { TimelineService } from '@/domain/timeline/service';
 import { CallService } from './service';
 import type { LogCallInput } from './types';
 
@@ -115,6 +116,14 @@ describeServices('CallService against the local stack', () => {
     const { data: after } = await broker.db.from('inquiries').select('status, contacted_at').eq('id', inquiry.id).single();
     expect(after!.status).toBe('contacted');
     expect(after!.contacted_at).not.toBeNull();
+
+    // The inbox card shows the contact time, the last call and the retry (rule 9).
+    const [listed] = (await new InquiryService(broker.db).list(broker.agencyId, { search: 'Call Test', limit: 50 })).filter((i) => i.id === inquiry.id);
+    expect(listed.contacted_at).toBe(after!.contacted_at);
+    expect(listed.calls).toEqual({
+      lastCall: { outcome: 'No answer', at: callTask.completed_at, channel: 'phone' },
+      nextRetryAt: nextTask!.due_at,
+    });
   });
 
   it("completes the inquiry's pending retry next time instead of adding a call, and keeps contacted_at (AC-3)", async () => {
@@ -280,6 +289,27 @@ describeServices('CallService against the local stack', () => {
     // Its own deal is fine.
     const logged = await log({ context: { inquiry_id: inquiry.id, opportunity_id: joined.id }, channel: 'phone', result: 'answered', outcome: 'Spoke', next: null });
     expect(logged.callTask.opportunity_id).toBe(joined.id);
+  });
+
+  it("shows an inquiry's Viber call on the deal timeline after it joins (AC-4, rule 10)", async () => {
+    const contact = await new ContactService(broker.db).create(broker.agencyId, broker.userId, { type: 'person', first_name: 'Call', last_name: 'Timeline' });
+    cleanup.track('contacts', contact.id);
+    const deal = await new OpportunityService(broker.db).create(broker.agencyId, broker.userId, {
+      title: 'Timeline deal',
+      type: 'buyer',
+      stage_id: stageId,
+      assigned_to: broker.userId,
+      primary_contact_id: contact.id,
+    });
+    cleanup.track('opportunities', deal.id);
+    const inquiry = await createInquiry();
+    const { callTask } = await log({ context: { inquiry_id: inquiry.id }, channel: 'viber', result: 'answered', outcome: 'Chatted on Viber', next: null });
+
+    await new InquiryService(broker.db).join(inquiry.id, broker.agencyId, { contact_id: contact.id, opportunity_id: deal.id, task: null });
+
+    const timeline = await new TimelineService(broker.db).getOpportunityTimeline(deal.id, broker.agencyId);
+    const entry = timeline.find((e) => e.type === 'task' && e.isCompletionEvent && e.data.id === callTask.id);
+    expect(entry?.type === 'task' && entry.data.channel).toBe('viber');
   });
 
   it("refuses another agency's inquiry (AC-7)", async () => {

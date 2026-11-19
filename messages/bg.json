@@ -2188,6 +2188,11 @@
     "intent": {
       "toast": "Запишете разговора с {name}",
       "log": "Запиши"
+    },
+    "card": {
+      "contactedAfter": "{unit, select, minutes {Свързан след {minutes} мин} hours {Свързан след {hours} ч {minutes} мин} other {Свързан след {days} д {hours} ч}}",
+      "lastCall": "Последно обаждане: {outcome} · {time}",
+      "retryAt": "Ново обаждане {time}"
     }
   }
 }

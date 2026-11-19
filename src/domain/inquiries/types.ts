@@ -3,6 +3,8 @@
  * Inquiries are immutable inbound events — never deleted after creation (domain rule).
  */
 
+import type { InquiryCallSummary } from './call-summary';
+
 export type InquiryStatus = 'new' | 'contacted' | 'converted' | 'dismissed';
 
 export interface Inquiry {
@@ -41,6 +43,12 @@ export interface Inquiry {
 
   /** When the inquiry joined an existing deal (AD-061). Null if it never joined one. */
   joined_at: string | null;
+
+  /** First outreach, set once by trigger (AD-065); null if never contacted or before the module. */
+  contacted_at: string | null;
+
+  /** Lists only: its last logged call and pending retry (spec phone-loop rule 9). */
+  calls?: InquiryCallSummary;
 
   created_by: string | null;
   import_job_id: string | null;

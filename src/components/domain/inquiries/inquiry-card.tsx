@@ -29,6 +29,7 @@ import { useTranslations } from "next-intl";
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
 import { ContactLinks } from "@/components/domain/calls/contact-links";
 import type { PostCallTarget } from "@/components/domain/calls/post-call-sheet";
+import { InquiryCallLine } from "./inquiry-call-line";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
@@ -71,6 +72,8 @@ interface InquiryCardProps {
   onDismiss?: (inquiry: Inquiry) => void;
   /** "Log call" by hand (spec phone-loop rule 4); also on converted and dismissed inquiries. */
   onLogCall?: (inquiry: Inquiry) => void;
+  /** The agency's timezone; with it the card shows the contact time and calls (rule 9). */
+  timeZone?: string;
 }
 
 /**
@@ -98,6 +101,7 @@ export function InquiryCard({
   onConvert,
   onDismiss,
   onLogCall,
+  timeZone,
 }: InquiryCardProps) {
   const t = useTranslations("InquiryCard");
   const tCall = useTranslations("phoneLoop");
@@ -253,6 +257,8 @@ export function InquiryCard({
           </span>
         )}
       </div>
+
+      {timeZone && <InquiryCallLine inquiry={inquiry} timeZone={timeZone} />}
 
       {/* Bottom meta row */}
       <div className="mt-2 flex items-center justify-between pl-11 text-[11px] text-muted-foreground">

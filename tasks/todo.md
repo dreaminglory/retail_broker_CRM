@@ -140,7 +140,9 @@
   - Files: `participant-list.tsx`, opportunity and contact `[id]` page headers,
     `post-call-sheet.tsx`, message files.
 
-- [ ] **T10: Inquiry card contact time and channel on the timeline** (S)
+- [x] **T10: Inquiry card contact time and channel on the timeline** (S)
+  - Done 2026-11-19. In the inbox card (the only `InquiryCard` user; Today's and Exceptions'
+    inquiry rows are their own components and were left as they are).
   - Acceptance: "Contacted after 2 h 10 min" via `useFormatter`, last call and pending retry
     on the card (rule 9); timeline call entries show the channel icon and label (rule 10).
   - Verify: unit test of the duration and last-call mapping; timeline service test; browser

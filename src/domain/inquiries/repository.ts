@@ -7,6 +7,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Inquiry, CreateInquiryInput, UpdateInquiryInput, JoinableOpportunity } from './types';
 import { ProfileRepository } from '../profiles/repository';
 import { DomainError } from '@/lib/errors';
+import { inquiryCallSummary, type InquiryCallRow } from './call-summary';
+
+/** The inquiry's call tasks, for the card's last call and retry (spec phone-loop rule 9). */
+const CALLS_EMBED = 'call_rows:tasks!fk_tasks_inquiry(status, task_type, outcome, completed_at, due_at, channel)';
 
 /** Most deals the join step lists; a contact with more open deals is beyond a normal book. */
 const JOINABLE_LIMIT = 50;
@@ -101,7 +105,7 @@ export class InquiryRepository {
 
     let query = this.db
       .from('inquiries')
-      .select('*', { count: 'exact' })
+      .select(`*, ${CALLS_EMBED}`, { count: 'exact' })
       .eq('agency_id', agencyId)
       .order('received_at', { ascending: false })
       .order('id', { ascending: false }) // tie-break so pages never overlap
@@ -127,7 +131,11 @@ export class InquiryRepository {
       if (!retry.error) return { rows: [], total: retry.count ?? 0 };
     }
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch inquiries: ${error.message}`);
-    return { rows: (data ?? []) as Inquiry[], total: count ?? 0 };
+    const rows = ((data ?? []) as Array<Inquiry & { call_rows?: InquiryCallRow[] }>).map(({ call_rows, ...row }) => ({
+      ...row,
+      calls: inquiryCallSummary(call_rows),
+    }));
+    return { rows, total: count ?? 0 };
   }
 
   async findById(id: string, agencyId: string): Promise<Inquiry | null> {

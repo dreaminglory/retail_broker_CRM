@@ -120,6 +120,7 @@ export function InquiryList({
                 onConvert={handleOpenConvert}
                 onDismiss={setDismissTarget}
                 onLogCall={handleLogCall}
+                timeZone={timeZone}
               />
             ))}
       </div>

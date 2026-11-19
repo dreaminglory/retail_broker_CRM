@@ -197,3 +197,31 @@ describe('TimelineEntryItem requirement rows (AD-059)', () => {
     expect(html).toContain('Yes');
   });
 });
+
+describe('TimelineEntryItem call channel (spec phone-loop rule 10)', () => {
+  const call = (channel: string | null): TimelineEntry => ({
+    type: 'task',
+    timestamp: '2026-11-04T10:00:00Z',
+    isCompletionEvent: true,
+    data: { title: 'Call with Ivan', task_type: 'call', channel, outcome: 'Wants a viewing', created_at: '2026-11-04T09:00:00Z', completed_at: '2026-11-04T10:00:00Z', status: 'completed' } as never,
+  });
+  const show = (locale: 'en' | 'bg', e: TimelineEntry) =>
+    renderToString(
+      <NextIntlClientProvider locale={locale} messages={locale === 'en' ? en : bg} timeZone="Europe/Sofia" now={SERVER_NOW}>
+        <TimelineEntryItem entry={e} />
+      </NextIntlClientProvider>,
+    );
+
+  it.each([
+    ['en', 'viber', 'Viber'],
+    ['en', 'phone', 'Phone'],
+    ['bg', 'phone', 'Телефон'],
+    ['bg', 'email', 'Имейл'],
+  ] as const)('labels a logged call with its channel (%s, %s)', (locale, channel, label) => {
+    expect(show(locale, call(channel))).toMatch(new RegExp(`data-testid="call-channel"[^>]*>(<[^>]+>)*${label}<`));
+  });
+
+  it('shows no channel on an ordinary task', () => {
+    expect(show('en', call(null))).not.toContain('data-testid="call-channel"');
+  });
+});

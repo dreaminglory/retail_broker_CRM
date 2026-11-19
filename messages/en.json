@@ -2188,6 +2188,11 @@
     "intent": {
       "toast": "Log the call with {name}",
       "log": "Log"
+    },
+    "card": {
+      "contactedAfter": "{unit, select, minutes {Contacted after {minutes} min} hours {Contacted after {hours} h {minutes} min} other {Contacted after {days} d {hours} h}}",
+      "lastCall": "Last call: {outcome} · {time}",
+      "retryAt": "Call again {time}"
     }
   }
 }
