@@ -23,6 +23,7 @@ import {
   MessageSquareOff,
   CheckCheck,
   Pencil,
+  PhoneCall,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
@@ -67,6 +68,8 @@ interface InquiryCardProps {
   onMarkContacted?: (id: string) => void;
   onConvert?: (inquiry: Inquiry) => void;
   onDismiss?: (inquiry: Inquiry) => void;
+  /** "Log call" by hand (spec phone-loop rule 4); also on converted and dismissed inquiries. */
+  onLogCall?: (inquiry: Inquiry) => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -81,8 +84,10 @@ export function InquiryCard({
   onMarkContacted,
   onConvert,
   onDismiss,
+  onLogCall,
 }: InquiryCardProps) {
   const t = useTranslations("InquiryCard");
+  const tCall = useTranslations("phoneLoop");
   const ago = useRelativeTime();
 
   const statusCfg = STATUS_CONFIG[inquiry.status];
@@ -140,8 +145,8 @@ export function InquiryCard({
             {t(`status.${inquiry.status}`)}
           </Badge>
 
-          {/* Actions dropdown — non-terminal inquiries only */}
-          {!isTerminal && (
+          {/* Actions dropdown: every action on an open inquiry, "Log call" on any (rule 8) */}
+          {(!isTerminal || onLogCall) && (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -157,7 +162,16 @@ export function InquiryCard({
                 }
               />
               <DropdownMenuContent align="end" className="w-48">
-                {onEdit && (
+                {onLogCall && (
+                  <DropdownMenuItem
+                    onClick={() => onLogCall(inquiry)}
+                    id={`inquiry-log-call-${inquiry.id}`}
+                  >
+                    <PhoneCall className="mr-2 h-4 w-4" />
+                    {tCall("logCall")}
+                  </DropdownMenuItem>
+                )}
+                {!isTerminal && onEdit && (
                   <DropdownMenuItem
                     onClick={() => onEdit(inquiry)}
                     id={`inquiry-edit-${inquiry.id}`}
@@ -175,7 +189,7 @@ export function InquiryCard({
                     {t("markContacted")}
                   </DropdownMenuItem>
                 )}
-                {onConvert && (
+                {!isTerminal && onConvert && (
                   <DropdownMenuItem
                     onClick={() => onConvert(inquiry)}
                     id={`inquiry-convert-${inquiry.id}`}
@@ -184,7 +198,7 @@ export function InquiryCard({
                     {t("convertToOpportunity")}
                   </DropdownMenuItem>
                 )}
-                {onDismiss && (
+                {!isTerminal && onDismiss && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

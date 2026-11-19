@@ -25,6 +25,7 @@ import { Plus, Calendar, CheckCircle2, Circle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PropertyPicker } from "@/components/domain/properties/property-picker";
 import { TaskPropertyLine } from "../tasks/task-property-line";
+import { useTaskOutcome } from "../tasks/task-outcome";
 import { TASK_TYPE_CONFIG } from "../tasks/task-card";
 import { TASK_TYPES } from "@/domain/tasks/validation";
 import type { TaskType } from "@/domain/tasks/types";
@@ -63,6 +64,7 @@ export function TaskList({
   completeAction,
 }: TaskListProps) {
   const t = useTranslations("OpportunityTaskList");
+  const outcomeText = useTaskOutcome();
   const format = useFormatter();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -277,7 +279,7 @@ export function TaskList({
                     <p className="text-sm line-through">{task.title}</p>
                     {task.outcome && (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {t("outcomeLabel")}: {task.outcome}
+                        {t("outcomeLabel")}: {outcomeText(task.outcome)}
                       </p>
                     )}
                   </div>

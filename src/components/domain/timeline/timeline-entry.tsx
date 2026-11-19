@@ -8,6 +8,7 @@ import type { TimelineEntry } from "@/domain/timeline/types";
 import { describeAudit } from "@/domain/timeline/audit-event";
 import { useFormatter, useTranslations } from "next-intl";
 import { AuditEventBody, auditEventTitle } from "./audit-event-view";
+import { useTaskOutcome } from "@/components/domain/tasks/task-outcome";
 
 interface TimelineEntryProps {
   entry: TimelineEntry;
@@ -20,6 +21,7 @@ interface TimelineEntryProps {
 
 export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote, showDeal }: TimelineEntryProps) {
   const t = useTranslations("Timeline");
+  const outcomeText = useTaskOutcome();
   const ago = useRelativeTime();
   const format = useFormatter();
   const tInquiry = useTranslations("InquiryCard");
@@ -102,7 +104,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
                 {entry.isCompletionEvent && entry.data.outcome && (
                   <p className="mt-2 text-foreground p-3 bg-muted/30 rounded border border-dashed">
                     <span className="text-muted-foreground block text-xs mb-1 uppercase tracking-wider font-semibold">{t("outcomeLabel")}</span>
-                    {entry.data.outcome}
+                    {outcomeText(entry.data.outcome)}
                   </p>
                 )}
               </div>

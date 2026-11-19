@@ -12,6 +12,7 @@ import { ListPager } from "@/components/ui/list-pager";
 import { InquiryCard } from "@/components/domain/inquiries/inquiry-card";
 import { InquiryForm } from "@/components/domain/inquiries/inquiry-form";
 import { ConvertInquiryDialog } from "@/components/domain/inquiries/convert-inquiry-dialog";
+import { PostCallSheet, type PostCallTarget } from "@/components/domain/calls/post-call-sheet";
 import {
   updateInquiryAction,
   markInquiryContactedAction,
@@ -77,6 +78,17 @@ export function InquiryList({
   const [dismissTarget, setDismissTarget] = useState<Inquiry | null>(null);
   const [convertTarget, setConvertTarget] = useState<Inquiry | null>(null);
   const [convertOpen, setConvertOpen] = useState(false);
+  const [logCallTarget, setLogCallTarget] = useState<PostCallTarget | null>(null);
+  const tCard = useTranslations("InquiryCard");
+
+  // A display name, never the number (spec phone-loop rule 12).
+  function handleLogCall(inquiry: Inquiry) {
+    setLogCallTarget({
+      context: { inquiry_id: inquiry.id },
+      name: inquiry.caller_name || tCard("unknownCaller"),
+      noRetry: inquiry.status === "dismissed",
+    });
+  }
 
   async function handleMarkContacted(id: string) {
     await markInquiryContactedAction(id);
@@ -112,10 +124,13 @@ export function InquiryList({
                 onMarkContacted={handleMarkContacted}
                 onConvert={handleOpenConvert}
                 onDismiss={setDismissTarget}
+                onLogCall={handleLogCall}
               />
             ))}
       </div>
       {pageInfo && <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />}
+
+      <PostCallSheet target={logCallTarget} onClose={() => setLogCallTarget(null)} />
 
       {/* ── Edit dialog ──────────────────────────────────────────────────────── */}
       <Dialog

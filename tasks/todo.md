@@ -83,7 +83,7 @@
   - Files: `src/domain/calls/*`, `src/domain/tasks/reschedule.ts` (+ test),
     `src/domain/tasks/repository.ts`, `src/app/(dashboard)/calls/actions.ts` (+ test).
 
-- [ ] **T6: Post-call sheet and "Log call" on the inquiry card** (M)
+- [x] **T6: Post-call sheet and "Log call" on the inquiry card** (M)
   - Acceptance:
     - `post-call-sheet.tsx`: bottom sheet at 390 px, dialog at 1280; Answered / No answer /
       Not now; outcome focus; presets per rule 5; channel picker for manual logging;

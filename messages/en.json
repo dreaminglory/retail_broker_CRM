@@ -2141,6 +2141,44 @@
       "noRetryDismissed": "A dismissed inquiry gets no retry.",
       "today18Passed": "It is past 17:00; pick another retry time.",
       "taskNotCompletable": "That task is no longer yours to complete. Log the call separately."
+    },
+    "cancelledByDismiss": "Cancelled: the inquiry was dismissed",
+    "logCall": "Log call",
+    "sheet": {
+      "title": "Did you reach {name}?",
+      "description": "Log the call and set the next action.",
+      "answered": "Answered",
+      "noAnswer": "No answer",
+      "notNow": "Not now",
+      "noAnswerOutcome": "No answer",
+      "outcomeLabel": "What happened?",
+      "outcomePlaceholder": "What did you agree on?",
+      "nextLabel": "Next action",
+      "retryLabel": "Call again",
+      "noRetry": "No retry",
+      "customLabel": "Date and time",
+      "channelLabel": "How did you reach them?",
+      "channels": {
+        "phone": "Phone",
+        "viber": "Viber",
+        "whatsapp": "WhatsApp",
+        "email": "Email"
+      },
+      "presets": {
+        "plus_1h": "In 1 hour",
+        "today_18": "Today 18:00",
+        "tomorrow_9": "Tomorrow 09:00",
+        "plus_2d": "In 2 days",
+        "next_monday_9": "Next Monday 09:00",
+        "custom": "Pick a time",
+        "none": "None"
+      },
+      "completes": "Completes: {title}",
+      "completesHint": "Turn off to log a separate call and keep this task open.",
+      "noNextWarning": "This deal will have no next action.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Call logged"
     }
   }
 }
