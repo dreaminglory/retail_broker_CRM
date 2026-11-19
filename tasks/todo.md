@@ -6,7 +6,7 @@
 
 ## Phase 1 — Foundation
 
-- [ ] **T1: Link builders and mobile detection** (S) — Opus no
+- [x] **T1: Link builders and mobile detection** (S) — Opus no
   - Acceptance:
     - `src/lib/contact-links.ts` exports `telHref`, `viberHref`, `whatsAppHref`, `mailtoHref`,
       `isMobile`, and `contactLinksFor(value, type)` returning the buttons rule 1 allows.
