@@ -106,6 +106,13 @@ export function InquiryCard({
       inactiveAssigneeNames[inquiry.assigned_to]
     : undefined;
 
+  // What a tapped link logs against; a display name, never the number (rule 12).
+  const callTarget = {
+    context: { inquiry_id: inquiry.id },
+    name: inquiry.caller_name || t("unknownCaller"),
+    noRetry: inquiry.status === "dismissed",
+  };
+
   const callerDisplay =
     inquiry.caller_name ||
     inquiry.caller_phone ||
@@ -225,7 +232,7 @@ export function InquiryCard({
               <Phone className="h-3 w-3" />
               {inquiry.caller_phone}
             </span>
-            <ContactLinks value={inquiry.caller_phone} type="phone" name={callerDisplay} />
+            <ContactLinks value={inquiry.caller_phone} type="phone" name={callerDisplay} callTarget={callTarget} />
           </span>
         )}
         {inquiry.caller_email && (

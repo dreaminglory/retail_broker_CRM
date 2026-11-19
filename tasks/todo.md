@@ -97,7 +97,9 @@
   - Files: `post-call-sheet.tsx` (+ test), `inquiry-card.tsx`, `inquiry-list.tsx`,
     message files.
 
-- [ ] **T7: Call intent: prompt on return, toast on desktop** (M) — **Opus**
+- [x] **T7: Call intent: prompt on return, toast on desktop** (M) — **Opus**
+  - Done 2026-11-19; **the real-phone check below is still open** (iPhone Safari, Android
+    Chrome). Return and toast paths checked in the browser with simulated `visibilitychange`.
   - Acceptance:
     - `use-call-intent.ts` + a provider mounted once in `src/app/(dashboard)/layout.tsx`;
       `ContactLinks` registers the intent on tap (Call/Viber/WhatsApp, not mailto).

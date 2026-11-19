@@ -2179,6 +2179,10 @@
       "save": "Save",
       "saving": "Saving…",
       "saved": "Call logged"
+    },
+    "intent": {
+      "toast": "Log the call with {name}",
+      "log": "Log"
     }
   }
 }

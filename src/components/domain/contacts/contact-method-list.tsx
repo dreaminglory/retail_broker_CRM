@@ -193,6 +193,7 @@ function MethodRow({
         type={method.type}
         name={contactName}
         showLabels
+        callTarget={{ context: { contact_id: contactId }, name: contactName }}
         className="basis-full flex-wrap pl-7 empty:hidden"
       />
     </div>
