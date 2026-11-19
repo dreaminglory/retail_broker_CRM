@@ -39,7 +39,8 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
   const format = useFormatter();
   const tInquiry = useTranslations("InquiryCard");
   const tChannel = useTranslations("phoneLoop.sheet.channels");
-  const channel = entry.type === "task" ? (entry.data.channel ?? null) : null;
+  // A logged call shows how it happened on its completion (rule 10).
+  const channel = entry.type === "task" && entry.isCompletionEvent ? (entry.data.channel ?? null) : null;
   const ChannelIcon = channel ? CHANNEL_ICONS[channel] : null;
   const event = entry.type === 'audit' ? describeAudit(entry.data) : null;
 

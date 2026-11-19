@@ -113,7 +113,7 @@
     `src/app/(dashboard)/layout.tsx`, `contact-links.tsx`.
 
 ### Checkpoint: Loop on inquiries
-- [ ] Spec AC-1, AC-2, AC-3, AC-8 work on the inquiry card in bg and en, 390 and 1280
+- [x] Spec AC-1, AC-2, AC-3, AC-8 work on the inquiry card in bg and en, 390 and 1280 (E2E, T11)
 - [x] typecheck, lint, test, `test:services` green
 - [x] `/review` (fixes in f20237a); founder tried it on a phone (2026-11-19)
 
@@ -151,12 +151,13 @@
     `src/domain/timeline/service.ts`, timeline entry component, message files.
 
 ### Checkpoint: Everywhere
-- [ ] Spec AC-4, AC-5, AC-6, AC-7 green (pgTAP + service suite), UI in bg/en 390/1280
-- [ ] `/review`
+- [x] Spec AC-4, AC-5, AC-6, AC-7 green (pgTAP + service suite), UI in bg/en 390/1280
+- [x] `/review` (self-review in the build session; no blocking findings)
 
 ## Phase 4 — Proof and close
 
-- [ ] **T11: Seed and E2E** (M)
+- [x] **T11: Seed and E2E** (M)
+  - Done 2026-11-19: new E2E passes in all four projects; full suite 88 passed.
   - Acceptance: seed per agency (BG mobile inquiry, landline inquiry, contact with a Viber
     method and one active deal, pending call task due today for the broker); core-loop E2E
     extended per the spec's testing strategy (intercept `tel:`, hide/show, No answer → Today

@@ -224,4 +224,8 @@ describe('TimelineEntryItem call channel (spec phone-loop rule 10)', () => {
   it('shows no channel on an ordinary task', () => {
     expect(show('en', call(null))).not.toContain('data-testid="call-channel"');
   });
+
+  it("shows the channel on the call's completion only, not on its creation", () => {
+    expect(show('en', { ...call('phone'), isCompletionEvent: false } as TimelineEntry)).not.toContain('data-testid="call-channel"');
+  });
 });
