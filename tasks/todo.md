@@ -68,7 +68,7 @@
   - Files: `contact-links.tsx`, `contact-links.test.tsx`, `contact-method-list.tsx`,
     `inquiry-card.tsx`, `messages/bg.json`, `messages/en.json`.
 
-- [ ] **T5: `CallService.log` and the `logCall` action** (M) — **Opus**
+- [x] **T5: `CallService.log` and the `logCall` action** (M) — **Opus**
   - Acceptance:
     - `src/domain/calls/` (`types.ts`, `validation.ts` with `logCallSchema`, `service.ts`):
       picks the pending call task (tapped task, else my earliest on the deal/inquiry, never

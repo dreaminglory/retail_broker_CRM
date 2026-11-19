@@ -2127,6 +2127,20 @@
       "viberAria": "Viber chat with {name}",
       "whatsappAria": "WhatsApp chat with {name}",
       "emailAria": "Email {name}"
+    },
+    "titles": {
+      "call": "Call with {name}",
+      "followUp": "Follow up with {name}",
+      "retry": "Call again: {name}"
+    },
+    "errors": {
+      "noContext": "Pick who this call was with.",
+      "invalidNext": "Pick a next action from the list.",
+      "stageNeedsAnswer": "A stage can change only after an answered call.",
+      "stageClosed": "This deal is closed; its stage can no longer change.",
+      "noRetryDismissed": "A dismissed inquiry gets no retry.",
+      "today18Passed": "It is past 17:00; pick another retry time.",
+      "taskNotCompletable": "That task is no longer yours to complete. Log the call separately."
     }
   }
 }

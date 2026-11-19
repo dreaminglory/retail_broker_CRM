@@ -15,6 +15,7 @@ import type {
   CreateTaskInput,
   CompleteTaskWithNextInput,
   CancelTaskInput,
+  TaskChannel,
   RescheduleTaskInput,
   UpdateTaskInput,
 } from './types';
@@ -138,7 +139,9 @@ export class TaskService {
     id: string,
     agencyId: string,
     userId: string,
-    input: CompleteTaskWithNextInput
+    input: CompleteTaskWithNextInput,
+    /** Set by the call log only (AD-065): how the call happened. */
+    opts: { channel?: TaskChannel } = {}
   ): Promise<{ completedTask: Task; nextTask?: Task }> {
     const parsed = this.schemas.completeWithNext.parse(input);
     await this.getPending(id, agencyId);
@@ -146,6 +149,7 @@ export class TaskService {
     // 1. Complete the current task
     const completedTask = await this.repo.complete(id, agencyId, {
       outcome: parsed.outcome,
+      channel: opts.channel,
     });
 
     let nextTask: Task | undefined;

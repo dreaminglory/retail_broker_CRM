@@ -8,7 +8,10 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
-import type { Task, CreateTaskInput, CompleteTaskInput } from './types';
+import type { Task, CreateTaskInput, CompleteTaskInput, TaskChannel, TaskType } from './types';
+
+/** Where a logged call and its next task hang (AD-065). */
+export type CallScope = { opportunity_id?: string | null; contact_id?: string | null; inquiry_id?: string | null };
 
 export interface TaskListOptions {
   opportunityId?: string;
@@ -198,6 +201,7 @@ export class TaskRepository {
         due_at: input.due_at ?? null,
         assigned_to: input.assigned_to ?? null,
         property_id: input.property_id ?? null,
+        inquiry_id: input.inquiry_id ?? null,
         status: 'pending',
         created_by: userId,
       })
@@ -239,7 +243,7 @@ export class TaskRepository {
   async complete(
     id: string,
     agencyId: string,
-    input: CompleteTaskInput
+    input: CompleteTaskInput & { channel?: TaskChannel }
   ): Promise<Task> {
     const { data, error } = await this.db
       .from('tasks')
@@ -247,6 +251,7 @@ export class TaskRepository {
         status: 'completed',
         completed_at: new Date().toISOString(),
         outcome: input.outcome,
+        ...(input.channel && { channel: input.channel }),
       })
       .eq('id', id)
       .eq('agency_id', agencyId)
@@ -255,6 +260,93 @@ export class TaskRepository {
       .maybeSingle();
 
     return pendingWriteResult(data, error, 'complete');
+  }
+
+  /**
+   * My earliest pending task of a type on a deal or an inquiry (spec phone-loop rule 6):
+   * the call the post-call prompt completes. Never another member's.
+   */
+  async findEarliestPendingOf(
+    agencyId: string,
+    assignedTo: string,
+    taskType: TaskType,
+    on: { opportunityId?: string | null; inquiryId?: string | null }
+  ): Promise<Task | null> {
+    // Ids come from a validated uuid or the database, so the filter string is safe.
+    const scopes = [
+      on.opportunityId && `opportunity_id.eq.${on.opportunityId}`,
+      on.inquiryId && `inquiry_id.eq.${on.inquiryId}`,
+    ].filter(Boolean);
+    if (scopes.length === 0) return null;
+
+    const { data, error } = await this.db
+      .from('tasks')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('status', 'pending')
+      .eq('task_type', taskType)
+      .eq('assigned_to', assignedTo)
+      .or(scopes.join(','))
+      .order('due_at', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch the pending call: ${error.message}`);
+    return (data as Task | null) ?? null;
+  }
+
+  /**
+   * A logged call and its optional next task in one multi-row insert, which PostgREST runs as
+   * one statement, so both land or neither does (AD-065).
+   */
+  async insertCallLog(
+    agencyId: string,
+    userId: string,
+    call: CallScope & { title: string; task_type: TaskType; channel: TaskChannel; outcome: string; assigned_to: string },
+    next: (CallScope & { title: string; due_at: string; assigned_to: string }) | null
+  ): Promise<{ call: Task; next?: Task }> {
+    const scope = (s: CallScope) => ({
+      agency_id: agencyId,
+      opportunity_id: s.opportunity_id ?? null,
+      contact_id: s.contact_id ?? null,
+      inquiry_id: s.inquiry_id ?? null,
+      created_by: userId,
+    });
+    // Every row carries every column: a multi-row insert fills missing ones with NULL.
+    const rows = [
+      {
+        ...scope(call),
+        title: call.title,
+        task_type: call.task_type,
+        channel: call.channel,
+        outcome: call.outcome,
+        assigned_to: call.assigned_to,
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        due_at: null,
+      },
+      ...(next
+        ? [{
+            ...scope(next),
+            title: next.title,
+            task_type: 'call',
+            channel: null,
+            outcome: null,
+            assigned_to: next.assigned_to,
+            status: 'pending',
+            completed_at: null,
+            due_at: next.due_at,
+          }]
+        : []),
+    ];
+
+    const { data, error } = await this.db.from('tasks').insert(rows).select();
+    if (error) throw createFailure(error);
+    const saved = (data ?? []) as Task[];
+    const logged = saved.find((t) => t.status === 'completed');
+    if (!logged) throw new DomainError('errors.saveFailed', 'The call log insert returned no completed task');
+    return { call: logged, next: saved.find((t) => t.status === 'pending') };
   }
 
   /** Cancels a pending task. The optional reason is kept as its `outcome`. */

@@ -69,6 +69,7 @@ export function taskSchemas(timezone: string) {
       due_at: dueAtSchema(timezone),
       assigned_to: nullableUuid(),
       property_id: nullableUuid(),
+      inquiry_id: nullableUuid(),
     })
     .transform((task) => ({ ...task, property_id: task.task_type === 'viewing' ? (task.property_id ?? null) : null }))
     .superRefine((task, ctx) => {

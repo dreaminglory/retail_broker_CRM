@@ -12,6 +12,9 @@ export type TaskStatus = 'pending' | 'completed' | 'cancelled';
 /** AD-013: Task type categorization for UI display and filtering. */
 export type TaskType = 'call' | 'follow_up' | 'viewing' | 'meeting' | 'email' | 'other';
 
+/** AD-065: phone, Viber and WhatsApp on a `call` task, email on an `email` task. */
+export type TaskChannel = 'phone' | 'viber' | 'whatsapp' | 'email';
+
 export interface Task {
   id: string;
   agency_id: string;
@@ -46,6 +49,12 @@ export interface Task {
 
   /** FK → properties. The property of a viewing (spec: properties, rule 7). */
   property_id: string | null;
+
+  /** FK → inquiries. A call made on an inquiry, before or after conversion (AD-065). */
+  inquiry_id?: string | null;
+
+  /** How a logged call or email happened (AD-065); null on every other task. */
+  channel?: TaskChannel | null;
 
   /** The viewing's property, when the list query embeds it. */
   property?: TaskProperty | null;
@@ -84,6 +93,8 @@ export interface CreateTaskInput {
   assigned_to?: string | null;
   /** Only on a viewing with an opportunity. */
   property_id?: string | null;
+  /** A call back on an inquiry (AD-065). */
+  inquiry_id?: string | null;
 }
 
 /** Input for completing a task (AD-014: outcome is required). */
