@@ -3,6 +3,7 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { CallIntentProvider } from "@/components/domain/calls/call-intent-provider";
+import { getAgencySettings } from "@/domain/agencies/settings";
 
 export default async function DashboardLayout({
   children,
@@ -24,7 +25,7 @@ export default async function DashboardLayout({
   // Now fetch the active membership
   const { data: membership } = await supabase
     .from("agency_memberships")
-    .select("role")
+    .select("agency_id, role")
     .eq("user_id", user.id)
     .eq("status", "active")
     .single();
@@ -33,8 +34,11 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
+  // The post-call prompt offers "today 18:00" by the agency's clock, not the browser's.
+  const { timezone } = await getAgencySettings(membership.agency_id);
+
   return (
-    <CallIntentProvider>
+    <CallIntentProvider timeZone={timezone}>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
         <Sidebar userRole={membership?.role ?? "broker"} />

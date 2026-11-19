@@ -22,7 +22,12 @@ async function callServiceFor(ctx: AuthContext) {
 
 function revalidateContext(scope: { opportunity_id?: string | null; contact_id?: string | null; inquiry_id?: string | null }) {
   revalidatePath('/today');
-  if (scope.inquiry_id) revalidatePath('/inquiries');
+  if (scope.inquiry_id) {
+    // A first call moves the inquiry new → contacted: the inbox, Exceptions and inquiry lists follow.
+    revalidatePath('/inquiries');
+    revalidatePath('/exceptions');
+    revalidatePath('/lists', 'layout');
+  }
   if (scope.opportunity_id) revalidatePath(`/opportunities/${scope.opportunity_id}`);
   if (scope.contact_id) revalidatePath(`/contacts/${scope.contact_id}`);
 }

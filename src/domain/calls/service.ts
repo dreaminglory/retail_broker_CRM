@@ -123,7 +123,8 @@ export class CallService {
         outcome: parsed.outcome,
         assigned_to: userId,
       },
-      next
+      next,
+      now
     );
     if (parsed.new_stage_id && ctx.opportunity_id) {
       await this.moveStage(ctx.opportunity_id, agencyId, parsed.new_stage_id);
@@ -148,6 +149,10 @@ export class CallService {
       const inquiry = await new InquiryRepository(this.db).findById(resolved.inquiry_id, agencyId);
       if (!inquiry) throw new DomainError('errors.not_found');
       resolved.inquiryStatus = inquiry.status;
+      // A converted inquiry's calls belong to its own deal, never to another one.
+      if (resolved.opportunity_id && inquiry.opportunity_id && resolved.opportunity_id !== inquiry.opportunity_id) {
+        throw new DomainError('phoneLoop.errors.contextMismatch');
+      }
       // A converted inquiry's context is its deal (rule 8).
       resolved.opportunity_id ??= inquiry.opportunity_id;
       resolved.contact_id ??= inquiry.contact_id;

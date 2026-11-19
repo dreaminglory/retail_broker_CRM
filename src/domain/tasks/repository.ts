@@ -304,7 +304,8 @@ export class TaskRepository {
     agencyId: string,
     userId: string,
     call: CallScope & { title: string; task_type: TaskType; channel: TaskChannel; outcome: string; assigned_to: string },
-    next: (CallScope & { title: string; due_at: string; assigned_to: string }) | null
+    next: (CallScope & { title: string; due_at: string; assigned_to: string }) | null,
+    now: Date = new Date()
   ): Promise<{ call: Task; next?: Task }> {
     const scope = (s: CallScope) => ({
       agency_id: agencyId,
@@ -323,7 +324,7 @@ export class TaskRepository {
         outcome: call.outcome,
         assigned_to: call.assigned_to,
         status: 'completed',
-        completed_at: new Date().toISOString(),
+        completed_at: now.toISOString(),
         due_at: null,
       },
       ...(next

@@ -28,7 +28,7 @@ const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, 
 
 describe('PostCallForm (spec phone-loop rule 5)', () => {
   it('asks "Did you reach <name>?" with the three choices and writes nothing on open', () => {
-    const html = render(<PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' }} onDone={() => {}} />);
+    const html = render(<PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' }} onDone={() => {}} />);
 
     expect(text(html)).toContain('Did you reach Ivan?');
     expect(text(html)).toMatch(/Answered .*No answer .*Not now/);
@@ -38,7 +38,7 @@ describe('PostCallForm (spec phone-loop rule 5)', () => {
 
   it('No answer prefills the outcome and offers the retry presets, in 1 h selected', () => {
     const html = render(
-      <PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' }} onDone={() => {}} initialResult="no_answer" />,
+      <PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' }} onDone={() => {}} initialResult="no_answer" />,
     );
 
     expect(html).toMatch(/<textarea[^>]*required[^>]*>No answer<\/textarea>/);
@@ -48,9 +48,22 @@ describe('PostCallForm (spec phone-loop rule 5)', () => {
     expect(text(html)).not.toContain('Next Monday');
   });
 
+  it("offers today 18:00 by the agency's clock, not the formatter's timezone", () => {
+    vi.useFakeTimers();
+    // 15:30 UTC: 17:30 in Sofia (the formatter's zone here), 07:30 in Los Angeles.
+    vi.setSystemTime(new Date('2026-01-15T15:30:00Z'));
+    try {
+      const props = { target: { context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' as const }, onDone: () => {}, initialResult: 'no_answer' as const };
+      expect(text(render(<PostCallForm timeZone="America/Los_Angeles" {...props} />))).toContain('Today 18:00');
+      expect(text(render(<PostCallForm timeZone="Europe/Sofia" {...props} />))).not.toContain('Today 18:00');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('Answered requires an outcome: empty textarea and Save disabled', () => {
     const html = render(
-      <PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' }} onDone={() => {}} initialResult="answered" />,
+      <PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone' }} onDone={() => {}} initialResult="answered" />,
     );
 
     expect(html).toMatch(/<textarea[^>]*required[^>]*><\/textarea>/);
@@ -60,8 +73,8 @@ describe('PostCallForm (spec phone-loop rule 5)', () => {
   });
 
   it('shows a channel picker for "Log call" only', () => {
-    const manual = render(<PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan' }} onDone={() => {}} />);
-    const tapped = render(<PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'viber' }} onDone={() => {}} />);
+    const manual = render(<PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan' }} onDone={() => {}} />);
+    const tapped = render(<PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'viber' }} onDone={() => {}} />);
 
     expect(text(manual)).toContain('How did you reach them?');
     expect(text(tapped)).not.toContain('How did you reach them?');
@@ -69,7 +82,7 @@ describe('PostCallForm (spec phone-loop rule 5)', () => {
 
   it('offers no retry on a dismissed inquiry (rule 8)', () => {
     const html = render(
-      <PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone', noRetry: true }} onDone={() => {}} initialResult="no_answer" />,
+      <PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Ivan', channel: 'phone', noRetry: true }} onDone={() => {}} initialResult="no_answer" />,
     );
 
     expect(text(html)).toContain('No retry');
@@ -78,13 +91,13 @@ describe('PostCallForm (spec phone-loop rule 5)', () => {
 
   it('warns about a deal left with no next action (rule 7)', () => {
     const target = { context: { opportunity_id: INQUIRY }, name: 'Ivan', channel: 'phone' as const, closed: true, deal: { active: true, hasOtherPendingTask: false } };
-    const html = render(<PostCallForm target={target} onDone={() => {}} initialResult="answered" />);
+    const html = render(<PostCallForm timeZone="Europe/Sofia" target={target} onDone={() => {}} initialResult="answered" />);
 
     expect(text(html)).toContain('This deal will have no next action.');
   });
 
   it('speaks Bulgarian', () => {
-    const html = render(<PostCallForm target={{ context: { inquiry_id: INQUIRY }, name: 'Иван', channel: 'phone' }} onDone={() => {}} initialResult="no_answer" />, 'bg');
+    const html = render(<PostCallForm timeZone="Europe/Sofia" target={{ context: { inquiry_id: INQUIRY }, name: 'Иван', channel: 'phone' }} onDone={() => {}} initialResult="no_answer" />, 'bg');
 
     expect(text(html)).toContain('Свързахте ли се с Иван?');
     expect(html).toMatch(/>Не вдига<\/textarea>/);

@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTimeZone, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { AlertTriangle, PhoneMissed, PhoneOutgoing } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,8 @@ export type PostCallTarget = {
 
 type PostCallSheetProps = {
   target: PostCallTarget | null;
+  /** The agency's timezone: "today 18:00" is offered before 17:00 there (rule 5). */
+  timeZone: string;
   onClose: () => void;
 };
 
@@ -51,7 +53,7 @@ type PostCallSheetProps = {
  * "Did you reach <name>?" (spec phone-loop rule 5): a bottom sheet on a phone, a dialog on a
  * desktop. One save logs the call and its next action or retry; "Not now" writes nothing.
  */
-export function PostCallSheet({ target, onClose }: PostCallSheetProps) {
+export function PostCallSheet({ target, timeZone, onClose }: PostCallSheetProps) {
   return (
     <Dialog open={target !== null} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent
@@ -61,7 +63,7 @@ export function PostCallSheet({ target, onClose }: PostCallSheetProps) {
           "max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:max-w-full max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]",
         )}
       >
-        {target && <PostCallForm key={JSON.stringify(target.context)} target={target} onDone={onClose} />}
+        {target && <PostCallForm key={JSON.stringify(target.context)} target={target} timeZone={timeZone} onDone={onClose} />}
       </DialogContent>
     </Dialog>
   );
@@ -69,14 +71,15 @@ export function PostCallSheet({ target, onClose }: PostCallSheetProps) {
 
 type PostCallFormProps = {
   target: PostCallTarget;
+  /** The agency's timezone (rule 5). */
+  timeZone: string;
   onDone: () => void;
   /** Tests start from a choice; the app always starts with none. */
   initialResult?: CallResult;
 };
 
-export function PostCallForm({ target, onDone, initialResult }: PostCallFormProps) {
+export function PostCallForm({ target, timeZone, onDone, initialResult }: PostCallFormProps) {
   const t = useTranslations("phoneLoop.sheet");
-  const timeZone = useTimeZone() ?? "Europe/Sofia";
   const router = useRouter();
   const ids = useId();
   const resultOpts = { noAnswerOutcome: t("noAnswerOutcome"), closed: !!target.closed, noRetry: !!target.noRetry };
@@ -88,6 +91,9 @@ export function PostCallForm({ target, onDone, initialResult }: PostCallFormProp
   const [task, setTask] = useState<CompletableTask | null>(null);
   const [completeTask, setCompleteTask] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Bumped after a failed save: a save that completed the task but not its retry (AD-065, the
+  // complete path isn't atomic) must not offer to complete that task again.
+  const [taskCheck, setTaskCheck] = useState(0);
 
   // Which pending call of mine this would complete ("Completes: <task>", rule 6).
   const contextKey = JSON.stringify(target.context);
@@ -99,7 +105,7 @@ export function PostCallForm({ target, onDone, initialResult }: PostCallFormProp
     return () => {
       live = false;
     };
-  }, [contextKey, state.channel]);
+  }, [contextKey, state.channel, taskCheck]);
 
   const options = state.result
     ? nextOptions(state.result, { today18: isToday18Available(timeZone), noRetry: !!target.noRetry })
@@ -117,6 +123,7 @@ export function PostCallForm({ target, onDone, initialResult }: PostCallFormProp
     setSaving(false);
     if (!res.success) {
       toast.error(res.error);
+      setTaskCheck((n) => n + 1);
       return;
     }
     toast.success(t("saved"));

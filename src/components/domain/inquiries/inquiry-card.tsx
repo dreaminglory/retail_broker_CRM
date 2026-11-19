@@ -28,6 +28,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
 import { ContactLinks } from "@/components/domain/calls/contact-links";
+import type { PostCallTarget } from "@/components/domain/calls/post-call-sheet";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
@@ -72,6 +73,18 @@ interface InquiryCardProps {
   onLogCall?: (inquiry: Inquiry) => void;
 }
 
+/**
+ * What a call on this inquiry logs against (spec phone-loop rules 2 and 8): a tapped link and
+ * "Log call" share it. A display name, never the number (rule 12).
+ */
+export function inquiryCallTarget(inquiry: Inquiry, unknownCaller: string): Omit<PostCallTarget, "channel"> {
+  return {
+    context: { inquiry_id: inquiry.id },
+    name: inquiry.caller_name || unknownCaller,
+    noRetry: inquiry.status === "dismissed",
+  };
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function InquiryCard({
@@ -106,12 +119,7 @@ export function InquiryCard({
       inactiveAssigneeNames[inquiry.assigned_to]
     : undefined;
 
-  // What a tapped link logs against; a display name, never the number (rule 12).
-  const callTarget = {
-    context: { inquiry_id: inquiry.id },
-    name: inquiry.caller_name || t("unknownCaller"),
-    noRetry: inquiry.status === "dismissed",
-  };
+  const callTarget = inquiryCallTarget(inquiry, t("unknownCaller"));
 
   const callerDisplay =
     inquiry.caller_name ||

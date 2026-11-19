@@ -27,7 +27,7 @@ function sessionStorageOrNull(): IntentStorage | null {
  * Mounted once in the dashboard layout: turns a tapped Call, Viber or WhatsApp link into the
  * post-call prompt on return, or a "Log the call" toast on a desktop (spec phone-loop rule 3).
  */
-export function CallIntentProvider({ children }: { children: React.ReactNode }) {
+export function CallIntentProvider({ children, timeZone }: { children: React.ReactNode; timeZone: string }) {
   const t = useTranslations("phoneLoop.intent");
   const [target, setTarget] = useState<PostCallTarget | null>(null);
   const tracker = useRef<CallIntentTracker | null>(null);
@@ -83,7 +83,7 @@ export function CallIntentProvider({ children }: { children: React.ReactNode }) 
   return (
     <CallIntentContext.Provider value={api}>
       {children}
-      <PostCallSheet target={target} onClose={close} />
+      <PostCallSheet target={target} timeZone={timeZone} onClose={close} />
     </CallIntentContext.Provider>
   );
 }

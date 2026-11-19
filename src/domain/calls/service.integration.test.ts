@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, expect, it } from 'vitest';
 import { createRowCleanup, describeServices, signInAs, type TestSession } from '@/test/supabase-test-client';
 import { DomainError } from '@/lib/errors';
+import { ContactService } from '@/domain/contacts/service';
 import { InquiryService } from '@/domain/inquiries/service';
 import { OpportunityService } from '@/domain/opportunities/service';
 import { rescheduleDueAt } from '@/domain/tasks/reschedule';
@@ -236,6 +237,38 @@ describeServices('CallService against the local stack', () => {
     const refused = await log({ context: { inquiry_id: inquiry.id }, channel: 'phone', result: 'no_answer', outcome: 'No answer', next: { preset: 'today_18' } }, at1730).catch((e) => e);
     expect(refused.message).toBe('phoneLoop.errors.today18Passed');
     expect(await tasksOf('inquiry_id', inquiry.id)).toEqual([]);
+  });
+
+  it('stamps the logged call with the time it was given', async () => {
+    const inquiry = await createInquiry();
+    const at = new Date('2026-01-15T08:00:00Z');
+    const { callTask } = await log({ context: { inquiry_id: inquiry.id }, channel: 'phone', result: 'no_answer', outcome: 'No answer', next: null }, at);
+    expect(new Date(callTask.completed_at!).toISOString()).toBe(at.toISOString());
+  });
+
+  it("refuses a deal that isn't the converted inquiry's own", async () => {
+    const contact = await new ContactService(broker.db).create(broker.agencyId, broker.userId, { type: 'person', first_name: 'Call', last_name: 'Mismatch' });
+    cleanup.track('contacts', contact.id);
+    const joined = await new OpportunityService(broker.db).create(broker.agencyId, broker.userId, {
+      title: 'Joined deal',
+      type: 'buyer',
+      stage_id: stageId,
+      assigned_to: broker.userId,
+      primary_contact_id: contact.id,
+    });
+    cleanup.track('opportunities', joined.id);
+    const other = await createDeal();
+    const inquiry = await createInquiry();
+    await new InquiryService(broker.db).join(inquiry.id, broker.agencyId, { contact_id: contact.id, opportunity_id: joined.id, task: null });
+
+    const refused = await log({ context: { inquiry_id: inquiry.id, opportunity_id: other.id }, channel: 'phone', result: 'answered', outcome: 'Spoke', next: null }).catch((e) => e);
+    expect(refused).toBeInstanceOf(DomainError);
+    expect(refused.message).toBe('phoneLoop.errors.contextMismatch');
+    expect(await tasksOf('opportunity_id', other.id)).toEqual([]);
+
+    // Its own deal is fine.
+    const logged = await log({ context: { inquiry_id: inquiry.id, opportunity_id: joined.id }, channel: 'phone', result: 'answered', outcome: 'Spoke', next: null });
+    expect(logged.callTask.opportunity_id).toBe(joined.id);
   });
 
   it("refuses another agency's inquiry (AC-7)", async () => {

@@ -36,14 +36,14 @@ type TrackerDeps = {
 export type CallIntentTracker = ReturnType<typeof createCallIntentTracker>;
 
 export function createCallIntentTracker(deps: TrackerDeps) {
-  // Memory is the fallback when storage throws (private mode, blocked site data).
+  // Memory is the fallback when storage is missing or throws (private mode, blocked site data).
   let memory: CallIntent | null = null;
   let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   function read(): CallIntent | null {
     try {
       const raw = deps.storage?.getItem(CALL_INTENT.storageKey);
-      return raw ? (JSON.parse(raw) as CallIntent) : null;
+      return raw ? (JSON.parse(raw) as CallIntent) : memory;
     } catch {
       return memory;
     }
@@ -54,7 +54,12 @@ export function createCallIntentTracker(deps: TrackerDeps) {
     try {
       deps.storage?.setItem(CALL_INTENT.storageKey, JSON.stringify(intent));
     } catch {
-      // Memory keeps it for this page.
+      // Memory keeps it for this page; drop an older stored tap so it can't win over memory.
+      try {
+        deps.storage?.removeItem(CALL_INTENT.storageKey);
+      } catch {
+        // Nothing stored.
+      }
     }
   }
 

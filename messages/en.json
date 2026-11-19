@@ -2134,6 +2134,7 @@
       "retry": "Call again: {name}"
     },
     "errors": {
+      "contextMismatch": "This inquiry belongs to another deal.",
       "noContext": "Pick who this call was with.",
       "invalidNext": "Pick a next action from the list.",
       "stageNeedsAnswer": "A stage can change only after an answered call.",

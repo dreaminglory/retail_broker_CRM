@@ -58,7 +58,7 @@ describe('logCallAction (spec phone-loop rule 6)', () => {
       expect.objectContaining({ title: 'phoneLoop.titles.call(Ivan)', status: 'completed', channel: 'phone', inquiry_id: INQUIRY_ID, assigned_to: 'user-1' }),
       expect.objectContaining({ title: 'phoneLoop.titles.retry(Ivan)', status: 'pending', task_type: 'call', assigned_to: 'user-1' }),
     ]);
-    expect(revalidated).toEqual(expect.arrayContaining(['/today', '/inquiries']));
+    expect(revalidated).toEqual(expect.arrayContaining(['/today', '/inquiries', '/exceptions', '/lists']));
   });
 
   it('filters the inquiry by the agency', async () => {

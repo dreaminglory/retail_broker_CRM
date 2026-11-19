@@ -182,4 +182,36 @@ describe('call intent (spec phone-loop rule 3)', () => {
 
     expect(prompts).toHaveLength(1);
   });
+
+  it('works from memory when there is no storage at all (sessionStorage blocked)', () => {
+    const t = createCallIntentTracker({
+      storage: null,
+      now: () => Date.now(),
+      onPrompt: (i) => prompts.push(i),
+      onToast: (i) => toasts.push(i),
+      onClearToast: () => toastsCleared++,
+    });
+    t.register(target);
+    vi.advanceTimersByTime(CALL_INTENT.hideWithinMs);
+    expect(toasts).toHaveLength(1);
+
+    t.register(target);
+    t.visibility(true);
+    vi.advanceTimersByTime(CALL_INTENT.minHiddenMs);
+    t.visibility(false);
+    expect(prompts).toHaveLength(1);
+  });
+
+  it('works from memory when storage reads but refuses writes (old private mode)', () => {
+    storage.setItem = () => {
+      throw new Error('QuotaExceededError');
+    };
+    const t = tracker();
+    t.register(target);
+    t.visibility(true);
+    vi.advanceTimersByTime(CALL_INTENT.minHiddenMs);
+    t.visibility(false);
+
+    expect(prompts).toHaveLength(1);
+  });
 });
