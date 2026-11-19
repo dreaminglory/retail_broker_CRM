@@ -45,7 +45,7 @@ starts; pilot evidence sets the order.
 | `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | Done |
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Done |
 | `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Done |
-| `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
+| `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | In progress |
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Done |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Done |
@@ -98,7 +98,8 @@ AD-050 RPCs. Leaked-password protection is still off
 crons (or the pg_cron fallback, AD-042), production env vars.
 
 **Open decisions:** none. `property-import` is Done (2026-11-09, `spec/property-import.md`, plan in
-`docs/archive/property-import-plan.md`); its migrations run through `20261109000007`. Next: `go-live`.
+`docs/archive/property-import-plan.md`); its migrations run through `20261109000007`. Next: `go-live`. `phone-loop` spec approved
+2026-11-19 (`spec/phone-loop.md`); plan approved (`tasks/plan.md`); next: `/build` Phase 1.
 
 ## 6. Pilot evidence
 
