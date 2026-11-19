@@ -35,10 +35,16 @@ import {
 } from "lucide-react";
 import type { ActionResult } from "@/lib/actions";
 import { useTranslations } from "next-intl";
+import { ContactLinks } from "@/components/domain/calls/contact-links";
+import type { CallTargetBase } from "@/components/domain/calls/call-targets";
 
 interface ContactMethodListProps {
   contactId: string;
+  /** For the links' aria-labels. */
+  contactName: string;
   methods: ContactMethod[];
+  /** What a tapped Call, Viber or WhatsApp logs against (spec phone-loop rule 2); the contact alone by default. */
+  callTarget?: CallTargetBase;
 }
 
 const METHOD_TYPE_LABELS: Record<string, string> = {
@@ -62,7 +68,9 @@ const addInitialState: AddMethodResult = { success: false, error: "" };
 
 export function ContactMethodList({
   contactId,
+  contactName,
   methods,
+  callTarget,
 }: ContactMethodListProps) {
   const t = useTranslations("ContactMethodList");
   const [addOpen, setAddOpen] = useState(false);
@@ -81,6 +89,8 @@ export function ContactMethodList({
               key={method.id}
               method={method}
               contactId={contactId}
+              contactName={contactName}
+              callTarget={callTarget ?? { context: { contact_id: contactId }, name: contactName }}
             />
           ))}
         </div>
@@ -113,9 +123,13 @@ export function ContactMethodList({
 function MethodRow({
   method,
   contactId,
+  contactName,
+  callTarget,
 }: {
   method: ContactMethod;
   contactId: string;
+  contactName: string;
+  callTarget: CallTargetBase;
 }) {
   const t = useTranslations("ContactMethodList");
   const tEnum = useTranslations("Enums");
@@ -142,7 +156,7 @@ function MethodRow({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-md border bg-card px-3 py-2.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border bg-card px-3 py-2.5">
       <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{method.value}</p>
@@ -181,6 +195,14 @@ function MethodRow({
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
       </div>
+      <ContactLinks
+        value={method.value}
+        type={method.type}
+        name={contactName}
+        showLabels
+        callTarget={callTarget}
+        className="basis-full flex-wrap pl-7 empty:hidden"
+      />
     </div>
   );
 }

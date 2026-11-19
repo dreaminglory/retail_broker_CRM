@@ -161,6 +161,20 @@ BEGIN
   (v_agency_1, v_source_1_portal, v_user_1_broker, 'new', 'John Smith', '+447700900123', 'john.smith@example.co.uk', 'Holiday flat in Bansko', now() - interval '1 day', '{"message": "Buying from the UK."}'::jsonb),
   (v_agency_2, v_source_2_portal, v_user_2_broker, 'new', 'Klaus Weber', '+4915123456789', NULL, 'Sea-view apartment in Varna', now() - interval '3 hours', '{"message": "Looking for a sea view."}'::jsonb);
 
+  -- 9c. Phone loop (spec phone-loop, T11): per agency a BG mobile and a landline `new` inquiry
+  -- (Alpha's are in 9b), a contact with a saved Viber method and one active deal (Ivan, Maria),
+  -- and a pending call due today for the broker (Alpha's is "Confirm viewing with Ivan").
+  INSERT INTO public.contact_methods (agency_id, contact_id, type, value, is_primary) VALUES
+  (v_agency_1, v_contact_1_1, 'viber', '+359898111222', false),
+  (v_agency_2, v_contact_2_1, 'viber', '+359898333444', false);
+
+  INSERT INTO public.inquiries (agency_id, source_id, assigned_to, status, caller_name, caller_phone, caller_email, subject, received_at, raw_payload) VALUES
+  (v_agency_2, v_source_2_portal, v_user_2_broker, 'new', 'Desislava Todorova', '+359878112233', NULL, 'Flat in Sea Garden', now() - interval '1 hour', '{"message": "Call me on my mobile."}'::jsonb),
+  (v_agency_2, v_source_2_website, NULL, 'new', 'Varna Office Ltd', '+35952611223', NULL, 'Office lease in Varna', now() - interval '20 minutes', '{"message": "Please call the office line."}'::jsonb);
+
+  INSERT INTO public.tasks (agency_id, opportunity_id, contact_id, assigned_to, title, task_type, due_at, status) VALUES
+  (v_agency_2, v_opp_2_1, v_contact_2_1, v_user_2_broker, 'Call Maria about the valuation', 'call', v_due_today, 'pending');
+
   -- 10. Create Notes
   INSERT INTO public.notes (agency_id, opportunity_id, created_by, content) VALUES
   (v_agency_1, v_opp_1_1, v_user_1_broker, 'Client is highly interested.'),

@@ -1,13 +1,27 @@
 "use client";
 
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
-import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus, Link2, Tag, ListChecks } from "lucide-react";
+import { MessageSquare, CheckCircle2, ClipboardList, ArrowRightLeft, UserCircle2, Flag, Mail, Plus, Link2, Tag, ListChecks, Phone, MessageCircle } from "lucide-react";
+import type { TaskChannel } from "@/domain/tasks/types";
 import { NoteCard } from "@/components/domain/notes/note-card";
 import { Badge } from "@/components/ui/badge";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import { describeAudit } from "@/domain/timeline/audit-event";
 import { useFormatter, useTranslations } from "next-intl";
 import { AuditEventBody, auditEventTitle } from "./audit-event-view";
+import { useTaskOutcome } from "@/components/domain/tasks/task-outcome";
+
+/** A logged call's channel on the timeline (spec phone-loop rule 10). */
+const CHANNEL_ICONS: Record<TaskChannel, React.ComponentType<{ className?: string }>> = {
+  phone: Phone,
+  viber: MessageCircle,
+  whatsapp: MessageCircle,
+  email: Mail,
+};
+const CHANNEL_TINT: Partial<Record<TaskChannel, string>> = {
+  viber: "text-violet-600 dark:text-violet-400",
+  whatsapp: "text-emerald-600 dark:text-emerald-400",
+};
 
 interface TimelineEntryProps {
   entry: TimelineEntry;
@@ -20,9 +34,14 @@ interface TimelineEntryProps {
 
 export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDeleteNote, showDeal }: TimelineEntryProps) {
   const t = useTranslations("Timeline");
+  const outcomeText = useTaskOutcome();
   const ago = useRelativeTime();
   const format = useFormatter();
   const tInquiry = useTranslations("InquiryCard");
+  const tChannel = useTranslations("phoneLoop.sheet.channels");
+  // A logged call shows how it happened on its completion (rule 10).
+  const channel = entry.type === "task" && entry.isCompletionEvent ? (entry.data.channel ?? null) : null;
+  const ChannelIcon = channel ? CHANNEL_ICONS[channel] : null;
   const event = entry.type === 'audit' ? describeAudit(entry.data) : null;
 
   const getIcon = () => {
@@ -98,11 +117,19 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
             {/* Entry Content */}
             {entry.type === 'task' && (
               <div className="text-muted-foreground">
-                <p className="font-medium text-foreground">{entry.data.title}</p>
+                <p className="flex flex-wrap items-center gap-2 font-medium text-foreground">
+                  {entry.data.title}
+                  {channel && ChannelIcon && (
+                    <Badge variant="outline" className="gap-1 font-normal" data-testid="call-channel">
+                      <ChannelIcon className={`h-3 w-3 ${CHANNEL_TINT[channel] ?? ""}`} aria-hidden />
+                      {tChannel(channel)}
+                    </Badge>
+                  )}
+                </p>
                 {entry.isCompletionEvent && entry.data.outcome && (
                   <p className="mt-2 text-foreground p-3 bg-muted/30 rounded border border-dashed">
                     <span className="text-muted-foreground block text-xs mb-1 uppercase tracking-wider font-semibold">{t("outcomeLabel")}</span>
-                    {entry.data.outcome}
+                    {outcomeText(entry.data.outcome)}
                   </p>
                 )}
               </div>

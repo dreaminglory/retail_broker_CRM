@@ -8,7 +8,14 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DomainError } from '@/lib/errors';
-import type { Task, CreateTaskInput, CompleteTaskInput } from './types';
+import type { Task, CreateTaskInput, CompleteTaskInput, TaskChannel, TaskType } from './types';
+import { callPhoneFor, type TaskCallPhone } from './call-phone';
+
+/** Call tasks whose phones are loaded per request (a 36-char id each in the URL). */
+const CALL_PHONE_CHUNK = 100;
+
+/** Where a logged call and its next task hang (AD-065). */
+export type CallScope = { opportunity_id?: string | null; contact_id?: string | null; inquiry_id?: string | null };
 
 export interface TaskListOptions {
   opportunityId?: string;
@@ -44,6 +51,13 @@ function pendingWriteResult(data: unknown, error: { message: string } | null, ve
 
 /** The viewing's property, embedded in task lists (spec: properties). */
 const PROPERTY_EMBED = 'property:properties!fk_tasks_property(id, code, address)';
+
+/** Today's call tasks: who to call and on which number (spec phone-loop rule 1). */
+const CALL_PHONE_EMBED =
+  'contact:contacts!tasks_contact_id_fkey(display_name, contact_methods(type, value, is_primary)), inquiry:inquiries!fk_tasks_inquiry(caller_name, caller_phone)';
+/** Inside the opportunities embed: the deal's primary contact, for tasks with no contact. */
+const DEAL_CONTACT_EMBED =
+  'primary_contact:contacts!opportunities_primary_contact_id_fkey(display_name, contact_methods(type, value, is_primary))';
 
 /** A failed task insert: the i18n keys the task triggers raise (rule 8, AD-032), else saveFailed. */
 function createFailure(error: { code?: string; message: string }): DomainError {
@@ -122,7 +136,7 @@ export class TaskRepository {
   ): Promise<Task[]> {
     let query = this.db
       .from('tasks')
-      .select(`*, opportunities(title, stages(name)), ${PROPERTY_EMBED}`)
+      .select(`*, opportunities(title, status, stages(name)), ${PROPERTY_EMBED}`)
       .eq('agency_id', agencyId)
       .eq('status', 'pending')
       .lt('due_at', range.before)
@@ -138,14 +152,42 @@ export class TaskRepository {
     const { data, error } = await query;
     if (error) throw new DomainError('errors.loadFailed', `Failed to fetch tasks: ${error.message}`);
 
+    const rows = (data ?? []) as Array<Task & { opportunities?: { title: string; status: string; stages?: { name: string } | null } | null }>;
+    const phones = await this.findCallPhones(
+      agencyId,
+      rows.filter((row) => row.task_type === 'call').map((row) => row.id)
+    );
+
     // Map joined fields to flat TaskWithOpportunity structure
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data ?? []).map((row: any) => ({
+    return rows.map((row) => ({
       ...row,
       opportunity_title: row.opportunities?.title ?? null,
       opportunity_stage: row.opportunities?.stages?.name ?? null,
+      opportunity_status: row.opportunities?.status ?? null,
+      call_phone: phones.get(row.id) ?? null,
       opportunities: undefined,
     })) as Task[];
+  }
+
+  /**
+   * The phone each call task offers (spec phone-loop rule 1). Only call tasks need contact
+   * methods, so they are loaded for those ids alone, 100 at a time to keep the URL short.
+   */
+  private async findCallPhones(agencyId: string, taskIds: string[]): Promise<Map<string, TaskCallPhone | null>> {
+    const phones = new Map<string, TaskCallPhone | null>();
+    for (let i = 0; i < taskIds.length; i += CALL_PHONE_CHUNK) {
+      const { data, error } = await this.db
+        .from('tasks')
+        .select(`id, opportunities(${DEAL_CONTACT_EMBED}), ${CALL_PHONE_EMBED}`)
+        .eq('agency_id', agencyId)
+        .in('id', taskIds.slice(i, i + CALL_PHONE_CHUNK));
+      if (error) throw new DomainError('errors.loadFailed', `Failed to fetch call phones: ${error.message}`);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const row of (data ?? []) as any[]) {
+        phones.set(row.id, callPhoneFor({ contact: row.contact, dealContact: row.opportunities?.primary_contact, inquiry: row.inquiry }));
+      }
+    }
+    return phones;
   }
 
   /**
@@ -185,6 +227,21 @@ export class TaskRepository {
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
+  /** Pending tasks of anyone per deal; deals with none are left out (spec phone-loop rule 7). */
+  async countPendingByOpportunity(agencyId: string, opportunityIds: string[]): Promise<Record<string, number>> {
+    if (opportunityIds.length === 0) return {};
+    const { data, error } = await this.db
+      .from('tasks')
+      .select('opportunity_id')
+      .eq('agency_id', agencyId)
+      .eq('status', 'pending')
+      .in('opportunity_id', opportunityIds);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to count pending tasks: ${error.message}`);
+    const counts: Record<string, number> = {};
+    for (const row of data ?? []) counts[row.opportunity_id] = (counts[row.opportunity_id] ?? 0) + 1;
+    return counts;
+  }
+
   async create(agencyId: string, userId: string, input: CreateTaskInput): Promise<Task> {
     const { data, error } = await this.db
       .from('tasks')
@@ -198,6 +255,7 @@ export class TaskRepository {
         due_at: input.due_at ?? null,
         assigned_to: input.assigned_to ?? null,
         property_id: input.property_id ?? null,
+        inquiry_id: input.inquiry_id ?? null,
         status: 'pending',
         created_by: userId,
       })
@@ -239,7 +297,7 @@ export class TaskRepository {
   async complete(
     id: string,
     agencyId: string,
-    input: CompleteTaskInput
+    input: CompleteTaskInput & { channel?: TaskChannel }
   ): Promise<Task> {
     const { data, error } = await this.db
       .from('tasks')
@@ -247,6 +305,7 @@ export class TaskRepository {
         status: 'completed',
         completed_at: new Date().toISOString(),
         outcome: input.outcome,
+        ...(input.channel && { channel: input.channel }),
       })
       .eq('id', id)
       .eq('agency_id', agencyId)
@@ -255,6 +314,94 @@ export class TaskRepository {
       .maybeSingle();
 
     return pendingWriteResult(data, error, 'complete');
+  }
+
+  /**
+   * My earliest pending task of a type on a deal or an inquiry (spec phone-loop rule 6):
+   * the call the post-call prompt completes. Never another member's.
+   */
+  async findEarliestPendingOf(
+    agencyId: string,
+    assignedTo: string,
+    taskType: TaskType,
+    on: { opportunityId?: string | null; inquiryId?: string | null }
+  ): Promise<Task | null> {
+    // Ids come from a validated uuid or the database, so the filter string is safe.
+    const scopes = [
+      on.opportunityId && `opportunity_id.eq.${on.opportunityId}`,
+      on.inquiryId && `inquiry_id.eq.${on.inquiryId}`,
+    ].filter(Boolean);
+    if (scopes.length === 0) return null;
+
+    const { data, error } = await this.db
+      .from('tasks')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('status', 'pending')
+      .eq('task_type', taskType)
+      .eq('assigned_to', assignedTo)
+      .or(scopes.join(','))
+      .order('due_at', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch the pending call: ${error.message}`);
+    return (data as Task | null) ?? null;
+  }
+
+  /**
+   * A logged call and its optional next task in one multi-row insert, which PostgREST runs as
+   * one statement, so both land or neither does (AD-065).
+   */
+  async insertCallLog(
+    agencyId: string,
+    userId: string,
+    call: CallScope & { title: string; task_type: TaskType; channel: TaskChannel; outcome: string; assigned_to: string },
+    next: (CallScope & { title: string; due_at: string; assigned_to: string }) | null,
+    now: Date = new Date()
+  ): Promise<{ call: Task; next?: Task }> {
+    const scope = (s: CallScope) => ({
+      agency_id: agencyId,
+      opportunity_id: s.opportunity_id ?? null,
+      contact_id: s.contact_id ?? null,
+      inquiry_id: s.inquiry_id ?? null,
+      created_by: userId,
+    });
+    // Every row carries every column: a multi-row insert fills missing ones with NULL.
+    const rows = [
+      {
+        ...scope(call),
+        title: call.title,
+        task_type: call.task_type,
+        channel: call.channel,
+        outcome: call.outcome,
+        assigned_to: call.assigned_to,
+        status: 'completed',
+        completed_at: now.toISOString(),
+        due_at: null,
+      },
+      ...(next
+        ? [{
+            ...scope(next),
+            title: next.title,
+            task_type: 'call',
+            channel: null,
+            outcome: null,
+            assigned_to: next.assigned_to,
+            status: 'pending',
+            completed_at: null,
+            due_at: next.due_at,
+          }]
+        : []),
+    ];
+
+    const { data, error } = await this.db.from('tasks').insert(rows).select();
+    if (error) throw createFailure(error);
+    const saved = (data ?? []) as Task[];
+    const logged = saved.find((t) => t.status === 'completed');
+    if (!logged) throw new DomainError('errors.saveFailed', 'The call log insert returned no completed task');
+    return { call: logged, next: saved.find((t) => t.status === 'pending') };
   }
 
   /** Cancels a pending task. The optional reason is kept as its `outcome`. */

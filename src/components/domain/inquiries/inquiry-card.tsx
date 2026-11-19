@@ -23,9 +23,13 @@ import {
   MessageSquareOff,
   CheckCheck,
   Pencil,
+  PhoneCall,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRelativeTime } from "@/lib/i18n/use-relative-time";
+import { ContactLinks } from "@/components/domain/calls/contact-links";
+import type { PostCallTarget } from "@/components/domain/calls/post-call-sheet";
+import { InquiryCallLine } from "./inquiry-call-line";
 
 // ── Status badge config ──────────────────────────────────────────────────────
 
@@ -66,6 +70,22 @@ interface InquiryCardProps {
   onMarkContacted?: (id: string) => void;
   onConvert?: (inquiry: Inquiry) => void;
   onDismiss?: (inquiry: Inquiry) => void;
+  /** "Log call" by hand (spec phone-loop rule 4); also on converted and dismissed inquiries. */
+  onLogCall?: (inquiry: Inquiry) => void;
+  /** The agency's timezone; with it the card shows the contact time and calls (rule 9). */
+  timeZone?: string;
+}
+
+/**
+ * What a call on this inquiry logs against (spec phone-loop rules 2 and 8): a tapped link and
+ * "Log call" share it. A display name, never the number (rule 12).
+ */
+export function inquiryCallTarget(inquiry: Inquiry, unknownCaller: string): Omit<PostCallTarget, "channel"> {
+  return {
+    context: { inquiry_id: inquiry.id },
+    name: inquiry.caller_name || unknownCaller,
+    noRetry: inquiry.status === "dismissed",
+  };
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -80,8 +100,11 @@ export function InquiryCard({
   onMarkContacted,
   onConvert,
   onDismiss,
+  onLogCall,
+  timeZone,
 }: InquiryCardProps) {
   const t = useTranslations("InquiryCard");
+  const tCall = useTranslations("phoneLoop");
   const ago = useRelativeTime();
 
   const statusCfg = STATUS_CONFIG[inquiry.status];
@@ -99,6 +122,8 @@ export function InquiryCard({
     ? brokers.find((b) => b.id === inquiry.assigned_to)?.display_name ??
       inactiveAssigneeNames[inquiry.assigned_to]
     : undefined;
+
+  const callTarget = inquiryCallTarget(inquiry, t("unknownCaller"));
 
   const callerDisplay =
     inquiry.caller_name ||
@@ -139,8 +164,8 @@ export function InquiryCard({
             {t(`status.${inquiry.status}`)}
           </Badge>
 
-          {/* Actions dropdown — non-terminal inquiries only */}
-          {!isTerminal && (
+          {/* Actions dropdown: every action on an open inquiry, "Log call" on any (rule 8) */}
+          {(!isTerminal || onLogCall) && (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -156,7 +181,16 @@ export function InquiryCard({
                 }
               />
               <DropdownMenuContent align="end" className="w-48">
-                {onEdit && (
+                {onLogCall && (
+                  <DropdownMenuItem
+                    onClick={() => onLogCall(inquiry)}
+                    id={`inquiry-log-call-${inquiry.id}`}
+                  >
+                    <PhoneCall className="mr-2 h-4 w-4" />
+                    {tCall("logCall")}
+                  </DropdownMenuItem>
+                )}
+                {!isTerminal && onEdit && (
                   <DropdownMenuItem
                     onClick={() => onEdit(inquiry)}
                     id={`inquiry-edit-${inquiry.id}`}
@@ -174,7 +208,7 @@ export function InquiryCard({
                     {t("markContacted")}
                   </DropdownMenuItem>
                 )}
-                {onConvert && (
+                {!isTerminal && onConvert && (
                   <DropdownMenuItem
                     onClick={() => onConvert(inquiry)}
                     id={`inquiry-convert-${inquiry.id}`}
@@ -183,7 +217,7 @@ export function InquiryCard({
                     {t("convertToOpportunity")}
                   </DropdownMenuItem>
                 )}
-                {onDismiss && (
+                {!isTerminal && onDismiss && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -203,20 +237,28 @@ export function InquiryCard({
       </div>
 
       {/* Contact details row */}
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 pl-11 text-xs text-muted-foreground">
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 pl-11 text-xs text-muted-foreground">
         {inquiry.caller_phone && (
-          <span className="flex items-center gap-1">
-            <Phone className="h-3 w-3" />
-            {inquiry.caller_phone}
+          <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <Phone className="h-3 w-3" />
+              {inquiry.caller_phone}
+            </span>
+            <ContactLinks value={inquiry.caller_phone} type="phone" name={callerDisplay} callTarget={callTarget} />
           </span>
         )}
         {inquiry.caller_email && (
-          <span className="flex items-center gap-1">
-            <Mail className="h-3 w-3" />
-            {inquiry.caller_email}
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="flex min-w-0 items-center gap-1">
+              <Mail className="h-3 w-3 shrink-0" />
+              <span className="truncate">{inquiry.caller_email}</span>
+            </span>
+            <ContactLinks value={inquiry.caller_email} type="email" name={callerDisplay} />
           </span>
         )}
       </div>
+
+      {timeZone && <InquiryCallLine inquiry={inquiry} timeZone={timeZone} />}
 
       {/* Bottom meta row */}
       <div className="mt-2 flex items-center justify-between pl-11 text-[11px] text-muted-foreground">

@@ -22,7 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ContactCombobox } from "@/components/domain/contacts/contact-combobox";
 import type { OpportunityParticipant } from "@/domain/opportunities/types";
-import type { Contact } from "@/domain/contacts/types";
+import type { Contact, ContactWithMethods } from "@/domain/contacts/types";
 import type { ActionResult } from "@/lib/actions";
 import { Plus, User, Building2, X, Users2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -37,6 +37,8 @@ interface ParticipantListProps {
     formData: FormData
   ) => Promise<ActionResult<{ id: string }>>;
   removeAction: (id: string, opportunityId: string) => Promise<ActionResult>;
+  /** Call and email links on a participant row (spec phone-loop rule 1); needs contacts with methods. */
+  contactLinks?: (contact: ContactWithMethods) => React.ReactNode;
 }
 
 const ROLE_OPTIONS = [
@@ -58,6 +60,7 @@ export function ParticipantList({
   contacts,
   addAction,
   removeAction,
+  contactLinks,
 }: ParticipantListProps) {
   const t = useTranslations("ParticipantList");
   const enums = useTranslations("Enums");
@@ -223,15 +226,18 @@ export function ParticipantList({
                   </div>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                  onClick={() => handleRemove(p.id)}
-                  title={t("removeTitle")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  {contact && contactLinks && "contact_methods" in contact && contactLinks(contact as ContactWithMethods)}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleRemove(p.id)}
+                    title={t("removeTitle")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             );
           })

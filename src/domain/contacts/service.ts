@@ -50,6 +50,10 @@ export class ContactService {
     return this.repo.findByIds(ids, agencyId);
   }
 
+  async getByIdsWithMethods(ids: string[], agencyId: string): Promise<ContactWithMethods[]> {
+    return this.repo.findByIdsWithMethods(ids, agencyId);
+  }
+
   async getById(id: string, agencyId: string): Promise<ContactWithMethods | null> {
     return this.repo.findById(id, agencyId);
   }

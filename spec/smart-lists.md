@@ -251,7 +251,9 @@ history or "worked" statistics.
   share of detail-page visits with `?list=`.
 - **A2** 3 days (hot) and 14 days (sellers) are the right "no recent activity" thresholds.
 - **A3** Completed tasks and notes are a good enough "touch"; calls logged outside the CRM aren't
-  seen. `phone-loop` will add calls.
+  seen. `phone-loop` will add calls. **Update (2026-11-19):** `phone-loop` is done; a call logged
+  from the post-call prompt or "Log call" is a completed task, so it already counts as a touch.
+  Calls the broker never logs still aren't seen.
 - **A4** Fifty personal lists per member is far above need.
 - **A5** All-deal matching meets the overview target without a cache (rule 10). **Missed** at
   2,000 deals on Agency scope (Checkpoint 1); accepted as the exception in rule 10.

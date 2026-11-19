@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ListPager } from "@/components/ui/list-pager";
-import { InquiryCard } from "@/components/domain/inquiries/inquiry-card";
+import { InquiryCard, inquiryCallTarget } from "@/components/domain/inquiries/inquiry-card";
 import { InquiryForm } from "@/components/domain/inquiries/inquiry-form";
 import { ConvertInquiryDialog } from "@/components/domain/inquiries/convert-inquiry-dialog";
+import { useCallIntent } from "@/components/domain/calls/use-call-intent";
 import {
   updateInquiryAction,
   markInquiryContactedAction,
@@ -77,6 +78,12 @@ export function InquiryList({
   const [dismissTarget, setDismissTarget] = useState<Inquiry | null>(null);
   const [convertTarget, setConvertTarget] = useState<Inquiry | null>(null);
   const [convertOpen, setConvertOpen] = useState(false);
+  const tCard = useTranslations("InquiryCard");
+  // "Log call" opens the one post-call sheet the dashboard layout mounts (spec phone-loop rule 4).
+  const callIntent = useCallIntent();
+  const handleLogCall = callIntent
+    ? (inquiry: Inquiry) => callIntent.open(inquiryCallTarget(inquiry, tCard("unknownCaller")))
+    : undefined;
 
   async function handleMarkContacted(id: string) {
     await markInquiryContactedAction(id);
@@ -112,6 +119,8 @@ export function InquiryList({
                 onMarkContacted={handleMarkContacted}
                 onConvert={handleOpenConvert}
                 onDismiss={setDismissTarget}
+                onLogCall={handleLogCall}
+                timeZone={timeZone}
               />
             ))}
       </div>

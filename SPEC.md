@@ -45,7 +45,7 @@ starts; pilot evidence sets the order.
 | `reminders` | Daily digest and inquiry-assigned email via Resend, tested with Mailpit (AD-042) | `trustworthy-loop` | Done |
 | `properties` | Light property record and parties, linked to opportunities (candidate / viewed / offered / rejected / selected). Starts with a data-model AD. Seed and E2E grow with it | `trustworthy-loop` | Done |
 | `requirements` | Buyer requirement on an opportunity: budget, areas, types, rooms, m² | `trustworthy-loop` | Done |
-| `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Planned |
+| `phone-loop` | `tel:`/`viber://`/`wa.me`/`mailto:` links, post-call prompt (answered? → outcome + next action), `inquiries.contacted_at` | `trustworthy-loop` | Done |
 | `conversion-join` | Join an existing opportunity when converting an inquiry; resend invitation | `trustworthy-loop` | Done |
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Done |
@@ -83,7 +83,11 @@ listings, parties, candidate and subject links on opportunities, viewing tasks t
 property viewed, a property timeline with notes, and ⌘K property search (AD-056, AD-057);
 buyer and tenant requirements on opportunities (budget, settlements and areas, types, size, floor,
 construction, financing, wishes, must-haves), audited one entry per save, read-only on closed
-deals, with a summary line on the opportunity, the list and the contact (AD-059).
+deals, with a summary line on the opportunity, the list and the contact (AD-059); Call, Viber,
+WhatsApp and Email links on every phone and email shown (inquiry card, contact page, a deal's
+contacts, Today's call tasks), a "Did you reach them?" prompt on return that logs the call and
+its next action or retry in one save, "Log call" by hand, and the inquiry's first contact time
+(AD-065).
 
 **Known gaps:** five services have no tests yet
 (FR-TST-03). BRD rows marked ⚠️ say where each is handled.
@@ -98,7 +102,9 @@ AD-050 RPCs. Leaked-password protection is still off
 crons (or the pg_cron fallback, AD-042), production env vars.
 
 **Open decisions:** none. `property-import` is Done (2026-11-09, `spec/property-import.md`, plan in
-`docs/archive/property-import-plan.md`); its migrations run through `20261109000007`. Next: `go-live`.
+`docs/archive/property-import-plan.md`); its migrations run through `20261109000007`. `phone-loop` is
+Done (2026-11-19, `spec/phone-loop.md`, plan in `docs/archive/phone-loop-plan.md`); its migrations
+run through `20261119000002`. Next: `go-live`.
 
 ## 6. Pilot evidence
 

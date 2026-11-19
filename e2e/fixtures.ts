@@ -53,6 +53,44 @@ export function dateTimeLocal(days: number, hour: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
 }
 
+/**
+ * Keeps Call, Viber and WhatsApp taps in the page (spec phone-loop): the browser has no dialer, so
+ * the link's default is cancelled and its href kept on `window.__lastOutbound`. The app's own
+ * click handler still runs, so the call intent is registered as on a phone.
+ */
+export async function interceptOutboundLinks(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    document.addEventListener(
+      'click',
+      (event) => {
+        const link = (event.target as Element | null)?.closest?.('a[href^="tel:"], a[href^="viber:"], a[href^="https://wa.me/"]');
+        if (!link) return;
+        event.preventDefault();
+        (window as unknown as { __lastOutbound?: string }).__lastOutbound = link.getAttribute('href') ?? undefined;
+      },
+      true,
+    );
+  });
+}
+
+/** The href of the last intercepted Call, Viber or WhatsApp tap. */
+export function lastOutbound(page: Page): Promise<string | undefined> {
+  return page.evaluate(() => (window as unknown as { __lastOutbound?: string }).__lastOutbound);
+}
+
+/** The broker switches to the dialer for `ms` and comes back: the page hides, then shows. */
+export async function leaveAndReturn(page: Page, ms: number): Promise<void> {
+  const setVisibility = (state: 'hidden' | 'visible') =>
+    page.evaluate((value) => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => value });
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => value === 'hidden' });
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, state);
+  await setVisibility('hidden');
+  await page.waitForTimeout(ms);
+  await setVisibility('visible');
+}
+
 /** A UI string with ICU values (plurals), formatted by next-intl as the app does in this locale. */
 export function formatMessage(locale: AppLocale, message: string, values: Record<string, string | number>): string {
   return createTranslator({ locale, messages: { message } })('message', values);

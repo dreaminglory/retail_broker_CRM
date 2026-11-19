@@ -1,4 +1,4 @@
-import { test, expect, dateTimeLocal } from './fixtures';
+import { test, expect, dateTimeLocal, interceptOutboundLinks, lastOutbound, leaveAndReturn } from './fixtures';
 
 // FR-TST-06 / AC-6.1-2: the core loop end to end, as a broker, in each project's
 // locale and viewport. inquiry → convert → task on the opportunity → Today →
@@ -159,4 +159,96 @@ test("a broker joins a repeat caller's inquiry to their open deal", async ({ pag
   await expect(page.getByText(callBack, { exact: true })).toBeVisible();
   await page.goto('/inquiries');
   await expect(page.getByText(m.InquiryCard.joinedTo.replace('{title}', 'Alpha Opp 1')).first()).toBeVisible();
+});
+
+// Spec phone-loop AC-1, AC-2, AC-4, AC-8: tap Call on an inquiry, come back and log "No answer"
+// with the default retry, call again from Today and log "Answered" with a next action, convert,
+// and see both calls on the deal timeline. On a phone the prompt opens on return (the page hid);
+// on a desktop the page never hides and the "Log the call" toast opens it.
+test('a broker calls an inquiry, retries from Today and sees both calls on the deal', async ({ page, m, signInAs }, testInfo) => {
+  const run = `${testInfo.project.name}-${Date.now()}`;
+  const caller = `E2E Phone ${run}`;
+  const digits = String(Date.now()).slice(-6);
+  const phone = `+359888${digits}`;
+  const retryTitle = m.phoneLoop.titles.retry.replace('{name}', caller);
+  const callAria = m.phoneLoop.links.callAria.replace('{name}', caller);
+  const onPhone = testInfo.project.name.endsWith('mobile');
+
+  await interceptOutboundLinks(page);
+  await signInAs('broker@alpha.bg');
+
+  /** After a tap: the prompt on return (phone) or the toast's Log button (desktop). */
+  async function openPromptAfterTap() {
+    if (onPhone) {
+      await leaveAndReturn(page, 5_500);
+    } else {
+      await page.getByRole('button', { name: m.phoneLoop.intent.log, exact: true }).click();
+    }
+    const sheet = page.getByRole('dialog');
+    await expect(sheet.getByText(m.phoneLoop.sheet.title.replace('{name}', caller))).toBeVisible();
+    return sheet;
+  }
+
+  // 1. A new inquiry with a BG mobile number.
+  await page.goto('/inquiries');
+  await page.getByRole('button', { name: m.InquiriesPage.logInquiryBtn }).click();
+  const inquiryDialog = page.getByRole('dialog');
+  await inquiryDialog.getByRole('combobox', { name: m.InquiryForm.source }).click();
+  await page.getByRole('option', { name: 'Imot.bg' }).click();
+  await inquiryDialog.getByRole('combobox').nth(1).click();
+  await page.getByRole('option', { name: 'Charlie AlphaBroker', exact: true }).click();
+  await inquiryDialog.getByLabel(m.InquiryForm.callerName).fill(caller);
+  await inquiryDialog.getByLabel(m.InquiryForm.phone).fill(phone);
+  await inquiryDialog.getByRole('button', { name: m.InquiryForm.submit }).click();
+  await expect(inquiryDialog).toBeHidden();
+
+  // The whole card (the links sit below its top row).
+  const card = page.locator('div.group').filter({ has: page.getByText(caller, { exact: true }) });
+
+  // 2. AC-1: Call, Viber and WhatsApp on a mobile number, as real links.
+  await expect(card.getByRole('link', { name: m.phoneLoop.links.viberAria.replace('{name}', caller) }))
+    .toHaveAttribute('href', `viber://chat?number=%2B359888${digits}`);
+  await expect(card.getByRole('link', { name: m.phoneLoop.links.whatsappAria.replace('{name}', caller) }))
+    .toHaveAttribute('href', `https://wa.me/359888${digits}`);
+  await card.getByRole('link', { name: callAria }).click();
+  expect(await lastOutbound(page)).toBe(`tel:${phone}`);
+
+  // 3. AC-2: "No answer" with the default retry in 1 h.
+  let sheet = await openPromptAfterTap();
+  await sheet.getByRole('button', { name: m.phoneLoop.sheet.noAnswer, exact: true }).click();
+  await expect(sheet.getByRole('radio', { name: m.phoneLoop.sheet.presets.plus_1h })).toHaveAttribute('aria-checked', 'true');
+  await sheet.getByRole('button', { name: m.phoneLoop.sheet.save, exact: true }).click();
+  await expect(sheet).toBeHidden();
+  await expect(card.getByText(m.InquiryCard.status.contacted, { exact: true })).toBeVisible();
+  await expect(card.getByText(m.phoneLoop.card.retryAt.split('{')[0].trim())).toBeVisible();
+
+  // 4. The retry is on Today; calling from it completes it (rule 2, AC-5's "Completes").
+  await page.goto('/today');
+  const retryCard = page.locator('div')
+    .filter({ has: page.getByText(retryTitle, { exact: true }) })
+    .filter({ has: page.getByRole('button', { name: m.TaskCard.complete }) }).last();
+  await retryCard.getByRole('link', { name: callAria }).click();
+  sheet = await openPromptAfterTap();
+  await sheet.getByRole('button', { name: m.phoneLoop.sheet.answered, exact: true }).click();
+  await expect(sheet.getByText(m.phoneLoop.sheet.completes.replace('{title}', retryTitle))).toBeVisible();
+  await sheet.getByLabel(m.phoneLoop.sheet.outcomeLabel).fill('Wants a viewing on Saturday.');
+  await sheet.getByRole('button', { name: m.phoneLoop.sheet.save, exact: true }).click();
+  await expect(sheet).toBeHidden();
+  await page.reload();
+  await expect(page.getByText(retryTitle, { exact: true })).toHaveCount(0);
+
+  // 5. AC-4: convert, and both calls are on the deal's timeline with their channel.
+  await page.goto('/inquiries');
+  await card.getByRole('button', { name: m.InquiryCard.actions }).click();
+  await page.getByRole('menuitem', { name: m.InquiryCard.convertToOpportunity }).click();
+  const convertDialog = page.getByRole('dialog');
+  await convertDialog.getByLabel(m.ConvertInquiryDialog.oppTitle).fill(`E2E call deal ${run}`);
+  await convertDialog.getByRole('button', { name: m.ConvertInquiryDialog.convert, exact: true }).click();
+  await expect(convertDialog).toBeHidden();
+
+  await page.goto('/opportunities');
+  await page.getByRole('link', { name: `E2E call deal ${run}` }).click();
+  await page.waitForURL(/\/opportunities\/[0-9a-f-]+$/);
+  await expect(page.getByTestId('call-channel')).toHaveCount(2);
+  await expect(page.getByText(m.phoneLoop.titles.followUp.replace('{name}', caller)).first()).toBeVisible();
 });

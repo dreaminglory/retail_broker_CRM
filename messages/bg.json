@@ -2116,5 +2116,83 @@
       "unsharedToast": "Сега само вие виждате този списък",
       "notShownExactly": "Списъкът има филтри, които тази страница не може да покаже (например „мои“, няколко стойности или подредбата му). Обновяването ги заменя с показаните тук филтри."
     }
+  },
+  "phoneLoop": {
+    "unknownName": "клиента",
+    "links": {
+      "call": "Обаждане",
+      "viber": "Viber",
+      "whatsapp": "WhatsApp",
+      "email": "Имейл",
+      "callAria": "Обаждане до {name}",
+      "viberAria": "Viber чат с {name}",
+      "whatsappAria": "WhatsApp чат с {name}",
+      "emailAria": "Имейл до {name}"
+    },
+    "titles": {
+      "call": "Обаждане с {name}",
+      "followUp": "Последващ контакт с {name}",
+      "retry": "Ново обаждане: {name}"
+    },
+    "errors": {
+      "contextMismatch": "Това запитване е към друга сделка.",
+      "noContext": "Изберете с кого е разговорът.",
+      "invalidNext": "Изберете следващо действие от списъка.",
+      "stageNeedsAnswer": "Етапът се сменя само след проведен разговор.",
+      "stageClosed": "Сделката е приключена; етапът ѝ не може да се сменя.",
+      "noRetryDismissed": "Отхвърлено запитване не получава ново обаждане.",
+      "today18Passed": "Минава 17:00; изберете друго време за ново обаждане.",
+      "taskNotCompletable": "Тази задача вече не е ваша за приключване. Запишете разговора отделно."
+    },
+    "cancelledByDismiss": "Отменена: запитването е отхвърлено",
+    "logCall": "Запиши разговор",
+    "sheet": {
+      "title": "Свързахте ли се с {name}?",
+      "description": "Запишете разговора и следващото действие.",
+      "answered": "Вдигна",
+      "noAnswer": "Не вдига",
+      "notNow": "Не сега",
+      "noAnswerOutcome": "Не вдига",
+      "outcomeLabel": "Какво стана?",
+      "outcomePlaceholder": "За какво се разбрахте?",
+      "nextLabel": "Следващо действие",
+      "retryLabel": "Ново обаждане",
+      "noRetry": "Без ново обаждане",
+      "customLabel": "Дата и час",
+      "channelLabel": "Как се свързахте?",
+      "channels": {
+        "phone": "Телефон",
+        "viber": "Viber",
+        "whatsapp": "WhatsApp",
+        "email": "Имейл"
+      },
+      "presets": {
+        "plus_1h": "След 1 час",
+        "today_18": "Днес 18:00",
+        "tomorrow_9": "Утре 09:00",
+        "plus_2d": "След 2 дни",
+        "next_monday_9": "Следващия понеделник 09:00",
+        "custom": "Друго време",
+        "none": "Без"
+      },
+      "completes": "Приключва: {title}",
+      "completesHint": "Изключете, за да запишете отделен разговор и задачата да остане отворена.",
+      "noNextWarning": "Сделката ще остане без следващо действие.",
+      "save": "Запази",
+      "saving": "Записване…",
+      "saved": "Разговорът е записан",
+      "dealLabel": "По коя сделка?",
+      "noDeal": "Без сделка",
+      "stageLabel": "Етап"
+    },
+    "intent": {
+      "toast": "Запишете разговора с {name}",
+      "log": "Запиши"
+    },
+    "card": {
+      "contactedAfter": "{unit, select, minutes {Свързан след {minutes} мин} hours {Свързан след {hours} ч {minutes} мин} other {Свързан след {days} д {hours} ч}}",
+      "lastCall": "Последно обаждане: {outcome} · {time}",
+      "retryAt": "Ново обаждане {time}"
+    }
   }
 }

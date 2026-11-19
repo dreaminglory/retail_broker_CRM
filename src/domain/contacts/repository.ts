@@ -99,6 +99,18 @@ export class ContactRepository {
     return (data ?? []) as Contact[];
   }
 
+  /** As `findByIds`, with each contact's methods (call links on a deal, spec phone-loop). */
+  async findByIdsWithMethods(ids: string[], agencyId: string): Promise<ContactWithMethods[]> {
+    if (ids.length === 0) return [];
+    const { data, error } = await this.db
+      .from('contacts')
+      .select('*, contact_methods(*)')
+      .eq('agency_id', agencyId)
+      .in('id', ids);
+    if (error) throw new DomainError('errors.loadFailed', `Failed to fetch contacts: ${error.message}`);
+    return (data ?? []) as ContactWithMethods[];
+  }
+
   async findById(id: string, agencyId: string): Promise<ContactWithMethods | null> {
     const { data, error } = await this.db
       .from('contacts')
