@@ -14,6 +14,7 @@ what's next: `SPEC.md`.**
 | `docs/domain-model.md` | Entities, states and invariants as built | Touching a table, status or rule (with `crm-domain-model`) |
 | `docs/decisions-log.md` | Decisions in force (AD-NNN), cited from code | Before changing something an AD covers |
 | `docs/BRD.md` | Functional requirements (FR-xxx) with built status | Closing a module; checking a requirement |
+| `docs/design/` | Bright design system pointer and PNGs of the reference screens (`screens/`) | Before any UI work: match the screens and tokens |
 | `docs/research/` | Business brief, competitor gap analysis, pattern benchmark | Only for `/feature-ideas` and new specs |
 | `docs/archive/` | Finished plans and old sprint docs | Rarely; history only |
 
@@ -76,7 +77,8 @@ Seen passing in this session, never assumed (if something can't run, say so):
 1. `npm run typecheck`, `npm run lint`, `npm run test`. New or changed service/validation
    logic has Vitest tests; a bug fix starts with a failing test.
 2. Touched `supabase/`: `npx supabase db reset` then `npm run test:db`.
-3. Changed UI: checked in the browser in `bg` and `en`.
+3. Changed UI: checked in the browser in `bg` and `en`, and matches `docs/design/` (the
+   reference screens and tokens).
 4. Changed schema or a rule: `docs/domain-model.md` in the same commit. Made a design
    decision: a new AD in `docs/decisions-log.md`.
 
