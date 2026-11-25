@@ -125,12 +125,12 @@ InputGroup, Select, Textarea, Switch, RadioGroup, Label with `border-strong` edg
 New keys: the four group headings (both message files). Отчети is added in Task 26.
 
 **Acceptance criteria:**
-- [ ] Vitest: every existing dashboard route appears exactly once, in its group; role filter unchanged (broker doesn't see Изключения)
-- [ ] Collapsed and phone menu work as before
+- [x] Vitest: every existing dashboard route appears exactly once, in its group; role filter unchanged (broker doesn't see Изключения)
+- [x] Collapsed and phone menu work as before
 
 **Verification:**
-- [ ] `npx vitest run src/components/layout/nav-config.test.ts`
-- [ ] Browser: collapsed vs `today-collapsed.png`; phone menu at 390 px; `git diff messages/` adds keys only
+- [x] `npx vitest run src/components/layout/nav-config.test.ts`
+- [x] Browser: collapsed vs `today-collapsed.png`; phone menu at 390 px; `git diff messages/` adds keys only
 
 **Dependencies:** Tasks 2, 4, 5
 **Files likely touched:** `src/components/layout/sidebar.tsx`, `src/components/layout/nav-config.ts(+test)`, `messages/{bg,en}.json`
@@ -141,15 +141,16 @@ New keys: the four group headings (both message files). Отчети is added in
 exists), existing actions kept, no bell or + Ново. `main` on white with 16px phone gutters.
 
 **Acceptance criteria:**
-- [ ] Breadcrumb correct on every dashboard route, including detail pages
-- [ ] Nothing scrolls sideways at 390 px on any route
+- [x] Breadcrumb correct on every dashboard route, including detail pages
+- [x] Nothing scrolls sideways at 390 px on any route
 
 **Verification:**
-- [ ] `npm run test:e2e` green (shell changes touch every spec)
-- [ ] Browser: header vs `today.png` and `deal.png`
+- [x] `npm run test:e2e` green (shell changes touch every spec)
+- [x] Browser: header vs `today.png` and `deal.png`
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/components/layout/header.tsx`, `src/app/(dashboard)/layout.tsx`
+**As built:** breadcrumb is group › page (the page links back on detail routes); the third level (item name) comes with the detail pages in Tasks 11, 20 and 21. Search stays in the header (moving it into the sidebar as in the PNG is an "ask first"). The header profile menu moved to the sidebar user block (settings, sign out). `main` became `relative`, fixing a page-level scroll from `sr-only` spans on /opportunities.
 **Estimated scope:** S
 
 ### Checkpoint 1: shell

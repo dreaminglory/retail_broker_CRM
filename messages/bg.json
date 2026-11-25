@@ -112,7 +112,15 @@
     "menuTitle": "Меню за навигация",
     "menuDescription": "Преминете към различните раздели на BrokerCRM.",
     "properties": "Имоти",
-    "lists": "Списъци"
+    "lists": "Списъци",
+    "groups": {
+      "myDay": "Моят ден",
+      "work": "Работа",
+      "base": "База",
+      "agency": "Агенция"
+    },
+    "userMenu": "Меню на профила",
+    "breadcrumb": "Навигационен път"
   },
   "header": {
     "loading": "Зареждане...",

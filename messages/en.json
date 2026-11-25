@@ -112,7 +112,15 @@
     "menuTitle": "Navigation menu",
     "menuDescription": "Go to the different sections of BrokerCRM.",
     "properties": "Properties",
-    "lists": "Lists"
+    "lists": "Lists",
+    "groups": {
+      "myDay": "My day",
+      "work": "Work",
+      "base": "Records",
+      "agency": "Agency"
+    },
+    "userMenu": "Profile menu",
+    "breadcrumb": "Breadcrumb"
   },
   "header": {
     "loading": "Loading...",

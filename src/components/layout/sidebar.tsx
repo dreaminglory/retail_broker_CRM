@@ -2,250 +2,148 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Building2,
-  LayoutDashboard,
-  CalendarCheck,
-  ListChecks,
-  Users,
-  Briefcase,
-  Home,
-  Inbox,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  ShieldAlert,
-  Menu,
-} from "lucide-react";
+import { Menu, PanelLeft } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
+
+import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { isNavItemActive, visibleNavGroups } from "./nav-config";
+import type { ShellUser } from "./shell-types";
+import { UserMenu, initials } from "./user-menu";
 
-interface NavItem {
-  i18nKey: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  disabled?: boolean;
-  badge?: string;
-  roles?: string[]; // Allowed roles to see this item
+type SidebarProps = {
+  user: ShellUser;
+  agencyName: string;
+};
+
+/** The agency's mark: its initials on primary, as in the Bright sidebar. */
+function AgencyMark({ name }: { name: string }) {
+  return (
+    <span
+      aria-hidden
+      className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-body-strong text-primary-foreground"
+    >
+      {initials(name)}
+    </span>
+  );
 }
 
-const navItems: NavItem[] = [
-  {
-    i18nKey: "dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    i18nKey: "today",
-    href: "/today",
-    icon: CalendarCheck,
-  },
-  {
-    i18nKey: "lists",
-    href: "/lists",
-    icon: ListChecks,
-  },
-  {
-    i18nKey: "contacts",
-    href: "/contacts",
-    icon: Users,
-  },
-  {
-    i18nKey: "properties",
-    href: "/properties",
-    icon: Home,
-  },
-  {
-    i18nKey: "opportunities",
-    href: "/opportunities",
-    icon: Briefcase,
-  },
-  {
-    i18nKey: "inquiries",
-    href: "/inquiries",
-    icon: Inbox,
-  },
-  {
-    i18nKey: "settings",
-    href: "/settings",
-    icon: Settings,
-  },
-  {
-    i18nKey: "exceptions",
-    href: "/exceptions",
-    icon: ShieldAlert,
-    roles: ["owner", "manager"],
-  },
-];
-
-interface SidebarProps {
-  userRole?: string;
-}
-
-export function Sidebar({ userRole = "broker" }: SidebarProps) {
+function SidebarNav({
+  role,
+  collapsed = false,
+  onNavigate,
+}: {
+  role: string;
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+
+  return (
+    <nav aria-label={t("menuTitle")} className="flex-1 overflow-y-auto px-3 pb-3">
+      {visibleNavGroups(role).map((group) => (
+        <div
+          key={group.key}
+          className={cn(collapsed ? "border-t border-border py-2 first:border-t-0" : "pt-4 first:pt-2")}
+        >
+          {!collapsed && (
+            <p id={`nav-group-${group.key}`} className="px-3 pb-1 text-label text-muted-foreground uppercase">
+              {t(`groups.${group.key}`)}
+            </p>
+          )}
+          <ul
+            className="space-y-0.5"
+            aria-labelledby={collapsed ? undefined : `nav-group-${group.key}`}
+            aria-label={collapsed ? t(`groups.${group.key}`) : undefined}
+          >
+            {group.items.map((item) => {
+              const active = isNavItemActive(item.href, pathname);
+              const Icon = item.icon;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={active ? "page" : undefined}
+                    title={collapsed ? t(item.key) : undefined}
+                    className={cn(
+                      "flex h-9 items-center gap-3 rounded-md px-3 text-body text-ink outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
+                      active && "bg-accent font-semibold hover:bg-accent",
+                      collapsed && "justify-center px-0",
+                    )}
+                  >
+                    <Icon className="size-[18px] shrink-0" aria-hidden />
+                    {collapsed ? <span className="sr-only">{t(item.key)}</span> : <span className="truncate">{t(item.key)}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+export function Sidebar({ user, agencyName }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const t = useTranslations("nav");
 
   return (
     <aside
       className={cn(
-        "hidden md:flex h-full flex-col border-r bg-sidebar-background transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "hidden h-full shrink-0 flex-col border-r border-border bg-sidebar transition-[width] duration-200 md:flex",
+        collapsed ? "w-[68px]" : "w-64",
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b px-4">
-        <Building2 className="h-6 w-6 shrink-0 text-sidebar-primary" />
+      <div className={cn("flex items-center gap-3 p-3", collapsed && "flex-col")}>
+        <AgencyMark name={agencyName} />
         {!collapsed && (
-          <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
-            BrokerCRM
-          </span>
+          <span className="min-w-0 flex-1 truncate text-body-strong text-ink">{agencyName}</span>
         )}
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
+          aria-expanded={!collapsed}
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-ink focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+        >
+          <PanelLeft className="size-4" />
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
-        {navItems.map((item) => {
-          if (item.roles && !item.roles.includes(userRole)) {
-            return null;
-          }
+      <SidebarNav role={user.role} collapsed={collapsed} />
 
-          const isActive =
-            item.href === "/dashboard"
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-          const Icon = item.icon;
-
-          if (item.disabled) {
-            return (
-              <div
-                key={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm opacity-40 cursor-not-allowed",
-                  collapsed && "justify-center px-2"
-                )}
-                title={collapsed ? `${t(item.i18nKey as any)} (${item.badge})` : undefined}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {!collapsed && (
-                  <>
-                    <span className="flex-1">{t(item.i18nKey as any)}</span>
-                    {item.badge && (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        {item.badge}
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-                collapsed && "justify-center px-2"
-              )}
-              title={collapsed ? t(item.i18nKey as any) : undefined}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{t(item.i18nKey as any)}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Collapse toggle */}
-      <div className="border-t p-3">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex w-full items-center justify-center rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-          aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </button>
+      <div className="border-t border-border p-3">
+        <UserMenu user={user} collapsed={collapsed} />
       </div>
     </aside>
   );
 }
 
-export function MobileSidebar({ userRole = "broker" }: SidebarProps) {
-  const pathname = usePathname();
+export function MobileSidebar({ user, agencyName }: SidebarProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="md:hidden flex items-center justify-center rounded-md p-2 hover:bg-accent text-foreground">
-        <Menu className="h-5 w-5" />
+      <SheetTrigger className="flex size-9 items-center justify-center rounded-md text-ink outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-focus md:hidden">
+        <Menu className="size-5" />
         <span className="sr-only">{t("toggleMenu")}</span>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0">
+      <SheetContent side="left" className="flex w-72 flex-col gap-0 bg-sidebar p-0">
         <SheetTitle className="sr-only">{t("menuTitle")}</SheetTitle>
         <SheetDescription className="sr-only">{t("menuDescription")}</SheetDescription>
-        <div className="flex h-16 items-center gap-2 border-b px-4">
-          <Building2 className="h-6 w-6 shrink-0 text-sidebar-primary" />
-          <span className="text-lg font-bold tracking-tight text-sidebar-foreground">
-            BrokerCRM
-          </span>
+        <div className="flex items-center gap-3 p-3 pr-12">
+          <AgencyMark name={agencyName} />
+          <span className="min-w-0 flex-1 truncate text-body-strong text-ink">{agencyName}</span>
         </div>
-        <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
-          {navItems.map((item) => {
-            if (item.roles && !item.roles.includes(userRole)) return null;
-            const isActive =
-              item.href === "/dashboard"
-                ? pathname === item.href
-                : pathname.startsWith(item.href);
-            const Icon = item.icon;
-
-            if (item.disabled) {
-              return (
-                <div
-                  key={item.href}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm opacity-40 cursor-not-allowed"
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1">{t(item.i18nKey as any)}</span>
-                  {item.badge && (
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              );
-            }
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                )}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                <span>{t(item.i18nKey as any)}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <SidebarNav role={user.role} onNavigate={() => setOpen(false)} />
+        <div className="border-t border-border p-3">
+          <UserMenu user={user} />
+        </div>
       </SheetContent>
     </Sheet>
   );
