@@ -587,6 +587,10 @@ bundle cost shows in page weight (compute `isMobile` on the server, or import `/
 - **Radius 4/6/8** (`sm`/`md`/`lg`; larger steps collapse onto 8). **Shadows:** cards none,
   floating layers `shadow-float`, and `shadow-action` (the 3px yellow offset) only through
   `<Button emphasis="action">`, at most once per view.
+- **Type:** Sofia Sans (and Semi Condensed for dense tables) via `next/font`, latin + cyrillic;
+  `font-mono` maps to Sofia Sans too. `tabular-nums` is set once on `body` rather than on each
+  number, so no formatter call site can miss it. The `tokens.json` type scale is `text-display`
+  … `text-cell-dense`.
 **Why:** one place to change the theme, no rewrite of the shadcn primitives, and status colour
 that can be checked by name.
 **Revisit if:** dark mode is switched on (the `.dark` values are untested), or the design system

@@ -193,9 +193,48 @@
   --shadow-card: var(--bright-shadow-card);
   --shadow-float: var(--bright-shadow-float);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
+  /* Sofia Sans for all text; codes (font-mono) stay in it with tabular figures. */
+  --font-sans: var(--font-sofia-sans), system-ui, sans-serif;
+  --font-condensed: var(--font-sofia-sans-condensed), var(--font-sofia-sans), system-ui, sans-serif;
+  --font-mono: var(--font-sofia-sans), system-ui, sans-serif;
+  --font-heading: var(--font-sofia-sans), system-ui, sans-serif;
+
+  /* Type scale from tokens.json: text-display, text-title, text-section, text-body,
+     text-body-strong, text-small, text-label (add `uppercase`), text-num, text-num-lg,
+     text-cell-dense (add `font-condensed`). */
+  --text-display: 28px;
+  --text-display--line-height: 34px;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.01em;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-title--font-weight: 700;
+  --text-title--letter-spacing: -0.01em;
+  --text-section: 16px;
+  --text-section--line-height: 24px;
+  --text-section--font-weight: 600;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--font-weight: 400;
+  --text-body-strong: 14px;
+  --text-body-strong--line-height: 20px;
+  --text-body-strong--font-weight: 600;
+  --text-small: 12px;
+  --text-small--line-height: 16px;
+  --text-small--font-weight: 400;
+  --text-label: 11px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 600;
+  --text-label--letter-spacing: 0.06em;
+  --text-num: 13px;
+  --text-num--line-height: 20px;
+  --text-num--font-weight: 600;
+  --text-num-lg: 24px;
+  --text-num-lg--line-height: 28px;
+  --text-num-lg--font-weight: 600;
+  --text-cell-dense: 13px;
+  --text-cell-dense--line-height: 18px;
+  --text-cell-dense--font-weight: 400;
 }
 
 @layer base {
@@ -204,6 +243,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Tabular figures everywhere: times, money, phones and m² line up down a column. */
+    font-variant-numeric: tabular-nums;
   }
   html {
     @apply font-sans;

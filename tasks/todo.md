@@ -36,13 +36,13 @@ onto them as in plan decision 1. Add status, info and highlight tokens, radius 4
 call sites and `Table` cells).
 
 **Acceptance criteria:**
-- [ ] Computed `font-family` is Sofia Sans on body text in `bg` (Cyrillic) and `en`
-- [ ] No Geist reference left in `src/`
-- [ ] Type utilities exist for every `type` entry in `tokens.json`
+- [x] Computed `font-family` is Sofia Sans on body text in `bg` (Cyrillic) and `en`
+- [x] No Geist reference left in `src/`
+- [x] Type utilities exist for every `type` entry in `tokens.json`
 
 **Verification:**
-- [ ] `grep -rn -i geist src` empty
-- [ ] Browser: `/today` and `/properties` prices and times line up in columns
+- [x] `grep -rn -i geist src` empty
+- [x] Browser: `/today` and `/properties` prices and times line up in columns
 
 **Dependencies:** Task 1
 **Files likely touched:** `src/app/layout.tsx`, `src/app/globals.css`, number/date display components
