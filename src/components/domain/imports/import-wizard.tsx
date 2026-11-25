@@ -295,7 +295,7 @@ export function ImportWizard({
           </CardHeader>
           <CardContent className="space-y-8">
             {previousJobs.length > 0 && (
-              <Alert variant="default" className="bg-yellow-50 text-yellow-900 border-yellow-200">
+              <Alert variant="default" className="bg-warning-soft text-warning-ink border-warning/30">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   {t("step2.previousUploadAlert")}
@@ -358,21 +358,21 @@ export function ImportWizard({
                 <div className="text-2xl font-bold">{summary.total}</div>
                 <div className="text-sm text-muted-foreground">{t("step3.totalRows")}</div>
               </div>
-              <div className="p-4 border rounded-md bg-green-50">
-                <div className="text-2xl font-bold text-green-700">{summary.valid}</div>
-                <div className="text-sm text-green-700">{t("step3.valid")}</div>
+              <div className="p-4 border rounded-md bg-success-soft">
+                <div className="text-2xl font-bold text-success">{summary.valid}</div>
+                <div className="text-sm text-success">{t("step3.valid")}</div>
               </div>
-              <div className="p-4 border rounded-md bg-yellow-50">
-                <div className="text-2xl font-bold text-yellow-700">{summary.duplicate}</div>
-                <div className="text-sm text-yellow-700">{t("step3.duplicates")}</div>
+              <div className="p-4 border rounded-md bg-warning-soft">
+                <div className="text-2xl font-bold text-warning-ink">{summary.duplicate}</div>
+                <div className="text-sm text-warning-ink">{t("step3.duplicates")}</div>
               </div>
-              <div className="p-4 border rounded-md bg-red-50">
-                <div className="text-2xl font-bold text-red-700">{summary.invalid}</div>
-                <div className="text-sm text-red-700">{t("step3.invalid")}</div>
+              <div className="p-4 border rounded-md bg-danger-soft">
+                <div className="text-2xl font-bold text-danger">{summary.invalid}</div>
+                <div className="text-sm text-danger">{t("step3.invalid")}</div>
               </div>
             </div>
             {summary.invalid > 0 && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-danger">
                 {t("step3.invalidDesc")}
               </p>
             )}

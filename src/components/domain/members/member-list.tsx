@@ -70,11 +70,11 @@ export function MemberList({ members, currentUserId, currentUserRole }: MemberLi
                 </TableCell>
                 <TableCell>
                   {member.status === "active" ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200">{t("status.active")}</Badge>
+                    <Badge variant="outline" className="bg-success-soft text-success hover:bg-success-soft border-success/30">{t("status.active")}</Badge>
                   ) : member.status === "invited" ? (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200">{t("status.invited")}</Badge>
+                    <Badge variant="outline" className="bg-warning-soft text-warning-ink hover:bg-warning-soft border-warning/30">{t("status.invited")}</Badge>
                   ) : (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200">{t("status.deactivated")}</Badge>
+                    <Badge variant="outline" className="bg-muted text-muted-foreground hover:bg-muted border-border">{t("status.deactivated")}</Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">

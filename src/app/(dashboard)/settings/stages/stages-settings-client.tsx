@@ -78,9 +78,9 @@ function TerminalBadge({ terminalType }: { terminalType: string | null }) {
 }
 
 function TerminalIcon({ terminalType }: { terminalType: string | null }) {
-  if (terminalType === 'won') return <Trophy className="h-3.5 w-3.5 text-amber-500" />;
+  if (terminalType === 'won') return <Trophy className="h-3.5 w-3.5 text-success" />;
   if (terminalType === 'lost') return <XCircle className="h-3.5 w-3.5 text-destructive" />;
-  if (terminalType === 'nurture') return <Leaf className="h-3.5 w-3.5 text-emerald-500" />;
+  if (terminalType === 'nurture') return <Leaf className="h-3.5 w-3.5 text-muted-foreground" />;
   return <Layers className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 
@@ -182,7 +182,7 @@ function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
               <SelectTrigger id="stage-terminal-type" className="w-48">
                 <SelectValue placeholder={t("selectType")}>
                   {(val: string) => {
-                    if (val === "won") return <span className="flex items-center gap-2"><Trophy className="h-3.5 w-3.5 text-amber-500" /> {t("terminal.won")}</span>;
+                    if (val === "won") return <span className="flex items-center gap-2"><Trophy className="h-3.5 w-3.5 text-success" /> {t("terminal.won")}</span>;
                     if (val === "lost") return <span className="flex items-center gap-2"><XCircle className="h-3.5 w-3.5 text-destructive" /> {t("terminal.lost")}</span>;
                     if (val === "nurture") return <span className="flex items-center gap-2"><Archive className="h-3.5 w-3.5 text-muted-foreground" /> {t("terminal.nurture")}</span>;
                     return t("selectType");
@@ -192,7 +192,7 @@ function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
               <SelectContent>
                 <SelectItem value="won">
                   <span className="flex items-center gap-2">
-                    <Trophy className="h-3.5 w-3.5 text-amber-500" /> {t("terminal.won")}
+                    <Trophy className="h-3.5 w-3.5 text-success" /> {t("terminal.won")}
                   </span>
                 </SelectItem>
                 <SelectItem value="lost">
@@ -202,7 +202,7 @@ function StageForm({ stage, onSuccess, onCancel }: StageFormProps) {
                 </SelectItem>
                 <SelectItem value="nurture">
                   <span className="flex items-center gap-2">
-                    <Leaf className="h-3.5 w-3.5 text-emerald-500" /> {t("terminal.nurture")}
+                    <Leaf className="h-3.5 w-3.5 text-muted-foreground" /> {t("terminal.nurture")}
                   </span>
                 </SelectItem>
               </SelectContent>
@@ -263,7 +263,7 @@ function DeleteConfirm({ stage, oppCount, onSuccess, onCancel }: DeleteConfirmPr
   return (
     <div className="space-y-4">
       {blocked ? (
-        <div className="flex items-start gap-3 rounded-md bg-amber-50 px-3 py-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+        <div className="flex items-start gap-3 rounded-md bg-warning-soft px-3 py-3 text-sm text-warning-ink">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
             <p className="font-medium">{t("cannotDelete")}</p>
@@ -332,7 +332,7 @@ function StageRow({ stage, index, total, onMoveUp, onMoveDown, onMutationSuccess
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 1,
-    boxShadow: isDragging ? '0 5px 15px rgba(0,0,0,0.1)' : 'none',
+    boxShadow: isDragging ? 'var(--bright-shadow-float)' : 'none',
   };
 
   return (

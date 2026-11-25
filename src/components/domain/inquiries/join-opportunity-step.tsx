@@ -91,7 +91,7 @@ export function JoinOpportunityStep({
       </fieldset>
 
       {selected?.status === "nurture" && (
-        <p className="rounded-md bg-amber-50 p-2.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200" role="note">
+        <p className="rounded-md bg-warning-soft p-2.5 text-xs text-warning-ink" role="note">
           {t("joinReactivates")}
         </p>
       )}

@@ -97,7 +97,7 @@ export default async function ImportHistoryPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">{job.total_rows}</TableCell>
-                <TableCell className="text-right text-green-600 font-medium">
+                <TableCell className="text-right text-success font-medium">
                   {job.created_count}
                 </TableCell>
                 <TableCell className="text-right">

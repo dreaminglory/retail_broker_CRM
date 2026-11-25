@@ -25,7 +25,7 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
           <input 
             type="checkbox"
             id="link_contacts" 
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
             checked={options.link_contacts}
             onChange={(e) => onChange({ ...options, link_contacts: e.target.checked })}
           />
@@ -35,7 +35,7 @@ export function InquiryImportOptionsForm({ options, onChange }: InquiryImportOpt
           <input 
             type="checkbox"
             id="create_missing_contacts" 
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            className="h-4 w-4 rounded border-border-strong text-primary focus:ring-primary"
             checked={options.create_missing_contacts}
             onChange={(e) => onChange({ ...options, create_missing_contacts: e.target.checked })}
           />

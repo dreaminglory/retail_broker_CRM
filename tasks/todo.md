@@ -73,12 +73,12 @@ colours. Then add a Vitest guard that scans `src/**/*.{ts,tsx}` (excluding `glob
 fails on palette classes, hex or `oklch` literals.
 
 **Acceptance criteria:**
-- [ ] Guard test passes, and fails when a `bg-red-500` is added to any file (tried once, reverted)
-- [ ] Import wizard error/success states still distinguishable (token `danger`/`success`, not palette)
+- [x] Guard test passes, and fails when a `bg-red-500` is added to any file (tried once, reverted)
+- [x] Import wizard error/success states still distinguishable (token `danger`/`success`, not palette)
 
 **Verification:**
-- [ ] `npx vitest run src/lib/design-guard.test.ts`
-- [ ] Browser: import wizard, team settings, matching panel
+- [x] `npx vitest run src/lib/design-guard.test.ts`
+- [x] Browser: import wizard, team settings, matching panel
 
 **Dependencies:** Task 3
 **Files likely touched:** `src/lib/design-guard.test.ts`, the remaining files from the grep (~14)

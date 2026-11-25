@@ -93,9 +93,9 @@ export default async function SmartListPage({
     <div className="mx-auto max-w-4xl">
       {header}
       {done === "1" && (
-        <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+        <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-success/30 bg-success-soft px-4 py-3">
           <p className="flex items-center gap-2 text-sm font-medium">
-            <PartyPopper className="h-4 w-4 text-emerald-600" aria-hidden />
+            <PartyPopper className="h-4 w-4 text-success" aria-hidden />
             {t("smartLists.queue.doneTitle")}
           </p>
           <Link href={data.scope === "agency" ? "/lists?scope=agency" : "/lists"} className={buttonVariants({ variant: "outline", size: "sm" })}>
@@ -109,7 +109,7 @@ export default async function SmartListPage({
         </p>
       ) : result.total === 0 ? (
         <div className="rounded-lg border border-dashed py-16 text-center">
-          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-emerald-500/70" aria-hidden />
+          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-success/70" aria-hidden />
           <p className="text-sm font-medium">{t("smartLists.page.emptyTitle")}</p>
           <p className="mt-1 text-xs text-muted-foreground">{t("smartLists.page.emptyDesc")}</p>
         </div>
