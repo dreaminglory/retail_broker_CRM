@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 /**
  * Bright colours live once, in `src/app/globals.css` (AD-066). Components use the
