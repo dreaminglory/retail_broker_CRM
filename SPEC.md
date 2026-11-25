@@ -70,6 +70,14 @@ Candidates from `/feature-ideas`, not yet on the map. Promote one by adding a ma
 | Idea | Evidence | Score | Notes |
 |---|---|---|---|
 | Bright restyle | E1: founder decision, design in `docs/design/` | Loop 1 + gate 2 + broker 2 + evidence 1 = 6 ÷ ~7 days ≈ 0.9 | Promoted to `ui-bright`, ahead of the formula ranking by founder decision. [ASSUMPTION — validate in pilot: brokers tell the "Скоро" placeholders apart from live screens; note any question about the sample ranking or KPIs in §6] |
+| Today planning aids: week strip, "Най-важно сега" card, route map with the day's timeline, task-type filter tabs | E1: Bright PNG (`today.png`), left out of `ui-bright` | Unscored | Run `/feature-ideas` before promoting |
+| Broker availability (Свободен / На оглед / Зает) and a team-today panel on Табло | E1: Bright PNGs (sidebar, `dashboard.png`) | Unscored | Run `/feature-ideas` before promoting; overlaps `routing` (on-duty broker) |
+| Shell shortcuts: "Последно отворени", notification bell, global + Ново, agency switcher, theme toggle with dark mode | E1: Bright PNGs (every screen) | Unscored | Run `/feature-ideas` before promoting |
+| Inquiry desk: KPI tiles (new today, time to first reply, waiting > 1 h, conversion), parsed message fields, matching properties in the panel | E1: `inquiries.png` | Unscored | Run `/feature-ideas` before promoting; time to first reply needs `contacted_at` (built in `phone-loop`); parsing overlaps `lead-intake` |
+| Contacts: role tabs with counts, temperature (Горещ / Топъл / Студен), summary line, "Изпрати всички" matches | E1: `contacts.png` | Unscored | Run `/feature-ideas` before promoting |
+| Properties: grid view with type illustrations, map view, portal badges and sync, price-change chips, buyer counts, deposit/sold/archive tabs | E1: `properties-list.png`, `properties-grid.png` | Unscored | Run `/feature-ideas` before promoting; portals belong to `syndication`, illustrations to the spot-art follow-up |
+| Exceptions: KPI tiles, filter chips, "Само моите", snooze, weekly chart, by-broker panel, new rules (deposit without contract, portal price drift, GDPR consent, exclusive expiring) | E1: `exceptions.png` | Unscored | Run `/feature-ideas` before promoting; new rules touch `gdpr`, `mandates`, `syndication` |
+| Spot illustrations for empty states and property cards | E1: Bright design system | Unscored | Run `/feature-ideas` before promoting; needs the art exported as SVG |
 
 ## 5. Current state
 
