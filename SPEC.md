@@ -32,6 +32,7 @@ The paid pilot starts when every row is Done. Recruiting can start once `propert
 | Inquiry can create **or join** an opportunity | `conversion-join` | Done |
 | Requirement ↔ property matching | `matching` | Done |
 | Smart Lists | `smart-lists` | Done |
+| Bright restyle | `ui-bright` | Planned |
 | Onboarding dry run with a real agency export | `go-live` | Planned |
 
 ## 3. Capability map
@@ -50,7 +51,8 @@ starts; pilot evidence sets the order.
 | `matching` | Two-way requirement ↔ property matches with a score and an "already offered" state | `properties`, `requirements` | Done |
 | `smart-lists` | Saved filters with counts, worked through one by one | `matching` | Done |
 | `property-import` | Property CSV import on the existing pipeline (AD-034) | `properties` | Done |
-| `go-live` | Domain, Resend domain, hosting, crons, prod env; E2E and coverage gate in CI; founder review of `bg.json`; dry run | `reminders`, `smart-lists`, `property-import` | Planned |
+| `ui-bright` | Restyle to Bright (`docs/design/`), visuals only. (1) Tokens and Sofia Sans in `globals.css`, the `ui/` primitives, the sidebar and shell. (2) The 12 PNG screens, laid out to match. (3) Pages without a PNG, built from the tokens and their nearest PNG. (4) Reports, follow-up rules, portals and the dashboard KPIs as "Скоро" placeholders: sample data, disabled controls, a banner. Light only (dark tokens defined, not switched on); phones adapt the desktop layout. No schema, rule or text changes; spot art later | `property-import` | Planned |
+| `go-live` | Domain, Resend domain, hosting, crons, prod env; E2E and coverage gate in CI; founder review of `bg.json`; dry run | `reminders`, `smart-lists`, `property-import`, `ui-bright` | Planned |
 | `lead-intake` | Portal inquiry emails (homes.bg, imot.bg, alo.bg) and a website form → inquiries; parser fixtures per portal | pilot | Later |
 | `routing` | Round robin, on-duty broker, escalation, shared pool | `lead-intake` | Later |
 | `gdpr` | Legal basis, export, erasure, retention purge | pilot | Later |
@@ -67,6 +69,7 @@ Candidates from `/feature-ideas`, not yet on the map. Promote one by adding a ma
 
 | Idea | Evidence | Score | Notes |
 |---|---|---|---|
+| Bright restyle | E1: founder decision, design in `docs/design/` | Loop 1 + gate 2 + broker 2 + evidence 1 = 6 ÷ ~7 days ≈ 0.9 | Promoted to `ui-bright`, ahead of the formula ranking by founder decision. [ASSUMPTION — validate in pilot: brokers tell the "Скоро" placeholders apart from live screens; note any question about the sample ranking or KPIs in §6] |
 
 ## 5. Current state
 
@@ -104,7 +107,7 @@ crons (or the pg_cron fallback, AD-042), production env vars.
 **Open decisions:** none. `property-import` is Done (2026-11-09, `spec/property-import.md`, plan in
 `docs/archive/property-import-plan.md`); its migrations run through `20261109000007`. `phone-loop` is
 Done (2026-11-19, `spec/phone-loop.md`, plan in `docs/archive/phone-loop-plan.md`); its migrations
-run through `20261119000002`. Next: `go-live`.
+run through `20261119000002`. Next: `ui-bright` (added 2026-11-25), then `go-live`.
 
 ## 6. Pilot evidence
 
