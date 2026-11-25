@@ -17,13 +17,13 @@ onto them as in plan decision 1. Add status, info and highlight tokens, radius 4
 (Phase 3 PNGs exist, 7 e2e specs).
 
 **Acceptance criteria:**
-- [ ] Every colour token in `tokens.json` has a CSS variable for light and dark; shadcn variables reference them, no `oklch` left
-- [ ] `bg-surface`, `text-ink`, `border-border-strong`, `shadow-action`, `shadow-float`, `rounded-{sm,md,lg}` = 4/6/8 px work as utilities
-- [ ] AD-066 in `docs/decisions-log.md`; `spec/ui-bright.md` Phase 3 table names its PNGs
+- [x] Every colour token in `tokens.json` has a CSS variable for light and dark; shadcn variables reference them, no `oklch` left
+- [x] `bg-surface`, `text-ink`, `border-border-strong`, `shadow-action`, `shadow-float`, `rounded-{sm,md,lg}` = 4/6/8 px work as utilities
+- [x] AD-066 in `docs/decisions-log.md`; `spec/ui-bright.md` Phase 3 table names its PNGs
 
 **Verification:**
-- [ ] Browser: `/today` renders white page, primary `#2b63c6` buttons (computed style check)
-- [ ] `grep -n oklch src/app/globals.css` is empty
+- [x] Browser: `/today` renders white page, primary `#2b63c6` buttons (computed style check)
+- [x] `grep -n oklch src/app/globals.css` is empty
 
 **Dependencies:** None
 **Files likely touched:** `src/app/globals.css`, `docs/decisions-log.md`, `spec/ui-bright.md`

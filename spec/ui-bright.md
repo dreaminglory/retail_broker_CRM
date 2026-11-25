@@ -4,7 +4,7 @@
 > (Bright tokens mapped onto the shadcn theme). Requirements: none new; this module changes how
 > existing FRs look, not what they do.
 > **Evidence:** founder decision (E1). Design source: `docs/design/` (README, `tokens.json`,
-> 12 PNGs) and the design system https://claude.ai/artifact/DmBeMNsJjGTvpizArucMPu.
+> 26 PNGs) and the design system https://claude.ai/artifact/DmBeMNsJjGTvpizArucMPu.
 > Scope answers from the founder (2026-11-25): visuals only, no schema or rule changes; existing
 > screens laid out to match their PNG; pages without a PNG derived from the tokens; PNG parts with
 > no data are **left out** and logged as ideas; three whole screens plus part of Табло become
@@ -70,17 +70,17 @@ change to data, rules or existing text.
 | `/exceptions` | `exceptions.png` | Each existing exception section as a collapsible card (severity pill, title, rule line, count, rows with one action). Main column only | — |
 | `/dashboard` (Табло) | `dashboard.png` | Top: the 4 real counts as KPI tiles. Below: one **Скоро** section (phase 4) | — |
 
-### Phase 3 — Pages without a PNG (derived from tokens and the nearest PNG)
+### Phase 3 — Pages with a code-rendered PNG (added 2026-11-25, `832193a`; parts without data left out)
 
 | Route | Follows |
 |---|---|
-| `/login`, `/signup`, `/onboarding`, `/forgot-password`, `/update-password` | White page, centred 400px card, logo mark from the sidebar, primary button with the yellow offset |
-| `/opportunities` | `properties-list.png` table |
-| `/lists`, `/lists/[id]` | `contacts.png` list rows and tabs |
-| `/properties/[id]` | `deal.png`: header card, tabs from its existing sections, right column with parties |
-| `/properties/new`, `/properties/[id]/edit`, all create/edit forms and dialogs | Field style of the inquiry panel: label above, `border-strong` inputs, grouped in cards |
-| `/contacts/[id]` | `deal.png` layout with the contact panel's content |
-| `/settings/*` (profile, team, stages, lead sources, areas, import) | `settings-rules.png` frame: settings sub-nav on the left, content in cards |
+| `/login`, `/signup`, `/onboarding`, `/forgot-password`, `/update-password` | `login.png`: white page, centred 400px card, logo mark from the sidebar, primary button with the yellow offset |
+| `/opportunities` | `deals.png` table (no deal-stage strip, no loss-reason counts) |
+| `/lists`, `/lists/[id]` | `lists.png`, `list-detail.png` (no list tabs) |
+| `/properties/[id]` | `property-detail.png`: header card, tabs from its existing sections, right column with parties |
+| `/properties/new`, `/properties/[id]/edit`, all create/edit forms and dialogs | `property-form.png` (no minimum price); its field style everywhere else: label above, `border-strong` inputs, grouped in cards |
+| `/contacts/[id]` | `contact-detail.png` |
+| `/settings/*` (profile, team, stages, lead sources, areas, import) | `settings-{profile,team,stages,lead-sources,areas,import,import-new}.png`: sub-nav on the left, content in cards |
 
 ### Phase 4 — Скоро placeholders
 
@@ -131,7 +131,7 @@ contract, portal price drift, GDPR consent, exclusive expiring). Spot illustrati
 6. Every Phase 2 screen matches its PNG in layout, and every Phase 3 page follows its row in the
    table; the founder approves each on the phase review page (PNG | built, `bg`, 1280 and 390 px).
 7. Every action that works today still works, with the same result, from the new layout
-   (Vitest and the 8 e2e specs green, selectors updated where the layout moved).
+   (Vitest and the 7 e2e specs green, selectors updated where the layout moved).
 8. Contacts and Inquiries show list + panel at ≥ 1024 px and list → page below it; selecting a row
    updates the URL (`?id=`), so a refresh or a shared link keeps the selection.
 9. Deal tabs are reachable by keyboard and by URL (`?tab=`); the default tab is Път.
