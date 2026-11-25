@@ -41,8 +41,8 @@ const ICONS: Record<ContactLinkKind, React.ComponentType<{ className?: string }>
 
 /** Lucide has no brand marks; the brand tint tells the two chat buttons apart. */
 const ICON_TINT: Partial<Record<ContactLinkKind, string>> = {
-  viber: "text-violet-600 dark:text-violet-400",
-  whatsapp: "text-emerald-600 dark:text-emerald-400",
+  viber: "text-primary",
+  whatsapp: "text-primary",
 };
 
 /** Call · Viber · WhatsApp · Email as real links (spec phone-loop rule 1, AD-065). */

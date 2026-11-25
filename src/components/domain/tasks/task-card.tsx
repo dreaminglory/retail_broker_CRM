@@ -54,12 +54,12 @@ interface TaskCardProps {
 }
 
 const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
-  call: { icon: Phone, label: "Call", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  email: { icon: Mail, label: "Email", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
-  viewing: { icon: Eye, label: "Viewing", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  meeting: { icon: Users, label: "Meeting", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-  follow_up: { icon: CalendarCheck, label: "Follow-up", color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
-  other: { icon: MoreHorizontal, label: "Other", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
+  call: { icon: Phone, label: "Call", color: "bg-sea-light text-primary" },
+  email: { icon: Mail, label: "Email", color: "bg-sea-light text-primary" },
+  viewing: { icon: Eye, label: "Viewing", color: "bg-sea-light text-primary" },
+  meeting: { icon: Users, label: "Meeting", color: "bg-sea-light text-primary" },
+  follow_up: { icon: CalendarCheck, label: "Follow-up", color: "bg-sea-light text-primary" },
+  other: { icon: MoreHorizontal, label: "Other", color: "bg-sea-light text-primary" },
 };
 
 export function TaskCard({
@@ -91,7 +91,7 @@ export function TaskCard({
       className={cn(
         "flex items-start gap-3 rounded-lg border p-3.5 transition-all hover:shadow-sm",
         isOverdue && "border-destructive/40 bg-destructive/5",
-        isDueToday && !isOverdue && "border-amber-300/50 bg-amber-50/50 dark:border-amber-700/30 dark:bg-amber-900/10",
+        isDueToday && !isOverdue && "border-due/40 bg-due-soft/50",
         !isOverdue && !isDueToday && "bg-card"
       )}
     >

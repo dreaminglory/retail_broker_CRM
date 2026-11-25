@@ -83,7 +83,7 @@ function OpportunityRow({ opportunity, stage, requirementSummary, newMatches }: 
           {opportunity.next_action_at && (
             <>
               <span>•</span>
-              <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+              <span className="flex items-center gap-1 text-primary">
                 <Calendar className="h-3 w-3" />
                 {format.dateTime(new Date(opportunity.next_action_at), { month: "short", day: "numeric" })}
               </span>

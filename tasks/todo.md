@@ -55,12 +55,12 @@ files) with the named status utilities from Task 1 (`text-overdue`, `bg-overdue-
 `done`, `at-risk`, severity). Neutral greys/blues there become `ink`/`muted`/`primary`.
 
 **Acceptance criteria:**
-- [ ] No palette class or hex/`oklch` literal left in those folders (grep)
-- [ ] Red/amber/green appear only on overdue, due, done, at-risk and exception severity
+- [x] No palette class or hex/`oklch` literal left in those folders (grep)
+- [x] Red/amber/green appear only on overdue, due, done, at-risk and exception severity
 
 **Verification:**
-- [ ] Browser: Today overdue/at-risk, a deal's next step and Exceptions read as before in meaning
-- [ ] Existing tests in those folders green
+- [x] Browser: Today overdue/at-risk, a deal's next step and Exceptions read as before in meaning
+- [x] Existing tests in those folders green
 
 **Dependencies:** Task 1
 **Files likely touched:** the follow-up-loop files from the grep (~10)

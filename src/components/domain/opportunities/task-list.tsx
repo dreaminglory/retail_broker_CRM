@@ -274,7 +274,7 @@ export function TaskList({
             <div className="space-y-2 opacity-70">
               {completedTasks.map((task) => (
                 <div key={task.id} className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-done shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm line-through">{task.title}</p>
                     {task.outcome && (

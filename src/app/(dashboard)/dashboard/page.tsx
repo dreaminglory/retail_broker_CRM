@@ -102,19 +102,19 @@ export default async function DashboardPage() {
             icon={<Inbox className="h-4 w-4" />}
             label={t('newInquiries')}
             count={newInquiries.length}
-            color={newInquiries.length > 0 ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}
+            color={newInquiries.length > 0 ? "text-primary" : "text-muted-foreground"}
           />
           <CountCard
             icon={<Clock className="h-4 w-4" />}
             label={t('dueToday')}
             count={totalToday}
-            color={totalToday > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}
+            color={totalToday > 0 ? "text-due-ink" : "text-muted-foreground"}
           />
           <CountCard
             icon={<Briefcase className="h-4 w-4" />}
             label={t('atRisk')}
             count={totalAtRisk}
-            color={totalAtRisk > 0 ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}
+            color={totalAtRisk > 0 ? "text-at-risk-ink" : "text-muted-foreground"}
           />
         </div>
       </Link>

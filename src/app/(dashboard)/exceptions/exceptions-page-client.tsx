@@ -120,14 +120,14 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
         </Card>
 
         {/* 2. Overdue Tasks */}
-        <Card className="col-span-2 md:col-span-1 border-orange-500/50">
+        <Card className="col-span-2 md:col-span-1 border-overdue/50">
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="h-5 w-5 text-orange-500" /> {t('overdue.title')} </CardTitle>
+                <Clock className="h-5 w-5 text-overdue" /> {t('overdue.title')} </CardTitle>
               <CardDescription>{t('overdue.description')}</CardDescription>
             </div>
-            <Badge className="bg-orange-500 hover:bg-orange-600 text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
+            <Badge className="bg-overdue text-on-primary hover:bg-overdue/90 text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
               {data.overdueTasksByBroker.reduce((acc, b) => acc + b.overdue_count, 0)}
             </Badge>
           </CardHeader>
@@ -157,10 +157,10 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-500" /> {t('atRisk.title')} </CardTitle>
+                <AlertCircle className="h-5 w-5 text-at-risk" /> {t('atRisk.title')} </CardTitle>
               <CardDescription>{t('atRisk.description')}</CardDescription>
             </div>
-            <Badge className="bg-amber-500 hover:bg-amber-600 text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
+            <Badge className="bg-at-risk-soft text-at-risk-ink hover:bg-at-risk-soft text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
               {data.atRiskOpportunities.length}
             </Badge>
           </CardHeader>
@@ -207,7 +207,7 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Timer className="h-5 w-5 text-slate-500" /> {t('stale.title')} </CardTitle>
+                <Timer className="h-5 w-5 text-muted-foreground" /> {t('stale.title')} </CardTitle>
               <CardDescription>{t('stale.description')}</CardDescription>
             </div>
             <Badge variant="secondary" className="text-sm rounded-full w-8 h-8 flex items-center justify-center p-0">
@@ -244,7 +244,7 @@ export function ExceptionsPageClient({ data, brokers }: ExceptionsPageClientProp
         <Card className="col-span-2 md:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <BarChart className="h-5 w-5 text-indigo-500" /> {t('workload.title')} </CardTitle>
+              <BarChart className="h-5 w-5 text-primary" /> {t('workload.title')} </CardTitle>
             <CardDescription>{t('workload.description')}</CardDescription>
           </CardHeader>
           <CardContent>

@@ -231,7 +231,7 @@ export function PostCallForm({ target, timeZone, onDone, initialResult }: PostCa
           )}
 
           {showNoNextWarning(state, deal, !!task && completeTask) && (
-            <p role="status" className="flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            <p role="status" className="flex items-start gap-2 rounded-md bg-warning-soft px-3 py-2 text-sm text-warning-ink">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
               {t("noNextWarning")}
             </p>

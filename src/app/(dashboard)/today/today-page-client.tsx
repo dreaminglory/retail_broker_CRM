@@ -130,19 +130,19 @@ export function TodayPageClient({
               </Badge>
             )}
             {newInquiries.length > 0 && (
-              <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+              <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-accent text-primary">
                 <Inbox className="h-3 w-3" />
                 {t('newInquiriesCount', { count: newInquiries.length })}
               </Badge>
             )}
             {dueToday.length > 0 && (
-              <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+              <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-due-soft text-due-ink">
                 <CalendarCheck className="h-3 w-3" />
                 {t('dueTodayCount', { count: dueToday.length })}
               </Badge>
             )}
             {atRisk.length > 0 && (
-              <Badge variant="outline" className="gap-1.5 text-xs px-3 py-1 text-orange-600 border-orange-300 dark:text-orange-400 dark:border-orange-700">
+              <Badge variant="outline" className="gap-1.5 text-xs px-3 py-1 text-at-risk-ink border-at-risk">
                 <Briefcase className="h-3 w-3" />
                 {t('atRiskCount', { count: atRisk.length })}
               </Badge>
@@ -168,7 +168,7 @@ export function TodayPageClient({
           {/* ── Section 2: New Inquiries ──────────────────────────────── */}
           {newInquiries.length > 0 && (
             <Section
-              icon={<Inbox className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
+              icon={<Inbox className="h-4 w-4 text-primary" />}
               title={t("sections.newInquiries")}
               count={newInquiries.length}
               variant="info"
@@ -178,9 +178,9 @@ export function TodayPageClient({
                   <Link
                     key={inq.id}
                     href={`/inquiries?id=${inq.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm hover:border-blue-300/50"
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm hover:border-info-line"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sea-light text-primary">
                       <Phone className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -206,7 +206,7 @@ export function TodayPageClient({
           {/* ── Section 3: Due Today ──────────────────────────────────── */}
           {dueToday.length > 0 && (
             <Section
-              icon={<CalendarCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />}
+              icon={<CalendarCheck className="h-4 w-4 text-due" />}
               title={t("sections.dueToday")}
               count={dueToday.length}
               variant="warning"
@@ -234,7 +234,7 @@ export function TodayPageClient({
           {/* ── Section 5: At Risk ────────────────────────────────────── */}
           {atRisk.length > 0 && (
             <Section
-              icon={<Briefcase className="h-4 w-4 text-orange-500" />}
+              icon={<Briefcase className="h-4 w-4 text-at-risk" />}
               title={t("sections.atRisk")}
               count={atRisk.length}
               variant="warning"
@@ -244,9 +244,9 @@ export function TodayPageClient({
                   <Link
                     key={opp.id}
                     href={`/opportunities/${opp.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm hover:border-orange-300/50"
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm hover:border-at-risk"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-at-risk-soft text-at-risk-ink">
                       <AlertTriangle className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -270,7 +270,7 @@ export function TodayPageClient({
           {/* ── Empty state ───────────────────────────────────────────── */}
           {!hasWork && (
             <div className="rounded-lg border bg-card p-12 text-center">
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 mb-4">
+              <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-done-soft text-done mb-4">
                 <CheckCircle className="h-7 w-7" />
               </div>
               <h3 className="font-semibold text-lg mb-1">{t("emptyState.title")}</h3>
@@ -319,9 +319,9 @@ function Section({
   children: React.ReactNode;
 }) {
   const borderColor = {
-    destructive: "border-l-destructive",
-    warning: "border-l-amber-400 dark:border-l-amber-600",
-    info: "border-l-blue-400 dark:border-l-blue-600",
+    destructive: "border-l-overdue",
+    warning: "border-l-due",
+    info: "border-l-info-line",
     default: "border-l-muted-foreground/30",
   }[variant];
 
