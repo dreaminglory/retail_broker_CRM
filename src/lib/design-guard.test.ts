@@ -96,4 +96,12 @@ describe('design guard (AD-066)', () => {
       .flatMap((path) => findViolations(path, readFileSync(join(SRC, path), 'utf8')));
     expect(violations).toEqual([]);
   });
+
+  it('shadow-action is applied only through <Button emphasis="action">', () => {
+    const users = sourceFiles(SRC)
+      .map((full) => relative(SRC, full).split(sep).join('/'))
+      // In a quoted class string, not a comment.
+      .filter((path) => /["'][^"'\n]*(?<![\w-])shadow-action\b/.test(readFileSync(join(SRC, path), 'utf8')));
+    expect(users).toEqual(['components/ui/button.tsx']);
+  });
 });

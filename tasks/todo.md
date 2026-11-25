@@ -91,11 +91,11 @@ InputGroup, Select, Textarea, Switch, RadioGroup, Label with `border-strong` edg
 `focus` ring.
 
 **Acceptance criteria:**
-- [ ] Control edges ≥ 3:1 and visible focus ring on every control (keyboard tab through a form)
-- [ ] `emphasis="action"` is the only way `shadow-action` is applied (grep)
+- [x] Control edges ≥ 3:1 and visible focus ring on every control (keyboard tab through a form)
+- [x] `emphasis="action"` is the only way `shadow-action` is applied (grep)
 
 **Verification:**
-- [ ] Existing component tests green; browser: contact form and inquiry form in both locales
+- [x] Existing component tests green; browser: contact form and inquiry form in both locales
 
 **Dependencies:** Task 1
 **Files likely touched:** `src/components/ui/{button,badge,input,input-group,select,textarea,switch,radio-group,label}.tsx`

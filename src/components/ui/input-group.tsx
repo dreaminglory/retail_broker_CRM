@@ -9,7 +9,7 @@ const InputGroup = React.forwardRef<
     ref={ref}
     data-slot="input-group"
     className={cn(
-      "flex w-full items-center overflow-hidden rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-within:ring-1 focus-within:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+      "flex w-full items-center overflow-hidden rounded-md border border-input bg-surface px-3 py-1 text-sm transition-colors focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
       className
     )}
     {...props}
