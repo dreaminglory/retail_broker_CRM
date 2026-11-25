@@ -97,6 +97,19 @@ describe('design guard (AD-066)', () => {
     expect(violations).toEqual([]);
   });
 
+  it('outside the primitives, only floating layers carry a shadow (shadow-float)', () => {
+    const raw = /(?<=[\s"'`:])shadow(?:-(?:xs|sm|md|lg|xl|2xl))?(?=[\s"'`])/;
+    const offenders = sourceFiles(SRC)
+      .map((full) => relative(SRC, full).split(sep).join('/'))
+      .filter((path) => !path.startsWith('components/ui/'))
+      .flatMap((path) =>
+        readFileSync(join(SRC, path), 'utf8')
+          .split(/\r?\n/)
+          .flatMap((line, i) => (raw.test(line) ? [`${path}:${i + 1}`] : [])),
+      );
+    expect(offenders).toEqual([]);
+  });
+
   it('shadow-action is applied only through <Button emphasis="action">', () => {
     const users = sourceFiles(SRC)
       .map((full) => relative(SRC, full).split(sep).join('/'))

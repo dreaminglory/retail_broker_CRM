@@ -35,7 +35,7 @@ export default async function ProfileSettingsPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border bg-card p-6 shadow-sm">
+      <div className="rounded-lg border bg-card p-6">
         <div className="mb-6 space-y-1">
           <label className="text-sm font-medium text-muted-foreground">
             {t("emailLabel")}

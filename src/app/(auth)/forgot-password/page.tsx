@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="rounded-lg border bg-card p-8 shadow-sm flex flex-col items-center text-center">
+      <div className="rounded-lg border bg-card p-8 flex flex-col items-center text-center">
         <CheckCircle2 className="h-12 w-12 text-success mb-4" />
         <h2 className="text-xl font-semibold tracking-tight mb-2">{t("successTitle")}</h2>
         <p className="text-sm text-muted-foreground mb-6">
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8 shadow-sm">
+    <div className="rounded-lg border bg-card p-8">
       <div className="mb-6">
         <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
         <p className="text-sm text-muted-foreground mt-1">

@@ -204,7 +204,7 @@ export function ContactCombobox({
           role="listbox"
           // mousedown would blur the input and close the list before the click lands
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+          className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-float"
         >
           {results.length === 0 ? (
             <li className="px-2 py-3 text-center text-sm text-muted-foreground" role="presentation">

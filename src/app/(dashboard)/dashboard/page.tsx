@@ -72,7 +72,7 @@ export default async function DashboardPage() {
       {/* Today's work summary */}
       <Link
         href="/today"
-        className="mb-8 block rounded-lg border bg-card p-6 shadow-sm transition-all hover:shadow-md hover:border-primary/30"
+        className="mb-8 block rounded-lg border bg-card p-6 transition-all hover:border-primary/30"
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export default async function DashboardPage() {
           <Link
             key={item.title}
             href={item.href}
-            className="group rounded-lg border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-primary/30"
+            className="group rounded-lg border bg-card p-5 transition-all hover:border-primary/30"
           >
             <div className="flex items-center justify-between">
               <item.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />

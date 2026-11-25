@@ -95,7 +95,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8 shadow-sm">
+    <div className="rounded-lg border bg-card p-8">
       <div className="mb-6">
         <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
         <p className="text-sm text-muted-foreground">

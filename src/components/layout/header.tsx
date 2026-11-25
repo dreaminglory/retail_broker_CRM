@@ -102,7 +102,7 @@ export function Header({ userRole = "broker" }: HeaderProps) {
               onClick={() => setMenuOpen(false)}
             />
             {/* Dropdown */}
-            <div className="absolute right-0 z-50 mt-1 w-56 rounded-md border bg-popover p-1 shadow-md">
+            <div className="absolute right-0 z-50 mt-1 w-56 rounded-md border bg-popover p-1 shadow-float">
               <div className="px-3 py-2 text-sm">
                 <p className="font-medium">{userInfo?.fullName}</p>
                 <p className="text-xs text-muted-foreground">

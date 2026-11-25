@@ -112,7 +112,7 @@ export default async function SettingsPage() {
             <Link
               key={section.href}
               href={section.href}
-              className="flex items-center justify-between rounded-lg border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
+              className="flex items-center justify-between rounded-lg border bg-card p-5 transition-colors hover:border-info-line"
             >
               <div className="flex items-center gap-4">
                 <div className="rounded-md bg-primary/10 p-2">

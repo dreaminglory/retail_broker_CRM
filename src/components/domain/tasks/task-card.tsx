@@ -89,8 +89,8 @@ export function TaskCard({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-lg border p-3.5 transition-all hover:shadow-sm",
-        isOverdue && "border-destructive/40 bg-destructive/5",
+        "flex items-start gap-3 rounded-lg border p-3.5 transition-colors hover:border-info-line",
+        isOverdue && "border-overdue/40 bg-overdue-soft/50",
         isDueToday && !isOverdue && "border-due/40 bg-due-soft/50",
         !isOverdue && !isDueToday && "bg-card"
       )}

@@ -178,7 +178,7 @@ export function TodayPageClient({
                   <Link
                     key={inq.id}
                     href={`/inquiries?id=${inq.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm hover:border-info-line"
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:border-info-line"
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sea-light text-primary">
                       <Phone className="h-4 w-4" />
@@ -244,7 +244,7 @@ export function TodayPageClient({
                   <Link
                     key={opp.id}
                     href={`/opportunities/${opp.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm hover:border-at-risk"
+                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:border-at-risk"
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-at-risk-soft text-at-risk-ink">
                       <AlertTriangle className="h-4 w-4" />

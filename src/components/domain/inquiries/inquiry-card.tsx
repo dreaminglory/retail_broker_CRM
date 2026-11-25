@@ -132,7 +132,7 @@ export function InquiryCard({
     t("unknownCaller");
 
   return (
-    <div className="group relative rounded-lg border bg-card px-4 py-3.5 transition-shadow hover:shadow-sm">
+    <div className="group relative rounded-lg border bg-card px-4 py-3.5 transition-colors hover:border-info-line">
       {/* Top row: avatar + caller + status + actions */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 flex items-start gap-3">

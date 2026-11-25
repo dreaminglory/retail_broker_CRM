@@ -107,11 +107,11 @@ InputGroup, Select, Textarea, Switch, RadioGroup, Label with `border-strong` edg
 `shadow-float`; Alert, Avatar (initials), ListPager restyled; tabs underline in primary.
 
 **Acceptance criteria:**
-- [ ] No card has a shadow in light; only floating layers use `shadow-float`
-- [ ] Table header and row metrics match `properties-list.png`
+- [x] No card has a shadow in light; only floating layers use `shadow-float`
+- [x] Table header and row metrics match `properties-list.png`
 
 **Verification:**
-- [ ] Browser: `/properties` table, a dialog (new contact), a sheet (post-call) and a dropdown
+- [x] Browser: `/properties` table, a dialog (new contact), a sheet (post-call) and a dropdown
 
 **Dependencies:** Task 1
 **Files likely touched:** `src/components/ui/{card,table,dialog,alert-dialog,sheet,dropdown-menu,command,alert,avatar,list-pager}.tsx`

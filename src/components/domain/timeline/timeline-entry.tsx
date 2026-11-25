@@ -81,7 +81,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
       <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border" />
       
       {/* Icon node */}
-      <div className="absolute left-0 top-5 h-8 w-8 rounded-full border bg-background flex items-center justify-center z-10 shadow-sm">
+      <div className="absolute left-0 top-5 h-8 w-8 rounded-full border bg-background flex items-center justify-center z-10">
         {getIcon()}
       </div>
 

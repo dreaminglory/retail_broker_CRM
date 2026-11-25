@@ -88,7 +88,7 @@ export function CommandPalette() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center justify-between rounded-md border border-input bg-muted/30 px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-64"
+        className="inline-flex items-center justify-between rounded-md border border-input bg-muted/30 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-64"
       >
         <span className="flex items-center gap-2">
           <Search className="h-4 w-4" />

@@ -204,7 +204,7 @@ export function InquiriesPageClient({
               autoComplete="off"
             />
             {showSuggestions && search.length > 1 && quickResults.length > 0 && (
-              <div className="absolute top-full mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none z-50 max-h-[300px] overflow-y-auto">
+              <div className="absolute top-full mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-float outline-none z-50 max-h-[300px] overflow-y-auto">
                 <div className="p-1">
                   {quickResults.map((inquiry) => (
                     <div
