@@ -154,7 +154,7 @@ exists), existing actions kept, no bell or + Ново. `main` on white with 16px
 **Estimated scope:** S
 
 ### Checkpoint 1: shell
-- [ ] typecheck, lint, test, `test:e2e` green
+- [x] typecheck, lint, test, `test:e2e` green
 - [ ] Review page published (every route, `bg`/`en`, 1280/390); founder approves
 
 ## Phase 2: Screens with a PNG
