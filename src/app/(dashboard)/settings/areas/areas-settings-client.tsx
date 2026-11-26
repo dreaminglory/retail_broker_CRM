@@ -100,7 +100,7 @@ export function AreasSettingsClient({ settlement, settlementsWithAreas, areas }:
               {t("empty")}
             </p>
           ) : (
-            <ul className="divide-y rounded-lg border bg-card">
+            <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
               {areas.map((area, index) => (
                 <li key={area.id} className="flex items-center justify-between gap-2 px-3 py-2">
                   <div className="flex min-w-0 items-center gap-2">

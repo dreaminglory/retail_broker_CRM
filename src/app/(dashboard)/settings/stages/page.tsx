@@ -24,7 +24,7 @@ export default async function StagesSettingsPage() {
   const stages = await new StageService(supabase).list(membership.agencyId);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       {/* Breadcrumb */}
       <div className="mb-6">
         <Link
@@ -37,7 +37,7 @@ export default async function StagesSettingsPage() {
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <h1 className="text-title text-ink">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {t("description")}
         </p>

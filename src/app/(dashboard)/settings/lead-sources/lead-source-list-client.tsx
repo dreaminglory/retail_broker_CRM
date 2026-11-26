@@ -51,7 +51,7 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger
             render={
-              <Button size="sm">
+              <Button size="sm" emphasis="action">
                 <Plus className="mr-1.5 h-4 w-4" />
                 {t("addLeadSource")}
               </Button>
@@ -71,7 +71,7 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
 
       {/* Active sources */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 className="mb-3 text-label uppercase text-muted-foreground">
           {t("activeCount", { count: active.length })}
         </h2>
         {active.length === 0 ? (
@@ -79,7 +79,7 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
             {t("noActive")}
           </p>
         ) : (
-          <div className="divide-y rounded-lg border bg-card">
+          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
             {active.map((source) => (
               <SourceRow
                 key={source.id}
@@ -94,10 +94,10 @@ export function LeadSourceListClient({ leadSources }: LeadSourceListClientProps)
       {/* Inactive sources */}
       {inactive.length > 0 && (
         <div>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <h2 className="mb-3 text-label uppercase text-muted-foreground">
             {t("inactiveCount", { count: inactive.length })}
           </h2>
-          <div className="divide-y rounded-lg border bg-card opacity-60">
+          <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface opacity-60">
             {inactive.map((source) => (
               <SourceRow
                 key={source.id}

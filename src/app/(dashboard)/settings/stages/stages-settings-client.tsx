@@ -549,7 +549,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger
             render={
-              <Button size="sm">
+              <Button size="sm" emphasis="action">
                 <Plus className="mr-1.5 h-4 w-4" />
                 {t("addStage")}
               </Button>
@@ -572,7 +572,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
 
       {/* Pipeline stages */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 className="mb-3 text-label uppercase text-muted-foreground">
           {t("pipelineStages", { count: pipeline.length })}
         </h2>
         {pipeline.length === 0 ? (
@@ -587,7 +587,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
             collisionDetection={closestCenter}
             onDragEnd={(e) => handleDragEnd(e, 'pipeline')}
           >
-            <div className="divide-y rounded-lg border bg-card">
+            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
               <SortableContext 
                 items={pipeline.map(s => s.id)}
                 strategy={verticalListSortingStrategy}
@@ -611,7 +611,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
 
       {/* Terminal stages */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 className="mb-3 text-label uppercase text-muted-foreground">
           {t("terminalStagesTitle", { count: terminal.length })}
         </h2>
         <p className="mb-3 text-xs text-muted-foreground">
@@ -629,7 +629,7 @@ export function StagesSettingsClient({ initialStages }: StagesSettingsClientProp
             collisionDetection={closestCenter}
             onDragEnd={(e) => handleDragEnd(e, 'terminal')}
           >
-            <div className="divide-y rounded-lg border bg-card">
+            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
               <SortableContext 
                 items={terminal.map(s => s.id)}
                 strategy={verticalListSortingStrategy}

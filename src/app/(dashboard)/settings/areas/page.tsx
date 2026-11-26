@@ -42,7 +42,7 @@ export default async function AreasPage({
   const areas = settlement ? await areaService.listForSettlement(membership.agencyId, settlement.id) : [];
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <div className="mb-6">
         <Link
           href="/settings"
@@ -54,7 +54,7 @@ export default async function AreasPage({
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+        <h1 className="text-title text-ink">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("description")}</p>
       </div>
 
