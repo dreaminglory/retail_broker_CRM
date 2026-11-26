@@ -47,7 +47,7 @@ export default async function EditPropertyPage({ params }: { params: Promise<{ i
         <ChevronLeft className="h-3.5 w-3.5" />
         {propertyCode(property)}
       </Link>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">{t("editTitle", { code: propertyCode(property) })}</h1>
+      <h1 className="mb-6 text-title text-ink">{t("editTitle", { code: propertyCode(property) })}</h1>
       <EditPropertyClient property={property} areas={areas} brokers={brokers} />
     </div>
   );

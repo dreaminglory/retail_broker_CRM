@@ -371,9 +371,9 @@ sections (reuse Task 10 helper), parties in the right column.
 **Description:** Property new/edit as `property-form.png` (label above, grouped cards); the same
 field style in contact, inquiry, task, requirement and convert dialogs.
 **Acceptance criteria:**
-- [ ] Validation errors still show per field; submit results unchanged
+- [x] Validation errors still show per field; submit results unchanged
 **Verification:**
-- [ ] properties and requirements e2e green; browser each dialog at 390 px
+- [x] properties and requirements e2e green; browser each dialog at 390 px
 **Dependencies:** Checkpoint 2 · **Files:** `src/components/domain/*/*-form.tsx`, `*-dialog.tsx`, `src/app/(dashboard)/properties/{new,[id]/edit}` · **Scope:** M
 
 ## Task 23: Settings frame, profile, team

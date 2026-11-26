@@ -42,6 +42,18 @@ const initialState: ActionResult<{ id: string }> = { success: false, error: "" }
 
 type FieldErrors = Record<string, string[] | undefined>;
 
+/** A numbered section title on the left of its fields (property-form.png). */
+function SectionHeading({ step, label }: { step: number; label: string }) {
+  return (
+    <div aria-hidden className="flex items-start gap-3">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-small font-semibold text-primary">
+        {step}
+      </span>
+      <span className="text-body-strong text-ink">{label}</span>
+    </div>
+  );
+}
+
 export function PropertyForm({
   property,
   settlement: initialSettlement = null,
@@ -151,9 +163,12 @@ export function PropertyForm({
   }
 
   return (
-    <form action={formAction} onSubmit={handleSubmit} noValidate className="space-y-8">
-      <fieldset className="space-y-4">
-        <legend className="mb-2 text-base font-semibold">{t("attributes")}</legend>
+    <form action={formAction} onSubmit={handleSubmit} noValidate className="space-y-6">
+      <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+      <fieldset className="grid gap-4 p-5 md:grid-cols-[200px_minmax(0,1fr)] md:gap-8 md:p-6">
+        <legend className="sr-only">{t("attributes")}</legend>
+        <SectionHeading step={1} label={t("attributes")} />
+        <div className="space-y-4">
 
         <div className="space-y-1.5">
           <Label htmlFor="property-type">
@@ -208,10 +223,13 @@ export function PropertyForm({
             {errorFor("construction")}
           </div>
         )}
+        </div>
       </fieldset>
 
-      <fieldset className="space-y-4">
-        <legend className="mb-2 text-base font-semibold">{t("location")}</legend>
+      <fieldset className="grid gap-4 p-5 md:grid-cols-[200px_minmax(0,1fr)] md:gap-8 md:p-6">
+        <legend className="sr-only">{t("location")}</legend>
+        <SectionHeading step={2} label={t("location")} />
+        <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="property-settlement">
@@ -287,10 +305,13 @@ export function PropertyForm({
           />
           {errorFor("location_note")}
         </div>
+        </div>
       </fieldset>
 
-      <fieldset className="space-y-4">
-        <legend className="mb-2 text-base font-semibold">{t("work")}</legend>
+      <fieldset className="grid gap-4 p-5 md:grid-cols-[200px_minmax(0,1fr)] md:gap-8 md:p-6">
+        <legend className="sr-only">{t("work")}</legend>
+        <SectionHeading step={3} label={t("work")} />
+        <div className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="property-assigned-to">{t("assignedTo")}</Label>
           <div id="property-assigned-to" className="sm:w-72">
@@ -317,7 +338,9 @@ export function PropertyForm({
           />
           {errorFor("description")}
         </div>
+        </div>
       </fieldset>
+      </div>
 
       {formError && (
         <p className="text-sm text-destructive" role="alert">
@@ -331,7 +354,7 @@ export function PropertyForm({
             {t("cancel")}
           </Button>
         )}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} emphasis="action">
           {pending ? t("saving") : property ? t("save") : t("create")}
         </Button>
       </div>
