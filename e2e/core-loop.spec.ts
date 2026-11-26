@@ -152,6 +152,7 @@ test("a broker joins a repeat caller's inquiry to their open deal", async ({ pag
 
   // 3. We land on the existing deal, and the inquiry is on its timeline as joined.
   await page.waitForURL(new RegExp(`${alphaOpp1}$`));
+  await page.getByRole('tab', { name: m.OpportunityDetail.activityHistoryTitle }).click();
   await expect(page.getByTestId('inquiry-joined-on').first()).toBeVisible();
 
   // 4. The call back is on Today, and the inquiry card says where it went.
@@ -254,6 +255,9 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
   await page.goto('/opportunities');
   await page.getByRole('link', { name: `E2E call deal ${run}` }).click();
   await page.waitForURL(/\/opportunities\/[0-9a-f-]+$/);
-  await expect(page.getByTestId('call-channel')).toHaveCount(2);
   await expect(page.getByText(m.phoneLoop.titles.followUp.replace('{name}', caller)).first()).toBeVisible();
+  // The calls are on the deal's History tab (ui-bright).
+  await page.getByRole('tab', { name: m.OpportunityDetail.activityHistoryTitle }).click();
+  await expect(page).toHaveURL(/[?&]tab=history/);
+  await expect(page.getByTestId('call-channel')).toHaveCount(2);
 });

@@ -1308,6 +1308,10 @@
     "viewInquiry": "View Inquiry",
     "notesTitle": "Notes",
     "activityHistoryTitle": "Activity History",
+    "tabs": {
+      "label": "Deal sections",
+      "path": "Path"
+    },
     "none": "—"
   },
   "Timeline": {

@@ -1308,6 +1308,10 @@
     "viewInquiry": "Виж запитване",
     "notesTitle": "Бележки",
     "activityHistoryTitle": "История на активността",
+    "tabs": {
+      "label": "Раздели на сделката",
+      "path": "Път"
+    },
     "none": "—"
   },
   "Timeline": {

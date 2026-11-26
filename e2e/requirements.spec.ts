@@ -7,6 +7,9 @@ import { test, expect } from './fixtures';
 // with the change and its old value → remove it, so the seed's empty state is back.
 
 const BUYER_DEAL = '/opportunities/11111111-6666-6666-6666-666666666663'; // seeded "Alpha Opp 3", no requirement
+// The deal page's tabs (ui-bright): the requirement and the timeline each have their own.
+const REQUIREMENTS_TAB = `${BUYER_DEAL}?tab=requirements`;
+const HISTORY_TAB = `${BUYER_DEAL}?tab=history`;
 const BUDGET_MIN = 150000;
 const BUDGET_MAX = 200000;
 
@@ -39,7 +42,7 @@ test('a broker records, edits and removes a buyer requirement', async ({ page, m
   const section = requirementSection(page);
 
   await signInAs('broker@alpha.bg');
-  await page.goto(BUYER_DEAL);
+  await page.goto(REQUIREMENTS_TAB);
 
   // A run that failed half way may have left its requirement: remove it first. Wait for the
   // section to show either state, since isVisible() doesn't wait.
@@ -93,7 +96,7 @@ test('a broker records, edits and removes a buyer requirement', async ({ page, m
   await expect(dealForm).toBeHidden();
 
   // 4. One timeline entry for the edit, with the old and the new value.
-  await page.reload();
+  await page.goto(HISTORY_TAB);
   const edits = page
     .getByTestId('timeline-entry')
     .filter({ hasText: m.Timeline.events.requirementChanged })
@@ -108,7 +111,7 @@ test('a broker records, edits and removes a buyer requirement', async ({ page, m
   const row = page.getByRole('link', { name: /Alpha Opp 3/ });
   await expect(row).toContainText('Младост 1');
   await expect(row).toContainText(amount(newMax));
-  await page.goto(BUYER_DEAL);
+  await page.goto(REQUIREMENTS_TAB);
 
   // 6. Remove it: the empty state is back for the next run.
   await section.getByRole('button', { name: m.RequirementSection.remove }).click();

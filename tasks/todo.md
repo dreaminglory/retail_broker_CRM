@@ -204,15 +204,16 @@ unit-tested. Deal page gets tabs Път (stage path + next-step card) / Имот
 without an existing section title.
 
 **Acceptance criteria:**
-- [ ] `?tab=istoriya`-style URL opens that tab; unknown tab falls back to Път
-- [ ] Arrow keys move between tabs; nothing on the page removed
+- [x] `?tab=istoriya`-style URL opens that tab; unknown tab falls back to Път
+- [x] Arrow keys move between tabs; nothing on the page removed
 
 **Verification:**
-- [ ] `npx vitest run src/lib/url-state.test.ts`
-- [ ] New e2e: deal tabs by click, keyboard and URL; existing specs touching the deal page green
+- [x] `npx vitest run src/lib/url-state.test.ts`
+- [x] New e2e: deal tabs by click, keyboard and URL; existing specs touching the deal page green
 
 **Dependencies:** Checkpoint 1
 **Files likely touched:** `src/lib/url-state.ts(+test)`, `src/app/(dashboard)/opportunities/[id]/opportunity-detail-client.tsx`, `e2e/deal-tabs.spec.ts`
+**As built:** `src/lib/url-state.ts` holds the pure helpers (`parseChoice`, `hrefWithParam`, safe in Server Components) and `src/lib/use-url-param.ts` the client hook (router.replace, so the server sees the param and the matches links keep `?tab=`). New `components/ui/tabs.tsx` (WAI-ARIA tabs, automatic activation, Arrow/Home/End) and `StagePath`. Tab slugs `path|properties|requirements|history`; labels reuse PropertyLinks.title, RequirementSection.title, activityHistoryTitle; new keys `OpportunityDetail.tabs.{label,path}`. Seller/landlord deals have no requirements tab. Only the active panel is mounted, so matching, properties, requirements and core-loop specs open the tab they need. Primary contact and participants moved to the right column (restyled in Task 11).
 **Estimated scope:** M
 
 ## Task 11: Deal header and right column
