@@ -388,17 +388,17 @@ field style in contact, inquiry, task, requirement and convert dialogs.
 ## Task 24: Settings stages, lead sources, areas
 **Description:** As `settings-stages.png`, `settings-lead-sources.png`, `settings-areas.png`.
 **Acceptance criteria:**
-- [ ] Reorder, add, archive behave as before (owner/manager only)
+- [x] Reorder, add, archive behave as before (owner/manager only)
 **Verification:**
-- [ ] Browser as manager; component tests green
+- [x] Browser as manager; component tests green
 **Dependencies:** Task 23 · **Files:** `src/app/(dashboard)/settings/{stages,lead-sources,areas}/*`, related domain components · **Scope:** M
 
 ## Task 25: Settings import and wizard
 **Description:** As `settings-import.png` and `settings-import-new.png`.
 **Acceptance criteria:**
-- [ ] Import wizard steps and history unchanged in behaviour
+- [x] Import wizard steps and history unchanged in behaviour
 **Verification:**
-- [ ] settings-import e2e green
+- [x] settings-import e2e green
 **Dependencies:** Task 23 · **Files:** `src/app/(dashboard)/settings/import/**`, `src/components/domain/imports/*` · **Scope:** S
 
 ### Checkpoint 3: all live pages
