@@ -50,7 +50,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-8 shadow-card">
+    <div>
       <div className="mb-6">
         <h2 className="text-title text-ink">
           {t("title")}

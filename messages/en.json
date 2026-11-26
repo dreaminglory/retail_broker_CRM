@@ -600,6 +600,7 @@
     }
   },
   "auth": {
+    "language": "Language",
     "hero": {"headline":"Every deal has an owner, a next step and the whole history.","point1":"Today: who to call and what is overdue","point2":"Portal inquiries get an owner within minutes","point3":"Buyers and properties that fit each other","footer":"© {year} BrokerCRM · For real estate agencies"},
     "login": {
       "title": "Welcome back",

@@ -23,8 +23,12 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("settings");
 
-  type NavItem = { i18nKey: string; href: string; icon: typeof User };
-  type NavGroup = { key: string; items: NavItem[] };
+  type NavItem = {
+    i18nKey: "profile" | "team" | "leadSources" | "pipelineStages" | "areas" | "import";
+    href: string;
+    icon: typeof User;
+  };
+  type NavGroup = { key: "personal" | "agency" | "work" | "data"; items: NavItem[] };
 
   const groups: NavGroup[] = [
     { key: "personal", items: [{ i18nKey: "profile", href: "/settings/profile", icon: User }] },
@@ -62,12 +66,12 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
         {groups.map((group) => (
           <div key={group.key} className="flex gap-1 md:flex-col">
             <p className="hidden px-3 pb-1 pt-4 text-label uppercase text-muted-foreground md:block">
-              {t(`groups.${group.key}` as never)}
+              {t(`groups.${group.key}`)}
             </p>
             {group.items.map((item) => (
               <Link key={item.href} href={item.href} className={navLink(pathname.startsWith(item.href))}>
                 <item.icon className="size-4" aria-hidden />
-                {t(item.i18nKey as never)}
+                {t(item.i18nKey)}
               </Link>
             ))}
           </div>

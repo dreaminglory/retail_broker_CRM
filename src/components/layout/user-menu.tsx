@@ -17,16 +17,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { initials } from "@/lib/initials";
 import type { ShellUser } from "./shell-types";
-
-/** Up to two initials from a name or an email ("Мария Колева" → "МК"). */
-export function initials(name: string): string {
-  const words = name.split(/[\s@._-]+/).filter(Boolean);
-  return words
-    .slice(0, 2)
-    .map((word) => word.charAt(0).toLocaleUpperCase())
-    .join("");
-}
 
 /**
  * The user block at the foot of the sidebar (name, role, settings), opening the

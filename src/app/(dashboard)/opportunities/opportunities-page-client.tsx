@@ -45,9 +45,9 @@ const NEXT_ACTION_FILTERS = [
 ] as const;
 const UNTOUCHED_DAY_OPTIONS = ["3", "7", "14", "30"];
 
-/** A filter pill: named until one is picked, then tinted as in deals.png. */
-function pill(value: string) {
-  return cn("h-9 min-w-28 rounded-full", value !== "all" && "border-primary bg-accent text-primary");
+/** A filter pill: named until one is picked, then tinted as in deals.png (the default choice is not a pick). */
+function pill(value: string, unset = "all") {
+  return cn("h-9 min-w-28 rounded-full", value !== unset && "border-primary bg-accent text-primary");
 }
 
 interface OpportunitiesPageClientProps {
@@ -236,7 +236,7 @@ export function OpportunitiesPageClient({
         </form>
 
         <Select value={initialStatus} onValueChange={(v) => updateParams({ status: (v as string) || "all", page: "" })}>
-          <SelectTrigger className={pill(initialStatus)}>
+          <SelectTrigger className={pill(initialStatus, "active")}>
             <SelectValue>
               {(val: string) => val ? t(`filters.${val === "all" ? "allStatuses" : val}` as any) : t("filters.allStatuses")}
             </SelectValue>

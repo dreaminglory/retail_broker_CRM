@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { setAuthLocaleAction } from "./set-locale";
 
@@ -14,6 +14,7 @@ const LOCALES = [
 export function LanguageToggle() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("auth");
 
   async function choose(next: string) {
     if (next === locale) return;
@@ -22,7 +23,7 @@ export function LanguageToggle() {
   }
 
   return (
-    <div role="group" className="inline-flex rounded-md border border-border-strong bg-surface p-0.5 text-sm">
+    <div role="group" aria-label={t("language")} className="inline-flex rounded-md border border-border-strong bg-surface p-0.5 text-sm">
       {LOCALES.map((item) => (
         <button
           key={item.value}

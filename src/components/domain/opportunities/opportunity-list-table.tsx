@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Opportunity } from "@/domain/opportunities/types";
 import type { Stage } from "@/domain/stages/types";
 import { RequirementSummaryLine } from "@/components/domain/requirements/requirement-summary-line";
-import { initials } from "@/components/layout/user-menu";
+import { initials } from "@/lib/initials";
 import { cn } from "@/lib/utils";
 import { StageBadge } from "./stage-badge";
 import { ChevronRight, Briefcase, Calendar } from "lucide-react";

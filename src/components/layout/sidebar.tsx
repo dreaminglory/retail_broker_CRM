@@ -11,7 +11,8 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { CommandPalette, SearchDialog, SearchTrigger } from "@/components/domain/search/command-palette";
 import { isNavItemActive, visibleNavGroups } from "./nav-config";
 import type { ShellUser } from "./shell-types";
-import { UserMenu, initials } from "./user-menu";
+import { initials } from "@/lib/initials";
+import { UserMenu } from "./user-menu";
 
 type SidebarProps = {
   user: ShellUser;

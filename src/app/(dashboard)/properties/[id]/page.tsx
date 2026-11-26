@@ -62,13 +62,16 @@ export default async function PropertyPage({ params, searchParams }: Props) {
   // Matching deals (spec: matching): an active property is matched in the same round as the rest;
   // the database returns nothing without an open listing, and the section needs one to show.
   const view = parseMatchView(query, PROPERTY_MATCH_KEYS);
-  const showMatches = property.status === "active";
+  const tab = parseChoice(query.tab, PROPERTY_TABS, "overview");
+  // Only the open tab's heavy parts load: matches for Buyers and deals, the timeline for History.
+  // A tab switch changes `?tab=`, which brings the server content of the new tab.
+  const showMatches = property.status === "active" && tab === "deals";
   const [listings, parties, opportunityLinks, brokers, timeline, matches] = await Promise.all([
     new ListingService(supabase).listForProperty(property.id, property.agency_id),
     new PropertyPartyService(supabase).listForProperty(property.id, property.agency_id),
     new OpportunityPropertyService(supabase).listForProperty(property.id, property.agency_id),
     new MemberRepository(supabase).getActiveBrokers(property.agency_id),
-    new TimelineService(supabase).getPropertyTimeline(property.id, property.agency_id),
+    tab === "history" ? new TimelineService(supabase).getPropertyTimeline(property.id, property.agency_id) : Promise.resolve([]),
     showMatches
       ? new MatchingService(supabase).forProperty(property.id, property.agency_id, {
           includeLinked: view.linked,
@@ -216,8 +219,8 @@ export default async function PropertyPage({ params, searchParams }: Props) {
             { value: "history", label: t("history") },
           ]}
           defaultTab="overview"
-          initialTab={parseChoice(query.tab, PROPERTY_TABS, "overview")}
-          panels={{ overview, deals: dealsTab, history: historyTab }}
+          initialTab={tab}
+          panels={{ overview, deals: tab === "deals" ? dealsTab : null, history: tab === "history" ? historyTab : null }}
           aside={<PartySection propertyId={property.id} current={parties.current} past={parties.past} />}
         />
       </div>

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Check } from "lucide-react";
+import { BrandMark } from "./brand-mark";
 
 const POINTS = ["point1", "point2", "point3"] as const;
 
@@ -33,19 +34,10 @@ function SpotArt() {
 /** The left half of the auth screens (login.png): logo, spot art, promise, three points, footer. */
 export async function AuthHero() {
   const t = await getTranslations("auth.hero");
-  const brand = "BrokerCRM";
 
   return (
     <div className="hidden flex-col justify-between bg-sidebar p-12 lg:flex">
-      <div className="flex items-center gap-2.5">
-        <span
-          aria-hidden
-          className="flex size-9 items-center justify-center rounded-md bg-primary text-body-strong text-primary-foreground"
-        >
-          {brand.charAt(0)}
-        </span>
-        <span className="text-body-strong text-ink">{brand}</span>
-      </div>
+      <BrandMark nameClassName="text-body-strong text-ink" />
 
       <div className="max-w-[460px]">
         <SpotArt />

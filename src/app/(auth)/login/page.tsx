@@ -99,7 +99,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="p-2 sm:p-0">
+    <div>
       <div className="mb-6">
         <h2 className="text-title text-ink">{t("title")}</h2>
         <p className="text-sm text-muted-foreground">

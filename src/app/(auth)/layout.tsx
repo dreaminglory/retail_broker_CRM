@@ -1,7 +1,6 @@
 import { AuthHero } from "./auth-hero";
+import { BrandMark } from "./brand-mark";
 import { LanguageToggle } from "./language-toggle";
-
-const BRAND = "BrokerCRM";
 
 export default function AuthLayout({
   children,
@@ -16,14 +15,8 @@ export default function AuthLayout({
           <LanguageToggle />
         </div>
         {/* The logo moves here when the left half is hidden (phones, tablets). */}
-        <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-          <span
-            aria-hidden
-            className="flex size-9 items-center justify-center rounded-md bg-primary text-body-strong text-primary-foreground"
-          >
-            {BRAND.charAt(0)}
-          </span>
-          <span className="text-title text-ink">{BRAND}</span>
+        <div className="mb-8 lg:hidden">
+          <BrandMark nameClassName="text-title text-ink" />
         </div>
         <div className="w-full max-w-[400px]">{children}</div>
       </div>

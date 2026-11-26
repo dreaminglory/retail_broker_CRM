@@ -181,7 +181,7 @@ export default async function ContactDetailPage({
             { value: "overview", label: t("tabs.overview") },
             { value: "deals", label: t("linkedOpportunities"), count: opportunities.length },
             { value: "properties", label: t("properties"), count: propertyParties.length },
-            { value: "history", label: t("activityHistory"), count: timeline.length },
+            { value: "history", label: t("activityHistory") },
           ]}
           defaultTab="overview"
           initialTab={parseChoice(query.tab, CONTACT_TABS, "overview")}
