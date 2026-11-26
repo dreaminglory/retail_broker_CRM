@@ -90,7 +90,7 @@ disabled, and **no queries**.
 
 | Where | PNG |
 |---|---|
-| `/reports` (new route, Агенция › Отчети) | `reports.png` |
+| `/reports` (new route, Агенция › Отчети; visible to every role, founder 2026-11-26) | `reports.png` |
 | `/settings/rules` (new sub-nav entry) | `settings-rules.png` |
 | `/settings/portals` (new sub-nav entry) | `settings-portals.png` |
 | Табло, below the real tiles | `dashboard.png` charts and lists (commissions, funnel, sources, portfolio health, team today) as one Скоро section |
