@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import * as A from './screens-a.mjs';
 import * as B from './screens-b.mjs';
+import * as D from './dialogs.mjs';
 
 import { fileURLToPath } from 'node:url';
 
@@ -33,6 +34,20 @@ const screens = {
   'settings-import-new': B.settingsImportNew,
   'settings-profile': B.settingsProfile,
   'login': B.login,
+  'dialog-new-contact': D.dlgNewContact,
+  'dialog-new-inquiry': D.dlgNewInquiry,
+  'dialog-convert-inquiry': D.dlgConvertInquiry,
+  'dialog-task-complete': D.dlgTaskComplete,
+  'dialog-close-deal': D.dlgCloseDeal,
+  'dialog-invite': D.dlgInvite,
+  'dialog-merge-contact': D.dlgMerge,
+  'dialog-schedule-viewing': D.dlgViewing,
+  'dialog-save-list': D.dlgSaveList,
+  'dialog-duplicates': D.dlgDuplicates,
+  'dialog-delete-list': D.dlgDeleteList,
+  'dialog-close-listing': D.dlgCloseListing,
+  'dialog-requirements': D.dlgRequirements,
+  'dialog-add-party': D.dlgAddParty,
 };
 const only = process.argv.slice(2);
 

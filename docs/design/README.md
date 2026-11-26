@@ -59,6 +59,32 @@ Change them in `src/`, not by hand. Approved 2026-11-25.
 | `screens/settings-profile.png` | Настройки, my profile | `/settings/profile` |
 | `screens/login.png` | Вход | `/login` (also the look for signup, forgot/update password) |
 
+### Dialogs (popups)
+
+Floating dialogs over the dimmed reference screen: `radius-lg`, `shadow-float`, a `#f6faff` footer, the
+yellow offset on the one confirming action. Source is `src/dialogs.mjs` (fields and Bulgarian copy come
+from the real components and `messages/bg.json`); render with `node docs/design/src/render.mjs dialog-<name>`.
+Proposed 2026-11-26, not yet approved. Copy checked against `messages/bg.json` 2026-11-26; text the app does not have is left out.
+
+| File | Dialog | Component |
+|---|---|---|
+| `screens/dialog-new-contact.png` | Нов контакт | `contacts-page-client + contact-form` |
+| `screens/dialog-new-inquiry.png` | Ново запитване | `inquiry-form` |
+| `screens/dialog-convert-inquiry.png` | Преобразуване в сделка | `convert-inquiry-dialog` |
+| `screens/dialog-task-complete.png` | Приключване на задача | `task-complete-dialog` |
+| `screens/dialog-close-deal.png` | Затваряне на сделка | `close-opportunity-dialog` |
+| `screens/dialog-invite.png` | Покани потребител | `invite-dialog` |
+| `screens/dialog-merge-contact.png` | Сливане на контакт (preview step) | `merge-dialog` |
+| `screens/dialog-schedule-viewing.png` | Насрочи оглед | `schedule-viewing-button` |
+| `screens/dialog-save-list.png` | Запази като списък | `save-list-dialog` |
+| `screens/dialog-duplicates.png` | Възможни дубликати | `duplicate-suggestion-modal` |
+| `screens/dialog-delete-list.png` | Изтриване на списък (confirm) | `saved-list-controls` |
+| `screens/dialog-close-listing.png` | Приключване на обява (confirm) | `listing-section` |
+| `screens/dialog-requirements.png` | Изисквания на клиента | `requirement-form` |
+| `screens/dialog-add-party.png` | Добави страна | `party-section` |
+
+Not drawn: the post-call sheet, the not-suitable dialog and the command palette.
+
 These screens show a few things the app does not have yet: minimum price, loss-reason counts, the list
 tabs and the deal-stage strip. Under `ui-bright` (visuals only), leave those out or show them as
 "Скоро" placeholders. The Settings menu also lists Моят профил, Източници, Квартали and Импорт,

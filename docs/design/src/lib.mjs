@@ -76,6 +76,7 @@ export const btn = (label, { ic, kind = 'secondary', offset = false, size = 'md'
     secondary: `border:1px solid #7d8897;background:var(--surf);color:${INK};font-weight:500;`,
     ghost: `border:0;background:transparent;color:var(--muted);font-weight:500;`,
     dashed: `border:1px dashed #7d8897;background:var(--surf);color:${INK};font-weight:500;`,
+    destructive: `border:0;background:var(--danger);color:#fff;font-weight:600;`,
     danger: `border:1px solid #e8b4ae;background:#fff;color:#c2362b;font-weight:500;`,
   }[kind];
   return `<button style="${base}${look}${disabled ? 'opacity:.45;' : ''}">${ic ? icon(ic, 14, kind === 'primary' ? 2.5 : 2) : ''}${label}</button>`;
@@ -237,7 +238,7 @@ body{margin:0}
 a{color:#2b63c6}
 .dp{font-family:'Sofia Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;color:#0e1a2b;-webkit-font-smoothing:antialiased}
 .dp button,.dp input,.dp select{font-family:inherit}
-.th-bright{--pg:#ffffff;--side:#f6faff;--surf:#ffffff;--muted:#5a6676;--line:#dce1e7;--sel:#dceefc;--sel-ink:#0e1a2b;--pri:#2b63c6;--pri-h:#1b3a6b;--step:#2b63c6;--next-bg:#eef7fe;--next-line:#7fbef0;--hl:#fff8dc;--card-shadow:none;--top:#ffffff}
+.th-bright{--pg:#ffffff;--side:#f6faff;--surf:#ffffff;--muted:#5a6676;--line:#dce1e7;--sel:#dceefc;--sel-ink:#0e1a2b;--pri:#2b63c6;--pri-h:#1b3a6b;--step:#2b63c6;--next-bg:#eef7fe;--next-line:#7fbef0;--danger:#c2362b;--danger-bg:#fbe9e7;--warn-bg:#fbf1de;--warn-ink:#8a5605;--ok-bg:#e3f1e8;--ok-ink:#28703f;--foot:#f6faff;--hl:#fff8dc;--card-shadow:none;--top:#ffffff}
 </style></head><body>`;
 
 export const page = ({ active, crumbs, body, minH = 1000 }) => `${HEAD}
