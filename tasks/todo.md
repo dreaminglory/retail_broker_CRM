@@ -443,10 +443,26 @@ colours only on follow-up, `git diff main -- messages/` shows only added keys, c
 focus rings, no sideways scroll at 390 px on every route. Update `docs/domain-model.md` only if
 something there describes UI (expected: nothing).
 **Acceptance criteria:**
-- [ ] Every success criterion checked with its evidence noted here
+- [x] Every success criterion checked with its evidence noted here
 **Verification:**
-- [ ] typecheck, lint, test, `test:e2e` green in this session
+- [x] typecheck, lint, test, `test:e2e` green in this session
 **Dependencies:** Tasks 26–28 · **Files:** as found · **Scope:** S
+
+**Task 29 evidence (2026-11-26, this session):**
+1. Colour tokens: `src/lib/design-guard.test.ts` passes (palette classes, oklch/rgb/hsl, hex in styles; only the email HTML is allowed).
+2. Sofia Sans via `next/font` in `layout.tsx`; `font-variant-numeric: tabular-nums` on `body`.
+3. `--bright-shadow-card` is a zero shadow; `shadow-sm` appears only on the switch thumb.
+4. `emphasis="action"` appears once per view (grep); the deal page only on the first open task.
+5. Status colours: follow-up states, exception severity, and the placeholders' severity pills and portfolio-health counts as in the PNGs.
+6. Founder approval: phases 1–3 approved; phase 4 awaits Checkpoint 4.
+7. 128 e2e passed (bg/en, 1280/390); 1175 Vitest passed.
+8. `contact-panel.spec.ts` and `inquiry-panel.spec.ts` cover `?id=` selection.
+9. `deal-tabs.spec.ts` covers click, keyboard and `?tab=`.
+10. Inline post-call prompt: `PostCallInline` on Today.
+11. Placeholders: Vitest checks no Supabase/domain import, no working control; `reports-placeholder.spec.ts` covers banner and disabled controls, broker redirect on settings, Табло for owner and broker.
+12. Messages vs the ui-bright base (`ae9b1db`): 0 changed, 0 removed, 163 added to each file; bg and en have the same keys.
+13. Contrast computed from the light tokens: all text pairs ≥ 4.5 (lowest 4.64), edges ≥ 3 (3.43); focus ring on controls; no sideways scroll at 390 px on `/reports`, `/settings/rules`, `/settings/portals`, `/dashboard`.
+14. typecheck, lint (0 errors), test, `test:e2e` green.
 
 ### Checkpoint 4: module done
 - [ ] Founder approves the phase 4 review page
