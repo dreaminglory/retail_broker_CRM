@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { CommandPalette } from "@/components/domain/search/command-palette";
 import { findNavItem } from "./nav-config";
 import type { ShellUser } from "./shell-types";
 import { MobileSidebar } from "./sidebar";
@@ -16,8 +15,8 @@ type HeaderProps = {
 };
 
 /**
- * Bright header: breadcrumb (group › page) on the left, search on the right.
- * The profile menu lives in the sidebar's user block; no bell, no "+ Ново"
+ * Bright header: the breadcrumb (group › page). Search and the profile menu live
+ * in the sidebar (founder, checkpoint 1); no bell, no "+ Ново"
  * (spec ui-bright: left out, logged in SPEC.md).
  */
 export function Header({ user, agencyName }: HeaderProps) {
@@ -51,10 +50,6 @@ export function Header({ user, agencyName }: HeaderProps) {
           </ol>
         )}
       </nav>
-
-      <div className="hidden shrink-0 md:flex">
-        <CommandPalette />
-      </div>
     </header>
   );
 }

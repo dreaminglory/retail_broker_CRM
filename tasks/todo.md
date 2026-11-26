@@ -150,12 +150,13 @@ exists), existing actions kept, no bell or + Ново. `main` on white with 16px
 
 **Dependencies:** Task 6
 **Files likely touched:** `src/components/layout/header.tsx`, `src/app/(dashboard)/layout.tsx`
-**As built:** breadcrumb is group › page (the page links back on detail routes); the third level (item name) comes with the detail pages in Tasks 11, 20 and 21. Search stays in the header (moving it into the sidebar as in the PNG is an "ask first"). The header profile menu moved to the sidebar user block (settings, sign out). `main` became `relative`, fixing a page-level scroll from `sr-only` spans on /opportunities.
+**As built:** breadcrumb is group › page (the page links back on detail routes); the third level (item name) comes with the detail pages in Tasks 11, 20 and 21. Search moved into the sidebar at checkpoint 1 (founder). The header profile menu moved to the sidebar user block (settings, sign out). `main` became `relative`, fixing a page-level scroll from `sr-only` spans on /opportunities.
 **Estimated scope:** S
 
 ### Checkpoint 1: shell
 - [x] typecheck, lint, test, `test:e2e` green
-- [ ] Review page published (every route, `bg`/`en`, 1280/390); founder approves
+- [x] Review page published (every route, `bg`/`en`, 1280/390); founder approves
+  Approved 2026-11-26 (https://claude.ai/artifact/Cyhp2kvKjKiyvfqP9yiEnk). Founder decisions: search moves into the sidebar as in the PNG (done; on phones it sits in the menu, which closes before search opens); the profile menu stays in the sidebar user block; the breadcrumb item name arrives with the detail pages (Tasks 11, 20, 21).
 
 ## Phase 2: Screens with a PNG
 

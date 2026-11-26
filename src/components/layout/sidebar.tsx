@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { CommandPalette, SearchDialog, SearchTrigger } from "@/components/domain/search/command-palette";
 import { isNavItemActive, visibleNavGroups } from "./nav-config";
 import type { ShellUser } from "./shell-types";
 import { UserMenu, initials } from "./user-menu";
@@ -114,6 +115,10 @@ export function Sidebar({ user, agencyName }: SidebarProps) {
         </button>
       </div>
 
+      <div className={cn("px-3 pb-1", collapsed && "flex justify-center")}>
+        <CommandPalette collapsed={collapsed} />
+      </div>
+
       <SidebarNav role={user.role} collapsed={collapsed} />
 
       <div className="border-t border-border p-3">
@@ -126,25 +131,37 @@ export function Sidebar({ user, agencyName }: SidebarProps) {
 export function MobileSidebar({ user, agencyName }: SidebarProps) {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="flex size-9 items-center justify-center rounded-md text-ink outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-focus md:hidden">
-        <Menu className="size-5" />
-        <span className="sr-only">{t("toggleMenu")}</span>
-      </SheetTrigger>
-      <SheetContent side="left" className="flex w-72 flex-col gap-0 bg-sidebar p-0">
-        <SheetTitle className="sr-only">{t("menuTitle")}</SheetTitle>
-        <SheetDescription className="sr-only">{t("menuDescription")}</SheetDescription>
-        <div className="flex items-center gap-3 p-3 pr-12">
-          <AgencyMark name={agencyName} />
-          <span className="min-w-0 flex-1 truncate text-body-strong text-ink">{agencyName}</span>
-        </div>
-        <SidebarNav role={user.role} onNavigate={() => setOpen(false)} />
-        <div className="border-t border-border p-3">
-          <UserMenu user={user} />
-        </div>
-      </SheetContent>
-    </Sheet>
+    <>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger className="flex size-9 items-center justify-center rounded-md text-ink outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-focus md:hidden">
+          <Menu className="size-5" />
+          <span className="sr-only">{t("toggleMenu")}</span>
+        </SheetTrigger>
+        <SheetContent side="left" className="flex w-72 flex-col gap-0 bg-sidebar p-0">
+          <SheetTitle className="sr-only">{t("menuTitle")}</SheetTitle>
+          <SheetDescription className="sr-only">{t("menuDescription")}</SheetDescription>
+          <div className="flex items-center gap-3 p-3 pr-12">
+            <AgencyMark name={agencyName} />
+            <span className="min-w-0 flex-1 truncate text-body-strong text-ink">{agencyName}</span>
+          </div>
+          <div className="px-3 pb-1">
+            <SearchTrigger
+              onClick={() => {
+                setOpen(false);
+                setSearchOpen(true);
+              }}
+            />
+          </div>
+          <SidebarNav role={user.role} onNavigate={() => setOpen(false)} />
+          <div className="border-t border-border p-3">
+            <UserMenu user={user} />
+          </div>
+        </SheetContent>
+      </Sheet>
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+    </>
   );
 }
