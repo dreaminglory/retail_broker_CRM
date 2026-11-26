@@ -74,7 +74,7 @@ change to data, rules or existing text.
 
 | Route | Follows |
 |---|---|
-| `/login`, `/signup`, `/onboarding`, `/forgot-password`, `/update-password` | `login.png`: white page, centred 400px card, logo mark from the sidebar, primary button with the yellow offset |
+| `/login`, `/signup`, `/onboarding`, `/forgot-password`, `/update-password` | `login.png`: split screen (spot art, promise and three points on the left from `auth.hero`; БГ/EN toggle and a 400px form on the right; the left half is hidden below 1024px), primary button with the yellow offset |
 | `/opportunities` | `deals.png` table (no deal-stage strip, no loss-reason counts) |
 | `/lists`, `/lists/[id]` | `lists.png`, `list-detail.png` (no list tabs) |
 | `/properties/[id]` | `property-detail.png`: header card, tabs from its existing sections, right column with parties |

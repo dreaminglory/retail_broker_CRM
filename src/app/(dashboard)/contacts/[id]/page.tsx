@@ -22,7 +22,7 @@ import { DetailTabs } from "@/components/layout/detail-tabs";
 import { parseChoice } from "@/lib/url-state";
 import { LogCallButton } from "@/components/domain/calls/log-call-button";
 
-const CONTACT_TABS = ["overview", "history"] as const;
+const CONTACT_TABS = ["overview", "deals", "properties", "history"] as const;
 
 export default async function ContactDetailPage({
   params,
@@ -141,6 +141,20 @@ export default async function ContactDetailPage({
     </>
   );
 
+  const dealsTab = (
+    <section>
+      <h2 className={`mb-3 ${heading}`}>{t("linkedOpportunities")}</h2>
+      <LinkedOpportunities opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} />
+    </section>
+  );
+
+  const propertiesTab = (
+    <section>
+      <h2 className={`mb-3 ${heading}`}>{t("properties")}</h2>
+      <ContactProperties parties={propertyParties} />
+    </section>
+  );
+
   const historyTab = (
     <section>
       <h2 className={`mb-4 ${heading}`}>{t("activityHistory")}</h2>
@@ -165,11 +179,13 @@ export default async function ContactDetailPage({
           tabLabel={t("tabs.label")}
           items={[
             { value: "overview", label: t("tabs.overview") },
+            { value: "deals", label: t("linkedOpportunities"), count: opportunities.length },
+            { value: "properties", label: t("properties"), count: propertyParties.length },
             { value: "history", label: t("activityHistory"), count: timeline.length },
           ]}
           defaultTab="overview"
           initialTab={parseChoice(query.tab, CONTACT_TABS, "overview")}
-          panels={{ overview, history: historyTab }}
+          panels={{ overview, deals: dealsTab, properties: propertiesTab, history: historyTab }}
           aside={
             <section className="rounded-lg border border-border bg-surface p-5">
               <h2 className={`mb-3 ${heading}`}>{t("contactMethods")}</h2>

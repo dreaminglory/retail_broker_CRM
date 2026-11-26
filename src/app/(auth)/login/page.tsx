@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
@@ -98,7 +99,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-8 shadow-card">
+    <div className="p-2 sm:p-0">
       <div className="mb-6">
         <h2 className="text-title text-ink">{t("title")}</h2>
         <p className="text-sm text-muted-foreground">
@@ -163,15 +164,18 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        {t("noAccount")}{" "}
-        <Link
-          href="/signup"
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          {t("createAgency")}
-        </Link>
-      </p>
+      <div className="my-6 flex items-center gap-3 text-small text-muted-foreground">
+        <span className="h-px flex-1 bg-border" aria-hidden />
+        {t("noAccount")}
+        <span className="h-px flex-1 bg-border" aria-hidden />
+      </div>
+      <Link
+        href="/signup"
+        className={cn(buttonVariants({ variant: "outline" }), "h-10 w-full")}
+      >
+        {t("createAgency")}
+      </Link>
+      <p className="mt-6 text-center text-small text-muted-foreground">{t("invitedHint")}</p>
     </div>
   );
 }

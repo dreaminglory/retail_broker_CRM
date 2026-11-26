@@ -600,6 +600,7 @@
     }
   },
   "auth": {
+    "hero": {"headline":"Every deal has an owner, a next step and the whole history.","point1":"Today: who to call and what is overdue","point2":"Portal inquiries get an owner within minutes","point3":"Buyers and properties that fit each other","footer":"© {year} BrokerCRM · For real estate agencies"},
     "login": {
       "title": "Welcome back",
       "subtitle": "Sign in to your BrokerCRM account",
@@ -611,7 +612,8 @@
       "submit": "Sign in",
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",
-      "createAgency": "Create your agency"
+      "createAgency": "Create your agency",
+      "invitedHint": "Invited by a colleague? Open the link in the email — you go straight into the agency."
     },
     "signup": {
       "title": "Create your agency",
