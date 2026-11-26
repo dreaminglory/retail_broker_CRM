@@ -465,5 +465,5 @@ something there describes UI (expected: nothing).
 14. typecheck, lint (0 errors), test, `test:e2e` green.
 
 ### Checkpoint 4: module done
-- [ ] Founder approves the phase 4 review page
-- [ ] Close: SPEC.md module Done, `tasks/*` → `docs/archive/ui-bright-{plan,todo}.md`
+- [x] Founder approves the phase 4 review page — closed on the founder's instruction 2026-11-27, after the phase 4 review fixes (`75eb215`); no review page was published for phase 4
+- [x] Close: SPEC.md module Done, `tasks/*` → `docs/archive/ui-bright-{plan,todo}.md` (BRD: no rows, the spec adds no requirements)
