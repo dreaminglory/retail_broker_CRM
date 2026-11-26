@@ -337,9 +337,9 @@ white page, centred 400 px card, sidebar logo mark, primary submit with the yell
 ## Task 18: Deals list
 **Description:** `/opportunities` as the `deals.png` table (existing columns and filters only).
 **Acceptance criteria:**
-- [ ] Filters, sorting, pager unchanged in behaviour
+- [x] Filters, sorting, pager unchanged in behaviour
 **Verification:**
-- [ ] core-loop green; browser
+- [x] core-loop green; browser
 **Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/opportunities/opportunities-page-client.tsx` · **Scope:** S
 
 ## Task 19: Lists and list detail
