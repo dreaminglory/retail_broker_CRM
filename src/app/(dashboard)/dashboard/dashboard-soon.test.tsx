@@ -36,6 +36,11 @@ describe("DashboardSoon (Скоро section)", () => {
     }
   });
 
+  it("gives each commission bar its amount as text, not only a tooltip", () => {
+    const html = render("en");
+    expect(html.match(/class="sr-only">: /g)?.length).toBe(12);
+  });
+
   it("has no working control: no button, input, link or form", () => {
     expect(render("en")).not.toMatch(/<(button|input|select|textarea|a|form)\b/);
   });

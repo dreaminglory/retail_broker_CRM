@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ComingSoonControl, ComingSoonSection } from "@/components/layout/coming-soon";
 import { initials } from "@/lib/initials";
 import { cn } from "@/lib/utils";
@@ -20,11 +21,11 @@ const METRICS = ["commissions", "deals", "newClients", "calls", "viewings", "res
 const COLUMNS = ["commissions", "deals", "clients", "calls", "viewings", "response", "conversion"] as const;
 const GOAL = { done: 61400, target: 70000 };
 
-/** Podium order is 2nd, 1st, 3rd; the bar height follows the rank. */
+/** Listed 1st, 2nd, 3rd so a screen reader reads the ranking in order; `place` puts 1st in the middle. */
 const PODIUM = [
-  { rank: 2, broker: BROKERS[1], height: "h-28", tone: "bg-info-soft" },
-  { rank: 1, broker: BROKERS[0], height: "h-40", tone: "bg-highlight" },
-  { rank: 3, broker: BROKERS[2], height: "h-20", tone: "bg-muted" },
+  { rank: 1, broker: BROKERS[0], height: "h-40", tone: "bg-highlight", place: "order-2" },
+  { rank: 2, broker: BROKERS[1], height: "h-28", tone: "bg-info-soft", place: "order-1" },
+  { rank: 3, broker: BROKERS[2], height: "h-20", tone: "bg-muted", place: "order-3" },
 ] as const;
 
 export function ReportsPreview() {
@@ -35,7 +36,7 @@ export function ReportsPreview() {
   const topCommission = BROKERS[0].commissions;
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-display text-ink">{t("title")}</h1>
@@ -72,13 +73,13 @@ export function ReportsPreview() {
               <p className="text-small text-muted-foreground">{t("podiumNote")}</p>
             </div>
             <ol className="mt-6 grid grid-cols-3 items-end gap-3">
-              {PODIUM.map(({ rank, broker, height, tone }) => {
+              {PODIUM.map(({ rank, broker, height, tone, place }) => {
                 const name = t(`brokers.${broker.key}`);
                 return (
-                  <li key={rank} className="flex flex-col items-center gap-1 text-center">
-                    <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-info-soft text-body-strong text-primary">
-                      {initials(name)}
-                    </span>
+                  <li key={rank} className={cn("flex flex-col items-center gap-1 text-center", place)}>
+                    <Avatar size="lg" aria-hidden>
+                      <AvatarFallback>{initials(name)}</AvatarFallback>
+                    </Avatar>
                     <span className="text-small text-muted-foreground">{name}</span>
                     <span className="text-section tabular-nums text-ink sm:text-num-lg">{eur(broker.commissions)}</span>
                     <span className={cn("flex w-full items-start justify-center rounded-t-md border border-b-0 border-border pt-2 text-title text-ink", height, tone)}>
@@ -135,9 +136,9 @@ export function ReportsPreview() {
                       <td className="px-4 py-3">{index + 1}</td>
                       <td className="px-4 py-3">
                         <span className="flex items-center gap-2">
-                          <span aria-hidden className="flex size-7 items-center justify-center rounded-full bg-info-soft text-small font-semibold text-primary">
-                            {initials(name)}
-                          </span>
+                          <Avatar size="sm" aria-hidden>
+                            <AvatarFallback>{initials(name)}</AvatarFallback>
+                          </Avatar>
                           {name}
                         </span>
                       </td>

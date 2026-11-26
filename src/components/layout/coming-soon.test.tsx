@@ -19,8 +19,8 @@ describe("ComingSoon", () => {
     expect(render(<ComingSoonBanner />, "bg")).toContain("Още не работи — показва примерни данни");
   });
 
-  it("the banner is a status region", () => {
-    expect(render(<ComingSoonBanner />)).toContain('role="status"');
+  it("the banner is a static note, not a live region", () => {
+    expect(render(<ComingSoonBanner />)).toContain('role="note"');
   });
 
   it("the badge reads Скоро in Bulgarian", () => {

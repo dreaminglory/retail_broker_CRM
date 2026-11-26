@@ -7,26 +7,51 @@ import { initials } from "@/lib/initials";
 
 type Option = "publish" | "price" | "inquiries" | "showAll";
 
+type Portal = {
+  key: "imot" | "homes" | "site" | "olx";
+  status: "connected" | "hasErrors" | "notConnected";
+  /** The line under the name. */
+  line: { kind: "synced"; listings: number; time: string } | { kind: "site" } | { kind: "none" };
+  options: readonly (readonly [Option, boolean])[];
+  rejected: boolean;
+};
+
 // Sample portals for the Скоро placeholder (spec ui-bright, phase 4): names and labels from
 // message keys, nothing read from the database, every control disabled.
-const PORTALS = [
-  { key: "imot", status: "connected", listings: 87, time: "10:42", options: { publish: true, price: true, inquiries: true } },
-  { key: "homes", status: "hasErrors", listings: 81, time: "10:40", options: { publish: true, price: false, inquiries: true }, rejected: true },
-  { key: "site", status: "connected", options: { showAll: true, inquiries: true } },
-  { key: "olx", status: "notConnected" },
-] as const satisfies readonly {
-  key: string;
-  status: "connected" | "hasErrors" | "notConnected";
-  listings?: number;
-  time?: string;
-  options?: Partial<Record<Option, boolean>>;
-  rejected?: boolean;
-}[];
+const PORTALS: readonly Portal[] = [
+  {
+    key: "imot",
+    status: "connected",
+    line: { kind: "synced", listings: 87, time: "10:42" },
+    options: [["publish", true], ["price", true], ["inquiries", true]],
+    rejected: false,
+  },
+  {
+    key: "homes",
+    status: "hasErrors",
+    line: { kind: "synced", listings: 81, time: "10:40" },
+    options: [["publish", true], ["price", false], ["inquiries", true]],
+    rejected: true,
+  },
+  { key: "site", status: "connected", line: { kind: "site" }, options: [["showAll", true], ["inquiries", true]], rejected: false },
+  { key: "olx", status: "notConnected", line: { kind: "none" }, options: [], rejected: false },
+];
 
 const STATUS_VARIANT = { connected: "default", hasErrors: "secondary", notConnected: "outline" } as const;
 
 export function PortalsPreview() {
   const t = useTranslations("SettingsPortals");
+
+  function lineText(line: Portal["line"]): string {
+    switch (line.kind) {
+      case "synced":
+        return t("listings", { count: line.listings, when: t("today", { time: line.time }) });
+      case "site":
+        return t("items.site.line");
+      case "none":
+        return t("notConnectedLine");
+    }
+  }
 
   return (
     <div>
@@ -37,9 +62,6 @@ export function PortalsPreview() {
         <ul className="grid gap-4 lg:grid-cols-2">
           {PORTALS.map((portal) => {
             const name = t(`items.${portal.key}.name`);
-            const options = "options" in portal ? (Object.entries(portal.options) as [Option, boolean][]) : [];
-            const hasListings = "listings" in portal;
-            const connected = portal.status !== "notConnected";
             return (
               <li key={portal.key} className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
                 <div className="flex items-start gap-3">
@@ -48,33 +70,27 @@ export function PortalsPreview() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-body-strong text-ink">{name}</p>
-                    <p className="text-small text-muted-foreground tabular-nums">
-                      {hasListings
-                        ? t("listings", { count: portal.listings, when: t("today", { time: portal.time }) })
-                        : portal.key === "site"
-                          ? t("items.site.line")
-                          : t("notConnectedLine")}
-                    </p>
+                    <p className="text-small text-muted-foreground tabular-nums">{lineText(portal.line)}</p>
                   </div>
                   <Badge variant={STATUS_VARIANT[portal.status]}>{t(portal.status)}</Badge>
                 </div>
 
-                {options.map(([option, on]) => (
+                {portal.options.map(([option, on]) => (
                   <div key={option} className="flex items-center justify-between gap-3 text-body text-ink">
                     <span>{t(`options.${option}`)}</span>
                     <Switch disabled defaultChecked={on} aria-label={`${name}: ${t(`options.${option}`)}`} />
                   </div>
                 ))}
 
-                {"rejected" in portal && (
+                {portal.rejected && (
                   <p className="rounded-md bg-at-risk-soft px-3 py-2 text-small text-at-risk-ink">{t("rejected")}</p>
                 )}
 
                 <div className="mt-auto pt-1">
-                  {connected ? (
-                    <ComingSoonControl variant="outline">{t("syncNow")}</ComingSoonControl>
-                  ) : (
+                  {portal.status === "notConnected" ? (
                     <ComingSoonControl>{t("connect")}</ComingSoonControl>
+                  ) : (
+                    <ComingSoonControl variant="outline">{t("syncNow")}</ComingSoonControl>
                   )}
                 </div>
               </li>

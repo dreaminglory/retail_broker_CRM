@@ -2221,8 +2221,7 @@
   },
   "ComingSoon": {
     "badge": "Soon",
-    "banner": "Not live yet — showing sample data",
-    "sample": "Sample data"
+    "banner": "Not live yet — showing sample data"
   },
   "Reports": {
     "title": "Broker leaderboard",
@@ -2273,12 +2272,10 @@
     "title": "Rules and exceptions",
     "description": "When something counts as an exception and who gets to know.",
     "after": "after",
-    "above": "over",
     "units": {
       "days": "days",
       "hours": "hours",
-      "minutes": "min",
-      "percent": "%"
+      "minutes": "min"
     },
     "severity": {
       "label": "Severity",
@@ -2412,7 +2409,7 @@
     "team": {
       "title": "Team today",
       "free": "{count} free",
-      "tasks": "{count} tasks",
+      "tasks": "{count, plural, one {# task} other {# tasks}}",
       "until": "until {time}",
       "status": {
         "free": "Free",

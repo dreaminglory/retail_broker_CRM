@@ -22,12 +22,12 @@ export function ComingSoonBadge({ className }: { className?: string }) {
   );
 }
 
-/** "Not live yet — showing sample data". Read out politely, as a status. */
+/** "Not live yet — showing sample data". Static, so a note rather than a live region. */
 export function ComingSoonBanner({ className }: { className?: string }) {
   const t = useTranslations("ComingSoon");
   return (
     <div
-      role="status"
+      role="note"
       className={cn("flex items-center gap-2 rounded-md border border-info-line bg-info-soft px-3 py-2 text-body text-ink", className)}
     >
       <Info className="size-4 shrink-0 text-primary" aria-hidden />

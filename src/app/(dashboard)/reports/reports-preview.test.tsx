@@ -29,6 +29,15 @@ describe("ReportsPreview (Скоро placeholder)", () => {
     for (const button of buttons) expect(button).toMatch(/\sdisabled(=|\s|>)/);
   });
 
+  it("lists the podium 1st, 2nd, 3rd so a screen reader reads the ranking in order", () => {
+    const html = render("en");
+    const podium = html.slice(html.indexOf('aria-labelledby="reports-podium"'), html.indexOf('aria-labelledby="reports-goal"'));
+    const { b1, b2, b3 } = en.Reports.brokers;
+    expect(podium.indexOf(b1)).toBeGreaterThan(-1);
+    expect(podium.indexOf(b1)).toBeLessThan(podium.indexOf(b2));
+    expect(podium.indexOf(b2)).toBeLessThan(podium.indexOf(b3));
+  });
+
   it("shows sample brokers from message keys", () => {
     expect(render("bg")).toContain(bg.Reports.brokers.b1);
     expect(render("en")).toContain(en.Reports.brokers.b1);

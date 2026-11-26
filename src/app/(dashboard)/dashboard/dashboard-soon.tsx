@@ -1,6 +1,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ComingSoonSection } from "@/components/layout/coming-soon";
 import { initials } from "@/lib/initials";
 import { Badge } from "@/components/ui/badge";
@@ -84,14 +85,18 @@ export function DashboardSoon() {
               {COMMISSIONS.map((value, index) => {
                 const month = format.dateTime(new Date(2025, 11 + index, 1), { month: "short" });
                 const latest = index === COMMISSIONS.length - 1;
+                const amount = format.number(value * 1000, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
                 return (
                   <li key={index} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
                     <span
                       className={latest ? "w-full rounded-t-sm bg-ink" : "w-full rounded-t-sm bg-primary"}
                       style={{ height: `${(value / MAX_COMMISSION) * 100}%` }}
-                      title={`${month}: ${format.number(value * 1000, { style: "currency", currency: "EUR", maximumFractionDigits: 0 })}`}
+                      title={amount}
                     />
-                    <span className="truncate text-label text-muted-foreground">{month}</span>
+                    <span className="truncate text-label text-muted-foreground">
+                      {month}
+                      <span className="sr-only">: {amount}</span>
+                    </span>
                   </li>
                 );
               })}
@@ -149,9 +154,9 @@ export function DashboardSoon() {
                 const name = t(`team.members.${member.key}`);
                 return (
                   <li key={member.key} className="flex items-center gap-3 py-2 first:pt-0 last:pb-0">
-                    <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-info-soft text-small font-semibold text-primary">
-                      {initials(name)}
-                    </span>
+                    <Avatar aria-hidden>
+                      <AvatarFallback>{initials(name)}</AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-body-strong text-ink">{name}</p>
                       <p className="text-small text-muted-foreground">{t(`team.status.${member.status}`)}</p>
