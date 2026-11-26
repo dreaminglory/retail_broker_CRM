@@ -2,12 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/config";
-import { PropertyPartyService } from "@/domain/property-parties/service";
 import { ContactProperties } from "@/components/domain/contacts/contact-properties";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import { ContactService } from "@/domain/contacts/service";
 import { ContactMethodList } from "@/components/domain/contacts/contact-method-list";
 import { ContactDetailClient } from "./contact-detail-client";
+import { loadContactDetail } from "../contact-data";
 import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 import {
   ChevronLeft,
@@ -16,15 +15,9 @@ import {
   Archive,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { TimelineService } from "@/domain/timeline/service";
 import { ContactActivity } from "./contact-activity";
-import { OpportunityService } from "@/domain/opportunities/service";
-import { RequirementService } from "@/domain/requirements/service";
-import { StageRepository } from "@/domain/stages/repository";
 import { LinkedOpportunities } from "@/components/domain/contacts/linked-opportunities";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
-import { TaskService } from "@/domain/tasks/service";
-import { contactCallTarget } from "@/components/domain/calls/call-targets";
 import { LogCallButton } from "@/components/domain/calls/log-call-button";
 
 export default async function ContactDetailPage({
@@ -50,36 +43,11 @@ export default async function ContactDetailPage({
   const agencyId = membership?.agency_id ?? "";
   if (!agencyId) notFound();
 
-  const service = new ContactService(supabase);
-  const contact = await service.getById(id, agencyId);
-
-  if (!contact) notFound();
-
-  const timelineService = new TimelineService(supabase);
-  
+  // The same loader as the contacts list's panel (spec ui-bright): one place for what a contact shows.
   const locale = (await getLocale()) as Locale;
-  const opportunitiesPromise = new OpportunityService(supabase).getByContactId(id, agencyId);
-
-  // The linked deals' summary lines (FR-REQ-05) load as soon as the deals are in.
-  const [timeline, opportunities, requirementSummaries, stages, propertyParties, pendingCounts] = await Promise.all([
-    timelineService.getContactTimeline(id, agencyId),
-    opportunitiesPromise,
-    opportunitiesPromise.then((opportunities) => new RequirementService(supabase).getSummaries(opportunities, agencyId, locale)),
-    new StageRepository(supabase).findActive(agencyId),
-    new PropertyPartyService(supabase).listForContact(id, agencyId, locale),
-    // Pending tasks per active deal, for the post-call "no next action" warning (spec phone-loop rule 7).
-    opportunitiesPromise.then((opportunities) =>
-      new TaskService(supabase).pendingCounts(agencyId, opportunities.filter((o) => o.status === "active").map((o) => o.id))
-    ),
-  ]);
-
-  // A call from this page: the contact, plus its one active deal or a picker (spec phone-loop rule 2).
-  const callTarget = contactCallTarget(
-    contact,
-    opportunities,
-    pendingCounts,
-    stages.map((s) => ({ id: s.id, name: s.name }))
-  );
+  const detail = await loadContactDetail(supabase, agencyId, id, locale);
+  if (!detail) notFound();
+  const { contact, timeline, opportunities, requirementSummaries, stages, propertyParties, callTarget } = detail;
 
   const isPerson = contact.type === "person";
   const initials = contact.display_name

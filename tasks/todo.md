@@ -259,14 +259,15 @@ links, requirement summary, linked deals, recent timeline) via the services `/co
 uses, with `agencyId`. Link to the full page. Нов контакт carries the yellow offset.
 
 **Acceptance criteria:**
-- [ ] Same `?id=` behaviour as Task 12; panel loads no query the detail page doesn't already run
-- [ ] Phone: list → `/contacts/[id]`
+- [x] Same `?id=` behaviour as Task 12; panel loads no query the detail page doesn't already run
+- [x] Phone: list → `/contacts/[id]`
 
 **Verification:**
-- [ ] e2e panel selection case; smart-lists and core-loop contact steps green
+- [x] e2e panel selection case; smart-lists and core-loop contact steps green
 
 **Dependencies:** Task 10
 **Files likely touched:** `src/app/(dashboard)/contacts/{page,contacts-page-client}.tsx`, `src/components/domain/contacts/{contact-panel,contact-list-table}.tsx`
+**As built:** `contacts/contact-data.ts` `loadContactDetail()` is now the one loader for the contact page and the panel, so the panel runs exactly the contact page's queries (agency-scoped; unknown, malformed or Beta ids give no panel). `ContactPanel` (server component): name linking to the full page, type, methods with links, linked deals with requirement lines, timeline. Rows: initials, name, type pill, company, last activity (`updated_at`); no owner or role pill (not loaded). From 1024 px a row selects into `?id=`; below it the row opens `/contacts/[id]` (a shared `?id=` link on a phone shows the panel alone with a back link). Status tabs replace the status select. Нов контакт carries the yellow offset. New `e2e/contact-panel.spec.ts` (4/4).
 **Estimated scope:** M
 
 ## Task 14: Properties table
