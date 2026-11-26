@@ -13,6 +13,7 @@ import { TaskService } from "@/domain/tasks/service";
 import { getTranslations } from "next-intl/server";
 import { InquiryService } from "@/domain/inquiries/service";
 import { cn } from "@/lib/utils";
+import { DashboardSoon } from "./dashboard-soon";
 
 export async function generateMetadata() {
   const t = await getTranslations("Metadata");
@@ -149,6 +150,9 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Скоро: sample numbers from dashboard.png, no queries (spec ui-bright, phase 4). */}
+      <DashboardSoon />
     </div>
   );
 }

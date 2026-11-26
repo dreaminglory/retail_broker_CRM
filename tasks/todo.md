@@ -432,9 +432,9 @@ control disabled, no Supabase import; Отчети·Скоро in the Агенц
 **Description:** Below the real tiles, one Скоро section with the PNG's commissions, funnel,
 sources, portfolio health and team-today blocks as sample data.
 **Acceptance criteria:**
-- [ ] Real tiles unaffected; the section runs no query
+- [x] Real tiles unaffected; the section runs no query
 **Verification:**
-- [ ] Browser as owner and broker
+- [x] Browser as owner and broker
 **Dependencies:** Task 26, Task 16 · **Files:** `src/app/(dashboard)/dashboard/page.tsx`, `src/components/layout/coming-soon.tsx` · **Scope:** S
 
 ## Task 29: Final sweep ⚑ Opus

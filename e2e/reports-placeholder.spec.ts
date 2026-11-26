@@ -38,3 +38,18 @@ for (const [path, titleKey] of [
     await expect(page).toHaveURL(/\/settings$/);
   });
 }
+
+// ui-bright T28: Табло keeps its real tiles and adds one Скоро section below them, with no control.
+for (const email of ['owner@alpha.bg', 'broker@alpha.bg']) {
+  test(`dashboard shows the Скоро section as ${email.split('@')[0]}`, async ({ page, m, signInAs }) => {
+    await signInAs(email);
+    await page.goto('/dashboard');
+
+    const soon = page.locator('section[aria-labelledby="dashboard-soon"]');
+    await expect(soon.getByRole('heading', { level: 2, name: m.DashboardSoon.title })).toBeVisible();
+    await expect(soon.getByRole('status').filter({ hasText: m.ComingSoon.banner })).toBeVisible();
+    await expect(soon.locator('button, a, input')).toHaveCount(0);
+    // The real tiles are still there, above it.
+    await expect(page.getByRole('heading', { level: 2, name: m.Dashboard.todayWorkTitle })).toBeVisible();
+  });
+}

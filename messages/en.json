@@ -2359,5 +2359,73 @@
         "name": "OLX.bg"
       }
     }
+  },
+  "DashboardSoon": {
+    "title": "Agency numbers",
+    "commissions": {
+      "title": "Commissions by month",
+      "note": "last 12 months · sample figures"
+    },
+    "funnel": {
+      "title": "Deal funnel",
+      "steps": {
+        "inquiries": "Inquiries",
+        "viewings": "Viewings",
+        "offers": "Offers",
+        "deposit": "Deposit",
+        "deals": "Deals"
+      },
+      "conversion": "From inquiry to deal"
+    },
+    "sources": {
+      "title": "Inquiry sources",
+      "items": {
+        "imot": "Imot.bg",
+        "homes": "Homes.bg",
+        "site": "Website",
+        "referrals": "Referrals",
+        "facebook": "Facebook",
+        "phone": "Phone"
+      }
+    },
+    "health": {
+      "title": "Portfolio health",
+      "items": {
+        "stale": {
+          "title": "Stale listings",
+          "note": "price or photos not synced"
+        },
+        "noPhotos": {
+          "title": "Without photos",
+          "note": "cannot be published"
+        },
+        "slow": {
+          "title": "Over 60 days on the market",
+          "note": "time to talk about the price"
+        },
+        "noOwner": {
+          "title": "Without an owner",
+          "note": "3 properties · 14 contacts"
+        }
+      }
+    },
+    "team": {
+      "title": "Team today",
+      "free": "{count} free",
+      "tasks": "{count} tasks",
+      "until": "until {time}",
+      "status": {
+        "free": "Free",
+        "viewing": "On a viewing",
+        "busy": "Busy"
+      },
+      "members": {
+        "b1": "Maria S.",
+        "b2": "Elitsa G.",
+        "b3": "Dimitar A.",
+        "b4": "Nevena D.",
+        "b5": "Kaloyan P."
+      }
+    }
   }
 }
