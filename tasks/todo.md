@@ -403,7 +403,8 @@ field style in contact, inquiry, task, requirement and convert dialogs.
 
 ### Checkpoint 3: all live pages
 - [x] typecheck, lint, test, full `test:e2e` green
-- [ ] Review page published; founder approves (and confirms who sees `/reports`)
+- [x] Review page published; founder approves
+  Approved 2026-11-26 (https://claude.ai/artifact/3fHCKVHAd6GxZLQy1g6Ji8). Who sees `/reports` is still open for Phase 4.
 
 ## Phase 4: Скоро placeholders
 
