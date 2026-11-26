@@ -318,8 +318,8 @@ style. Space below left for Task 28.
 ### Checkpoint 2: core screens
 - [x] typecheck, lint, test, full `test:e2e` green (2026-11-26: lint 0 errors, 1138 unit tests, e2e 100 passed)
 - [x] At most one `emphasis="action"` per view (grep): contacts, properties, inquiry panel, deal task list; none on Today, Exceptions, Табло
-- [ ] Review page published; founder approves
-  Published 2026-11-26 (https://claude.ai/artifact/KsLwjh15oz1STvjTuQyt85); waiting for approval.
+- [x] Review page published; founder approves
+  Approved 2026-11-26 (https://claude.ai/artifact/KsLwjh15oz1STvjTuQyt85), with the four as-built points on the page (no greeting, no Move forward button, severity without a text pill, no owner/role on contact rows).
 
 ## Phase 3: Pages with code-rendered PNGs
 Each follows its PNG for layout; parts with no data (minimum price, loss-reason counts, list
