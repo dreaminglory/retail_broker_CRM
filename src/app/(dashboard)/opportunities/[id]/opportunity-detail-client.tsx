@@ -51,7 +51,11 @@ import { opportunityCallTarget } from "@/components/domain/calls/call-targets";
 import type { Task } from "@/domain/tasks/types";
 import type { TimelineEntry } from "@/domain/timeline/types";
 import type { ActiveBroker } from "@/domain/members/types";
-import { ArrowLeft, Pencil, Link as LinkIcon, FileText, Users } from "lucide-react";
+import { ArrowLeft, Pencil, Link as LinkIcon, FileText, Mail, Phone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ContactLinks } from "@/components/domain/calls/contact-links";
+import { contactEmail, contactPhone } from "@/domain/tasks/call-phone";
+import { propertyCode, propertyHeadline } from "@/components/domain/properties/property-labels";
 import { useTranslations, useFormatter } from "next-intl";
 import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 
@@ -100,6 +104,7 @@ export function OpportunityDetailClient({
   const [editOpen, setEditOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const tProperties = useTranslations("PropertyLinks");
+  const tForm = useTranslations("OpportunityForm");
   const tRequirement = useTranslations("RequirementSection");
 
   // Tabs Път / Имоти / Изисквания / История (deal.png). Seller and landlord deals have no
@@ -136,6 +141,11 @@ export function OpportunityDetailClient({
   const callTargetFor = (contact: ContactWithMethods | null) =>
     opportunityCallTarget(opportunity, contact, pendingTaskCount, stageOptions);
   const source = leadSources.find((s) => s.id === opportunity.source_id);
+  const ownerName = brokers.find((b) => b.id === opportunity.assigned_to)?.display_name;
+  const phone = primaryContact ? contactPhone(primaryContact) : null;
+  const email = primaryContact ? contactEmail(primaryContact) : null;
+  // Viewed properties (deal.png's right column): the linked ones, offered or seen.
+  const viewed = propertyLinks.filter((link) => link.status !== "rejected");
   
   const formatter = new Intl.NumberFormat("bg-BG", {
     style: "currency",
@@ -157,84 +167,158 @@ export function OpportunityDetailClient({
         </Button>
       </div>
 
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-1">
-            {opportunity.title}
-          </h1>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            {currentStage && <StageBadge stage={currentStage} />}
-            <span>{enums(`opportunityType.${opportunity.type}`)}</span>
-            {opportunity.temperature && (
-              <span className="flex items-center gap-1">
-                {enums(`opportunityTemperature.${opportunity.temperature}`)}
-              </span>
-            )}
-            {opportunity.status !== "active" && opportunity.closed_at && (
-              <span className="text-destructive font-medium">
-                {t("closedLabel", { date: format.dateTime(new Date(opportunity.closed_at), { month: "short", day: "numeric", year: "numeric" }) })}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <LogCallButton target={callTargetFor(primaryContact)} />
-
-          {opportunity.status === "active" && (
-            <div className="flex items-center gap-2 mr-2">
-              <span className="text-sm font-medium text-muted-foreground">{t("stageLabel")}</span>
-              <Select value={opportunity.stage_id} onValueChange={(v) => { if (v) handleStageChange(v as string); }}>
-                <SelectTrigger className="w-44 h-9">
-                  <SelectValue>
-                    {(val) => getStageName(stages.find((s) => s.id === val)?.name ?? "") || t("stagePlaceholder")}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {stages.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {getStageName(s.name)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Phone: header, contact, tabs, then the rest of the right column (spec ui-bright plan). */}
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <header className="min-w-0 rounded-lg border border-border bg-surface">
+          <div className="flex flex-wrap items-start justify-between gap-4 p-5 pb-4">
+            <div className="min-w-0">
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                <Badge>{enums(`opportunityType.${opportunity.type}`)}</Badge>
+                {currentStage && <StageBadge stage={currentStage} />}
+                {opportunity.status === "active" && (
+                  <Badge variant="secondary">{enums("opportunityStatus.active")}</Badge>
+                )}
+                {opportunity.temperature && (
+                  <Badge variant="outline">{enums(`opportunityTemperature.${opportunity.temperature}`)}</Badge>
+                )}
+                {opportunity.status !== "active" && opportunity.closed_at && (
+                  <span className="text-small font-semibold text-ink">
+                    {t("closedLabel", { date: format.dateTime(new Date(opportunity.closed_at), { month: "short", day: "numeric", year: "numeric" }) })}
+                  </span>
+                )}
+              </div>
+              <h1 className="text-title text-ink [overflow-wrap:anywhere]">{opportunity.title}</h1>
+              <p className="mt-1 text-body text-muted-foreground">
+                {t("expectedValue")}:{" "}
+                <span className="font-semibold tabular-nums text-ink">
+                  {opportunity.expected_value ? formatter.format(opportunity.expected_value) : t("none")}
+                </span>
+                {ownerName && (
+                  <>
+                    {" · "}
+                    {tForm("assignedToLabel")}: <span className="text-ink">{ownerName}</span>
+                  </>
+                )}
+              </p>
             </div>
-          )}
 
-          {opportunity.status === "active" && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setCloseOpen(true)}
-            >
-              {t("closeBtn")}
-            </Button>
-          )}
+            <div className="flex flex-wrap items-center gap-2">
+              <LogCallButton target={callTargetFor(primaryContact)} />
 
-          {opportunity.status !== "active" && (
-            <form action={async () => { await reactivateOpportunityAction(opportunity.id); }}>
-              <Button type="submit" variant="outline" size="sm">
-                {t("reactivateBtn")}
+              {opportunity.status === "active" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-small text-muted-foreground">{t("stageLabel")}</span>
+                  <Select value={opportunity.stage_id} onValueChange={(v) => { if (v) handleStageChange(v as string); }}>
+                    <SelectTrigger className="h-9 w-44">
+                      <SelectValue>
+                        {(val) => getStageName(stages.find((s) => s.id === val)?.name ?? "") || t("stagePlaceholder")}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stages.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {getStageName(s.name)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {opportunity.status === "active" && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCloseOpen(true)}
+                >
+                  {t("closeBtn")}
+                </Button>
+              )}
+
+              {opportunity.status !== "active" && (
+                <form action={async () => { await reactivateOpportunityAction(opportunity.id); }}>
+                  <Button type="submit" variant="outline" size="sm">
+                    {t("reactivateBtn")}
+                  </Button>
+                </form>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="mr-1.5 h-4 w-4" />
+                {t("editBtn")}
               </Button>
-            </form>
-          )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditOpen(true)}
-          >
-            <Pencil className="mr-1.5 h-4 w-4" />
-            {t("editBtn")}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0 space-y-6">
-          <div className="rounded-lg border border-border bg-surface px-5 pt-3">
+            </div>
+          </div>
+          <div className="border-t border-border px-5 pt-3">
             <Tabs label={t("tabs.label")} items={tabItems} value={tab} onChange={setTab} idBase={tabsId} />
           </div>
+        </header>
+
+        <aside className="lg:col-start-2 lg:row-start-1">
+          <div className="space-y-6">
+            <section aria-label={t("primaryContact")} className="rounded-lg border border-border bg-surface p-5">
+              {primaryContact ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sea-light text-body-strong text-primary">
+                      {initials(primaryContact.display_name)}
+                    </span>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/contacts/${primaryContact.id}`}
+                        className="block truncate text-body-strong text-ink hover:text-primary hover:underline"
+                      >
+                        {primaryContact.display_name}
+                      </Link>
+                      <p className="text-small text-muted-foreground">{t("primaryContact")}</p>
+                    </div>
+                  </div>
+                  {(phone || email) && (
+                    <dl className="mt-4 space-y-2 text-body">
+                      {phone && (
+                        <div className="flex items-center gap-2">
+                          <dt><Phone className="size-4 text-muted-foreground" aria-hidden /></dt>
+                          <dd className="min-w-0 truncate tabular-nums">{phone.value}</dd>
+                        </div>
+                      )}
+                      {email && (
+                        <div className="flex items-center gap-2">
+                          <dt><Mail className="size-4 text-muted-foreground" aria-hidden /></dt>
+                          <dd className="min-w-0 truncate">{email}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  )}
+                  {(phone || email) && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {phone && (
+                        <ContactLinks
+                          value={phone.value}
+                          type={phone.type}
+                          name={primaryContact.display_name}
+                          callTarget={callTargetFor(primaryContact)}
+                          showLabels
+                        />
+                      )}
+                      {email && <ContactLinks value={email} type="email" name={primaryContact.display_name} showLabels />}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h2 className="text-small text-muted-foreground">{t("primaryContact")}</h2>
+                  <p className="mt-1 text-body text-muted-foreground">{t("none")}</p>
+                </>
+              )}
+            </section>
+          </div>
+        </aside>
+
+        <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-span-2 lg:row-start-2">
 
           {tab === "path" && (
             <TabPanel idBase={tabsId} value="path" className="space-y-6">
@@ -336,25 +420,28 @@ export function OpportunityDetailClient({
           )}
         </div>
 
-        {/* Right column: the people on the deal. */}
-        <aside className="space-y-6">
-          <div className="rounded-lg border border-border bg-surface p-5">
-            <h3 className="mb-3 text-small text-muted-foreground">{t("primaryContact")}</h3>
-            {primaryContact ? (
-              <div className="flex flex-col gap-3">
-                <Link
-                  href={`/contacts/${primaryContact.id}`}
-                  className="flex items-center gap-1.5 text-body-strong text-primary hover:underline"
-                >
-                  <Users className="size-4 text-muted-foreground" />
-                  {primaryContact.display_name}
-                </Link>
-                <ContactQuickLinks contact={primaryContact} callTarget={callTargetFor(primaryContact)} />
+        {/* Right column, below the contact card: viewed properties and the other people. */}
+        <div className="min-w-0 space-y-6 lg:col-start-2 lg:row-start-2">
+          {viewed.length > 0 && (
+            <section aria-labelledby={`${tabsId}-viewed`} className="overflow-hidden rounded-lg border border-border bg-surface">
+              <div className="flex items-center justify-between border-b border-border px-5 py-3">
+                <h2 id={`${tabsId}-viewed`} className="text-section text-ink">{tProperties("title")}</h2>
+                <span className="text-small tabular-nums text-muted-foreground">{viewed.length}</span>
               </div>
-            ) : (
-              <p className="text-body text-muted-foreground">{t("none")}</p>
-            )}
-          </div>
+              <ul className="divide-y divide-border">
+                {viewed.map((link) => (
+                  <li key={link.id} className="flex items-center gap-3 px-5 py-3">
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/properties/${link.property.id}`} className="block truncate text-body-strong text-ink hover:text-primary hover:underline">
+                        {propertyCode(link.property)} · {propertyHeadline(enums, link.property)}
+                      </Link>
+                    </div>
+                    <Badge variant="secondary">{enums(`propertyLinkStatus.${link.status}`)}</Badge>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <ParticipantList
             opportunityId={opportunity.id}
@@ -364,7 +451,7 @@ export function OpportunityDetailClient({
             removeAction={removeParticipantAction}
             contactLinks={(contact) => <ContactQuickLinks contact={contact} callTarget={callTargetFor(contact)} />}
           />
-        </aside>
+        </div>
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -400,4 +487,11 @@ export function OpportunityDetailClient({
       />
     </>
   );
+}
+
+/** Two letters for the avatar (deal.png): first and last word. */
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const letters = words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] ?? "").slice(0, 2);
+  return letters.toUpperCase();
 }

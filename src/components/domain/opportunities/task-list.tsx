@@ -21,7 +21,7 @@ import type { ActiveBroker } from "@/domain/members/types";
 import type { Stage } from "@/domain/stages/types";
 import type { ActionResult } from "@/lib/actions";
 import { BrokerSelect } from "@/components/domain/members/broker-select";
-import { Plus, Calendar, CheckCircle2, Circle } from "lucide-react";
+import { Plus, Calendar, Check, CheckCircle2, Circle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PropertyPicker } from "@/components/domain/properties/property-picker";
 import { TaskPropertyLine } from "../tasks/task-property-line";
@@ -97,14 +97,18 @@ export function TaskList({
 
   const fieldErrors = !state.success ? state.fieldErrors : undefined;
 
-  const pendingTasks = tasks.filter((t) => t.status === "pending");
+  // The next step first (deal.png): the earliest due, undated last.
+  const pendingTasks = tasks
+    .filter((t) => t.status === "pending")
+    .sort((a, b) => (a.due_at ?? "\uffff").localeCompare(b.due_at ?? "\uffff"));
+  const tCard = useTranslations("TaskCard");
   const completedTasks = tasks.filter((t) => t.status === "completed");
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+    <section className="space-y-4 rounded-lg border border-border bg-surface p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="flex items-center gap-2 text-section text-ink">
+          <CheckCircle2 className="size-4 text-muted-foreground" />
           {t("title")} ({pendingTasks.length} {t("pending")})
         </h3>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -227,24 +231,30 @@ export function TaskList({
 
       <div className="space-y-3">
         {pendingTasks.length === 0 ? (
-          <div className="rounded-md border border-dashed py-6 text-center text-sm text-muted-foreground">
+          <div className="rounded-md border border-dashed border-border-strong py-6 text-center text-body text-muted-foreground">
             {t("noPendingTasks")}
           </div>
         ) : (
-          <div className="rounded-md border divide-y bg-card">
-            {pendingTasks.map((task) => {
+          <div className="divide-y divide-border overflow-hidden rounded-md border border-border">
+            {pendingTasks.map((task, index) => {
               const overdue = task.due_at && isPast(new Date(task.due_at));
+              const next = index === 0;
               return (
-                <div key={task.id} className="flex items-start gap-3 p-3">
-                  <button
-                    onClick={() => setCompleteTarget(task)}
-                    aria-label={t("completeTask", { title: task.title })}
-                    className="mt-0.5 text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <Circle className="h-4 w-4" />
-                  </button>
+                <div
+                  key={task.id}
+                  className={next ? "flex flex-wrap items-start gap-3 border-l-2 border-l-primary bg-info-soft p-4" : "flex items-start gap-3 p-3"}
+                >
+                  {!next && (
+                    <button
+                      onClick={() => setCompleteTarget(task)}
+                      aria-label={t("completeTask", { title: task.title })}
+                      className="mt-0.5 rounded-full text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      <Circle className="size-4" />
+                    </button>
+                  )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{task.title}</p>
+                    <p className={next ? "text-body-strong text-ink" : "text-body font-medium text-ink"}>{task.title}</p>
                     {task.property && <TaskPropertyLine property={task.property} />}
                     {task.description && (
                       <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
@@ -252,14 +262,27 @@ export function TaskList({
                       </p>
                     )}
                     {task.due_at && (
-                      <div className={`mt-1.5 flex items-center gap-1.5 text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                      <div className={`mt-1.5 flex items-center gap-1.5 text-xs ${overdue ? "font-semibold text-overdue" : "text-muted-foreground"}`}>
                         <Calendar className="h-3.5 w-3.5" />
                         {format.dateTime(new Date(task.due_at), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone })}
-                        {overdue && <Badge variant="destructive" className="ml-1 text-[10px] h-4 px-1 py-0">{t("overdue")}</Badge>}
+                        {overdue && <Badge variant="overdue" className="ml-1">{t("overdue")}</Badge>}
                       </div>
                     )}
                   </div>
-                  <TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />
+                  <div className="flex items-center gap-1">
+                    {next && (
+                      <Button
+                        emphasis="action"
+                        size="sm"
+                        onClick={() => setCompleteTarget(task)}
+                        aria-label={t("completeTask", { title: task.title })}
+                      >
+                        <Check className="size-4" aria-hidden />
+                        {tCard("complete")}
+                      </Button>
+                    )}
+                    <TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />
+                  </div>
                 </div>
               );
             })}
@@ -303,6 +326,6 @@ export function TaskList({
         linkedProperties={linkedProperties}
         completeAction={completeAction}
       />
-    </div>
+    </section>
   );
 }

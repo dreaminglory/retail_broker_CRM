@@ -223,14 +223,15 @@ card under the header, viewed properties after the tabs. Готово on the nex
 yellow offset.
 
 **Acceptance criteria:**
-- [ ] Matches `deal.png`; exactly one `emphasis="action"` on the page (Готово)
-- [ ] Call links still start the call intent
+- [x] Matches `deal.png`; exactly one `emphasis="action"` on the page (Готово)
+- [x] Call links still start the call intent
 
 **Verification:**
-- [ ] core-loop, matching, requirements e2e green; browser at 390 px
+- [x] core-loop, matching, requirements e2e green; browser at 390 px
 
 **Dependencies:** Task 10
 **Files likely touched:** `src/app/(dashboard)/opportunities/[id]/{page,opportunity-detail-client}.tsx`, `src/components/domain/opportunities/*`
+**As built:** header card with type, stage, status and temperature pills, title, budget and owner line, the existing actions (log call, stage select, close or reactivate, edit) and the tabs; no separate "Move forward" button, since the stage select already moves the deal and the spec allows no new key for it. Right column: contact card (initials, phone, email, Call/Viber/WhatsApp/email links), viewed properties (non-rejected links with status), participants. Phone order: header, contact card, tab panel, the rest. The next step (earliest due) is the highlighted first row with Готово (`emphasis="action"`, aria-label unchanged). e2e: 56/60 first run; the 4 failures were the seeded deal holding 64 pending tasks from earlier runs (the task list loads 50, earliest due first). Cancelled the 60 leftover `E2E …` tasks on that deal locally; the test then passed 4/4. The test leaves one pending task per run, so it will hit the cap again.
 **Estimated scope:** M
 
 ## Task 12: Inquiries master-detail ⚑ Opus
