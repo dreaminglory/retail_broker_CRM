@@ -78,7 +78,7 @@ export default async function SmartListPage({
           {list.entity === "opportunity" && result && result.total > 0 && (
             <QueueStepLink
               href={queueStepHref({ listId: list.id, dir: "next", pos: 0, scope: data.scope })}
-              className={buttonVariants({ size: "sm" })}
+              className={buttonVariants({ emphasis: "action" })}
             >
               <ListChecks className="h-4 w-4" aria-hidden />
               {t("smartLists.queue.workThrough")}
@@ -90,7 +90,7 @@ export default async function SmartListPage({
   );
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div>
       {header}
       {done === "1" && (
         <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-success/30 bg-success-soft px-4 py-3">
@@ -104,11 +104,11 @@ export default async function SmartListPage({
         </div>
       )}
       {!result ? (
-        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-lg border border-dashed border-border-strong px-4 py-6 text-center text-sm text-muted-foreground">
           {t("smartLists.overview.stale")}
         </p>
       ) : result.total === 0 ? (
-        <div className="rounded-lg border border-dashed py-16 text-center">
+        <div className="rounded-lg border border-dashed border-border-strong py-16 text-center">
           <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-success/70" aria-hidden />
           <p className="text-sm font-medium">{t("smartLists.page.emptyTitle")}</p>
           <p className="mt-1 text-xs text-muted-foreground">{t("smartLists.page.emptyDesc")}</p>
@@ -142,15 +142,18 @@ async function OpportunityRows({ ctx, data, rows, total }: RowsProps<Opportunity
   );
 
   return (
-    <>
+    <div className="overflow-hidden rounded-lg border border-border bg-surface">
       <OpportunityListTable
+        embedded
         opportunities={rows}
         requirementSummaries={requirementSummaries}
         stages={stages}
         newMatches={newMatches}
       />
-      <ListPager page={data.page} pageSize={data.pageSize} total={total} />
-    </>
+      <div className="border-t border-border px-4 sm:px-5">
+        <ListPager page={data.page} pageSize={data.pageSize} total={total} />
+      </div>
+    </div>
   );
 }
 

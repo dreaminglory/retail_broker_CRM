@@ -10,7 +10,11 @@ import { ScopeToggle } from "./scope-toggle";
 function EntityIcon({ entity }: { entity: SmartListEntity }) {
   const t = useTranslations("smartLists.entity");
   const Icon = entity === "opportunity" ? Briefcase : Inbox;
-  return <Icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-label={t(entity)} />;
+  return (
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
+      <Icon className="size-[18px]" aria-label={t(entity)} />
+    </span>
+  );
 }
 
 function ListRow({
@@ -30,15 +34,17 @@ function ListRow({
     <li>
       <Link
         href={href}
-        className="flex min-h-12 items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+        className="flex h-full min-h-28 flex-col gap-3 rounded-lg border border-border bg-surface p-4 shadow-card transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        <EntityIcon entity={entity} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{name}</span>
-          {detail && <span className="block truncate text-xs text-muted-foreground">{detail}</span>}
+        <span className="flex items-start gap-3">
+          <EntityIcon entity={entity} />
+          <span className="min-w-0 flex-1">
+            <span className="block break-words text-body-strong text-ink">{name}</span>
+            {detail && <span className="block truncate text-small text-muted-foreground">{detail}</span>}
+          </span>
+          <ChevronRight className="mt-2 size-4 shrink-0 text-muted-foreground" aria-hidden />
         </span>
-        <span className="shrink-0 tabular-nums">{count}</span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <span className="mt-auto tabular-nums">{count}</span>
       </Link>
     </li>
   );
@@ -48,8 +54,8 @@ function CountBadge({ count }: { count: number }) {
   return (
     <span
       className={cn(
-        "inline-flex min-w-8 justify-center rounded-full px-2 py-0.5 text-sm font-semibold",
-        count > 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        "text-num-lg font-semibold",
+        count > 0 ? "text-ink" : "text-muted-foreground"
       )}
     >
       {formatListCount(count)}
@@ -63,20 +69,20 @@ export function ListOverviewView({ scope, canSwitchScope, builtIn, saved }: List
   const tRoot = useTranslations();
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("overview.title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("overview.description")}</p>
+          <h1 className="text-title text-ink">{t("overview.title")}</h1>
+          <p className="mt-1 text-body text-muted-foreground">{t("overview.description")}</p>
         </div>
         {canSwitchScope && <ScopeToggle scope={scope} basePath="/lists" />}
       </div>
 
       <section aria-labelledby="lists-built-in" className="mb-8">
-        <h2 id="lists-built-in" className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 id="lists-built-in" className="mb-3 text-label uppercase text-muted-foreground">
           {t("overview.builtIn")}
         </h2>
-        <ul className="divide-y rounded-lg border bg-card">
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {builtIn.map(({ list, count }) => (
             <ListRow
               key={list.id}
@@ -91,15 +97,15 @@ export function ListOverviewView({ scope, canSwitchScope, builtIn, saved }: List
       </section>
 
       <section aria-labelledby="lists-saved">
-        <h2 id="lists-saved" className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 id="lists-saved" className="mb-3 text-label uppercase text-muted-foreground">
           {t("overview.saved")}
         </h2>
         {saved.length === 0 ? (
-          <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-lg border border-dashed border-border-strong px-4 py-6 text-center text-sm text-muted-foreground">
             {t("overview.savedEmpty")}
           </p>
         ) : (
-          <ul className="divide-y rounded-lg border bg-card">
+          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {saved.map(({ list, count, sharedBy }) => (
               <ListRow
                 key={list.id}

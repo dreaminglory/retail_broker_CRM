@@ -345,9 +345,9 @@ white page, centred 400 px card, sidebar logo mark, primary submit with the yell
 ## Task 19: Lists and list detail
 **Description:** `/lists` and `/lists/[id]` as `lists.png` and `list-detail.png`, without tabs.
 **Acceptance criteria:**
-- [ ] Working a list one by one behaves as before
+- [x] Working a list one by one behaves as before
 **Verification:**
-- [ ] smart-lists e2e green
+- [x] smart-lists e2e green
 **Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/lists/**`, `src/components/domain/smart-lists/*` · **Scope:** M
 
 ## Task 20: Property detail
