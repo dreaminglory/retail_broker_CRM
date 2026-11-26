@@ -286,13 +286,14 @@ status pill; existing filters as pill selects; pager in the footer. Нов им�
 count, rows with one action). Main column only. No yellow action.
 
 **Acceptance criteria:**
-- [ ] Matches `exceptions.png` layout; every row action works; collapse is keyboard-operable
+- [x] Matches `exceptions.png` layout; every row action works; collapse is keyboard-operable
 
 **Verification:**
-- [ ] Browser as manager@alpha.bg; component tests green
+- [x] Browser as manager@alpha.bg; component tests green
 
 **Dependencies:** Checkpoint 1
 **Files likely touched:** `src/app/(dashboard)/exceptions/exceptions-page-client.tsx`
+**As built:** the five existing sections as `ExceptionSection` cards (button with aria-expanded/aria-controls in the h2; Enter/Space fold the rows). Severity is shown by edge, icon and count colour (unassigned and overdue red, at risk and stale amber, workload neutral); no severity text pill, since no message key exists for it and the spec allows none. An empty rule goes neutral. Unassigned rows now link to `/inquiries?id=`. Checked as manager@alpha.bg in bg 1280 and en 390.
 **Estimated scope:** S
 
 ## Task 16: Табло KPI tiles
