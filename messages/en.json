@@ -1705,6 +1705,7 @@
     "ownerFromOpportunity": "{name} will be added as the owner."
   },
   "PropertyDetail": {
+    "tabs": { "label": "Property sections", "overview": "Overview", "deals": "Buyers and deals" },
     "backToList": "Properties",
     "title": "{headline}, {place}",
     "archived": "Archived",

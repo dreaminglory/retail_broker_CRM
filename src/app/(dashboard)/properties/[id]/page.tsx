@@ -25,6 +25,9 @@ import { OpportunityMatchesSection } from "@/components/domain/matching/opportun
 import { MATCH_PREVIEW_SIZE } from "@/components/domain/matching/match-list-controls";
 import { PROPERTY_MATCH_KEYS, matchBaseParams, parseMatchView } from "@/components/domain/matching/match-params";
 import { PropertyActivity } from "./property-activity";
+import { PropertyDetailTabs } from "@/components/domain/properties/property-detail-tabs";
+import { PROPERTY_TABS } from "@/components/domain/properties/property-tabs";
+import { parseChoice } from "@/lib/url-state";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -114,10 +117,88 @@ export default async function PropertyPage({ params, searchParams }: Props) {
     ...(property.location_note ? [{ label: t("locationNote"), value: property.location_note }] : []),
   ];
 
+  const header = (
+    <header className="flex flex-wrap items-start justify-between gap-4">
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="font-mono">
+            {propertyCode(property)}
+          </Badge>
+          {property.status === "archived" && <Badge variant="secondary">{t("archived")}</Badge>}
+        </div>
+        <h1 className="text-title text-ink">{t("title", { headline, place })}</h1>
+        {property.address && <p className="text-body text-muted-foreground">{property.address}</p>}
+      </div>
+      <PropertyActionsMenu
+        propertyId={property.id}
+        status={property.status}
+        canDelete={hasRole(membership?.role, CONFIG_ROLES)}
+      />
+    </header>
+  );
+
+  const overview = (
+    <>
+      <div className="grid gap-6 md:grid-cols-2">
+        <DetailCard title={t("attributes")} rows={attributes} />
+        <DetailCard title={t("location")} rows={location} />
+      </div>
+
+      <ListingSection property={property} listings={listings} />
+
+      <section className="rounded-lg border border-border bg-surface p-5" aria-labelledby="property-work">
+        <h2 id="property-work" className="mb-3 text-label uppercase text-muted-foreground">
+          {t("work")}
+        </h2>
+        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-muted-foreground">{t("assignedTo")}</dt>
+            <dd className="font-medium">{property.assignee?.display_name ?? t("unassigned")}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t("createdAt")}</dt>
+            <dd className="tabular-nums">{format.dateTime(new Date(property.created_at), { dateStyle: "medium" })}</dd>
+          </div>
+        </dl>
+        {property.description && <p className="mt-4 whitespace-pre-line text-sm">{property.description}</p>}
+      </section>
+    </>
+  );
+
+  const dealsTab = (
+    <>
+      {matches && openOffers.length > 0 && (
+        <OpportunityMatchesSection propertyId={property.id} offerTypes={openOffers} matches={matches} view={view} baseParams={baseParams} />
+      )}
+      <PropertyOpportunities
+        links={opportunityLinks}
+        action={
+          property.status === "active" ? (
+            <ScheduleViewingButton
+              propertyId={property.id}
+              code={propertyCode(property)}
+              deals={viewingDeals}
+              brokers={brokers}
+            />
+          ) : undefined
+        }
+      />
+    </>
+  );
+
+  const historyTab = (
+    <section className="rounded-lg border border-border bg-surface p-5" aria-labelledby="property-history">
+      <h2 id="property-history" className="mb-3 text-label uppercase text-muted-foreground">
+        {t("history")}
+      </h2>
+      <PropertyActivity initialTimeline={timeline} propertyId={property.id} currentUserId={membership?.userId} />
+    </section>
+  );
+
   // A fresh `now` per render: relative times match between the server and hydration.
   return (
     <FreshNowProvider now={new Date().toISOString()}>
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="space-y-6">
         <Link
           href="/properties"
           className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -126,76 +207,18 @@ export default async function PropertyPage({ params, searchParams }: Props) {
           {t("backToList")}
         </Link>
 
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="font-mono">
-                {propertyCode(property)}
-              </Badge>
-              {property.status === "archived" && <Badge variant="secondary">{t("archived")}</Badge>}
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("title", { headline, place })}</h1>
-            {property.address && <p className="text-sm text-muted-foreground">{property.address}</p>}
-          </div>
-          <PropertyActionsMenu
-            propertyId={property.id}
-            status={property.status}
-            canDelete={hasRole(membership?.role, CONFIG_ROLES)}
-          />
-        </header>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <DetailCard title={t("attributes")} rows={attributes} />
-          <DetailCard title={t("location")} rows={location} />
-        </div>
-
-        <ListingSection property={property} listings={listings} />
-
-        {matches && openOffers.length > 0 && (
-          <OpportunityMatchesSection propertyId={property.id} offerTypes={openOffers} matches={matches} view={view} baseParams={baseParams} />
-        )}
-
-        <PartySection propertyId={property.id} current={parties.current} past={parties.past} />
-
-        <PropertyOpportunities
-          links={opportunityLinks}
-          action={
-            property.status === "active" ? (
-              <ScheduleViewingButton
-                propertyId={property.id}
-                code={propertyCode(property)}
-                deals={viewingDeals}
-                brokers={brokers}
-              />
-            ) : undefined
-          }
+        <PropertyDetailTabs
+          header={header}
+          tabLabel={t("tabs.label")}
+          items={[
+            { value: "overview", label: t("tabs.overview") },
+            { value: "deals", label: t("tabs.deals"), count: opportunityLinks.length },
+            { value: "history", label: t("history") },
+          ]}
+          initialTab={parseChoice(query.tab, PROPERTY_TABS, "overview")}
+          panels={{ overview, deals: dealsTab, history: historyTab }}
+          aside={<PartySection propertyId={property.id} current={parties.current} past={parties.past} />}
         />
-
-        <section className="rounded-lg border bg-card p-4" aria-labelledby="property-work">
-          <h2 id="property-work" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("work")}
-          </h2>
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground">{t("assignedTo")}</dt>
-              <dd className="font-medium">{property.assignee?.display_name ?? t("unassigned")}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t("createdAt")}</dt>
-              <dd>{format.dateTime(new Date(property.created_at), { dateStyle: "medium" })}</dd>
-            </div>
-          </dl>
-          {property.description && (
-            <p className="mt-4 whitespace-pre-line text-sm">{property.description}</p>
-          )}
-        </section>
-
-        <section className="rounded-lg border bg-card p-4" aria-labelledby="property-history">
-          <h2 id="property-history" className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("history")}
-          </h2>
-          <PropertyActivity initialTimeline={timeline} propertyId={property.id} currentUserId={membership?.userId} />
-        </section>
       </div>
     </FreshNowProvider>
   );
@@ -203,8 +226,8 @@ export default async function PropertyPage({ params, searchParams }: Props) {
 
 function DetailCard({ title, rows }: { title: string; rows: { label: string; value: string }[] }) {
   return (
-    <section className="rounded-lg border bg-card p-4">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
+    <section className="rounded-lg border border-border bg-surface p-5">
+      <h2 className="mb-3 text-label uppercase text-muted-foreground">{title}</h2>
       <dl className="space-y-2 text-sm">
         {rows.map((row) => (
           <div key={row.label} className="flex justify-between gap-4">

@@ -1705,6 +1705,7 @@
     "ownerFromOpportunity": "Като собственик ще се добави {name}."
   },
   "PropertyDetail": {
+    "tabs": { "label": "Раздели на имота", "overview": "Преглед", "deals": "Купувачи и сделки" },
     "backToList": "Имоти",
     "title": "{headline}, {place}",
     "archived": "Архивиран",

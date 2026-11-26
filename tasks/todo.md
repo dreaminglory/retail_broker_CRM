@@ -354,9 +354,9 @@ white page, centred 400 px card, sidebar logo mark, primary submit with the yell
 **Description:** `/properties/[id]` as `property-detail.png`: header card, tabs from existing
 sections (reuse Task 10 helper), parties in the right column.
 **Acceptance criteria:**
-- [ ] Every existing section reachable; `?tab=` works
+- [x] Every existing section reachable; `?tab=` works
 **Verification:**
-- [ ] properties and matching e2e green
+- [x] properties and matching e2e green
 **Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/properties/[id]/*` · **Scope:** M
 
 ## Task 21: Contact detail

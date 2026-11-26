@@ -94,7 +94,7 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   }
 
   // 1. The buyer deal is listed with its contact and broker, and 100%.
-  await page.goto(BEST_PROPERTY);
+  await page.goto(`${BEST_PROPERTY}?tab=deals`);
   await expect(matches.getByRole('heading', { name: m.matching.dealsTitleSale })).toBeVisible();
   const row = rows.filter({ hasText: DEAL_TITLE });
   await expect(row).toHaveCount(1);
@@ -170,7 +170,7 @@ test('a broker marks a match as not suitable with a reason', async ({ page, m, s
 // tests: the budgets of the seeded deals would hide a wrong mapping here.)
 test('a rent-only property lists its matching tenants', async ({ page, m, signInAs }) => {
   await signInAs('broker@alpha.bg');
-  await page.goto(RENT_PROPERTY);
+  await page.goto(`${RENT_PROPERTY}?tab=deals`);
 
   const matches = dealMatches(page);
   await expect(matches.getByRole('heading', { name: m.matching.dealsTitleRent })).toBeVisible();
