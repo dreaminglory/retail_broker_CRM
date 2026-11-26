@@ -300,13 +300,14 @@ count, rows with one action). Main column only. No yellow action.
 style. Space below left for Task 28.
 
 **Acceptance criteria:**
-- [ ] Same four numbers as today, tabular; owner notice kept
+- [x] Same four numbers as today, tabular; owner notice kept
 
 **Verification:**
-- [ ] Browser as owner and broker
+- [x] Browser as owner and broker
 
 **Dependencies:** Checkpoint 1
 **Files likely touched:** `src/app/(dashboard)/dashboard/page.tsx`
+**As built:** four tiles (label, large tabular number, each opens Today), red tint on Overdue only when it has items; welcome line and owner notice kept; quick actions restyled below. Checked as manager@alpha.bg; owner notice code unchanged.
 **Estimated scope:** XS
 
 ### Checkpoint 2: core screens
