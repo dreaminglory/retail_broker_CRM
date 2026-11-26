@@ -402,7 +402,7 @@ field style in contact, inquiry, task, requirement and convert dialogs.
 **Dependencies:** Task 23 · **Files:** `src/app/(dashboard)/settings/import/**`, `src/components/domain/imports/*` · **Scope:** S
 
 ### Checkpoint 3: all live pages
-- [ ] typecheck, lint, test, full `test:e2e` green
+- [x] typecheck, lint, test, full `test:e2e` green
 - [ ] Review page published; founder approves (and confirms who sees `/reports`)
 
 ## Phase 4: Скоро placeholders
