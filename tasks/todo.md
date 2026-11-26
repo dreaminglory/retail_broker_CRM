@@ -241,14 +241,15 @@ selected inquiry's panel right (message, existing fields, convert/assign/reject)
 from what the page already loads. Convert/take carries the yellow offset.
 
 **Acceptance criteria:**
-- [ ] Selecting a row updates `?id=`; refresh keeps it; an id from another agency or unknown shows no panel
-- [ ] Convert, assign, reject work from the panel with the same result
+- [x] Selecting a row updates `?id=`; refresh keeps it; an id from another agency or unknown shows no panel
+- [x] Convert, assign, reject work from the panel with the same result
 
 **Verification:**
-- [ ] New e2e: panel selection survives reload; existing inquiry flows in core-loop green
+- [x] New e2e: panel selection survives reload; existing inquiry flows in core-loop green
 
 **Dependencies:** Task 10
 **Files likely touched:** `src/app/(dashboard)/inquiries/{page,inquiries-page-client}.tsx`, `src/components/domain/inquiries/inquiry-panel.tsx`
+**As built:** the list always loads; `?id=` also loads the selected inquiry through the same `getById` the old deep link used, and the panel uses the list row instead when it is on the page (it carries the call summary). `InquiryRows` (source pill, caller, message line, status pill and age, assignee; a row is a Link with `replace`) and `InquiryPanel` (the existing card, flat, plus the caller's message and Convert with the yellow offset on open inquiries). The actions and dialogs moved to `useInquiryActions`, shared with `InquiryList` (smart lists). Status tabs are links over the existing statuses. Below 1024 px a selected inquiry replaces the list, with a back link. Unknown, malformed or Beta ids show the not-found notice and no panel. New `e2e/inquiry-panel.spec.ts`; core-loop opens the row before using the card.
 **Estimated scope:** M
 
 ## Task 13: Contacts master-detail ⚑ Opus

@@ -65,8 +65,10 @@ export default async function InquiriesPage({
 
   // Fetch all required data in parallel
   const viewer = { userId: user!.id, agencyId, role: membership?.role ?? "" };
-  const [paged, leadSources, stages, brokers, settings, editingList] = await Promise.all([
-    id ? loadInquiryById(supabase, agencyId, id) : loadPage(page, PAGE_SIZE, (offset, limit) =>
+  // Master-detail (spec ui-bright): the list always loads; `?id=` adds the selected inquiry for
+  // the panel, through the same lookup the deep link used (agency-scoped; unknown → no panel).
+  const [paged, byId, leadSources, stages, brokers, settings, editingList] = await Promise.all([
+    loadPage(page, PAGE_SIZE, (offset, limit) =>
       new InquiryService(supabase).listPage(agencyId, {
         search: search || undefined,
         status: status === "all" ? undefined : status,
@@ -74,6 +76,7 @@ export default async function InquiriesPage({
         offset,
       })
     ),
+    id ? loadInquiryById(supabase, agencyId, id).then((one) => one.rows[0] ?? null) : null,
     new LeadSourceRepository(supabase).findActive(agencyId),
     new StageRepository(supabase).findActive(agencyId),
     new MemberRepository(supabase).getActiveBrokers(agencyId),
@@ -82,14 +85,19 @@ export default async function InquiriesPage({
   ]);
 
   const inquiries = paged.rows;
-  const { inactiveAssigneeNames, joinedDeals } = await loadInquiryRowContext(supabase, agencyId, inquiries, brokers);
+  // The list row when the selection is on this page: it carries the call summary (last call,
+  // pending retry) that the single lookup doesn't.
+  const selected = (byId && inquiries.find((i) => i.id === byId.id)) ?? byId;
+  const withSelected = selected && !inquiries.some((i) => i.id === selected.id) ? [...inquiries, selected] : inquiries;
+  const { inactiveAssigneeNames, joinedDeals } = await loadInquiryRowContext(supabase, agencyId, withSelected, brokers);
 
   // A fresh `now` per render: relative times match between the server and hydration.
   return (
     <FreshNowProvider now={new Date().toISOString()}>
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <InquiriesPageClient
           inquiries={inquiries}
+          selected={selected}
           pageInfo={paged.info}
           leadSources={leadSources}
           stages={stages}

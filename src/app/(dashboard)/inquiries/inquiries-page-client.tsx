@@ -1,16 +1,9 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +12,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { InquiryForm } from "@/components/domain/inquiries/inquiry-form";
-import { InquiryList } from "@/components/domain/inquiries/inquiry-list";
+import Link from "next/link";
+import { ListPager } from "@/components/ui/list-pager";
+import { InquiryRows } from "@/components/domain/inquiries/inquiry-rows";
+import { InquiryPanel } from "@/components/domain/inquiries/inquiry-panel";
+import { useInquiryActions } from "@/components/domain/inquiries/inquiry-actions";
+import { cn } from "@/lib/utils";
 import { createInquiryAction, searchInquiriesQuickAction } from "./actions";
 import type { Inquiry } from "@/domain/inquiries/types";
 import type { LeadSource } from "@/domain/lead-sources/types";
@@ -44,6 +42,8 @@ const STATUS_FILTER_OPTIONS = [
 
 interface InquiriesPageClientProps {
   inquiries: Inquiry[];
+  /** The inquiry in `?id=`, for the panel; null when none is selected or it isn't found. */
+  selected: Inquiry | null;
   pageInfo: PageInfo;
   leadSources: LeadSource[];
   stages: Stage[];
@@ -64,6 +64,7 @@ interface InquiriesPageClientProps {
 
 export function InquiriesPageClient({
   inquiries,
+  selected,
   pageInfo,
   leadSources,
   stages,
@@ -80,7 +81,9 @@ export function InquiriesPageClient({
   const t = useTranslations("InquiriesPage");
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const { handlers, dialogs } = useInquiryActions({ leadSources, stages, brokers, inactiveAssigneeNames, timeZone });
 
   const [createOpen, setCreateOpen] = useState(false);
   const [search, setSearch] = useState(initialSearch);
@@ -125,25 +128,27 @@ export function InquiriesPageClient({
     updateParams({ search, page: "" });
   }
 
-  function handleStatusChange(value: string | null) {
-    const v = value ?? "all";
-    updateParams({ status: v === "all" ? "" : v, page: "" });
+  /** A status tab: the list from page 1, keeping the search and the selection. */
+  function statusHref(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "all") params.delete("status");
+    else params.set("status", value);
+    params.delete("page");
+    const query = params.toString();
+    return query ? `${pathname}?${query}` : pathname;
   }
 
   const statusLabel =
     t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === initialStatus)?.value ?? "all"}` as any);
 
-  const displayedInquiries = initialId 
-    ? inquiries.filter(i => i.id === initialId) 
-    : inquiries;
 
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <h1 className="text-title text-ink">{t("title")}</h1>
+          <p className="mt-1 text-body text-muted-foreground">
             {t("count", { count: pageInfo.total, statusLabel: typeof statusLabel === "string" ? statusLabel.toLowerCase() : statusLabel })}
             {initialSearch ? t("matchingSearch", { search: initialSearch }) : ""}
           </p>
@@ -187,7 +192,7 @@ export function InquiriesPageClient({
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="mb-4 flex gap-3">
-        <form onSubmit={handleSearchSubmit} className="relative flex-1 flex gap-2">
+        <form onSubmit={handleSearchSubmit} className="relative flex min-w-0 flex-1 gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -234,53 +239,73 @@ export function InquiriesPageClient({
           <Button type="submit" variant="secondary">{t("searchBtn")}</Button>
         </form>
 
-        <Select value={initialStatus} onValueChange={(v) => handleStatusChange(v as string | null)}>
-          <SelectTrigger className="w-44" id="inquiry-status-filter">
-            <SelectValue>
-              {(val: string) => val ? t(`filters.${STATUS_FILTER_OPTIONS.find((o) => o.value === val)?.label ?? "all"}` as any) : t("filters.all")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {t(`filters.${o.label}` as any)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* ── List ────────────────────────────────────────────────────────────── */}
-      {initialId && (
-        <div className="mb-4 flex items-center justify-between rounded-md bg-muted/50 px-4 py-2 text-sm text-muted-foreground border">
-          <p>{t("singleInquiryLabel")}</p>
-          <Button variant="link" className="h-auto p-0" onClick={() => router.push("/inquiries")}>
-            {t("viewAllBtn")}
-          </Button>
+      {/* ── Master-detail (inquiries.png) ───────────────────────────────────── */}
+      {initialId && !selected && (
+        <div role="status" className="mb-4 rounded-lg border border-border bg-surface px-4 py-3">
+          <p className="text-body-strong text-ink">{t("emptyState.notFoundTitle")}</p>
+          <p className="text-small text-muted-foreground">{t("emptyState.notFoundDesc")}</p>
         </div>
       )}
-      <InquiryList
-        inquiries={displayedInquiries}
-        pageInfo={initialId ? null : pageInfo}
-        leadSources={leadSources}
-        stages={stages}
-        brokers={brokers}
-        inactiveAssigneeNames={inactiveAssigneeNames}
-        timeZone={timeZone}
-        joinedDeals={joinedDeals}
-        pending={isPending}
-        empty={
-          <div className="rounded-lg border border-dashed py-16 text-center">
-            <Inbox className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">
-              {initialId ? t("emptyState.notFoundTitle") : t("emptyState.emptyTitle")}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground/70">
-              {initialId ? t("emptyState.notFoundDesc") : t("emptyState.emptyDesc")}
-            </p>
+      <div className={cn("grid items-start gap-6", selected && "lg:grid-cols-[minmax(0,1fr)_24rem]")}>
+        {/* Below 1024 px an open inquiry replaces the list; its panel links back. */}
+        <div className={cn("min-w-0", selected && "max-lg:hidden")}>
+          <div className={cn("overflow-hidden rounded-lg border border-border bg-surface", isPending && "pointer-events-none opacity-60")}>
+            {/* Status tabs: only the statuses that exist. */}
+            <nav aria-label={t("title")} className="flex gap-5 overflow-x-auto border-b border-border px-4 pt-3 [scrollbar-width:none] sm:px-5">
+              {STATUS_FILTER_OPTIONS.map((o) => {
+                const active = initialStatus === o.value;
+                return (
+                  <Link
+                    key={o.value}
+                    href={statusHref(o.value)}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "-mb-px shrink-0 border-b-2 pb-2.5 text-body transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                      active ? "border-primary font-semibold text-ink" : "border-transparent text-muted-foreground hover:text-ink"
+                    )}
+                  >
+                    {t(`filters.${o.label}` as never)}
+                  </Link>
+                );
+              })}
+            </nav>
+            {inquiries.length === 0 ? (
+              <div className="py-16 text-center">
+                <Inbox className="mx-auto mb-3 size-10 text-muted-foreground/40" />
+                <p className="text-body-strong text-muted-foreground">{t("emptyState.emptyTitle")}</p>
+                <p className="mt-1 text-small text-muted-foreground">{t("emptyState.emptyDesc")}</p>
+              </div>
+            ) : (
+              <InquiryRows
+                inquiries={inquiries}
+                selectedId={selected?.id ?? null}
+                leadSources={leadSources}
+                brokers={brokers}
+                inactiveAssigneeNames={inactiveAssigneeNames}
+              />
+            )}
           </div>
-        }
-      />
+          <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
+        </div>
+
+        {selected && (
+          <div className="min-w-0 lg:sticky lg:top-4">
+            <InquiryPanel
+              key={selected.id}
+              inquiry={selected}
+              leadSources={leadSources}
+              brokers={brokers}
+              inactiveAssigneeNames={inactiveAssigneeNames}
+              joinedDeal={joinedDeals[selected.id]}
+              timeZone={timeZone}
+              handlers={handlers}
+            />
+          </div>
+        )}
+      </div>
+      {dialogs}
     </>
   );
 }
