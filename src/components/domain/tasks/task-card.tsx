@@ -2,8 +2,6 @@
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Phone,
   Mail,
@@ -11,9 +9,7 @@ import {
   Users,
   CalendarCheck,
   MoreHorizontal,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
+  Check,
   Briefcase,
 } from "lucide-react";
 import type { Task, TaskType } from "@/domain/tasks/types";
@@ -62,6 +58,10 @@ const TASK_TYPE_CONFIG: Record<TaskType, { icon: React.ComponentType<{ className
   other: { icon: MoreHorizontal, label: "Other", color: "bg-sea-light text-primary" },
 };
 
+/**
+ * A task as a Today row (today.png): checkbox, type icon, title, context line, time and the row
+ * action. The section card around it carries the overdue tint; the row only colours the time.
+ */
 export function TaskCard({
   task,
   timeZone,
@@ -71,12 +71,13 @@ export function TaskCard({
   showOpportunity = true,
   menu,
 }: TaskCardProps) {
-  const t = useTranslations('TaskCard');
-  const tCall = useTranslations('phoneLoop');
+  const t = useTranslations("TaskCard");
+  const tCall = useTranslations("phoneLoop");
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const bucket = task.due_at ? todayBucket(task.due_at, timeZone, now) : null;
-  const isOverdue = bucket === "overdue" && task.status === "pending";
+  const pending = task.status === "pending";
+  const isOverdue = bucket === "overdue" && pending;
   const isDueToday = bucket === "dueToday";
   const typeConfig = task.task_type ? TASK_TYPE_CONFIG[task.task_type] : null;
   const TypeIcon = typeConfig?.icon ?? CalendarCheck;
@@ -84,127 +85,142 @@ export function TaskCard({
   const resolvedOppTitle = opportunityTitle || ("opportunity_title" in task ? (task as unknown as Record<string, string>).opportunity_title : undefined);
   const resolvedAssignee =
     assigneeName ?? ("assignee_name" in task ? (task as unknown as Record<string, string>).assignee_name : undefined);
-  const callPhone = task.task_type === "call" && task.status === "pending" ? task.call_phone : null;
+  const callPhone = task.task_type === "call" && pending ? task.call_phone : null;
 
+  const due = task.due_at ? new Date(task.due_at) : null;
+  const when = !due
+    ? null
+    : isOverdue
+      ? format.dateTime(due, { weekday: "short", day: "numeric", month: "short", timeZone })
+      : isDueToday
+        ? format.dateTime(due, { hour: "2-digit", minute: "2-digit", timeZone })
+        : format.dateTime(due, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone });
+  const overdueLabel = due && isOverdue ? t("overdueSince", { relative: format.relativeTime(due, now) }) : undefined;
+
+  // Lay out by the width of the card it sits in (an `@container`), not the viewport, so the same
+  // row works in Today's main column, its side column and on a phone.
   return (
-    <div
-      className={cn(
-        "flex items-start gap-3 rounded-lg border p-3.5 transition-colors hover:border-info-line",
-        isOverdue && "border-overdue/40 bg-overdue-soft/50",
-        isDueToday && !isOverdue && "border-due/40 bg-due-soft/50",
-        !isOverdue && !isDueToday && "bg-card"
+    <div className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-4 py-3 @md:grid-cols-[auto_auto_minmax(0,1fr)_auto] @md:items-center @md:px-5">
+      {/* The checkbox opens completion (outcome + next step); it never completes silently. */}
+      {pending ? (
+        <button
+          type="button"
+          aria-label={t("complete")}
+          title={t("complete")}
+          data-slot="task-check"
+          onClick={(e) => {
+            e.stopPropagation();
+            onComplete(task.id);
+          }}
+          className="group/check relative mt-2 flex after:absolute after:-inset-3 after:content-[''] size-5 shrink-0 items-center justify-center rounded-sm border-2 border-border-strong bg-surface text-primary transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 @md:mt-0"
+        >
+          <Check className="size-3.5 opacity-0 transition-opacity group-hover/check:opacity-100" aria-hidden />
+        </button>
+      ) : (
+        <span className="mt-2 flex size-5 shrink-0 items-center justify-center rounded-sm bg-primary text-on-primary @md:mt-0" aria-hidden>
+          <Check className="size-3.5" />
+        </span>
       )}
-    >
-      {/* Type icon */}
+
       <div
         className={cn(
-          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          typeConfig?.color ?? "bg-muted text-muted-foreground"
+          "flex size-9 shrink-0 items-center justify-center rounded-full border border-border",
+          typeConfig?.color ?? "bg-muted text-muted-foreground",
         )}
+        title={typeConfig ? t(`types.${task.task_type}`) : undefined}
       >
-        <TypeIcon className="h-4 w-4" />
+        <TypeIcon className="size-4" />
+        {typeConfig && <span className="sr-only">{t(`types.${task.task_type}`)}</span>}
       </div>
 
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="font-medium text-sm leading-snug truncate">{task.title}</p>
+      <div className="min-w-0">
+        <p className={cn("truncate text-body-strong text-ink", !pending && "text-muted-foreground line-through")}>
+          {task.title}
+        </p>
+        {((showOpportunity && resolvedOppTitle) || resolvedAssignee) && (
+          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 text-small text-muted-foreground">
             {showOpportunity && resolvedOppTitle && (
               task.opportunity_id ? (
-                <Link 
+                <Link
                   href={`/opportunities/${task.opportunity_id}`}
-                  className="text-xs text-muted-foreground hover:text-primary mt-0.5 truncate flex items-center gap-1.5 transition-colors"
+                  className="flex min-w-0 items-center gap-1 transition-colors hover:text-primary"
                 >
-                  <Briefcase className="h-3 w-3 shrink-0" />
-                  {resolvedOppTitle}
+                  <Briefcase className="size-3 shrink-0" />
+                  <span className="truncate">{resolvedOppTitle}</span>
                 </Link>
               ) : (
-                <p className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-1.5">
-                  <Briefcase className="h-3 w-3 shrink-0" />
-                  {resolvedOppTitle}
-                </p>
+                <span className="flex min-w-0 items-center gap-1">
+                  <Briefcase className="size-3 shrink-0" />
+                  <span className="truncate">{resolvedOppTitle}</span>
+                </span>
               )
             )}
-            {task.property && <TaskPropertyLine property={task.property} />}
             {resolvedAssignee && (
-              <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
-                <Users className="h-3 w-3" />
-                {resolvedAssignee}
-              </p>
+              <span className="flex min-w-0 items-center gap-1">
+                <Users className="size-3 shrink-0" />
+                <span className="truncate">{resolvedAssignee}</span>
+              </span>
             )}
           </div>
-
-          {/* Task type badge */}
-          {typeConfig && (
-            <Badge variant="secondary" className={cn("text-[10px] shrink-0", typeConfig.color)}>
-              {typeConfig ? t('types.' + task.task_type) : ''}
-            </Badge>
-          )}
-        </div>
-
-        {callPhone && (
-          <ContactLinks
-            value={callPhone.value}
-            type={callPhone.type}
-            name={callPhone.name || tCall("unknownName")}
-            callTarget={taskCallTarget(task, tCall("unknownName"))}
-            className="mt-2"
-          />
         )}
-
-        {/* Due date + overdue indicator */}
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs">
-            {isOverdue ? (
-              <>
-                <AlertTriangle className="h-3 w-3 text-destructive" />
-                <span className="font-medium text-destructive">
-                  {t('overdueSince', { relative: format.relativeTime(new Date(task.due_at!), now) })}
-                </span>
-              </>
-            ) : task.due_at ? (
-              <>
-                <Clock className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">
-                  {isDueToday
-                    ? t('dueTodayTime', {
-                        time: format.dateTime(new Date(task.due_at), { hour: '2-digit', minute: '2-digit', timeZone }),
-                      })
-                    : t('dueDateTime', {
-                        date: format.dateTime(new Date(task.due_at), {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          timeZone,
-                        }),
-                      })}
-                </span>
-              </>
-            ) : (
-              <span className="text-muted-foreground italic">{t("noDueDate")}</span>
-            )}
-          </div>
-
-          {task.status === "pending" && (
-            <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2 text-xs hover:bg-primary/10 hover:text-primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                onComplete(task.id);
-              }}
-            >
-              <CheckCircle className="mr-1 h-3.5 w-3.5" />
-              {t("complete")}</Button>
-            {menu}
-            </div>
-          )}
-        </div>
+        {task.property && <TaskPropertyLine property={task.property} />}
       </div>
+
+      {/* Narrow card (phone, side column): under the text. Wide card: at the row's end. */}
+      <div className="col-start-3 flex items-center justify-between gap-3 @md:col-start-4 @md:row-start-1 @md:justify-end">
+        <DueTime when={when} overdue={isOverdue} overdueLabel={overdueLabel} empty={t("noDueDate")} />
+        <RowActions callPhone={callPhone} task={task} unknownName={tCall("unknownName")} menu={pending ? menu : null} />
+      </div>
+    </div>
+  );
+}
+
+function DueTime({
+  when,
+  overdue,
+  overdueLabel,
+  empty,
+}: {
+  when: string | null;
+  overdue: boolean;
+  overdueLabel?: string;
+  empty: string;
+}) {
+  if (!when) return <span className="text-small italic text-muted-foreground">{empty}</span>;
+  return (
+    <span
+      title={overdueLabel}
+      className={cn("whitespace-nowrap text-small tabular-nums", overdue ? "font-semibold text-overdue" : "text-muted-foreground")}
+    >
+      {when}
+      {overdueLabel && <span className="sr-only"> · {overdueLabel}</span>}
+    </span>
+  );
+}
+
+function RowActions({
+  callPhone,
+  task,
+  unknownName,
+  menu,
+}: {
+  callPhone: Task["call_phone"] | null;
+  task: Task;
+  unknownName: string;
+  menu: React.ReactNode;
+}) {
+  if (!callPhone && !menu) return null;
+  return (
+    <div className="flex items-center gap-1">
+      {callPhone && (
+        <ContactLinks
+          value={callPhone.value}
+          type={callPhone.type}
+          name={callPhone.name || unknownName}
+          callTarget={taskCallTarget(task, unknownName)}
+        />
+      )}
+      {menu}
     </div>
   );
 }

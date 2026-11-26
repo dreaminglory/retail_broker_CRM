@@ -167,14 +167,15 @@ Coming up in the right column. Task rows: checkbox, type icon, title, context li
 row action. Scope toggle kept. No yellow action (plan).
 
 **Acceptance criteria:**
-- [ ] Layout matches `today.png`; every section and action that exists today still works
-- [ ] Phone: one column in the same order
+- [x] Layout matches `today.png`; every section and action that exists today still works
+- [x] Phone: one column in the same order
 
 **Verification:**
-- [ ] `npx vitest run src/app/(dashboard)/today`; core-loop e2e green
+- [x] `npx vitest run src/app/(dashboard)/today`; core-loop e2e green
 
 **Dependencies:** Checkpoint 1
 **Files likely touched:** `src/app/(dashboard)/today/today-page-client.tsx`, `src/components/domain/tasks/*`
+**As built:** the task card became the Today row (checkbox opens completion, type icon, title, context line, time, call links and menu), laid out by its card width (container queries) so the side column and phones stack it. The summary line reuses the existing count keys; no greeting key exists, so the title stays "Днес" under the date. No `due today` tasks in the seed at the time of the check.
 **Estimated scope:** M
 
 ## Task 9: Inline post-call prompt on Today ⚑ Opus

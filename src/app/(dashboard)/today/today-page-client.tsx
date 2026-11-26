@@ -9,13 +9,12 @@ import { TaskCard } from "@/components/domain/tasks/task-card";
 import { TaskCompleteDialog } from "@/components/domain/tasks/task-complete-dialog";
 import { TaskActionsMenu } from "@/components/domain/tasks/task-actions-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle,
   CalendarCheck,
   CalendarClock,
   Inbox,
-  ArrowRight,
+  ChevronRight,
   CheckCircle,
   Briefcase,
   Phone,
@@ -50,6 +49,11 @@ interface TodayPageClientProps {
   ) => Promise<ActionResult<unknown>>;
 }
 
+/**
+ * Today as `today.png`: greeting and summary line, then the follow-up work as cards. Main column:
+ * overdue (red tint), due today, no next step (amber). Side column: new inquiries, coming up.
+ * On a phone the two columns stack in that same order.
+ */
 export function TodayPageClient({
   scope,
   timeZone,
@@ -77,40 +81,72 @@ export function TodayPageClient({
   const brokerNames = new Map(brokers.map((b) => [b.id, b.display_name]));
 
   const renderTask = (task: Task) => (
-    <TaskCard
-      key={task.id}
-      task={task}
-      timeZone={timeZone}
-      assigneeName={scope === "agency" && task.assigned_to ? brokerNames.get(task.assigned_to) : undefined}
-      onComplete={() => setCompletingTask(task)}
-      menu={<TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />}
-    />
+    <li key={task.id}>
+      <TaskCard
+        task={task}
+        timeZone={timeZone}
+        assigneeName={scope === "agency" && task.assigned_to ? brokerNames.get(task.assigned_to) : undefined}
+        onComplete={() => setCompletingTask(task)}
+        menu={<TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />}
+      />
+    </li>
   );
 
   const totalItems = overdue.length + dueToday.length + newInquiries.length;
   const hasWork = totalItems > 0 || atRisk.length > 0 || upcoming.length > 0;
+  const hasSide = newInquiries.length > 0 || upcoming.length > 0;
+
+  const summary = [
+    overdue.length > 0 && { text: t("overdueCount", { count: overdue.length }), tone: "text-overdue font-semibold" },
+    dueToday.length > 0 && { text: t("dueTodayCount", { count: dueToday.length }), tone: "text-ink" },
+    newInquiries.length > 0 && { text: t("newInquiriesCount", { count: newInquiries.length }), tone: "text-primary" },
+    atRisk.length > 0 && { text: t("atRiskCount", { count: atRisk.length }), tone: "text-at-risk-ink font-semibold" },
+  ].filter((part): part is { text: string; tone: string } => !!part);
 
   return (
     <>
-      <div className="mx-auto max-w-3xl">
-        {/* Header */}
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {hasWork ? t("hasWorkSubtitle", { count: totalItems }) : t("allCaughtUpSubtitle")}
+      <div className="mx-auto max-w-6xl">
+        {/* Header: date, title, summary line; the scope switch on the right. */}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-small text-muted-foreground first-letter:uppercase">
+              {format.dateTime(now, { weekday: "long", day: "numeric", month: "long", timeZone })}
+            </p>
+            <h1 className="mt-1 text-display text-ink">{t("title")}</h1>
+            <p className="mt-1 text-body text-muted-foreground">
+              {hasWork ? (
+                <>
+                  <span className="sr-only">{t("hasWorkSubtitle", { count: totalItems })}</span>
+                  <span aria-hidden className="flex flex-wrap gap-x-1.5">
+                    {summary.map((part, i) => (
+                      <span key={part.text} className={part.tone}>
+                        {i > 0 && <span className="mr-1.5 font-normal text-muted-foreground">·</span>}
+                        {part.text}
+                      </span>
+                    ))}
+                  </span>
+                </>
+              ) : (
+                t("allCaughtUpSubtitle")
+              )}
             </p>
           </div>
           {canSwitchScope && (
-            <div role="group" aria-label={t("scope.label")} className="inline-flex rounded-md border p-0.5 text-sm">
+            <div
+              role="group"
+              aria-label={t("scope.label")}
+              className="inline-flex rounded-lg border border-border bg-surface p-1 text-body"
+            >
               {(["mine", "agency"] as const).map((option) => (
                 <Link
                   key={option}
                   href={option === "agency" ? "/today?scope=agency" : "/today"}
                   aria-current={scope === option ? "page" : undefined}
                   className={cn(
-                    "rounded px-3 py-1 transition-colors",
-                    scope === option ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    "rounded-md px-3 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    scope === option
+                      ? "bg-accent font-semibold text-primary"
+                      : "text-muted-foreground hover:text-ink"
                   )}
                 >
                   {t(`scope.${option}`)}
@@ -120,170 +156,127 @@ export function TodayPageClient({
           )}
         </div>
 
-        {/* Summary badges */}
-        {hasWork && (
-          <div className="mb-6 flex flex-wrap gap-2">
-            {overdue.length > 0 && (
-              <Badge variant="destructive" className="gap-1.5 text-xs px-3 py-1">
-                <AlertTriangle className="h-3 w-3" />
-                {t('overdueCount', { count: overdue.length })}
-              </Badge>
-            )}
-            {newInquiries.length > 0 && (
-              <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-accent text-primary">
-                <Inbox className="h-3 w-3" />
-                {t('newInquiriesCount', { count: newInquiries.length })}
-              </Badge>
-            )}
-            {dueToday.length > 0 && (
-              <Badge variant="secondary" className="gap-1.5 text-xs px-3 py-1 bg-due-soft text-due-ink">
-                <CalendarCheck className="h-3 w-3" />
-                {t('dueTodayCount', { count: dueToday.length })}
-              </Badge>
-            )}
-            {atRisk.length > 0 && (
-              <Badge variant="outline" className="gap-1.5 text-xs px-3 py-1 text-at-risk-ink border-at-risk">
-                <Briefcase className="h-3 w-3" />
-                {t('atRiskCount', { count: atRisk.length })}
-              </Badge>
+        {hasWork ? (
+          <div className={cn("grid items-start gap-6", hasSide && "lg:grid-cols-[minmax(0,1fr)_20rem]")}>
+            <div className="space-y-6">
+              {overdue.length > 0 && (
+                <Section
+                  icon={<AlertTriangle className="size-4 text-overdue" />}
+                  title={t("sections.overdue")}
+                  count={overdue.length}
+                  tone="overdue"
+                >
+                  <ul className="divide-y divide-overdue/15 bg-overdue-soft">{overdue.map(renderTask)}</ul>
+                </Section>
+              )}
+
+              {dueToday.length > 0 && (
+                <Section
+                  icon={<CalendarCheck className="size-4 text-primary" />}
+                  title={t("sections.dueToday")}
+                  count={dueToday.length}
+                >
+                  <ul className="divide-y divide-border">{dueToday.map(renderTask)}</ul>
+                </Section>
+              )}
+
+              {atRisk.length > 0 && (
+                <Section
+                  icon={<AlertTriangle className="size-4 text-at-risk" />}
+                  title={t("sections.atRisk")}
+                  count={atRisk.length}
+                  tone="atRisk"
+                >
+                  <ul className="divide-y divide-border">
+                    {atRisk.map((opp) => (
+                      <li key={opp.id}>
+                        <Link
+                          href={`/opportunities/${opp.id}`}
+                          className="group/row flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 sm:px-5"
+                        >
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-sea-light text-primary">
+                            <Briefcase className="size-4" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-body-strong text-ink">{opp.title}</span>
+                            <span className="mt-0.5 block truncate text-small text-muted-foreground">
+                              {getStageName(opp.stage_name)} · {enums(`opportunityType.${opp.type}` as never)}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-small text-at-risk-ink tabular-nums">
+                            {t("updated")} {since(opp.updated_at)}
+                          </span>
+                          <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover/row:text-primary" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
+            </div>
+
+            {hasSide && (
+              <div className="space-y-6">
+                {newInquiries.length > 0 && (
+                  <Section
+                    icon={<Inbox className="size-4 text-primary" />}
+                    title={t("sections.newInquiries")}
+                    count={newInquiries.length}
+                  >
+                    <ul className="divide-y divide-border">
+                      {newInquiries.map((inq) => (
+                        <li key={inq.id}>
+                          <Link
+                            href={`/inquiries?id=${inq.id}`}
+                            className="group/row flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50"
+                          >
+                            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-sea-light text-primary">
+                              <Phone className="size-4" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-body-strong text-ink">
+                                {inq.caller_name || inq.caller_phone || inq.caller_email || t("unknownCaller")}
+                              </span>
+                              {inq.subject && (
+                                <span className="mt-0.5 block truncate text-small text-muted-foreground">{inq.subject}</span>
+                              )}
+                              <span className="mt-0.5 block text-small text-muted-foreground tabular-nums">
+                                {since(inq.received_at)}
+                              </span>
+                            </span>
+                            <ChevronRight className="mt-2 size-4 shrink-0 text-muted-foreground transition-colors group-hover/row:text-primary" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </Section>
+                )}
+
+                {upcoming.length > 0 && (
+                  <Section
+                    icon={<CalendarClock className="size-4 text-muted-foreground" />}
+                    title={t("sections.comingUp")}
+                    count={upcoming.length}
+                  >
+                    <ul className="divide-y divide-border">{upcoming.map(renderTask)}</ul>
+                  </Section>
+                )}
+              </div>
             )}
           </div>
-        )}
-
-        <div className="space-y-8">
-          {/* ── Section 1: Overdue ─────────────────────────────────────── */}
-          {overdue.length > 0 && (
-            <Section
-              icon={<AlertTriangle className="h-4 w-4 text-destructive" />}
-              title={t("sections.overdue")}
-              count={overdue.length}
-              variant="destructive"
-            >
-              <div className="space-y-2">
-                {overdue.map(renderTask)}
-              </div>
-            </Section>
-          )}
-
-          {/* ── Section 2: New Inquiries ──────────────────────────────── */}
-          {newInquiries.length > 0 && (
-            <Section
-              icon={<Inbox className="h-4 w-4 text-primary" />}
-              title={t("sections.newInquiries")}
-              count={newInquiries.length}
-              variant="info"
-            >
-              <div className="space-y-2">
-                {newInquiries.map((inq) => (
-                  <Link
-                    key={inq.id}
-                    href={`/inquiries?id=${inq.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:border-info-line"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sea-light text-primary">
-                      <Phone className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">
-                        {inq.caller_name || inq.caller_phone || inq.caller_email || t("unknownCaller")}
-                      </p>
-                      {inq.subject && (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {inq.subject}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      {since(inq.received_at)}
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </Link>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* ── Section 3: Due Today ──────────────────────────────────── */}
-          {dueToday.length > 0 && (
-            <Section
-              icon={<CalendarCheck className="h-4 w-4 text-due" />}
-              title={t("sections.dueToday")}
-              count={dueToday.length}
-              variant="warning"
-            >
-              <div className="space-y-2">
-                {dueToday.map(renderTask)}
-              </div>
-            </Section>
-          )}
-
-          {/* ── Section 4: Coming Up ──────────────────────────────────── */}
-          {upcoming.length > 0 && (
-            <Section
-              icon={<CalendarClock className="h-4 w-4 text-muted-foreground" />}
-              title={t("sections.comingUp")}
-              count={upcoming.length}
-              variant="default"
-            >
-              <div className="space-y-2">
-                {upcoming.map(renderTask)}
-              </div>
-            </Section>
-          )}
-
-          {/* ── Section 5: At Risk ────────────────────────────────────── */}
-          {atRisk.length > 0 && (
-            <Section
-              icon={<Briefcase className="h-4 w-4 text-at-risk" />}
-              title={t("sections.atRisk")}
-              count={atRisk.length}
-              variant="warning"
-            >
-              <div className="space-y-2">
-                {atRisk.map((opp) => (
-                  <Link
-                    key={opp.id}
-                    href={`/opportunities/${opp.id}`}
-                    className="flex items-center gap-3 rounded-lg border bg-card p-3.5 transition-all hover:border-at-risk"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-at-risk-soft text-at-risk-ink">
-                      <AlertTriangle className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{opp.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {getStageName(opp.stage_name)} · {enums(`opportunityType.${opp.type}` as never)}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-muted-foreground">
-                        {t('updated')} {since(opp.updated_at)}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </Link>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* ── Empty state ───────────────────────────────────────────── */}
-          {!hasWork && (
-            <div className="rounded-lg border bg-card p-12 text-center">
-              <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-done-soft text-done mb-4">
-                <CheckCircle className="h-7 w-7" />
-              </div>
-              <h3 className="font-semibold text-lg mb-1">{t("emptyState.title")}</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                {t('emptyState.description')}
-              </p>
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <Button variant="outline" size="sm" onClick={() => router.push("/contacts")}>{t("emptyState.viewContacts")}</Button>
-                <Button variant="outline" size="sm" onClick={() => router.push("/opportunities")}>{t("emptyState.viewOpportunities")}</Button>
-              </div>
+        ) : (
+          <div className="rounded-lg border border-border bg-surface p-12 text-center">
+            <div className="mb-4 inline-flex size-14 items-center justify-center rounded-full bg-done-soft text-done">
+              <CheckCircle className="size-7" />
             </div>
-          )}
-        </div>
+            <h2 className="mb-1 text-section text-ink">{t("emptyState.title")}</h2>
+            <p className="mx-auto max-w-sm text-body text-muted-foreground">{t("emptyState.description")}</p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button variant="outline" size="sm" onClick={() => router.push("/contacts")}>{t("emptyState.viewContacts")}</Button>
+              <Button variant="outline" size="sm" onClick={() => router.push("/opportunities")}>{t("emptyState.viewOpportunities")}</Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Task completion dialog */}
@@ -303,40 +296,51 @@ export function TodayPageClient({
   );
 }
 
-// ── Section wrapper ─────────────────────────────────────────────────────────
+// ── Section card ────────────────────────────────────────────────────────────
 
+/**
+ * A Today section as a flat card. `overdue` tints the rows red (the card's list does that);
+ * `atRisk` gives the card an amber edge and header, as the PNG's "Без следваща стъпка".
+ */
 function Section({
   icon,
   title,
   count,
-  variant,
+  tone = "default",
   children,
 }: {
   icon: React.ReactNode;
   title: string;
   count: number;
-  variant: "destructive" | "warning" | "info" | "default";
+  tone?: "default" | "overdue" | "atRisk";
   children: React.ReactNode;
 }) {
-  const borderColor = {
-    destructive: "border-l-overdue",
-    warning: "border-l-due",
-    info: "border-l-info-line",
-    default: "border-l-muted-foreground/30",
-  }[variant];
-
   return (
-    <div className={cn("border-l-2 pl-4", borderColor)}>
-      <div className="mb-3 flex items-center gap-2">
+    <section
+      aria-label={title}
+      className={cn(
+        "@container overflow-hidden rounded-lg border bg-surface",
+        tone === "atRisk" ? "border-at-risk/50" : "border-border"
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center gap-2 border-b px-4 py-3 sm:px-5",
+          tone === "atRisk" ? "border-at-risk/30 bg-at-risk-soft" : "border-border"
+        )}
+      >
         {icon}
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </h2>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+        <h2 className="text-section text-ink">{title}</h2>
+        <span
+          className={cn(
+            "rounded-sm px-1.5 py-0.5 text-small font-semibold tabular-nums",
+            tone === "overdue" ? "bg-overdue-soft text-overdue" : tone === "atRisk" ? "bg-surface text-at-risk-ink" : "bg-muted text-muted-foreground"
+          )}
+        >
           {count}
         </span>
       </div>
       {children}
-    </div>
+    </section>
   );
 }

@@ -75,3 +75,22 @@ describe('taskCallTarget (rule 2: a Today task prompts with that task)', () => {
     expect(taskCallTarget({ ...base, opportunity_id: null, opportunity_status: null }, 'Unknown').closed).toBe(false);
   });
 });
+
+describe('TaskCard as the Today row (ui-bright T8)', () => {
+  it('opens completion from a checkbox-style button named Complete', () => {
+    const html = render(base);
+    expect(html).toMatch(/<button[^>]*aria-label="Complete"[^>]*data-slot="task-check"/);
+  });
+
+  it('colours only the overdue time red; a later task stays neutral', () => {
+    const overdue = render({ ...base, due_at: '2026-11-18T10:00:00Z' });
+    const later = render({ ...base, due_at: '2026-11-21T10:00:00Z' });
+    expect(overdue).toContain('text-overdue');
+    expect(later).not.toMatch(/text-(overdue|due|at-risk)\b/);
+    expect(later).not.toMatch(/bg-(overdue|due)-soft/);
+  });
+
+  it('shows the time with tabular figures', () => {
+    expect(render({ ...base, due_at: '2026-11-19T15:30:00Z' })).toMatch(/tabular-nums[^>]*>[^<]*(17:30|05:30 PM)/);
+  });
+});
