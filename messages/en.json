@@ -111,6 +111,7 @@
     "toggleMenu": "Toggle menu",
     "menuTitle": "Navigation menu",
     "menuDescription": "Go to the different sections of BrokerCRM.",
+    "reports": "Reports",
     "properties": "Properties",
     "lists": "Lists",
     "groups": {
@@ -150,7 +151,8 @@
     "newProperty": "New property | BrokerCRM",
     "property": "Property {code} | BrokerCRM",
     "editProperty": "Edit property | BrokerCRM",
-    "lists": "Lists | BrokerCRM"
+    "lists": "Lists | BrokerCRM",
+    "reports": "Reports | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -2211,6 +2213,56 @@
       "contactedAfter": "{unit, select, minutes {Contacted after {minutes} min} hours {Contacted after {hours} h {minutes} min} other {Contacted after {days} d {hours} h}}",
       "lastCall": "Last call: {outcome} · {time}",
       "retryAt": "Call again {time}"
+    }
+  },
+  "ComingSoon": {
+    "badge": "Soon",
+    "banner": "Not live yet — showing sample data",
+    "sample": "Sample data"
+  },
+  "Reports": {
+    "title": "Broker leaderboard",
+    "subtitle": "November 2026 · 5 brokers · sample figures",
+    "periods": {
+      "label": "Period",
+      "month": "November",
+      "quarter": "Q4",
+      "year": "2026"
+    },
+    "export": "Export PDF",
+    "metrics": {
+      "label": "Metric",
+      "commissions": "Commissions",
+      "deals": "Deals",
+      "newClients": "New clients",
+      "calls": "Calls",
+      "viewings": "Viewings",
+      "response": "Response time",
+      "conversion": "Conversion"
+    },
+    "podiumTitle": "Top 3 · Commissions",
+    "podiumNote": "sum of commissions from deals with a signed notarial deed",
+    "goalTitle": "Agency goal",
+    "goalLine": "of the monthly commission target",
+    "tableTitle": "All metrics",
+    "tableNote": "Click a column to sort by it",
+    "columns": {
+      "rank": "#",
+      "broker": "Broker",
+      "commissions": "Commissions",
+      "deals": "Deals",
+      "clients": "Clients",
+      "calls": "Calls",
+      "viewings": "Viewings",
+      "response": "Response",
+      "conversion": "Conversion"
+    },
+    "brokers": {
+      "b1": "Maria S.",
+      "b2": "Elitsa G.",
+      "b3": "Dimitar A.",
+      "b4": "Nevena D.",
+      "b5": "Kaloyan P."
     }
   }
 }

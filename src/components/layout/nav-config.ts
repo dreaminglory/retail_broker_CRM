@@ -7,6 +7,7 @@ import {
   ListChecks,
   Settings,
   ShieldAlert,
+  Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ export type NavItemKey =
   | "contacts"
   | "properties"
   | "dashboard"
+  | "reports"
   | "exceptions"
   | "settings";
 
@@ -34,6 +36,8 @@ export type NavItem = {
   icon: LucideIcon;
   /** Roles that see the item; every role when absent. */
   roles?: readonly MemberRole[];
+  /** A placeholder screen: the sidebar adds the Скоро badge (spec ui-bright, phase 4). */
+  comingSoon?: boolean;
 };
 
 export type NavGroup = {
@@ -68,6 +72,7 @@ export const NAV_GROUPS: NavGroup[] = [
     key: "agency",
     items: [
       { key: "dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { key: "reports", href: "/reports", icon: Trophy, comingSoon: true },
       { key: "exceptions", href: "/exceptions", icon: ShieldAlert, roles: MANAGER_ROLES },
       { key: "settings", href: "/settings", icon: Settings },
     ],

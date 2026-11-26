@@ -13,6 +13,7 @@ import { isNavItemActive, visibleNavGroups } from "./nav-config";
 import type { ShellUser } from "./shell-types";
 import { initials } from "@/lib/initials";
 import { UserMenu } from "./user-menu";
+import { ComingSoonBadge } from "./coming-soon";
 
 type SidebarProps = {
   user: ShellUser;
@@ -42,6 +43,7 @@ function SidebarNav({
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const tc = useTranslations("ComingSoon");
 
   return (
     <nav aria-label={t("menuTitle")} className="flex-1 overflow-y-auto px-3 pb-3">
@@ -78,6 +80,7 @@ function SidebarNav({
                   >
                     <Icon className="size-[18px] shrink-0" aria-hidden />
                     {collapsed ? <span className="sr-only">{t(item.key)}</span> : <span className="truncate">{t(item.key)}</span>}
+                    {item.comingSoon && (collapsed ? <span className="sr-only">{tc("badge")}</span> : <ComingSoonBadge className="ml-auto" />)}
                   </Link>
                 </li>
               );

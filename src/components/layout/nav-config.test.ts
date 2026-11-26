@@ -26,7 +26,7 @@ describe('sidebar groups (ui-bright)', () => {
       ['myDay', ['today', 'inquiries']],
       ['work', ['opportunities', 'lists']],
       ['base', ['contacts', 'properties']],
-      ['agency', ['dashboard', 'exceptions', 'settings']],
+      ['agency', ['dashboard', 'reports', 'exceptions', 'settings']],
     ]);
   });
 
@@ -36,7 +36,12 @@ describe('sidebar groups (ui-bright)', () => {
     expect(keys('broker')).not.toContain('exceptions');
     expect(keys('manager')).toContain('exceptions');
     expect(keys('owner')).toContain('exceptions');
-    expect(keys('broker')).toHaveLength(8);
+    expect(keys('broker')).toHaveLength(9);
+  });
+
+  it('marks Отчети as a Скоро placeholder, and nothing else', () => {
+    const soon = NAV_GROUPS.flatMap((g) => g.items).filter((i) => i.comingSoon).map((i) => i.key);
+    expect(soon).toEqual(['reports']);
   });
 
   it('drops a group whose items are all hidden', () => {

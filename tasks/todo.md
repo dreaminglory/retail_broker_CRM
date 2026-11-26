@@ -413,10 +413,10 @@ field style in contact, inquiry, task, requirement and convert dialogs.
 данни"); `/reports` as `reports.png` with sample data from message keys, CSS/SVG bars, every
 control disabled, no Supabase import; Отчети·Скоро in the Агенция group.
 **Acceptance criteria:**
-- [ ] Vitest: component renders the banner and disabled controls
-- [ ] `/reports` imports nothing from `@/lib/supabase` or `@/domain` (test or grep)
+- [x] Vitest: component renders the banner and disabled controls
+- [x] `/reports` imports nothing from `@/lib/supabase` or `@/domain` (test or grep)
 **Verification:**
-- [ ] e2e smoke: `/reports` shows the banner in `bg` and `en`
+- [x] e2e smoke: `/reports` shows the banner in `bg` and `en`
 **Dependencies:** Checkpoint 3 · **Files:** `src/components/layout/coming-soon.tsx(+test)`, `src/app/(dashboard)/reports/page.tsx`, nav config, messages · **Scope:** M
 
 ## Task 27: Settings rules and portals placeholders

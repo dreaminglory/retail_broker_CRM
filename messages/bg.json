@@ -111,6 +111,7 @@
     "toggleMenu": "Отваряне на менюто",
     "menuTitle": "Меню за навигация",
     "menuDescription": "Преминете към различните раздели на BrokerCRM.",
+    "reports": "Отчети",
     "properties": "Имоти",
     "lists": "Списъци",
     "groups": {
@@ -150,7 +151,8 @@
     "newProperty": "Нов имот | BrokerCRM",
     "property": "Имот {code} | BrokerCRM",
     "editProperty": "Редакция на имот | BrokerCRM",
-    "lists": "Списъци | BrokerCRM"
+    "lists": "Списъци | BrokerCRM",
+    "reports": "Отчети | BrokerCRM"
   },
   "SettingsImport": {
     "title": "История на импортиранията",
@@ -2211,6 +2213,56 @@
       "contactedAfter": "{unit, select, minutes {Свързан след {minutes} мин} hours {Свързан след {hours} ч {minutes} мин} other {Свързан след {days} д {hours} ч}}",
       "lastCall": "Последно обаждане: {outcome} · {time}",
       "retryAt": "Ново обаждане {time}"
+    }
+  },
+  "ComingSoon": {
+    "badge": "Скоро",
+    "banner": "Още не работи — показва примерни данни",
+    "sample": "Примерни данни"
+  },
+  "Reports": {
+    "title": "Класация на брокерите",
+    "subtitle": "Ноември 2026 · 5 брокери · примерни числа",
+    "periods": {
+      "label": "Период",
+      "month": "Ноември",
+      "quarter": "Q4",
+      "year": "2026"
+    },
+    "export": "Експорт PDF",
+    "metrics": {
+      "label": "Показател",
+      "commissions": "Комисиони",
+      "deals": "Сделки",
+      "newClients": "Нови клиенти",
+      "calls": "Обаждания",
+      "viewings": "Огледи",
+      "response": "Време за отговор",
+      "conversion": "Конверсия"
+    },
+    "podiumTitle": "Топ 3 · Комисиони",
+    "podiumNote": "сума на комисионите от сделки с подписан нотариален акт",
+    "goalTitle": "Цел на агенцията",
+    "goalLine": "от месечната цел за комисиони",
+    "tableTitle": "Всички показатели",
+    "tableNote": "Кликни колона, за да подредиш по нея",
+    "columns": {
+      "rank": "#",
+      "broker": "Брокер",
+      "commissions": "Комисиони",
+      "deals": "Сделки",
+      "clients": "Клиенти",
+      "calls": "Обаждания",
+      "viewings": "Огледи",
+      "response": "Отговор",
+      "conversion": "Конверсия"
+    },
+    "brokers": {
+      "b1": "Мартин С.",
+      "b2": "Елица Г.",
+      "b3": "Димитър А.",
+      "b4": "Невена Д.",
+      "b5": "Калоян П."
     }
   }
 }
