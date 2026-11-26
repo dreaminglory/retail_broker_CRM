@@ -274,13 +274,14 @@ uses, with `agencyId`. Link to the full page. Нов контакт carries the 
 status pill; existing filters as pill selects; pager in the footer. Нов имот yellow.
 
 **Acceptance criteria:**
-- [ ] Matches `properties-list.png` minus left-out parts; filters and pager behave as before
+- [x] Matches `properties-list.png` minus left-out parts; filters and pager behave as before
 
 **Verification:**
-- [ ] properties e2e green
+- [x] properties e2e green
 
 **Dependencies:** Checkpoint 1
 **Files likely touched:** `src/app/(dashboard)/properties/properties-page-client.tsx`, `src/components/domain/properties/*`
+**As built:** one card: the filters as pill selects on top (each pill names its filter until one is picked; labels stay for screen readers; a picked pill turns primary), the table (type icon, headline with code and place, size, listings with prices, broker) and the pager in its footer; phones keep the card rows. Status lives in the status pill filter and the archived badge, so no status column. Нов имот is `<Button emphasis="action" render={<Link>}>`. properties e2e 8/8.
 **Estimated scope:** S
 
 ## Task 15: Exceptions cards

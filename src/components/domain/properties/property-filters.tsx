@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { SettlementCombobox } from "@/components/domain/settlements/settlement-combobox";
 import type { Area } from "@/domain/areas/types";
 import { LISTING_STATUSES, OFFER_TYPES } from "@/domain/listings/validation";
@@ -41,8 +42,8 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
   ) {
     const current = value === undefined ? ALL : String(value);
     return (
-      <div className="space-y-1">
-        <Label htmlFor={id} className="text-xs text-muted-foreground">
+      <div>
+        <Label htmlFor={id} className="sr-only">
           {label}
         </Label>
         <Select
@@ -50,9 +51,10 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
           onValueChange={(next) => onChange({ [param]: next === ALL ? null : (next as string) })}
           disabled={disabled}
         >
-          <SelectTrigger id={id} className="w-full">
+          <SelectTrigger id={id} className={cn("h-9 min-w-28 rounded-full", current !== ALL && "border-primary bg-accent text-primary")}>
             <SelectValue>
-              {(selected: string) => options.find((option) => option.value === selected)?.label ?? allLabel}
+              {/* A pill names its filter until one is picked (the label itself is visually hidden). */}
+              {(selected: string) => options.find((option) => option.value === selected)?.label ?? (disabled ? allLabel : label)}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -79,8 +81,8 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
     Object.keys(filters).some((key) => key !== "status") || filters.status !== "active";
 
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-3">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="space-y-3 border-b border-border px-4 py-3 sm:px-5">
+      <div className="flex flex-wrap items-center gap-2">
         {select(
           "filter-type",
           t("type"),
@@ -89,8 +91,8 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
           PROPERTY_TYPES.map((value) => ({ value, label: enums(`propertyType.${value}`) })),
           t("allTypes"),
         )}
-        <div className="col-span-2 space-y-1 md:col-span-1">
-          <Label htmlFor="filter-settlement" className="text-xs text-muted-foreground">
+        <div className="w-full sm:w-56">
+          <Label htmlFor="filter-settlement" className="sr-only">
             {t("settlement")}
           </Label>
           <SettlementCombobox
@@ -143,12 +145,12 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
           brokers.map((broker) => ({ value: broker.id, label: broker.display_name })),
           t("allBrokers"),
         )}
-        <div className="space-y-1">
-          <Label htmlFor="filter-status" className="text-xs text-muted-foreground">
+        <div>
+          <Label htmlFor="filter-status" className="sr-only">
             {t("status")}
           </Label>
           <Select value={filters.status} onValueChange={(next) => onChange({ status: next === "active" ? null : (next as string) })}>
-            <SelectTrigger id="filter-status" className="w-full">
+            <SelectTrigger id="filter-status" className={cn("h-9 min-w-28 rounded-full", filters.status !== "active" && "border-primary bg-accent text-primary")}>
               <SelectValue>{(value: string) => t(`statuses.${value}` as never)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -169,13 +171,13 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
           className="flex flex-wrap items-end gap-2"
         >
           <div className="space-y-1">
-            <Label htmlFor="filter-min" className="text-xs text-muted-foreground">
+            <Label htmlFor="filter-min" className="text-small text-muted-foreground">
               {t("priceFrom")}
             </Label>
             <Input id="filter-min" name="min" inputMode="numeric" className="w-32" defaultValue={filters.priceMin ?? ""} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="filter-max" className="text-xs text-muted-foreground">
+            <Label htmlFor="filter-max" className="text-small text-muted-foreground">
               {t("priceTo")}
             </Label>
             <Input id="filter-max" name="max" inputMode="numeric" className="w-32" defaultValue={filters.priceMax ?? ""} />
@@ -202,7 +204,7 @@ export function PropertyFilters({ filters, brokers, settlement, areas, onChange 
         )}
       </div>
       {(filters.offerType || filters.listingStatus || filters.priceMin !== undefined || filters.priceMax !== undefined) && (
-        <p className="text-xs text-muted-foreground">{t("listingFilterNote")}</p>
+        <p className="text-small text-muted-foreground">{t("listingFilterNote")}</p>
       )}
     </div>
   );
