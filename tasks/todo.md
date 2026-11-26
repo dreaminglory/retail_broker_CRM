@@ -329,9 +329,9 @@ tabs, deal-stage strip) are left out.
 **Description:** `/login`, `/signup`, `/onboarding`, `/forgot-password`, `/update-password`:
 white page, centred 400 px card, sidebar logo mark, primary submit with the yellow offset.
 **Acceptance criteria:**
-- [ ] Matches `login.png`; sign-in, sign-up and reset flows still work
+- [x] Matches `login.png`; sign-in, sign-up and reset flows still work
 **Verification:**
-- [ ] e2e login fixture green; browser all five pages
+- [x] e2e login fixture green; browser all five pages
 **Dependencies:** Checkpoint 2 · **Files:** `src/app/(auth)/*` · **Scope:** S
 
 ## Task 18: Deals list

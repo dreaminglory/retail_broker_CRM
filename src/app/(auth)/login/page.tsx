@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
 import { authErrorKey } from "@/lib/auth-errors";
 
@@ -95,9 +98,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8">
+    <div className="rounded-lg border border-border bg-card p-8 shadow-card">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
+        <h2 className="text-title text-ink">{t("title")}</h2>
         <p className="text-sm text-muted-foreground">
           {t("subtitle")}
         </p>
@@ -111,44 +114,43 @@ export default function LoginPage() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium">
+          <Label htmlFor="email">
             {t("email")}
-          </label>
-          <input
+          </Label>
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("emailPlaceholder")}
             required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-sm font-medium">
+            <Label htmlFor="password">
               {t("password")}
-            </label>
+            </Label>
             <Link href="/forgot-password" className="text-sm text-primary hover:underline">
               {t("forgotPassword")}
             </Link>
           </div>
-          <input
+          <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t("passwordPlaceholder")}
             required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+          emphasis="action"
+          className="h-10 w-full"
         >
           {loading ? (
             <>
@@ -158,7 +160,7 @@ export default function LoginPage() {
           ) : (
             t("submit")
           )}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
