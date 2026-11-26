@@ -25,7 +25,7 @@ import { OpportunityMatchesSection } from "@/components/domain/matching/opportun
 import { MATCH_PREVIEW_SIZE } from "@/components/domain/matching/match-list-controls";
 import { PROPERTY_MATCH_KEYS, matchBaseParams, parseMatchView } from "@/components/domain/matching/match-params";
 import { PropertyActivity } from "./property-activity";
-import { PropertyDetailTabs } from "@/components/domain/properties/property-detail-tabs";
+import { DetailTabs } from "@/components/layout/detail-tabs";
 import { PROPERTY_TABS } from "@/components/domain/properties/property-tabs";
 import { parseChoice } from "@/lib/url-state";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
@@ -207,7 +207,7 @@ export default async function PropertyPage({ params, searchParams }: Props) {
           {t("backToList")}
         </Link>
 
-        <PropertyDetailTabs
+        <DetailTabs
           header={header}
           tabLabel={t("tabs.label")}
           items={[
@@ -215,6 +215,7 @@ export default async function PropertyPage({ params, searchParams }: Props) {
             { value: "deals", label: t("tabs.deals"), count: opportunityLinks.length },
             { value: "history", label: t("history") },
           ]}
+          defaultTab="overview"
           initialTab={parseChoice(query.tab, PROPERTY_TABS, "overview")}
           panels={{ overview, deals: dealsTab, history: historyTab }}
           aside={<PartySection propertyId={property.id} current={parties.current} past={parties.past} />}

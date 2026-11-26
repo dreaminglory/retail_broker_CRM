@@ -3,33 +3,34 @@
 import { useState, type ReactNode } from "react";
 import { TabPanel, Tabs, useTabsId, type TabItem } from "@/components/ui/tabs";
 import { useUrlParam } from "@/lib/use-url-param";
-import type { PropertyTab } from "./property-tabs";
 
-type PropertyDetailTabsProps = {
-  /** The header card's top part: code, title, actions. The tab bar sits under it in the same card. */
+type DetailTabsProps<T extends string> = {
+  /** The header card's top part: name, badges, actions. The tab bar sits under it in the same card. */
   header: ReactNode;
   tabLabel: string;
-  items: TabItem<PropertyTab>[];
-  initialTab: PropertyTab;
+  items: TabItem<T>[];
+  /** The tab shown when `?tab=` is missing or unknown; it is not written to the URL. */
+  defaultTab: T;
+  initialTab: T;
   /** Server-rendered content by tab; only the open one is shown. */
-  panels: Record<PropertyTab, ReactNode>;
-  /** The right column (parties); beside the tabs on desktop, below them on a phone. */
+  panels: Record<T, ReactNode>;
+  /** The right column; beside the tabs on desktop, below them on a phone. */
   aside: ReactNode;
 };
 
 /**
- * Header card with tabs, the open tab's sections and the right column (property-detail.png).
- * The panels are Server Component output passed in; this only switches which one shows and keeps
- * the choice in `?tab=`.
+ * Header card with tabs, the open tab's sections and the right column (property-detail.png,
+ * contact-detail.png). The panels are Server Component output passed in; this only switches which
+ * one shows and keeps the choice in `?tab=`.
  */
-export function PropertyDetailTabs({ header, tabLabel, items, initialTab, panels, aside }: PropertyDetailTabsProps) {
-  const [tab, setTabState] = useState<PropertyTab>(items.some((item) => item.value === initialTab) ? initialTab : "overview");
+export function DetailTabs<T extends string>({ header, tabLabel, items, defaultTab, initialTab, panels, aside }: DetailTabsProps<T>) {
+  const [tab, setTabState] = useState<T>(items.some((item) => item.value === initialTab) ? initialTab : defaultTab);
   const [, setTabParam] = useUrlParam("tab");
   const tabsId = useTabsId();
 
-  function setTab(next: PropertyTab) {
+  function setTab(next: T) {
     setTabState(next);
-    setTabParam(next === "overview" ? null : next);
+    setTabParam(next === defaultTab ? null : next);
   }
 
   return (

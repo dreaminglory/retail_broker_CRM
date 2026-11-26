@@ -1549,6 +1549,7 @@
     "floorHint": "Партер = етаж 1"
   },
   "ContactDetailPage": {
+    "tabs": { "label": "Раздели на контакта", "overview": "Преглед" },
     "back": "Контакти",
     "archived": "Архивиран",
     "importedFrom": "Внесен от {fileName}",

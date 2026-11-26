@@ -362,9 +362,9 @@ sections (reuse Task 10 helper), parties in the right column.
 ## Task 21: Contact detail
 **Description:** `/contacts/[id]` as `contact-detail.png`, reusing the Task 13 panel parts.
 **Acceptance criteria:**
-- [ ] Methods, properties, deals, timeline, merge (config roles) all present and working
+- [x] Methods, properties, deals, timeline, merge (config roles) all present and working
 **Verification:**
-- [ ] core-loop contact steps green; browser as broker and manager
+- [x] core-loop contact steps green; browser as broker and manager
 **Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/contacts/[id]/*` · **Scope:** M
 
 ## Task 22: Forms and dialogs

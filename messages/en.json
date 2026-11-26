@@ -1549,6 +1549,7 @@
     "floorHint": "Ground floor = floor 1"
   },
   "ContactDetailPage": {
+    "tabs": { "label": "Contact sections", "overview": "Overview" },
     "back": "Contacts",
     "archived": "Archived",
     "importedFrom": "Imported from {fileName}",
