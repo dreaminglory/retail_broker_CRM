@@ -18,7 +18,7 @@ export function NewImportMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button />}>
+      <DropdownMenuTrigger render={<Button emphasis="action" />}>
         <Plus className="mr-2 h-4 w-4" />
         {t("newImport")}
       </DropdownMenuTrigger>

@@ -35,7 +35,7 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
 
   
   return (
-    <div className="space-y-2 mt-6">
+    <div className="mt-6 space-y-2 border-t border-border pt-6">
       <Label htmlFor="locale">{t("language")}</Label>
       <Select
         value={currentLocale}

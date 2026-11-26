@@ -64,17 +64,17 @@ export function DuplicateSuggestionModal({
                   {/* Match reasons */}
                   <div className="flex flex-wrap gap-2">
                     {dup.match_reasons.includes('phone') && (
-                      <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-200">
+                      <Badge variant="outline" className="text-primary bg-accent border-transparent">
                         {t("matches.phone")}
                       </Badge>
                     )}
                     {dup.match_reasons.includes('email') && (
-                      <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200">
+                      <Badge variant="outline" className="text-primary bg-accent border-transparent">
                         {t("matches.email")}
                       </Badge>
                     )}
                     {dup.match_reasons.includes('name') && (
-                      <Badge variant="outline" className="text-amber-600 bg-amber-50 border-amber-200">
+                      <Badge variant="outline" className="text-primary bg-accent border-transparent">
                         {t("matches.name")}
                       </Badge>
                     )}

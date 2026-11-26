@@ -111,8 +111,17 @@
     "toggleMenu": "Toggle menu",
     "menuTitle": "Navigation menu",
     "menuDescription": "Go to the different sections of BrokerCRM.",
+    "reports": "Reports",
     "properties": "Properties",
-    "lists": "Lists"
+    "lists": "Lists",
+    "groups": {
+      "myDay": "My day",
+      "work": "Work",
+      "base": "Records",
+      "agency": "Agency"
+    },
+    "userMenu": "Profile menu",
+    "breadcrumb": "Breadcrumb"
   },
   "header": {
     "loading": "Loading...",
@@ -142,7 +151,10 @@
     "newProperty": "New property | BrokerCRM",
     "property": "Property {code} | BrokerCRM",
     "editProperty": "Edit property | BrokerCRM",
-    "lists": "Lists | BrokerCRM"
+    "lists": "Lists | BrokerCRM",
+    "reports": "Reports | BrokerCRM",
+    "rules": "Rules and exceptions | BrokerCRM",
+    "portals": "Portals | BrokerCRM"
   },
   "SettingsImport": {
     "title": "Import History",
@@ -557,6 +569,7 @@
   },
   "settings": {
     "title": "Settings",
+    "groups": {"personal":"Personal","agency":"Agency","work":"Work","data":"Data"},
     "description": "Manage your agency and preferences.",
     "overview": "Overview",
     "overviewDesc": "Quickly access your account and agency configuration.",
@@ -571,7 +584,9 @@
     "import": "Import",
     "importDesc": "Import data into your agency workspace.",
     "areas": "Areas",
-    "areasDesc": "Your agency's districts per settlement, used in property addresses."
+    "areasDesc": "Your agency's districts per settlement, used in property addresses.",
+    "rules": "Rules and exceptions",
+    "portals": "Portals"
   },
   "search": {
     "placeholder": "Search...",
@@ -591,6 +606,8 @@
     }
   },
   "auth": {
+    "language": "Language",
+    "hero": {"headline":"Every deal has an owner, a next step and the whole history.","point1":"Today: who to call and what is overdue","point2":"Portal inquiries get an owner within minutes","point3":"Buyers and properties that fit each other","footer":"© {year} BrokerCRM · For real estate agencies"},
     "login": {
       "title": "Welcome back",
       "subtitle": "Sign in to your BrokerCRM account",
@@ -602,7 +619,8 @@
       "submit": "Sign in",
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",
-      "createAgency": "Create your agency"
+      "createAgency": "Create your agency",
+      "invitedHint": "Invited by a colleague? Open the link in the email — you go straight into the agency."
     },
     "signup": {
       "title": "Create your agency",
@@ -1300,6 +1318,10 @@
     "viewInquiry": "View Inquiry",
     "notesTitle": "Notes",
     "activityHistoryTitle": "Activity History",
+    "tabs": {
+      "label": "Deal sections",
+      "path": "Path"
+    },
     "none": "—"
   },
   "Timeline": {
@@ -1537,6 +1559,7 @@
     "floorHint": "Ground floor = floor 1"
   },
   "ContactDetailPage": {
+    "tabs": { "label": "Contact sections", "overview": "Overview" },
     "back": "Contacts",
     "archived": "Archived",
     "importedFrom": "Imported from {fileName}",
@@ -1693,6 +1716,7 @@
     "ownerFromOpportunity": "{name} will be added as the owner."
   },
   "PropertyDetail": {
+    "tabs": { "label": "Property sections", "overview": "Overview", "deals": "Buyers and deals" },
     "backToList": "Properties",
     "title": "{headline}, {place}",
     "archived": "Archived",
@@ -2193,6 +2217,212 @@
       "contactedAfter": "{unit, select, minutes {Contacted after {minutes} min} hours {Contacted after {hours} h {minutes} min} other {Contacted after {days} d {hours} h}}",
       "lastCall": "Last call: {outcome} · {time}",
       "retryAt": "Call again {time}"
+    }
+  },
+  "ComingSoon": {
+    "badge": "Soon",
+    "banner": "Not live yet — showing sample data"
+  },
+  "Reports": {
+    "title": "Broker leaderboard",
+    "subtitle": "November 2026 · 5 brokers · sample figures",
+    "periods": {
+      "label": "Period",
+      "month": "November",
+      "quarter": "Q4",
+      "year": "2026"
+    },
+    "export": "Export PDF",
+    "metrics": {
+      "label": "Metric",
+      "commissions": "Commissions",
+      "deals": "Deals",
+      "newClients": "New clients",
+      "calls": "Calls",
+      "viewings": "Viewings",
+      "response": "Response time",
+      "conversion": "Conversion"
+    },
+    "podiumTitle": "Top 3 · Commissions",
+    "podiumNote": "sum of commissions from deals with a signed notarial deed",
+    "goalTitle": "Agency goal",
+    "goalLine": "of the monthly commission target",
+    "tableTitle": "All metrics",
+    "tableNote": "Click a column to sort by it",
+    "columns": {
+      "rank": "#",
+      "broker": "Broker",
+      "commissions": "Commissions",
+      "deals": "Deals",
+      "clients": "Clients",
+      "calls": "Calls",
+      "viewings": "Viewings",
+      "response": "Response",
+      "conversion": "Conversion"
+    },
+    "brokers": {
+      "b1": "Maria S.",
+      "b2": "Elitsa G.",
+      "b3": "Dimitar A.",
+      "b4": "Nevena D.",
+      "b5": "Kaloyan P."
+    }
+  },
+  "SettingsRules": {
+    "title": "Rules and exceptions",
+    "description": "When something counts as an exception and who gets to know.",
+    "after": "after",
+    "units": {
+      "days": "days",
+      "hours": "hours",
+      "minutes": "min"
+    },
+    "severity": {
+      "label": "Severity",
+      "critical": "Critical",
+      "attention": "Attention",
+      "info": "Info"
+    },
+    "enabled": "Rule on",
+    "threshold": "Threshold",
+    "newRule": "+ New rule",
+    "cancel": "Cancel",
+    "save": "Save changes",
+    "items": {
+      "r1": {
+        "title": "Contract-less deposit",
+        "desc": "A deal with a deposit taken but no preliminary contract attached.",
+        "owner": "Owner and manager"
+      },
+      "r2": {
+        "title": "Price differs from the portal",
+        "desc": "The price on the portal does not match the CRM.",
+        "owner": "Owner and manager"
+      },
+      "r3": {
+        "title": "Deal without a next step",
+        "desc": "An active deal with no open task.",
+        "owner": "Owner"
+      },
+      "r4": {
+        "title": "Property without an owner",
+        "desc": "An active property with no broker assigned.",
+        "owner": "Manager"
+      },
+      "r5": {
+        "title": "Unanswered inquiry",
+        "desc": "A new inquiry nobody has taken.",
+        "owner": "Everyone free"
+      },
+      "r6": {
+        "title": "Property without photos",
+        "desc": "An active property with fewer than 5 photos.",
+        "owner": "Owner"
+      }
+    }
+  },
+  "SettingsPortals": {
+    "title": "Portals",
+    "description": "Publishing and syncing your listings on property portals.",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "hasErrors": "Has errors",
+    "listings": "{count} listings · synced {when}",
+    "notConnectedLine": "Not connected",
+    "today": "today {time}",
+    "connect": "Connect",
+    "syncNow": "Sync now",
+    "cancel": "Cancel",
+    "save": "Save changes",
+    "options": {
+      "publish": "Publish new properties automatically",
+      "price": "Update the price within 2 hours",
+      "inquiries": "Bring inquiries into Inquiries",
+      "showAll": "Show all active properties"
+    },
+    "rejected": "2 listings rejected: missing energy class.",
+    "items": {
+      "imot": {
+        "name": "Imot.bg"
+      },
+      "homes": {
+        "name": "Homes.bg"
+      },
+      "site": {
+        "name": "Agency website",
+        "line": "sample-agency.bg · inquiry form"
+      },
+      "olx": {
+        "name": "OLX.bg"
+      }
+    }
+  },
+  "DashboardSoon": {
+    "title": "Agency numbers",
+    "commissions": {
+      "title": "Commissions by month",
+      "note": "last 12 months · sample figures"
+    },
+    "funnel": {
+      "title": "Deal funnel",
+      "steps": {
+        "inquiries": "Inquiries",
+        "viewings": "Viewings",
+        "offers": "Offers",
+        "deposit": "Deposit",
+        "deals": "Deals"
+      },
+      "conversion": "From inquiry to deal"
+    },
+    "sources": {
+      "title": "Inquiry sources",
+      "items": {
+        "imot": "Imot.bg",
+        "homes": "Homes.bg",
+        "site": "Website",
+        "referrals": "Referrals",
+        "facebook": "Facebook",
+        "phone": "Phone"
+      }
+    },
+    "health": {
+      "title": "Portfolio health",
+      "items": {
+        "stale": {
+          "title": "Stale listings",
+          "note": "price or photos not synced"
+        },
+        "noPhotos": {
+          "title": "Without photos",
+          "note": "cannot be published"
+        },
+        "slow": {
+          "title": "Over 60 days on the market",
+          "note": "time to talk about the price"
+        },
+        "noOwner": {
+          "title": "Without an owner",
+          "note": "3 properties · 14 contacts"
+        }
+      }
+    },
+    "team": {
+      "title": "Team today",
+      "free": "{count} free",
+      "tasks": "{count, plural, one {# task} other {# tasks}}",
+      "until": "until {time}",
+      "status": {
+        "free": "Free",
+        "viewing": "On a viewing",
+        "busy": "Busy"
+      },
+      "members": {
+        "b1": "Maria S.",
+        "b2": "Elitsa G.",
+        "b3": "Dimitar A.",
+        "b4": "Nevena D.",
+        "b5": "Kaloyan P."
+      }
     }
   }
 }

@@ -40,7 +40,7 @@ export function QueueBar({ listId, listName, pos, total, sortKey, scope }: Queue
   return (
     <nav
       aria-label={t("label", { name: listName })}
-      className="sticky bottom-0 z-20 -mx-4 mt-6 border-t bg-background/95 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.04)] backdrop-blur md:mx-0 md:rounded-lg md:border"
+      className="sticky bottom-0 z-20 -mx-4 mt-6 border-t bg-background/95 px-4 py-3 shadow-float backdrop-blur md:mx-0 md:rounded-lg md:border"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <div className="min-w-0 flex-1">

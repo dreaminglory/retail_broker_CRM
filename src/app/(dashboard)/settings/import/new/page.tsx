@@ -24,7 +24,7 @@ export default async function NewImportPage({ searchParams }: { searchParams: Pr
     : [];
 
   return (
-    <div className="container py-8 max-w-5xl">
+    <div>
       <ImportWizard entityType={type} brokers={brokers} />
     </div>
   );

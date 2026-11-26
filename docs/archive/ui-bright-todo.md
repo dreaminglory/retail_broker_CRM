@@ -1,0 +1,469 @@
+# Tasks: ui-bright
+
+> **Plan:** `tasks/plan.md` · **Spec:** `spec/ui-bright.md` · **Design:** `docs/design/`
+> Every task also clears the Definition of Done in `AGENTS.md`. Tick a task only after that.
+> Every UI task's verification includes: `npm run typecheck`, `npm run lint`, `npm run test`, and
+> a browser check of the touched pages in `bg` and `en` at 1280 and 390 px next to the PNG.
+> Never: schema/RLS/service/validation changes, changed message values, new queries or Server
+> Actions (ask first), `eslint-suppressions.json` entries.
+
+## Phase 1: Theme and shell
+
+## Task 1: Bright tokens and AD-066
+**Description:** Replace the shadcn neutral variables in `globals.css` with the Bright tokens from
+`tokens.json` (light in `:root`, dark in `.dark`, never switched on) and map the shadcn variables
+onto them as in plan decision 1. Add status, info and highlight tokens, radius 4/6/8,
+`shadow-action` (3px `#f7d154` offset) and `shadow-float`. Write AD-066. Fix the spec drift
+(Phase 3 PNGs exist, 7 e2e specs).
+
+**Acceptance criteria:**
+- [x] Every colour token in `tokens.json` has a CSS variable for light and dark; shadcn variables reference them, no `oklch` left
+- [x] `bg-surface`, `text-ink`, `border-border-strong`, `shadow-action`, `shadow-float`, `rounded-{sm,md,lg}` = 4/6/8 px work as utilities
+- [x] AD-066 in `docs/decisions-log.md`; `spec/ui-bright.md` Phase 3 table names its PNGs
+
+**Verification:**
+- [x] Browser: `/today` renders white page, primary `#2b63c6` buttons (computed style check)
+- [x] `grep -n oklch src/app/globals.css` is empty
+
+**Dependencies:** None
+**Files likely touched:** `src/app/globals.css`, `docs/decisions-log.md`, `spec/ui-bright.md`
+**Estimated scope:** M
+
+## Task 2: Sofia Sans, type scale, tabular figures
+**Description:** Swap Geist for Sofia Sans and Sofia Sans Semi Condensed (latin + cyrillic) via
+`next/font/google`. Add the `tokens.json → type` scale as utilities (display 28/34, title 22/28,
+…). Apply `tabular-nums` to number, money, date and time output (the shared formatters'
+call sites and `Table` cells).
+
+**Acceptance criteria:**
+- [x] Computed `font-family` is Sofia Sans on body text in `bg` (Cyrillic) and `en`
+- [x] No Geist reference left in `src/`
+- [x] Type utilities exist for every `type` entry in `tokens.json`
+
+**Verification:**
+- [x] `grep -rn -i geist src` empty
+- [x] Browser: `/today` and `/properties` prices and times line up in columns
+
+**Dependencies:** Task 1
+**Files likely touched:** `src/app/layout.tsx`, `src/app/globals.css`, number/date display components
+**Estimated scope:** S
+
+## Task 3: Status colours on the follow-up screens
+**Description:** Replace the palette classes and colour literals in the follow-up-loop files
+(`today`, `exceptions`, `dashboard`, `domain/{tasks,opportunities,calls,timeline}`, about 10
+files) with the named status utilities from Task 1 (`text-overdue`, `bg-overdue-tint`, `due`,
+`done`, `at-risk`, severity). Neutral greys/blues there become `ink`/`muted`/`primary`.
+
+**Acceptance criteria:**
+- [x] No palette class or hex/`oklch` literal left in those folders (grep)
+- [x] Red/amber/green appear only on overdue, due, done, at-risk and exception severity
+
+**Verification:**
+- [x] Browser: Today overdue/at-risk, a deal's next step and Exceptions read as before in meaning
+- [x] Existing tests in those folders green
+
+**Dependencies:** Task 1
+**Files likely touched:** the follow-up-loop files from the grep (~10)
+**Estimated scope:** M
+
+## Task 3b: Remaining palette classes and the guard test
+**Description:** Replace the rest (imports, members, matching, contacts, inquiries, smart-lists,
+settings, auth: about 14 files) with tokens; none of these are follow-up states, so no status
+colours. Then add a Vitest guard that scans `src/**/*.{ts,tsx}` (excluding `globals.css`) and
+fails on palette classes, hex or `oklch` literals.
+
+**Acceptance criteria:**
+- [x] Guard test passes, and fails when a `bg-red-500` is added to any file (tried once, reverted)
+- [x] Import wizard error/success states still distinguishable (token `danger`/`success`, not palette)
+
+**Verification:**
+- [x] `npx vitest run src/lib/design-guard.test.ts`
+- [x] Browser: import wizard, team settings, matching panel
+
+**Dependencies:** Task 3
+**Files likely touched:** `src/lib/design-guard.test.ts`, the remaining files from the grep (~14)
+**Estimated scope:** M
+
+## Task 4: Control primitives
+**Description:** Restyle Button (primary, outline, ghost, destructive; `emphasis="action"` adds
+`shadow-action`), Badge as the PNG status pill (neutral, primary, status variants), Input,
+InputGroup, Select, Textarea, Switch, RadioGroup, Label with `border-strong` edges and the
+`focus` ring.
+
+**Acceptance criteria:**
+- [x] Control edges ≥ 3:1 and visible focus ring on every control (keyboard tab through a form)
+- [x] `emphasis="action"` is the only way `shadow-action` is applied (grep)
+
+**Verification:**
+- [x] Existing component tests green; browser: contact form and inquiry form in both locales
+
+**Dependencies:** Task 1
+**Files likely touched:** `src/components/ui/{button,badge,input,input-group,select,textarea,switch,radio-group,label}.tsx`
+**Estimated scope:** M
+
+## Task 5: Surface primitives
+**Description:** Card flat with a hairline and no shadow; Table with muted uppercase headers and
+12px rows; Dialog, AlertDialog, Sheet, DropdownMenu, Command with `surface-raised` and
+`shadow-float`; Alert, Avatar (initials), ListPager restyled; tabs underline in primary.
+
+**Acceptance criteria:**
+- [x] No card has a shadow in light; only floating layers use `shadow-float`
+- [x] Table header and row metrics match `properties-list.png`
+
+**Verification:**
+- [x] Browser: `/properties` table, a dialog (new contact), a sheet (post-call) and a dropdown
+
+**Dependencies:** Task 1
+**Files likely touched:** `src/components/ui/{card,table,dialog,alert-dialog,sheet,dropdown-menu,command,alert,avatar,list-pager}.tsx`
+**Estimated scope:** M
+
+## Task 6: Grouped sidebar
+**Description:** Move nav items into a typed group config (Моят ден: Днес, Запитвания; Работа:
+Сделки, Списъци; База: Контакти, Имоти; Агенция: Табло, Изключения, Настройки), keeping the
+`roles` filter. `#f6faff` background, active item on `accent`, collapse styled as
+`today-collapsed.png`, user block at the foot (name, role, settings link), mobile menu restyled.
+New keys: the four group headings (both message files). Отчети is added in Task 26.
+
+**Acceptance criteria:**
+- [x] Vitest: every existing dashboard route appears exactly once, in its group; role filter unchanged (broker doesn't see Изключения)
+- [x] Collapsed and phone menu work as before
+
+**Verification:**
+- [x] `npx vitest run src/components/layout/nav-config.test.ts`
+- [x] Browser: collapsed vs `today-collapsed.png`; phone menu at 390 px; `git diff messages/` adds keys only
+
+**Dependencies:** Tasks 2, 4, 5
+**Files likely touched:** `src/components/layout/sidebar.tsx`, `src/components/layout/nav-config.ts(+test)`, `messages/{bg,en}.json`
+**Estimated scope:** M
+
+## Task 7: Header breadcrumb and main area
+**Description:** Header shows group › page › item breadcrumb (item from the page title where one
+exists), existing actions kept, no bell or + Ново. `main` on white with 16px phone gutters.
+
+**Acceptance criteria:**
+- [x] Breadcrumb correct on every dashboard route, including detail pages
+- [x] Nothing scrolls sideways at 390 px on any route
+
+**Verification:**
+- [x] `npm run test:e2e` green (shell changes touch every spec)
+- [x] Browser: header vs `today.png` and `deal.png`
+
+**Dependencies:** Task 6
+**Files likely touched:** `src/components/layout/header.tsx`, `src/app/(dashboard)/layout.tsx`
+**As built:** breadcrumb is group › page (the page links back on detail routes); the third level (item name) comes with the detail pages in Tasks 11, 20 and 21. Search moved into the sidebar at checkpoint 1 (founder). The header profile menu moved to the sidebar user block (settings, sign out). `main` became `relative`, fixing a page-level scroll from `sr-only` spans on /opportunities.
+**Estimated scope:** S
+
+### Checkpoint 1: shell
+- [x] typecheck, lint, test, `test:e2e` green
+- [x] Review page published (every route, `bg`/`en`, 1280/390); founder approves
+  Approved 2026-11-26 (https://claude.ai/artifact/Cyhp2kvKjKiyvfqP9yiEnk). Founder decisions: search moves into the sidebar as in the PNG (done; on phones it sits in the menu, which closes before search opens); the profile menu stays in the sidebar user block; the breadcrumb item name arrives with the detail pages (Tasks 11, 20, 21).
+
+## Phase 2: Screens with a PNG
+
+## Task 8: Today layout
+**Description:** Greeting (display) and summary line; sections as cards in the PNG's order:
+Закъсняло (red tint), Днес, Без следваща стъпка (amber) in the main column; Нови запитвания and
+Coming up in the right column. Task rows: checkbox, type icon, title, context line, time, one
+row action. Scope toggle kept. No yellow action (plan).
+
+**Acceptance criteria:**
+- [x] Layout matches `today.png`; every section and action that exists today still works
+- [x] Phone: one column in the same order
+
+**Verification:**
+- [x] `npx vitest run src/app/(dashboard)/today`; core-loop e2e green
+
+**Dependencies:** Checkpoint 1
+**Files likely touched:** `src/app/(dashboard)/today/today-page-client.tsx`, `src/components/domain/tasks/*`
+**As built:** the task card became the Today row (checkbox opens completion, type icon, title, context line, time, call links and menu), laid out by its card width (container queries) so the side column and phones stack it. The summary line reuses the existing count keys; no greeting key exists, so the title stays "Днес" under the date. No `due today` tasks in the seed at the time of the check.
+**Estimated scope:** M
+
+## Task 9: Inline post-call prompt on Today ⚑ Opus
+**Description:** Split `PostCallSheet` into the form body and the sheet shell. The provider
+exposes the current target; on Today the form renders inline under the matching task row and
+the provider skips the sheet; elsewhere (and on Today when no row matches) the sheet opens as
+before. Same fields, same single save.
+
+**Acceptance criteria:**
+- [x] Calling from a Today task opens the prompt under that row, not as a sheet; save behaves exactly as before
+- [x] From the deal page and contacts the sheet still opens; a page discarded during a call still reopens the prompt
+
+**Verification:**
+- [x] Failing test first: provider renders no sheet while Today claims the target
+- [x] `npx vitest run src/components/domain/calls`; core-loop e2e green
+
+**Dependencies:** Task 8
+**Files likely touched:** `src/components/domain/calls/{post-call-sheet,call-intent-provider}.tsx`, new `post-call-form.tsx`, Today client
+**As built:** `PostCallForm` moved to `post-call-form.tsx` (`layout="dialog" | "inline"`); the provider exposes the target and `claim(taskIds)`, and `sheetTarget()` keeps the sheet shut for a claimed task. Today claims every task it shows and renders `PostCallInline` under the row. Leaving Today releases the claim, so the sheet takes over the same call. The core-loop retry step now finds the prompt inline on Today (and no dialog).
+**Estimated scope:** M
+
+## Task 10: URL state helper and deal tabs ⚑ Opus
+**Description:** `src/lib/url-state.ts` reads/writes `?id=` and `?tab=` (replace, not push),
+unit-tested. Deal page gets tabs Път (stage path + next-step card) / Имоти / Изисквания /
+История (timeline + + Бележка), default Път, keyboard-reachable. New keys only for tab labels
+without an existing section title.
+
+**Acceptance criteria:**
+- [x] `?tab=istoriya`-style URL opens that tab; unknown tab falls back to Път
+- [x] Arrow keys move between tabs; nothing on the page removed
+
+**Verification:**
+- [x] `npx vitest run src/lib/url-state.test.ts`
+- [x] New e2e: deal tabs by click, keyboard and URL; existing specs touching the deal page green
+
+**Dependencies:** Checkpoint 1
+**Files likely touched:** `src/lib/url-state.ts(+test)`, `src/app/(dashboard)/opportunities/[id]/opportunity-detail-client.tsx`, `e2e/deal-tabs.spec.ts`
+**As built:** `src/lib/url-state.ts` holds the pure helpers (`parseChoice`, `hrefWithParam`, safe in Server Components) and `src/lib/use-url-param.ts` the client hook (router.replace, so the server sees the param and the matches links keep `?tab=`). New `components/ui/tabs.tsx` (WAI-ARIA tabs, automatic activation, Arrow/Home/End) and `StagePath`. Tab slugs `path|properties|requirements|history`; labels reuse PropertyLinks.title, RequirementSection.title, activityHistoryTitle; new keys `OpportunityDetail.tabs.{label,path}`. Seller/landlord deals have no requirements tab. Only the active panel is mounted, so matching, properties, requirements and core-loop specs open the tab they need. Primary contact and participants moved to the right column (restyled in Task 11).
+**Estimated scope:** M
+
+## Task 11: Deal header and right column
+**Description:** Header card (type and status pills, title, budget/owner line, Move forward);
+right column with the contact card (call/Viber/email links) and viewed properties. Phone: contact
+card under the header, viewed properties after the tabs. Готово on the next step carries the
+yellow offset.
+
+**Acceptance criteria:**
+- [x] Matches `deal.png`; exactly one `emphasis="action"` on the page (Готово)
+- [x] Call links still start the call intent
+
+**Verification:**
+- [x] core-loop, matching, requirements e2e green; browser at 390 px
+
+**Dependencies:** Task 10
+**Files likely touched:** `src/app/(dashboard)/opportunities/[id]/{page,opportunity-detail-client}.tsx`, `src/components/domain/opportunities/*`
+**As built:** header card with type, stage, status and temperature pills, title, budget and owner line, the existing actions (log call, stage select, close or reactivate, edit) and the tabs; no separate "Move forward" button, since the stage select already moves the deal and the spec allows no new key for it. Right column: contact card (initials, phone, email, Call/Viber/WhatsApp/email links), viewed properties (non-rejected links with status), participants. Phone order: header, contact card, tab panel, the rest. The next step (earliest due) is the highlighted first row with Готово (`emphasis="action"`, aria-label unchanged). e2e: 56/60 first run; the 4 failures were the seeded deal holding 64 pending tasks from earlier runs (the task list loads 50, earliest due first). Cancelled the 60 leftover `E2E …` tasks on that deal locally; the test then passed 4/4. The test leaves one pending task per run, so it will hit the cap again.
+**Estimated scope:** M
+
+## Task 12: Inquiries master-detail ⚑ Opus
+**Description:** At ≥ 1024 px: list (source pill, name, message line, time pill, assignee) left,
+selected inquiry's panel right (message, existing fields, convert/assign/reject), selection in
+`?id=`. Status tabs only for existing statuses. Below 1024 px: list → existing card. Panel data
+from what the page already loads. Convert/take carries the yellow offset.
+
+**Acceptance criteria:**
+- [x] Selecting a row updates `?id=`; refresh keeps it; an id from another agency or unknown shows no panel
+- [x] Convert, assign, reject work from the panel with the same result
+
+**Verification:**
+- [x] New e2e: panel selection survives reload; existing inquiry flows in core-loop green
+
+**Dependencies:** Task 10
+**Files likely touched:** `src/app/(dashboard)/inquiries/{page,inquiries-page-client}.tsx`, `src/components/domain/inquiries/inquiry-panel.tsx`
+**As built:** the list always loads; `?id=` also loads the selected inquiry through the same `getById` the old deep link used, and the panel uses the list row instead when it is on the page (it carries the call summary). `InquiryRows` (source pill, caller, message line, status pill and age, assignee; a row is a Link with `replace`) and `InquiryPanel` (the existing card, flat, plus the caller's message and Convert with the yellow offset on open inquiries). The actions and dialogs moved to `useInquiryActions`, shared with `InquiryList` (smart lists). Status tabs are links over the existing statuses. Below 1024 px a selected inquiry replaces the list, with a back link. Unknown, malformed or Beta ids show the not-found notice and no panel. New `e2e/inquiry-panel.spec.ts`; core-loop opens the row before using the card.
+**Estimated scope:** M
+
+## Task 13: Contacts master-detail ⚑ Opus
+**Description:** Filters bar (existing filters only), rows (initials avatar, name, role pill if
+loaded, summary, last activity, owner); at ≥ 1024 px the selected contact's panel (methods with
+links, requirement summary, linked deals, recent timeline) via the services `/contacts/[id]`
+uses, with `agencyId`. Link to the full page. Нов контакт carries the yellow offset.
+
+**Acceptance criteria:**
+- [x] Same `?id=` behaviour as Task 12; panel loads no query the detail page doesn't already run
+- [x] Phone: list → `/contacts/[id]`
+
+**Verification:**
+- [x] e2e panel selection case; smart-lists and core-loop contact steps green
+
+**Dependencies:** Task 10
+**Files likely touched:** `src/app/(dashboard)/contacts/{page,contacts-page-client}.tsx`, `src/components/domain/contacts/{contact-panel,contact-list-table}.tsx`
+**As built:** `contacts/contact-data.ts` `loadContactDetail()` is now the one loader for the contact page and the panel, so the panel runs exactly the contact page's queries (agency-scoped; unknown, malformed or Beta ids give no panel). `ContactPanel` (server component): name linking to the full page, type, methods with links, linked deals with requirement lines, timeline. Rows: initials, name, type pill, company, last activity (`updated_at`); no owner or role pill (not loaded). From 1024 px a row selects into `?id=`; below it the row opens `/contacts/[id]` (a shared `?id=` link on a phone shows the panel alone with a back link). Status tabs replace the status select. Нов контакт carries the yellow offset. New `e2e/contact-panel.spec.ts` (4/4).
+**Estimated scope:** M
+
+## Task 14: Properties table
+**Description:** Table only: type icon, title and settlement, area, price (tabular), owner,
+status pill; existing filters as pill selects; pager in the footer. Нов имот yellow.
+
+**Acceptance criteria:**
+- [x] Matches `properties-list.png` minus left-out parts; filters and pager behave as before
+
+**Verification:**
+- [x] properties e2e green
+
+**Dependencies:** Checkpoint 1
+**Files likely touched:** `src/app/(dashboard)/properties/properties-page-client.tsx`, `src/components/domain/properties/*`
+**As built:** one card: the filters as pill selects on top (each pill names its filter until one is picked; labels stay for screen readers; a picked pill turns primary), the table (type icon, headline with code and place, size, listings with prices, broker) and the pager in its footer; phones keep the card rows. Status lives in the status pill filter and the archived badge, so no status column. Нов имот is `<Button emphasis="action" render={<Link>}>`. properties e2e 8/8.
+**Estimated scope:** S
+
+## Task 15: Exceptions cards
+**Description:** Each existing section as a collapsible card (severity pill, title, rule line,
+count, rows with one action). Main column only. No yellow action.
+
+**Acceptance criteria:**
+- [x] Matches `exceptions.png` layout; every row action works; collapse is keyboard-operable
+
+**Verification:**
+- [x] Browser as manager@alpha.bg; component tests green
+
+**Dependencies:** Checkpoint 1
+**Files likely touched:** `src/app/(dashboard)/exceptions/exceptions-page-client.tsx`
+**As built:** the five existing sections as `ExceptionSection` cards (button with aria-expanded/aria-controls in the h2; Enter/Space fold the rows). Severity is shown by edge, icon and count colour (unassigned and overdue red, at risk and stale amber, workload neutral); no severity text pill, since no message key exists for it and the spec allows none. An empty rule goes neutral. Unassigned rows now link to `/inquiries?id=`. Checked as manager@alpha.bg in bg 1280 and en 390.
+**Estimated scope:** S
+
+## Task 16: Табло KPI tiles
+**Description:** The 4 real counts as KPI tiles at the top of `/dashboard`, in the PNG's tile
+style. Space below left for Task 28.
+
+**Acceptance criteria:**
+- [x] Same four numbers as today, tabular; owner notice kept
+
+**Verification:**
+- [x] Browser as owner and broker
+
+**Dependencies:** Checkpoint 1
+**Files likely touched:** `src/app/(dashboard)/dashboard/page.tsx`
+**As built:** four tiles (label, large tabular number, each opens Today), red tint on Overdue only when it has items; welcome line and owner notice kept; quick actions restyled below. Checked as manager@alpha.bg; owner notice code unchanged.
+**Estimated scope:** XS
+
+### Checkpoint 2: core screens
+- [x] typecheck, lint, test, full `test:e2e` green (2026-11-26: lint 0 errors, 1138 unit tests, e2e 100 passed)
+- [x] At most one `emphasis="action"` per view (grep): contacts, properties, inquiry panel, deal task list; none on Today, Exceptions, Табло
+- [x] Review page published; founder approves
+  Approved 2026-11-26 (https://claude.ai/artifact/KsLwjh15oz1STvjTuQyt85), with the four as-built points on the page (no greeting, no Move forward button, severity without a text pill, no owner/role on contact rows).
+
+## Phase 3: Pages with code-rendered PNGs
+Each follows its PNG for layout; parts with no data (minimum price, loss-reason counts, list
+tabs, deal-stage strip) are left out.
+
+## Task 17: Auth pages
+**Description:** `/login`, `/signup`, `/onboarding`, `/forgot-password`, `/update-password`:
+white page, centred 400 px card, sidebar logo mark, primary submit with the yellow offset.
+**Acceptance criteria:**
+- [x] Matches `login.png`; sign-in, sign-up and reset flows still work
+**Verification:**
+- [x] e2e login fixture green; browser all five pages
+**Dependencies:** Checkpoint 2 · **Files:** `src/app/(auth)/*` · **Scope:** S
+
+## Task 18: Deals list
+**Description:** `/opportunities` as the `deals.png` table (existing columns and filters only).
+**Acceptance criteria:**
+- [x] Filters, sorting, pager unchanged in behaviour
+**Verification:**
+- [x] core-loop green; browser
+**Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/opportunities/opportunities-page-client.tsx` · **Scope:** S
+
+## Task 19: Lists and list detail
+**Description:** `/lists` and `/lists/[id]` as `lists.png` and `list-detail.png`, without tabs.
+**Acceptance criteria:**
+- [x] Working a list one by one behaves as before
+**Verification:**
+- [x] smart-lists e2e green
+**Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/lists/**`, `src/components/domain/smart-lists/*` · **Scope:** M
+
+## Task 20: Property detail
+**Description:** `/properties/[id]` as `property-detail.png`: header card, tabs from existing
+sections (reuse Task 10 helper), parties in the right column.
+**Acceptance criteria:**
+- [x] Every existing section reachable; `?tab=` works
+**Verification:**
+- [x] properties and matching e2e green
+**Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/properties/[id]/*` · **Scope:** M
+
+## Task 21: Contact detail
+**Description:** `/contacts/[id]` as `contact-detail.png`, reusing the Task 13 panel parts.
+**Acceptance criteria:**
+- [x] Methods, properties, deals, timeline, merge (config roles) all present and working
+**Verification:**
+- [x] core-loop contact steps green; browser as broker and manager
+**Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/contacts/[id]/*` · **Scope:** M
+
+## Task 22: Forms and dialogs
+**Description:** Property new/edit as `property-form.png` (label above, grouped cards); the same
+field style in contact, inquiry, task, requirement and convert dialogs.
+**Acceptance criteria:**
+- [x] Validation errors still show per field; submit results unchanged
+**Verification:**
+- [x] properties and requirements e2e green; browser each dialog at 390 px
+**Dependencies:** Checkpoint 2 · **Files:** `src/components/domain/*/*-form.tsx`, `*-dialog.tsx`, `src/app/(dashboard)/properties/{new,[id]/edit}` · **Scope:** M
+
+## Task 23: Settings frame, profile, team
+**Description:** Settings sub-nav left, content in cards (`settings-profile.png`,
+`settings-team.png`).
+**Acceptance criteria:**
+- [x] Sub-nav role filter unchanged; invite and role change work
+**Verification:**
+- [x] settings-team e2e green
+**Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/settings/{layout,settings-sidebar,profile,team}*` · **Scope:** M
+
+## Task 24: Settings stages, lead sources, areas
+**Description:** As `settings-stages.png`, `settings-lead-sources.png`, `settings-areas.png`.
+**Acceptance criteria:**
+- [x] Reorder, add, archive behave as before (owner/manager only)
+**Verification:**
+- [x] Browser as manager; component tests green
+**Dependencies:** Task 23 · **Files:** `src/app/(dashboard)/settings/{stages,lead-sources,areas}/*`, related domain components · **Scope:** M
+
+## Task 25: Settings import and wizard
+**Description:** As `settings-import.png` and `settings-import-new.png`.
+**Acceptance criteria:**
+- [x] Import wizard steps and history unchanged in behaviour
+**Verification:**
+- [x] settings-import e2e green
+**Dependencies:** Task 23 · **Files:** `src/app/(dashboard)/settings/import/**`, `src/components/domain/imports/*` · **Scope:** S
+
+### Checkpoint 3: all live pages
+- [x] typecheck, lint, test, full `test:e2e` green
+- [x] Review page published; founder approves
+  Approved 2026-11-26 (https://claude.ai/artifact/3fHCKVHAd6GxZLQy1g6Ji8). Decided 2026-11-26: `/reports` is visible to every role.
+
+## Phase 4: Скоро placeholders
+
+## Task 26: Coming-soon component and `/reports` ⚑ Opus
+**Description:** `coming-soon.tsx` (Скоро badge + banner "Още не работи — показва примерни
+данни"); `/reports` as `reports.png` with sample data from message keys, CSS/SVG bars, every
+control disabled, no Supabase import; Отчети·Скоро in the Агенция group.
+**Acceptance criteria:**
+- [x] Vitest: component renders the banner and disabled controls
+- [x] `/reports` imports nothing from `@/lib/supabase` or `@/domain` (test or grep)
+**Verification:**
+- [x] e2e smoke: `/reports` shows the banner in `bg` and `en`
+**Dependencies:** Checkpoint 3 · **Files:** `src/components/layout/coming-soon.tsx(+test)`, `src/app/(dashboard)/reports/page.tsx`, nav config, messages · **Scope:** M
+
+## Task 27: Settings rules and portals placeholders
+**Description:** `/settings/rules` and `/settings/portals` as their PNGs, sub-nav entries with
+Скоро.
+**Acceptance criteria:**
+- [x] Same placeholder rules as Task 26
+**Verification:**
+- [x] Browser; nav-config test updated
+**Dependencies:** Task 26 · **Files:** `src/app/(dashboard)/settings/{rules,portals}/page.tsx`, `settings-sidebar.tsx`, messages · **Scope:** S
+
+## Task 28: Табло Скоро section
+**Description:** Below the real tiles, one Скоро section with the PNG's commissions, funnel,
+sources, portfolio health and team-today blocks as sample data.
+**Acceptance criteria:**
+- [x] Real tiles unaffected; the section runs no query
+**Verification:**
+- [x] Browser as owner and broker
+**Dependencies:** Task 26, Task 16 · **Files:** `src/app/(dashboard)/dashboard/page.tsx`, `src/components/layout/coming-soon.tsx` · **Scope:** S
+
+## Task 29: Final sweep ⚑ Opus
+**Description:** Check all 14 success criteria: palette guard, one action per view, status
+colours only on follow-up, `git diff main -- messages/` shows only added keys, contrast pairs,
+focus rings, no sideways scroll at 390 px on every route. Update `docs/domain-model.md` only if
+something there describes UI (expected: nothing).
+**Acceptance criteria:**
+- [x] Every success criterion checked with its evidence noted here
+**Verification:**
+- [x] typecheck, lint, test, `test:e2e` green in this session
+**Dependencies:** Tasks 26–28 · **Files:** as found · **Scope:** S
+
+**Task 29 evidence (2026-11-26, this session):**
+1. Colour tokens: `src/lib/design-guard.test.ts` passes (palette classes, oklch/rgb/hsl, hex in styles; only the email HTML is allowed).
+2. Sofia Sans via `next/font` in `layout.tsx`; `font-variant-numeric: tabular-nums` on `body`.
+3. `--bright-shadow-card` is a zero shadow; `shadow-sm` appears only on the switch thumb.
+4. `emphasis="action"` appears once per view (grep); the deal page only on the first open task.
+5. Status colours: follow-up states, exception severity, and the placeholders' severity pills and portfolio-health counts as in the PNGs.
+6. Founder approval: phases 1–3 approved; phase 4 awaits Checkpoint 4.
+7. 128 e2e passed (bg/en, 1280/390); 1175 Vitest passed.
+8. `contact-panel.spec.ts` and `inquiry-panel.spec.ts` cover `?id=` selection.
+9. `deal-tabs.spec.ts` covers click, keyboard and `?tab=`.
+10. Inline post-call prompt: `PostCallInline` on Today.
+11. Placeholders: Vitest checks no Supabase/domain import, no working control; `reports-placeholder.spec.ts` covers banner and disabled controls, broker redirect on settings, Табло for owner and broker.
+12. Messages vs the ui-bright base (`ae9b1db`): 0 changed, 0 removed, 163 added to each file; bg and en have the same keys.
+13. Contrast computed from the light tokens: all text pairs ≥ 4.5 (lowest 4.64), edges ≥ 3 (3.43); focus ring on controls; no sideways scroll at 390 px on `/reports`, `/settings/rules`, `/settings/portals`, `/dashboard`.
+14. typecheck, lint (0 errors), test, `test:e2e` green.
+
+### Checkpoint 4: module done
+- [x] Founder approves the phase 4 review page — closed on the founder's instruction 2026-11-27, after the phase 4 review fixes (`75eb215`); no review page was published for phase 4
+- [x] Close: SPEC.md module Done, `tasks/*` → `docs/archive/ui-bright-{plan,todo}.md` (BRD: no rows, the spec adds no requirements)

@@ -23,7 +23,7 @@ export function StageBadge({ stage, className }: StageBadgeProps) {
       return (
         <Badge
           className={cn(
-            "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-400 border-emerald-500/20",
+            "bg-done-soft text-done hover:bg-done-soft border-done/20",
             className
           )}
           variant="outline"

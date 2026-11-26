@@ -200,7 +200,7 @@ export function ConvertInquiryDialog({
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   contactTab === "new"
-                    ? "bg-background shadow-sm text-foreground"
+                    ? "bg-accent text-ink"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 id="convert-tab-new"
@@ -214,7 +214,7 @@ export function ConvertInquiryDialog({
                 className={cn(
                   "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   contactTab === "existing"
-                    ? "bg-background shadow-sm text-foreground"
+                    ? "bg-accent text-ink"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 id="convert-tab-existing"
@@ -330,7 +330,7 @@ export function ConvertInquiryDialog({
                           className={cn(
                             "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                             joining === (mode === "join")
-                              ? "bg-background shadow-sm text-foreground"
+                              ? "bg-accent text-ink"
                               : "text-muted-foreground hover:text-foreground"
                           )}
                         >

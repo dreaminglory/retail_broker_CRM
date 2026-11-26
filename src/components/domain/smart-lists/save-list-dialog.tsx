@@ -131,7 +131,7 @@ export function UpdateListBar({ list }: UpdateListBarProps) {
       <div className="min-w-0 space-y-1">
         <p className="break-words text-sm">{t("editing", { name: list.name })}</p>
         {!list.shownExactly && (
-          <p className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+          <p className="flex items-start gap-1.5 text-xs text-warning-ink">
             <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
             {t("notShownExactly")}
           </p>

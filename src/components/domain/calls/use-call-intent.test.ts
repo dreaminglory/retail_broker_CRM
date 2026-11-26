@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CALL_INTENT } from './call-intent-constants';
 import { createCallIntentTracker, type CallIntent, type IntentStorage } from './use-call-intent';
+import { sheetTarget } from './use-call-intent';
 
 const INQUIRY = '11111111-1111-4111-8111-111111111111';
 const target = { context: { inquiry_id: INQUIRY }, name: 'Ivan Petrov', channel: 'phone' as const };
@@ -265,5 +266,24 @@ describe('call intent (spec phone-loop rule 3)', () => {
     t.visibility(false);
 
     expect(prompts).toHaveLength(1);
+  });
+});
+
+describe('sheetTarget (ui-bright T9: Today shows the prompt inline)', () => {
+  const target = { context: { task_id: 't1', opportunity_id: 'o1' }, name: 'Ivan', channel: 'phone' as const };
+
+  it('gives the sheet no target while a page claims that task', () => {
+    expect(sheetTarget(target, [['t0', 't1']])).toBeNull();
+  });
+
+  it('opens the sheet when no claim matches, or the call has no task', () => {
+    expect(sheetTarget(target, [])).toBe(target);
+    expect(sheetTarget(target, [['t2']])).toBe(target);
+    const noTask = { ...target, context: { opportunity_id: 'o1' } };
+    expect(sheetTarget(noTask, [['t1']])).toBe(noTask);
+  });
+
+  it('passes no target through', () => {
+    expect(sheetTarget(null, [['t1']])).toBeNull();
   });
 });

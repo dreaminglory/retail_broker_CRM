@@ -568,6 +568,34 @@ proves too loose or too strict on a real export (tune the one function).
 **Revisit if:** calls need fields a task can't hold (duration, recording), or the `/mobile`
 bundle cost shows in page weight (compute `isMobile` on the server, or import `/mobile` lazily).
 
+### AD-066: Bright tokens live once in `globals.css`, under the shadcn variables
+**Accepted** (ui-bright plan, 2026-11-25).
+- **Raw tokens are `--bright-*`**, copied from `docs/design/tokens.json` (light in `:root`, dark in
+  `.dark`, never switched on). They are the only colour literals in `src/`.
+- **The shadcn variables point at them**, so the primitives inherit Bright: `background`←bg,
+  `card`←surface, `popover`←surface-raised, `primary`←primary, `accent`←accent,
+  `border`←border, `input`←border-strong, `ring`←focus, `destructive`←danger,
+  `sidebar*`←sidebar/accent/primary. Where shadcn has a token Bright lacks: `secondary` and
+  `muted` ← the sidebar tint with `ink` text, `muted-foreground` ← Bright `muted`,
+  `chart-1..5` ← primary, sea, success, warning, muted.
+- **Bright names are utilities too** (`bg-surface`, `text-ink`, `border-border-strong`,
+  `bg-info-soft`, `bg-highlight`, ...). Bright's `muted` text colour is spelled
+  `text-muted-foreground`, because `muted` is already shadcn's tint.
+- **Follow-up states have their own names**: `overdue` (danger), `due` and `at-risk` (warning,
+  text in `*-ink`), `done` (success), each with a `*-soft` tint. A page says *why* something is
+  red, and a grep guard forbids Tailwind palette classes everywhere.
+- **Radius 4/6/8** (`sm`/`md`/`lg`; larger steps collapse onto 8). **Shadows:** cards none,
+  floating layers `shadow-float`, and `shadow-action` (the 3px yellow offset) only through
+  `<Button emphasis="action">`, at most once per view.
+- **Type:** Sofia Sans (and Semi Condensed for dense tables) via `next/font`, latin + cyrillic;
+  `font-mono` maps to Sofia Sans too. `tabular-nums` is set once on `body` rather than on each
+  number, so no formatter call site can miss it. The `tokens.json` type scale is `text-display`
+  … `text-cell-dense`.
+**Why:** one place to change the theme, no rewrite of the shadcn primitives, and status colour
+that can be checked by name.
+**Revisit if:** dark mode is switched on (the `.dark` values are untested), or the design system
+renames a token (refresh `tokens.json` and this block together).
+
 ---
 
 ## Retired

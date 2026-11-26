@@ -47,15 +47,15 @@ export default async function ImportHistoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <h1 className="text-title text-ink">{t("title")}</h1>
+          <p className="mt-1 text-body text-muted-foreground">
             {t("description")}
           </p>
         </div>
         <NewImportMenu />
       </div>
 
-      <div className="rounded-md border bg-card">
+      <div className="overflow-hidden rounded-lg border border-border bg-surface">
         <Table>
           <TableHeader>
             <TableRow>
@@ -97,7 +97,7 @@ export default async function ImportHistoryPage() {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">{job.total_rows}</TableCell>
-                <TableCell className="text-right text-green-600 font-medium">
+                <TableCell className="text-right text-success font-medium">
                   {job.created_count}
                 </TableCell>
                 <TableCell className="text-right">

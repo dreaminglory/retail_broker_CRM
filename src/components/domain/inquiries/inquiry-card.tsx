@@ -38,15 +38,15 @@ const STATUS_CONFIG: Record<
   { className: string }
 > = {
   new: {
-    className: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+    className: "bg-accent text-primary",
   },
   contacted: {
     className:
-      "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+      "bg-muted text-ink",
   },
   converted: {
     className:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+      "bg-done-soft text-done",
   },
   dismissed: {
     className: "bg-muted text-muted-foreground",
@@ -74,6 +74,8 @@ interface InquiryCardProps {
   onLogCall?: (inquiry: Inquiry) => void;
   /** The agency's timezone; with it the card shows the contact time and calls (rule 9). */
   timeZone?: string;
+  /** Inside the inquiries panel: no card edge of its own. */
+  flat?: boolean;
 }
 
 /**
@@ -102,6 +104,7 @@ export function InquiryCard({
   onDismiss,
   onLogCall,
   timeZone,
+  flat = false,
 }: InquiryCardProps) {
   const t = useTranslations("InquiryCard");
   const tCall = useTranslations("phoneLoop");
@@ -132,7 +135,13 @@ export function InquiryCard({
     t("unknownCaller");
 
   return (
-    <div className="group relative rounded-lg border bg-card px-4 py-3.5 transition-shadow hover:shadow-sm">
+    <div
+      className={
+        flat
+          ? "group relative px-4 py-4"
+          : "group relative rounded-lg border bg-card px-4 py-3.5 transition-colors hover:border-info-line"
+      }
+    >
       {/* Top row: avatar + caller + status + actions */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 flex items-start gap-3">
@@ -204,7 +213,7 @@ export function InquiryCard({
                     onClick={() => onMarkContacted(inquiry.id)}
                     id={`inquiry-mark-contacted-${inquiry.id}`}
                   >
-                    <CheckCheck className="mr-2 h-4 w-4 text-amber-600" />
+                    <CheckCheck className="mr-2 h-4 w-4 text-muted-foreground" />
                     {t("markContacted")}
                   </DropdownMenuItem>
                 )}
@@ -213,7 +222,7 @@ export function InquiryCard({
                     onClick={() => onConvert(inquiry)}
                     id={`inquiry-convert-${inquiry.id}`}
                   >
-                    <ArrowUpRight className="mr-2 h-4 w-4 text-emerald-600" />
+                    <ArrowUpRight className="mr-2 h-4 w-4 text-muted-foreground" />
                     {t("convertToOpportunity")}
                   </DropdownMenuItem>
                 )}

@@ -7,7 +7,9 @@ import { PostCallSheet, type PostCallTarget } from "./post-call-sheet";
 import { CALL_INTENT } from "./call-intent-constants";
 import {
   CallIntentContext,
+  PostCallTargetContext,
   createCallIntentTracker,
+  sheetTarget,
   type CallIntentApi,
   type CallIntentTracker,
   type IntentStorage,
@@ -30,6 +32,9 @@ function sessionStorageOrNull(): IntentStorage | null {
 export function CallIntentProvider({ children, timeZone }: { children: React.ReactNode; timeZone: string }) {
   const t = useTranslations("phoneLoop.intent");
   const [target, setTarget] = useState<PostCallTarget | null>(null);
+  // Task ids a page renders the prompt for itself (Today, inline under the row).
+  const [claims, setClaims] = useState<readonly { id: number; taskIds: readonly string[] }[]>([]);
+  const claimSeq = useRef(0);
   const tracker = useRef<CallIntentTracker | null>(null);
 
   // The toast text reads the latest translations without re-creating the tracker.
@@ -66,24 +71,37 @@ export function CallIntentProvider({ children, timeZone }: { children: React.Rea
     };
   }, []);
 
-  const api = useMemo<CallIntentApi>(
-    () => ({
-      register: (intentTarget) => tracker.current?.register(intentTarget),
-      open: (openTarget) => setTarget(openTarget),
-    }),
-    [],
-  );
-
   // Saved, "Not now" or closed: the intent is done either way.
   const close = useCallback(() => {
     tracker.current?.clear();
     setTarget(null);
   }, []);
 
+  const api = useMemo<CallIntentApi>(
+    () => ({
+      register: (intentTarget) => tracker.current?.register(intentTarget),
+      open: (openTarget) => setTarget(openTarget),
+      close,
+      claim: (taskIds) => {
+        const id = ++claimSeq.current;
+        setClaims((current) => [...current, { id, taskIds }]);
+        return () => setClaims((current) => current.filter((c) => c.id !== id));
+      },
+    }),
+    [close],
+  );
+
+  const forSheet = sheetTarget(
+    target,
+    claims.map((c) => c.taskIds),
+  );
+
   return (
     <CallIntentContext.Provider value={api}>
-      {children}
-      <PostCallSheet target={target} timeZone={timeZone} onClose={close} />
+      <PostCallTargetContext.Provider value={target}>
+        {children}
+        <PostCallSheet target={forSheet} timeZone={timeZone} onClose={close} />
+      </PostCallTargetContext.Provider>
     </CallIntentContext.Provider>
   );
 }

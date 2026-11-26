@@ -39,16 +39,16 @@ export function PropertyImportPreview({ jobId, preview, duplicateStrategy, keptA
     return t("outcome.valid");
   };
   const outcomeClass = (row: PreviewRow) =>
-    row.status === "invalid" ? "text-red-700" : row.status === "valid" ? "text-green-700" : "text-yellow-700";
+    row.status === "invalid" ? "text-danger" : row.status === "valid" ? "text-success" : "text-warning-ink";
   const notes = (row: PreviewRow) => [...row.errors, ...row.warnings].map((e) => describeRowError(e, reason));
 
   const filtered = filter === "all" ? preview.rows : preview.rows.filter((r) => r.status === filter);
   const shown = filtered.slice(0, MAX_ROWS_SHOWN);
 
   const tiles = [
-    { key: "new", value: preview.counts.new, className: "bg-green-50 text-green-700" },
-    { key: "duplicate", value: preview.counts.duplicate, className: "bg-yellow-50 text-yellow-700" },
-    { key: "invalid", value: preview.counts.invalid, className: "bg-red-50 text-red-700" },
+    { key: "new", value: preview.counts.new, className: "bg-success-soft text-success" },
+    { key: "duplicate", value: preview.counts.duplicate, className: "bg-warning-soft text-warning-ink" },
+    { key: "invalid", value: preview.counts.invalid, className: "bg-danger-soft text-danger" },
     { key: "skipped", value: preview.counts.skipped, className: "bg-muted text-muted-foreground" },
   ] as const;
 
@@ -84,7 +84,7 @@ export function PropertyImportPreview({ jobId, preview, duplicateStrategy, keptA
                     <input
                       type="checkbox"
                       id={id}
-                      className="mt-1 h-4 w-4 rounded border-gray-300"
+                      className="mt-1 h-4 w-4 rounded border-border-strong"
                       checked={keptAreas.has(area.key)}
                       onChange={(e) => onToggleArea(area.key, e.target.checked)}
                     />
@@ -97,7 +97,7 @@ export function PropertyImportPreview({ jobId, preview, duplicateStrategy, keptA
                     </Label>
                   </div>
                   {area.similarTo && (
-                    <p className="ml-6 text-xs text-yellow-700 flex items-center gap-1">
+                    <p className="ml-6 text-xs text-warning-ink flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3 shrink-0" />
                       {t("newAreas.similar", { name: area.similarTo })}
                     </p>

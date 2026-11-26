@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useTranslations } from "next-intl";
 
 export default function OnboardingPage() {
@@ -34,9 +37,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8 shadow-sm">
+    <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">
+        <h2 className="text-title text-ink">
           {t("title")}
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -52,24 +55,24 @@ export default function OnboardingPage() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="agencyName" className="text-sm font-medium">
+          <Label htmlFor="agencyName">
             {t("agencyName")}
-          </label>
-          <input
+          </Label>
+          <Input
             id="agencyName"
             type="text"
             value={agencyName}
             onChange={(e) => setAgencyName(e.target.value)}
             placeholder={t("agencyNamePlaceholder")}
             required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading || !agencyName}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+          emphasis="action"
+          className="h-10 w-full"
         >
           {loading ? (
             <>
@@ -79,7 +82,7 @@ export default function OnboardingPage() {
           ) : (
             t("submit")
           )}
-        </button>
+        </Button>
       </form>
     </div>
   );

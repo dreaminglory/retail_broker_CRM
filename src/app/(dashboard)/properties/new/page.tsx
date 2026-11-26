@@ -41,7 +41,7 @@ export default async function NewPropertyPage({ searchParams }: Props) {
         <ChevronLeft className="h-3.5 w-3.5" />
         {subjectOf ? t("backToOpportunity") : t("backToList")}
       </Link>
-      <h1 className="mb-6 text-2xl font-bold tracking-tight">{t("newTitle")}</h1>
+      <h1 className="mb-6 text-title text-ink">{t("newTitle")}</h1>
       {subjectOf && (
         <p className="mb-6 rounded-lg border bg-muted/40 p-3 text-sm">
           {t("forOpportunity", { title: subjectOf.title })}

@@ -19,8 +19,8 @@ const CHANNEL_ICONS: Record<TaskChannel, React.ComponentType<{ className?: strin
   email: Mail,
 };
 const CHANNEL_TINT: Partial<Record<TaskChannel, string>> = {
-  viber: "text-violet-600 dark:text-violet-400",
-  whatsapp: "text-emerald-600 dark:text-emerald-400",
+  viber: "text-primary",
+  whatsapp: "text-primary",
 };
 
 interface TimelineEntryProps {
@@ -46,31 +46,31 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
 
   const getIcon = () => {
     switch (entry.type) {
-      case 'note': return <MessageSquare className="h-4 w-4 text-blue-500" />;
+      case 'note': return <MessageSquare className="h-4 w-4 text-primary" />;
       case 'task': 
         return entry.isCompletionEvent 
-          ? <CheckCircle2 className="h-4 w-4 text-green-500" />
-          : <ClipboardList className="h-4 w-4 text-orange-500" />;
+          ? <CheckCircle2 className="h-4 w-4 text-done" />
+          : <ClipboardList className="h-4 w-4 text-muted-foreground" />;
       case 'audit':
         switch (event?.kind) {
           case 'created':
           case 'propertyCreated':
           case 'listingCreated':
-            return <Plus className="h-4 w-4 text-emerald-500" />;
+            return <Plus className="h-4 w-4 text-muted-foreground" />;
           case 'stage':
-            return <ArrowRightLeft className="h-4 w-4 text-purple-500" />;
+            return <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />;
           case 'assignment':
-            return <UserCircle2 className="h-4 w-4 text-indigo-500" />;
+            return <UserCircle2 className="h-4 w-4 text-muted-foreground" />;
           case 'listingPrice':
-            return <Tag className="h-4 w-4 text-amber-500" />;
+            return <Tag className="h-4 w-4 text-muted-foreground" />;
           case 'propertyLink':
-            return <Link2 className="h-4 w-4 text-sky-500" />;
+            return <Link2 className="h-4 w-4 text-muted-foreground" />;
           case 'requirement':
-            return <ListChecks className="h-4 w-4 text-teal-500" />;
+            return <ListChecks className="h-4 w-4 text-muted-foreground" />;
           default:
-            return <Flag className="h-4 w-4 text-gray-500" />;
+            return <Flag className="h-4 w-4 text-muted-foreground" />;
         }
-      case 'inquiry': return <Mail className="h-4 w-4 text-cyan-500" />;
+      case 'inquiry': return <Mail className="h-4 w-4 text-muted-foreground" />;
       default: return <MessageSquare className="h-4 w-4" />;
     }
   };
@@ -81,7 +81,7 @@ export function TimelineEntryItem({ entry, currentUserId, onUpdateNote, onDelete
       <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border" />
       
       {/* Icon node */}
-      <div className="absolute left-0 top-5 h-8 w-8 rounded-full border bg-background flex items-center justify-center z-10 shadow-sm">
+      <div className="absolute left-0 top-5 h-8 w-8 rounded-full border bg-background flex items-center justify-center z-10">
         {getIcon()}
       </div>
 

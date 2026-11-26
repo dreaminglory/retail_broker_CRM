@@ -68,7 +68,7 @@ export function InviteDialog({ agencyId, currentUserRole }: InviteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger 
-        className={cn(buttonVariants({ variant: "default" }))}
+        className={cn(buttonVariants({ variant: "default", emphasis: "action" }))}
       >
         <UserPlus className="mr-2 h-4 w-4" />
         {t("button")}

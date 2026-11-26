@@ -1,134 +1,55 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
-import { LogOut, User, Settings } from "lucide-react";
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CommandPalette } from "@/components/domain/search/command-palette";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { usePathname } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { findNavItem } from "./nav-config";
+import type { ShellUser } from "./shell-types";
 import { MobileSidebar } from "./sidebar";
 
-interface UserInfo {
-  email: string;
-  fullName: string;
+type HeaderProps = {
+  user: ShellUser;
   agencyName: string;
-}
+};
 
-interface HeaderProps {
-  userRole?: string;
-}
-
-export function Header({ userRole = "broker" }: HeaderProps) {
-  const router = useRouter();
-  const t = useTranslations("header");
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    async function loadUser() {
-      const supabase = createSupabaseBrowser();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // Get agency name
-        const { data: membership } = await supabase
-          .from("agency_memberships")
-          .select("agencies(name)")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .single();
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const agencyData = membership?.agencies as unknown as { name: string } | null;
-
-        setUserInfo({
-          email: user.email ?? "",
-          fullName: user.user_metadata?.full_name ?? user.email ?? "",
-          agencyName: agencyData?.name ?? t("myAgency"),
-        });
-      }
-    }
-    loadUser();
-  }, []);
-
-  async function handleSignOut() {
-    const supabase = createSupabaseBrowser();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
-  }
+/**
+ * Bright header: the breadcrumb (group › page). Search and the profile menu live
+ * in the sidebar (founder, checkpoint 1); no bell, no "+ Ново"
+ * (spec ui-bright: left out, logged in SPEC.md).
+ */
+export function Header({ user, agencyName }: HeaderProps) {
+  const pathname = usePathname();
+  const t = useTranslations("nav");
+  const found = findNavItem(pathname);
+  const onSubPage = found !== null && pathname !== found.item.href;
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
-      <MobileSidebar userRole={userRole} />
-      
-      {/* Agency name */}
-      <div className="flex-1 hidden md:flex">
-        <h2 className="text-sm font-semibold text-foreground">
-          {userInfo?.agencyName ?? t("loading")}
-        </h2>
-      </div>
+    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4 md:px-6">
+      <MobileSidebar user={user} agencyName={agencyName} />
 
-      {/* Global Search */}
-      <div className="flex-1 flex justify-center hidden md:flex">
-        <CommandPalette />
-      </div>
-
-      {/* User menu */}
-      <div className="relative flex-1 flex justify-end">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="flex items-center gap-2 rounded-full px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-        >
-          <Avatar className="h-8 w-8 border">
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-              {userInfo?.fullName?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          <span className="hidden sm:inline font-medium text-foreground">
-            {userInfo?.fullName ?? t("loading")}
-          </span>
-        </button>
-
-        {menuOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setMenuOpen(false)}
-            />
-            {/* Dropdown */}
-            <div className="absolute right-0 z-50 mt-1 w-56 rounded-md border bg-popover p-1 shadow-md">
-              <div className="px-3 py-2 text-sm">
-                <p className="font-medium">{userInfo?.fullName}</p>
-                <p className="text-xs text-muted-foreground">
-                  {userInfo?.email}
-                </p>
-              </div>
-              <div className="my-1 h-px bg-border" />
-              <Link
-                href="/settings"
-                onClick={() => setMenuOpen(false)}
-                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                <Settings className="h-4 w-4 text-muted-foreground" />
-                {t("settings")}
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                {t("signOut")}
-              </button>
-            </div>
-          </>
+      <nav aria-label={t("breadcrumb")} className="min-w-0 flex-1">
+        {found && (
+          <ol className="flex min-w-0 items-center gap-2 text-body">
+            <li className="hidden shrink-0 text-muted-foreground sm:block">{t(`groups.${found.group.key}`)}</li>
+            <li aria-hidden className="hidden text-muted-foreground sm:block">
+              <ChevronRight className="size-4" />
+            </li>
+            <li className="min-w-0 truncate">
+              {onSubPage ? (
+                <Link href={found.item.href} className="text-muted-foreground underline-offset-4 hover:text-ink hover:underline">
+                  {t(found.item.key)}
+                </Link>
+              ) : (
+                <span aria-current="page" className="font-semibold text-ink">
+                  {t(found.item.key)}
+                </span>
+              )}
+            </li>
+          </ol>
         )}
-      </div>
+      </nav>
     </header>
   );
 }

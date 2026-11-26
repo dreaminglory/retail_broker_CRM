@@ -4,80 +4,111 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Bright theme (AD-066). The raw tokens are `--bright-*`, copied from
+ * docs/design/tokens.json; the shadcn variables below point at them, so the
+ * primitives inherit Bright without knowing it. `.dark` is defined but never
+ * switched on (spec ui-bright: light only).
+ */
 :root {
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: 0 0% 98%;
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-  --sidebar-background: 0 0% 98%;
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
+  --bright-bg: #ffffff;
+  --bright-surface: #ffffff;
+  --bright-surface-raised: #ffffff;
+  --bright-sidebar: #f6faff;
+  --bright-accent: #dceefc;
+  --bright-ink: #0e1a2b;
+  --bright-muted: #5a6676;
+  --bright-border: #dce1e7;
+  --bright-border-strong: #7d8897;
+  --bright-primary: #2b63c6;
+  --bright-primary-hover: #1b3a6b;
+  --bright-on-primary: #ffffff;
+  --bright-action: #f7d154;
+  --bright-sea: #7fbef0;
+  --bright-sea-light: #dceefc;
+  --bright-info-soft: #eef7fe;
+  --bright-info-line: #7fbef0;
+  --bright-highlight: #fff8dc;
+  --bright-focus: #2b63c6;
+  --bright-danger: #c2362b;
+  --bright-danger-soft: #fbe9e7;
+  --bright-warning: #b8730a;
+  --bright-warning-ink: #8a5605;
+  --bright-warning-soft: #fbf1de;
+  --bright-success: #28703f;
+  --bright-success-soft: #e3f1e8;
+  --bright-shadow-card: 0 0 0 0 rgba(14, 26, 43, 0);
+  --bright-shadow-float: 0 8px 24px -4px rgba(14, 26, 43, 0.18);
+
+  --background: var(--bright-bg);
+  --foreground: var(--bright-ink);
+  --card: var(--bright-surface);
+  --card-foreground: var(--bright-ink);
+  --popover: var(--bright-surface-raised);
+  --popover-foreground: var(--bright-ink);
+  --primary: var(--bright-primary);
+  --primary-foreground: var(--bright-on-primary);
+  --secondary: var(--bright-sidebar);
+  --secondary-foreground: var(--bright-ink);
+  --muted: var(--bright-sidebar);
+  --muted-foreground: var(--bright-muted);
+  --accent: var(--bright-accent);
+  --accent-foreground: var(--bright-ink);
+  --destructive: var(--bright-danger);
+  --destructive-foreground: var(--bright-on-primary);
+  --border: var(--bright-border);
+  --input: var(--bright-border-strong);
+  --ring: var(--bright-focus);
+  --radius: 8px;
+  --sidebar: var(--bright-sidebar);
+  --sidebar-background: var(--bright-sidebar);
+  --sidebar-foreground: var(--bright-ink);
+  --sidebar-primary: var(--bright-primary);
+  --sidebar-primary-foreground: var(--bright-on-primary);
+  --sidebar-accent: var(--bright-accent);
+  --sidebar-accent-foreground: var(--bright-ink);
+  --sidebar-border: var(--bright-border);
+  --sidebar-ring: var(--bright-focus);
+  --chart-1: var(--bright-primary);
+  --chart-2: var(--bright-sea);
+  --chart-3: var(--bright-success);
+  --chart-4: var(--bright-warning);
+  --chart-5: var(--bright-muted);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: 0 0% 98%;
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --sidebar-background: 240 5.9% 10%;
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
+  --bright-bg: #0b1420;
+  --bright-surface: #121d2c;
+  --bright-surface-raised: #1a2738;
+  --bright-sidebar: #0f1926;
+  --bright-accent: #1a2a42;
+  --bright-ink: #e8edf3;
+  --bright-muted: #9aa6b5;
+  --bright-border: #24334a;
+  --bright-border-strong: #5c6b80;
+  --bright-primary: #8fb8f0;
+  --bright-primary-hover: #a9c9f4;
+  --bright-on-primary: #0b1420;
+  --bright-action: #f7d154;
+  --bright-sea: #7fbef0;
+  --bright-sea-light: #1b3550;
+  --bright-info-soft: #13263b;
+  --bright-info-line: #3d6f9e;
+  --bright-highlight: #332b12;
+  --bright-focus: #7fbef0;
+  --bright-danger: #f07a6e;
+  --bright-danger-soft: #3a1c1b;
+  --bright-warning: #e6a743;
+  --bright-warning-ink: #e6a743;
+  --bright-warning-soft: #3a2a10;
+  --bright-success: #5fc08a;
+  --bright-success-soft: #15301f;
+  --bright-shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --bright-shadow-float: 0 8px 24px -4px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {
+  /* shadcn names */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -97,6 +128,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
   --color-sidebar-background: var(--sidebar-background);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -105,22 +137,104 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Bright names (text-ink, bg-surface, border-border-strong, ...).
+     Bright's "muted" text colour is text-muted-foreground. */
+  --color-surface: var(--bright-surface);
+  --color-surface-raised: var(--bright-surface-raised);
+  --color-ink: var(--bright-ink);
+  --color-border-strong: var(--bright-border-strong);
+  --color-primary-hover: var(--bright-primary-hover);
+  --color-on-primary: var(--bright-on-primary);
+  --color-action: var(--bright-action);
+  --color-sea: var(--bright-sea);
+  --color-sea-light: var(--bright-sea-light);
+  --color-info-soft: var(--bright-info-soft);
+  --color-info-line: var(--bright-info-line);
+  --color-highlight: var(--bright-highlight);
+  --color-focus: var(--bright-focus);
+  --color-danger: var(--bright-danger);
+  --color-danger-soft: var(--bright-danger-soft);
+  --color-warning: var(--bright-warning);
+  --color-warning-ink: var(--bright-warning-ink);
+  --color-warning-soft: var(--bright-warning-soft);
+  --color-success: var(--bright-success);
+  --color-success-soft: var(--bright-success-soft);
+
+  /* Follow-up states: the only places red, amber and green appear.
+     *-ink is the text colour, *-soft the tint behind it. */
+  --color-overdue: var(--bright-danger);
+  --color-overdue-soft: var(--bright-danger-soft);
+  --color-due: var(--bright-warning);
+  --color-due-ink: var(--bright-warning-ink);
+  --color-due-soft: var(--bright-warning-soft);
+  --color-at-risk: var(--bright-warning);
+  --color-at-risk-ink: var(--bright-warning-ink);
+  --color-at-risk-soft: var(--bright-warning-soft);
+  --color-done: var(--bright-success);
+  --color-done-soft: var(--bright-success-soft);
+
+  /* Radius 4 / 6 / 8; larger shadcn steps collapse onto 8 (cards). */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
+
+  /* Flat: shadow-action only via <Button emphasis="action">. */
+  --shadow-action: 3px 3px 0 0 var(--bright-action);
+  --shadow-card: var(--bright-shadow-card);
+  --shadow-float: var(--bright-shadow-float);
+
+  /* Sofia Sans for all text; codes (font-mono) stay in it with tabular figures. */
+  --font-sans: var(--font-sofia-sans), system-ui, sans-serif;
+  --font-condensed: var(--font-sofia-sans-condensed), var(--font-sofia-sans), system-ui, sans-serif;
+  --font-mono: var(--font-sofia-sans), system-ui, sans-serif;
+  --font-heading: var(--font-sofia-sans), system-ui, sans-serif;
+
+  /* Type scale from tokens.json: text-display, text-title, text-section, text-body,
+     text-body-strong, text-small, text-label (add `uppercase`), text-num, text-num-lg,
+     text-cell-dense (add `font-condensed`). */
+  --text-display: 28px;
+  --text-display--line-height: 34px;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.01em;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-title--font-weight: 700;
+  --text-title--letter-spacing: -0.01em;
+  --text-section: 16px;
+  --text-section--line-height: 24px;
+  --text-section--font-weight: 600;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--font-weight: 400;
+  --text-body-strong: 14px;
+  --text-body-strong--line-height: 20px;
+  --text-body-strong--font-weight: 600;
+  --text-small: 12px;
+  --text-small--line-height: 16px;
+  --text-small--font-weight: 400;
+  --text-label: 11px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 600;
+  --text-label--letter-spacing: 0.06em;
+  --text-num: 13px;
+  --text-num--line-height: 20px;
+  --text-num--font-weight: 600;
+  --text-num-lg: 24px;
+  --text-num-lg--line-height: 28px;
+  --text-num-lg--font-weight: 600;
+  --text-cell-dense: 13px;
+  --text-cell-dense--line-height: 18px;
+  --text-cell-dense--font-weight: 400;
 }
 
 @layer base {
@@ -129,6 +243,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Tabular figures everywhere: times, money, phones and m² line up down a column. */
+    font-variant-numeric: tabular-nums;
   }
   html {
     @apply font-sans;

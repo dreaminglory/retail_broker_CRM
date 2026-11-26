@@ -171,7 +171,7 @@ function AddPartyForm({ propertyId, onDone }: { propertyId: string; onDone: () =
             onClick={() => setMode(value)}
             className={cn(
               "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-              mode === value ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
+              mode === value ? "bg-accent text-ink" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {t(value === "existing" ? "existingContact" : "newContact")}

@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { authErrorKey } from "@/lib/auth-errors";
@@ -62,7 +65,7 @@ export default function UpdatePasswordPage() {
 
   if (initializing) {
     return (
-      <div className="rounded-lg border bg-card p-8 shadow-sm flex flex-col items-center justify-center space-y-4">
+      <div className="flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">{t("verifying")}</p>
       </div>
@@ -71,30 +74,30 @@ export default function UpdatePasswordPage() {
 
   if (noSession) {
     return (
-      <div className="rounded-lg border bg-card p-8 shadow-sm flex flex-col items-center text-center space-y-4">
+      <div className="flex flex-col items-center text-center space-y-4">
         <div className="rounded-full bg-destructive/10 p-3">
           <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold tracking-tight">{t("invalidTitle")}</h2>
+        <h2 className="text-title text-ink">{t("invalidTitle")}</h2>
         <p className="text-sm text-muted-foreground">
           {t("invalidSubtitle")}
         </p>
-        <button
+        <Button
           onClick={() => router.push("/login")}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="h-10 w-full"
         >
           {t("returnLogin")}
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8 shadow-sm">
+    <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
+        <h2 className="text-title text-ink">{t("title")}</h2>
         <p className="text-sm text-muted-foreground">
           {t("subtitle")}
         </p>
@@ -108,24 +111,24 @@ export default function UpdatePasswordPage() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="password" className="text-sm font-medium">
+          <Label htmlFor="password">
             {t("password")}
-          </label>
-          <input
+          </Label>
+          <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t("passwordPlaceholder")}
             required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+          emphasis="action"
+          className="h-10 w-full"
         >
           {loading ? (
             <>
@@ -135,7 +138,7 @@ export default function UpdatePasswordPage() {
           ) : (
             t("submit")
           )}
-        </button>
+        </Button>
       </form>
     </div>
   );

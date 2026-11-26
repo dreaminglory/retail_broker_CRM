@@ -21,6 +21,8 @@ import { MATCH_PREVIEW_SIZE } from "@/components/domain/matching/match-list-cont
 import { DEAL_MATCH_KEYS, matchBaseParams, parseMatchView } from "@/components/domain/matching/match-params";
 import type { Locale } from "@/i18n/config";
 import { OpportunityDetailClient } from "./opportunity-detail-client";
+import { DEAL_TABS } from "./deal-tabs";
+import { parseChoice } from "@/lib/url-state";
 import { FreshNowProvider } from "@/lib/i18n/fresh-now-provider";
 
 export default async function OpportunityDetailPage({
@@ -133,6 +135,7 @@ export default async function OpportunityDetailPage({
           timeZone={settings.timezone}
           propertyLinks={propertyLinks}
           requirement={requirement}
+          initialTab={parseChoice(query.tab, DEAL_TABS, "path")}
           matchesSection={
             matches ? (
               <PropertyMatchesSection

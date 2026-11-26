@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { authErrorKey } from "@/lib/auth-errors";
@@ -39,9 +42,9 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="rounded-lg border bg-card p-8 shadow-sm flex flex-col items-center text-center">
-        <CheckCircle2 className="h-12 w-12 text-emerald-500 mb-4" />
-        <h2 className="text-xl font-semibold tracking-tight mb-2">{t("successTitle")}</h2>
+      <div className="flex flex-col items-center text-center">
+        <CheckCircle2 className="h-12 w-12 text-success mb-4" />
+        <h2 className="text-title text-ink mb-2">{t("successTitle")}</h2>
         <p className="text-sm text-muted-foreground mb-6">
           {t("successSubtitle")}<span className="font-medium text-foreground">{email}</span>.
         </p>
@@ -53,9 +56,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="rounded-lg border bg-card p-8 shadow-sm">
+    <div>
       <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
+        <h2 className="text-title text-ink">{t("title")}</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {t("subtitle")}
         </p>
@@ -69,24 +72,24 @@ export default function ForgotPasswordPage() {
         )}
 
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium">
+          <Label htmlFor="email">
             {t("email")}
-          </label>
-          <input
+          </Label>
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("emailPlaceholder")}
             required
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+          emphasis="action"
+          className="h-10 w-full"
         >
           {loading ? (
             <>
@@ -96,7 +99,7 @@ export default function ForgotPasswordPage() {
           ) : (
             t("submit")
           )}
-        </button>
+        </Button>
       </form>
 
       <div className="mt-6 text-center">

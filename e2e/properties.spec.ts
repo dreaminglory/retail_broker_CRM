@@ -42,8 +42,8 @@ test('a broker lists a property, proposes it to a buyer and records the viewing'
   await expect(partyDialog).toBeHidden();
   await expect(page.getByRole('button', { name: new RegExp(m.PartySection.end) })).toHaveCount(1);
 
-  // 4. Propose it on the buyer deal.
-  await page.goto(BUYER_DEAL);
+  // 4. Propose it on the buyer deal (its Properties tab).
+  await page.goto(`${BUYER_DEAL}?tab=properties`);
   await page.getByRole('button', { name: m.PropertyLinks.addCandidate }).first().click();
   const candidateDialog = page.getByRole('dialog');
   await candidateDialog.getByRole('combobox', { name: m.PropertyLinks.property }).fill(address);
@@ -54,7 +54,7 @@ test('a broker lists a property, proposes it to a buyer and records the viewing'
   await expect(statusOnDeal).toContainText(m.Enums.propertyLinkStatus.candidate);
 
   // 5. Schedule the viewing from the property page.
-  await page.goto(propertyUrl);
+  await page.goto(`${propertyUrl}?tab=deals`);
   const deals = page.locator('section[aria-labelledby="property-opportunities"]');
   await expect(deals.getByText(m.Enums.propertyLinkStatus.candidate)).toBeVisible();
   await page.getByRole('button', { name: m.PropertyViewing.schedule }).click();
@@ -76,9 +76,9 @@ test('a broker lists a property, proposes it to a buyer and records the viewing'
   await expect(completeDialog).toBeHidden();
 
   // 7. `viewed` on both pages.
-  await page.reload();
+  await page.goto(`${BUYER_DEAL}?tab=properties`);
   await expect(statusOnDeal).toContainText(m.Enums.propertyLinkStatus.viewed);
-  await page.goto(propertyUrl);
+  await page.goto(`${propertyUrl}?tab=deals`);
   await expect(deals.getByText(m.Enums.propertyLinkStatus.viewed)).toBeVisible();
 });
 

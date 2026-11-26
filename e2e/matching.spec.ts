@@ -8,6 +8,8 @@ import { test, expect } from './fixtures';
 // starts from the same seed.
 
 const BUYER_DEAL = '/opportunities/11111111-6666-6666-6666-666666666661'; // seeded "Alpha Opp 1"
+// Matches and linked properties sit on the deal's Properties tab (ui-bright).
+const BUYER_DEAL_PROPERTIES = `${BUYER_DEAL}?tab=properties`;
 const BEST_MATCH = '#1009'; // 2-room Лозенец apartment at €185,000, 100%, never linked in the seed
 
 const matchesSection = (page: Page) => page.locator('section[aria-labelledby="opportunity-matches-title"]');
@@ -19,7 +21,7 @@ test('a broker adds the best match as a candidate and sees it under already offe
   const removeLink = m.PropertyLinks.removeLink.replace('{code}', BEST_MATCH);
 
   await signInAs('broker@alpha.bg');
-  await page.goto(BUYER_DEAL);
+  await page.goto(BUYER_DEAL_PROPERTIES);
 
   // A run that failed half way may have left the link: remove it first.
   await expect(matches).toBeVisible();
@@ -83,7 +85,7 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   await signInAs('broker@alpha.bg');
 
   // A run that failed half way may have left the link: remove it from the deal first.
-  await page.goto(BUYER_DEAL);
+  await page.goto(BUYER_DEAL_PROPERTIES);
   const leftover = propertiesSection(page).getByRole('button', { name: removeLink });
   await expect(matchesSection(page)).toBeVisible();
   if (await leftover.isVisible()) {
@@ -92,7 +94,7 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   }
 
   // 1. The buyer deal is listed with its contact and broker, and 100%.
-  await page.goto(BEST_PROPERTY);
+  await page.goto(`${BEST_PROPERTY}?tab=deals`);
   await expect(matches.getByRole('heading', { name: m.matching.dealsTitleSale })).toBeVisible();
   const row = rows.filter({ hasText: DEAL_TITLE });
   await expect(row).toHaveCount(1);
@@ -115,7 +117,7 @@ test('a broker adds a matching buyer deal from the property page', async ({ page
   await expect(page.locator('section[aria-labelledby="property-opportunities"]').getByText(m.Enums.propertyLinkSource.match)).toBeVisible();
 
   // 4. Clean up from the deal's Properties section.
-  await page.goto(BUYER_DEAL);
+  await page.goto(BUYER_DEAL_PROPERTIES);
   await propertiesSection(page).getByRole('button', { name: removeLink }).click();
   await expect(propertiesSection(page).getByRole('button', { name: removeLink })).toBeHidden();
 });
@@ -131,7 +133,7 @@ test('a broker marks a match as not suitable with a reason', async ({ page, m, s
   const reason = `Too noisy ${Date.now()}`;
 
   await signInAs('broker@alpha.bg');
-  await page.goto(BUYER_DEAL);
+  await page.goto(BUYER_DEAL_PROPERTIES);
   await expect(matches).toBeVisible();
   const leftover = properties.getByRole('button', { name: removeLink });
   if (await leftover.isVisible()) {
@@ -168,7 +170,7 @@ test('a broker marks a match as not suitable with a reason', async ({ page, m, s
 // tests: the budgets of the seeded deals would hide a wrong mapping here.)
 test('a rent-only property lists its matching tenants', async ({ page, m, signInAs }) => {
   await signInAs('broker@alpha.bg');
-  await page.goto(RENT_PROPERTY);
+  await page.goto(`${RENT_PROPERTY}?tab=deals`);
 
   const matches = dealMatches(page);
   await expect(matches.getByRole('heading', { name: m.matching.dealsTitleRent })).toBeVisible();

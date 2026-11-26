@@ -7,7 +7,7 @@ import type { ListScope } from "@/domain/smart-lists/types";
 export function ScopeToggle({ scope, basePath }: { scope: ListScope; basePath: string }) {
   const t = useTranslations("smartLists.scope");
   return (
-    <div role="group" aria-label={t("label")} className="inline-flex rounded-md border p-0.5 text-sm">
+    <div role="group" aria-label={t("label")} className="inline-flex rounded-md border border-border-strong bg-surface p-0.5 text-sm">
       {(["mine", "agency"] as const).map((option) => (
         <Link
           key={option}
@@ -15,7 +15,7 @@ export function ScopeToggle({ scope, basePath }: { scope: ListScope; basePath: s
           aria-current={scope === option ? "page" : undefined}
           className={cn(
             "rounded px-3 py-1 transition-colors",
-            scope === option ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            scope === option ? "bg-accent font-semibold text-primary" : "text-muted-foreground hover:text-foreground"
           )}
         >
           {t(option)}

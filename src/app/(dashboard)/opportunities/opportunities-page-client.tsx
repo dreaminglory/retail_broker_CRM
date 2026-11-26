@@ -29,6 +29,7 @@ import { useStageTranslation } from "@/lib/i18n/use-stage-translation";
 import type { LeadSource } from "@/domain/lead-sources/types";
 import type { ActiveBroker } from "@/domain/members/types";
 import { Search, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { SaveListDialog, UpdateListBar } from "@/components/domain/smart-lists/save-list-dialog";
 
@@ -43,6 +44,11 @@ const NEXT_ACTION_FILTERS = [
   ["upcoming", "nextUpcoming"],
 ] as const;
 const UNTOUCHED_DAY_OPTIONS = ["3", "7", "14", "30"];
+
+/** A filter pill: named until one is picked, then tinted as in deals.png (the default choice is not a pick). */
+function pill(value: string, unset = "all") {
+  return cn("h-9 min-w-28 rounded-full", value !== unset && "border-primary bg-accent text-primary");
+}
 
 interface OpportunitiesPageClientProps {
   opportunities: Opportunity[];
@@ -132,6 +138,8 @@ export function OpportunitiesPageClient({
     });
   }
 
+  const brokerNames = new Map(brokers.map((b) => [b.id, b.display_name]));
+
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
     setShowSuggestions(false);
@@ -141,10 +149,10 @@ export function OpportunitiesPageClient({
   return (
     <>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <h1 className="text-title text-ink">{t("title")}</h1>
+          <p className="mt-1 text-body text-muted-foreground">
             {t("count", { count: pageInfo.total })}
           </p>
         </div>
@@ -154,8 +162,8 @@ export function OpportunitiesPageClient({
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger
             render={
-              <Button size="sm" type="button">
-                <Plus className="mr-1.5 h-4 w-4" />
+              <Button type="button" emphasis="action">
+                <Plus className="size-4" aria-hidden />
                 {t("newBtn")}
               </Button>
             }
@@ -185,8 +193,10 @@ export function OpportunitiesPageClient({
 
       {editingList && <UpdateListBar list={editingList} />}
 
+      {/* One card: filters on top, the rows, the pager in its footer (deals.png). */}
+      <div className="overflow-hidden rounded-lg border border-border bg-surface">
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
-      <div className="mb-4 flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 sm:px-5">
         <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px] flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -203,7 +213,7 @@ export function OpportunitiesPageClient({
               autoComplete="off"
             />
             {showSuggestions && search.length > 1 && quickResults.length > 0 && (
-              <div className="absolute top-full mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none z-50 max-h-[300px] overflow-y-auto">
+              <div className="absolute top-full mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-float outline-none z-50 max-h-[300px] overflow-y-auto">
                 <div className="p-1">
                   {quickResults.map((opportunity) => (
                     <div
@@ -226,7 +236,7 @@ export function OpportunitiesPageClient({
         </form>
 
         <Select value={initialStatus} onValueChange={(v) => updateParams({ status: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className={pill(initialStatus, "active")}>
             <SelectValue>
               {(val: string) => val ? t(`filters.${val === "all" ? "allStatuses" : val}` as any) : t("filters.allStatuses")}
             </SelectValue>
@@ -241,7 +251,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialType} onValueChange={(v) => updateParams({ type: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className={pill(initialType)}>
             <SelectValue>
               {(val: string) => val ? t(`filters.${val === "all" ? "allTypes" : val}` as any) : t("filters.allTypes")}
             </SelectValue>
@@ -256,7 +266,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialBroker} onValueChange={(v) => updateParams({ broker: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className={pill(initialBroker)}>
             <SelectValue>
               {(val: string) =>
                 val && val !== "all"
@@ -276,7 +286,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialTemperature} onValueChange={(v) => updateParams({ temperature: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className={pill(initialTemperature)}>
             <SelectValue>
               {(val: string) => t(`filters.${TEMPERATURE_FILTER_KEYS.find((k) => k === val) ?? "allTemperatures"}`)}
             </SelectValue>
@@ -291,7 +301,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialStage} onValueChange={(v) => updateParams({ stage: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className={pill(initialStage)}>
             <SelectValue placeholder={t("filters.allStages")}>
               {initialStage === "all" 
                 ? t("filters.allStages")
@@ -309,7 +319,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialSource} onValueChange={(v) => updateParams({ source: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className={pill(initialSource)}>
             <SelectValue>
               {(val: string) =>
                 val && val !== "all"
@@ -329,7 +339,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialNextAction} onValueChange={(v) => updateParams({ next: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className={pill(initialNextAction)}>
             <SelectValue>
               {(val: string) =>
                 t(`filters.${NEXT_ACTION_FILTERS.find(([value]) => value === val)?.[1] ?? "anyNextAction"}`)
@@ -346,7 +356,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialUntouched} onValueChange={(v) => updateParams({ untouched: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className={pill(initialUntouched)}>
             <SelectValue>
               {(val: string) =>
                 val && val !== "all"
@@ -366,7 +376,7 @@ export function OpportunitiesPageClient({
         </Select>
 
         <Select value={initialMatches} onValueChange={(v) => updateParams({ matches: (v as string) || "all", page: "" })}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className={pill(initialMatches)}>
             <SelectValue>
               {(val: string) => (val === "new" ? t("filters.newMatches") : t("filters.anyMatches"))}
             </SelectValue>
@@ -380,8 +390,11 @@ export function OpportunitiesPageClient({
 
       {/* ── List ────────────────────────────────────────────────────────────── */}
       <div className={`${isPending ? "opacity-60 pointer-events-none" : ""}`}>
-        <OpportunityListTable opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} />
-        <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
+        <OpportunityListTable embedded opportunities={opportunities} requirementSummaries={requirementSummaries} stages={stages} brokerNames={brokerNames} />
+        <div className="border-t border-border px-4 sm:px-5">
+          <ListPager page={pageInfo.page} pageSize={pageInfo.pageSize} total={pageInfo.total} />
+        </div>
+      </div>
       </div>
     </>
   );

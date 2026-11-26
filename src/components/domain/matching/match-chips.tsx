@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 import type { MatchChip } from "@/domain/matching/criteria";
 
 const STYLES: Record<MatchChip["result"], { icon: typeof Check; className: string }> = {
-  match: { icon: Check, className: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" },
-  close: { icon: Minus, className: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200" },
-  miss: { icon: X, className: "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200" },
+  match: { icon: Check, className: "border-success/30 bg-success-soft text-success" },
+  close: { icon: Minus, className: "border-warning/30 bg-warning-soft text-warning-ink" },
+  miss: { icon: X, className: "border-danger/30 bg-danger-soft text-danger" },
   unknown: { icon: CircleHelp, className: "border-border bg-muted text-muted-foreground" },
 };
 

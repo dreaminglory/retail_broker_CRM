@@ -64,7 +64,7 @@ export function ProfileForm({ currentDisplayName }: ProfileFormProps) {
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={!isDirty || isSubmitting}>
+        <Button type="submit" disabled={!isDirty || isSubmitting} emphasis="action">
           {isSubmitting ? t("saving") : t("saveChanges")}
         </Button>
       </div>

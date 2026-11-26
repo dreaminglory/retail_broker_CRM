@@ -1,4 +1,11 @@
+import type { Page } from '@playwright/test';
 import { test, expect, dateTimeLocal, interceptOutboundLinks, lastOutbound, leaveAndReturn } from './fixtures';
+
+/** Opens an inquiry in the inquiries page's panel (ui-bright: a row selects it into `?id=`). */
+async function openInquiry(page: Page, caller: string) {
+  await page.getByTestId('inquiry-row').filter({ hasText: caller }).click();
+  await expect(page.getByTestId('inquiry-panel').getByText(caller, { exact: true }).first()).toBeVisible();
+}
 
 // FR-TST-06 / AC-6.1-2: the core loop end to end, as a broker, in each project's
 // locale and viewport. inquiry → convert → task on the opportunity → Today →
@@ -28,6 +35,7 @@ test('a broker takes an inquiry through to a scheduled next action', async ({ pa
   await inquiryDialog.getByLabel(m.InquiryForm.subject).fill('2-bedroom in Lozenets');
   await inquiryDialog.getByRole('button', { name: m.InquiryForm.submit }).click();
   await expect(inquiryDialog).toBeHidden();
+  await openInquiry(page, caller);
 
   // 2. Convert it into an opportunity with a new contact.
   // The innermost element holding both the caller and the actions button is the card.
@@ -134,6 +142,7 @@ test("a broker joins a repeat caller's inquiry to their open deal", async ({ pag
   await inquiryDialog.getByLabel(m.InquiryForm.subject).fill('One more question');
   await inquiryDialog.getByRole('button', { name: m.InquiryForm.submit }).click();
   await expect(inquiryDialog).toBeHidden();
+  await openInquiry(page, caller);
 
   // 2. Convert: the duplicate check offers Ivan, who we use, then join his deal.
   const card = page.locator('div').filter({ has: page.getByText(caller, { exact: true }) })
@@ -152,12 +161,14 @@ test("a broker joins a repeat caller's inquiry to their open deal", async ({ pag
 
   // 3. We land on the existing deal, and the inquiry is on its timeline as joined.
   await page.waitForURL(new RegExp(`${alphaOpp1}$`));
+  await page.getByRole('tab', { name: m.OpportunityDetail.activityHistoryTitle }).click();
   await expect(page.getByTestId('inquiry-joined-on').first()).toBeVisible();
 
   // 4. The call back is on Today, and the inquiry card says where it went.
   await page.goto('/today');
   await expect(page.getByText(callBack, { exact: true })).toBeVisible();
   await page.goto('/inquiries');
+  await openInquiry(page, caller);
   await expect(page.getByText(m.InquiryCard.joinedTo.replace('{title}', 'Alpha Opp 1')).first()).toBeVisible();
 });
 
@@ -177,16 +188,21 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
   await interceptOutboundLinks(page);
   await signInAs('broker@alpha.bg');
 
-  /** After a tap: the prompt on return (phone) or the toast's Log button (desktop). */
-  async function openPromptAfterTap() {
+  /**
+   * After a tap: the prompt on return (phone) or the toast's Log button (desktop). It is the
+   * sheet everywhere except Today, where it opens inline under the task row (spec ui-bright).
+   */
+  async function openPromptAfterTap(where: 'sheet' | 'inline' = 'sheet') {
     if (onPhone) {
       await leaveAndReturn(page, 5_500);
     } else {
       await page.getByRole('button', { name: m.phoneLoop.intent.log, exact: true }).click();
     }
-    const sheet = page.getByRole('dialog');
-    await expect(sheet.getByText(m.phoneLoop.sheet.title.replace('{name}', caller))).toBeVisible();
-    return sheet;
+    const title = m.phoneLoop.sheet.title.replace('{name}', caller);
+    const prompt = where === 'sheet' ? page.getByRole('dialog') : page.getByRole('group', { name: title });
+    await expect(prompt.getByText(title)).toBeVisible();
+    if (where === 'inline') await expect(page.getByRole('dialog')).toHaveCount(0);
+    return prompt;
   }
 
   // 1. A new inquiry with a BG mobile number.
@@ -201,6 +217,7 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
   await inquiryDialog.getByLabel(m.InquiryForm.phone).fill(phone);
   await inquiryDialog.getByRole('button', { name: m.InquiryForm.submit }).click();
   await expect(inquiryDialog).toBeHidden();
+  await openInquiry(page, caller);
 
   // The whole card (the links sit below its top row).
   const card = page.locator('div.group').filter({ has: page.getByText(caller, { exact: true }) });
@@ -228,7 +245,7 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
     .filter({ has: page.getByText(retryTitle, { exact: true }) })
     .filter({ has: page.getByRole('button', { name: m.TaskCard.complete }) }).last();
   await retryCard.getByRole('link', { name: callAria }).click();
-  sheet = await openPromptAfterTap();
+  sheet = await openPromptAfterTap('inline');
   await sheet.getByRole('button', { name: m.phoneLoop.sheet.answered, exact: true }).click();
   await expect(sheet.getByText(m.phoneLoop.sheet.completes.replace('{title}', retryTitle))).toBeVisible();
   await sheet.getByLabel(m.phoneLoop.sheet.outcomeLabel).fill('Wants a viewing on Saturday.');
@@ -239,6 +256,7 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
 
   // 5. AC-4: convert, and both calls are on the deal's timeline with their channel.
   await page.goto('/inquiries');
+  await openInquiry(page, caller);
   await card.getByRole('button', { name: m.InquiryCard.actions }).click();
   await page.getByRole('menuitem', { name: m.InquiryCard.convertToOpportunity }).click();
   const convertDialog = page.getByRole('dialog');
@@ -249,6 +267,9 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
   await page.goto('/opportunities');
   await page.getByRole('link', { name: `E2E call deal ${run}` }).click();
   await page.waitForURL(/\/opportunities\/[0-9a-f-]+$/);
-  await expect(page.getByTestId('call-channel')).toHaveCount(2);
   await expect(page.getByText(m.phoneLoop.titles.followUp.replace('{name}', caller)).first()).toBeVisible();
+  // The calls are on the deal's History tab (ui-bright).
+  await page.getByRole('tab', { name: m.OpportunityDetail.activityHistoryTitle }).click();
+  await expect(page).toHaveURL(/[?&]tab=history/);
+  await expect(page.getByTestId('call-channel')).toHaveCount(2);
 });
