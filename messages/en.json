@@ -565,6 +565,7 @@
   },
   "settings": {
     "title": "Settings",
+    "groups": {"personal":"Personal","agency":"Agency","work":"Work","data":"Data"},
     "description": "Manage your agency and preferences.",
     "overview": "Overview",
     "overviewDesc": "Quickly access your account and agency configuration.",

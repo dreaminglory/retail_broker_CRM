@@ -72,8 +72,8 @@ export default async function SettingsPage() {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold">{t("overview")}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{t("overviewDesc")}</p>
+        <h2 className="text-title text-ink">{t("overview")}</h2>
+        <p className="mt-1 text-body text-muted-foreground">{t("overviewDesc")}</p>
       </div>
 
       <div className="space-y-3">
@@ -112,10 +112,10 @@ export default async function SettingsPage() {
             <Link
               key={section.href}
               href={section.href}
-              className="flex items-center justify-between rounded-lg border bg-card p-5 transition-colors hover:border-info-line"
+              className="flex items-center justify-between rounded-lg border border-border bg-surface p-5 transition-colors hover:border-info-line"
             >
               <div className="flex items-center gap-4">
-                <div className="rounded-md bg-primary/10 p-2">
+                <div className="rounded-md bg-accent p-2">
                   <Icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>

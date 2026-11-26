@@ -29,13 +29,13 @@ export default async function ProfileSettingsPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-title text-ink">{t("title")}</h1>
+        <p className="mt-1 text-body text-muted-foreground">
           {t("description")}
         </p>
       </div>
 
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-lg border border-border bg-surface p-6">
         <div className="mb-6 space-y-1">
           <label className="text-sm font-medium text-muted-foreground">
             {t("emailLabel")}

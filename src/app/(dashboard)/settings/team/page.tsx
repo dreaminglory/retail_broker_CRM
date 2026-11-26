@@ -40,11 +40,11 @@ export default async function TeamSettingsPage() {
   const members = await memberService.getAgencyMembers(membership.agency_id);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-title text-ink">{t("title")}</h1>
+          <p className="mt-1 text-body text-muted-foreground">
             {t("description")}
           </p>
         </div>

@@ -31,7 +31,7 @@ export function MemberList({ members, currentUserId, currentUserRole }: MemberLi
   const showActionsColumn = canManage || currentUserRole === "manager";
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-hidden rounded-lg border border-border bg-surface">
       <Table>
         <TableHeader>
           <TableRow>

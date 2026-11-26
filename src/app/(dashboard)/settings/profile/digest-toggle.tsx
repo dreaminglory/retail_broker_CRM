@@ -34,7 +34,7 @@ export function DigestToggle({ currentEnabled }: DigestToggleProps) {
   }
 
   return (
-    <div className="mt-6 flex items-start justify-between gap-4">
+    <div className="mt-6 flex items-start justify-between gap-4 border-t border-border pt-6">
       <div className="space-y-2">
         <Label id="digest_enabled_label" htmlFor="digest_enabled">{t('digest')}</Label>
         <p id="digest_enabled_help" className="text-xs text-muted-foreground">{t('digestHelp')}</p>

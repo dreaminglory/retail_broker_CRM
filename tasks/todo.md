@@ -380,9 +380,9 @@ field style in contact, inquiry, task, requirement and convert dialogs.
 **Description:** Settings sub-nav left, content in cards (`settings-profile.png`,
 `settings-team.png`).
 **Acceptance criteria:**
-- [ ] Sub-nav role filter unchanged; invite and role change work
+- [x] Sub-nav role filter unchanged; invite and role change work
 **Verification:**
-- [ ] settings-team e2e green
+- [x] settings-team e2e green
 **Dependencies:** Checkpoint 2 · **Files:** `src/app/(dashboard)/settings/{layout,settings-sidebar,profile,team}*` · **Scope:** M
 
 ## Task 24: Settings stages, lead sources, areas
