@@ -185,15 +185,16 @@ the provider skips the sheet; elsewhere (and on Today when no row matches) the s
 before. Same fields, same single save.
 
 **Acceptance criteria:**
-- [ ] Calling from a Today task opens the prompt under that row, not as a sheet; save behaves exactly as before
-- [ ] From the deal page and contacts the sheet still opens; a page discarded during a call still reopens the prompt
+- [x] Calling from a Today task opens the prompt under that row, not as a sheet; save behaves exactly as before
+- [x] From the deal page and contacts the sheet still opens; a page discarded during a call still reopens the prompt
 
 **Verification:**
-- [ ] Failing test first: provider renders no sheet while Today claims the target
-- [ ] `npx vitest run src/components/domain/calls`; core-loop e2e green
+- [x] Failing test first: provider renders no sheet while Today claims the target
+- [x] `npx vitest run src/components/domain/calls`; core-loop e2e green
 
 **Dependencies:** Task 8
 **Files likely touched:** `src/components/domain/calls/{post-call-sheet,call-intent-provider}.tsx`, new `post-call-form.tsx`, Today client
+**As built:** `PostCallForm` moved to `post-call-form.tsx` (`layout="dialog" | "inline"`); the provider exposes the target and `claim(taskIds)`, and `sheetTarget()` keeps the sheet shut for a claimed task. Today claims every task it shows and renders `PostCallInline` under the row. Leaving Today releases the claim, so the sheet takes over the same call. The core-loop retry step now finds the prompt inline on Today (and no dialog).
 **Estimated scope:** M
 
 ## Task 10: URL state helper and deal tabs ⚑ Opus

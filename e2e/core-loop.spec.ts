@@ -177,16 +177,21 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
   await interceptOutboundLinks(page);
   await signInAs('broker@alpha.bg');
 
-  /** After a tap: the prompt on return (phone) or the toast's Log button (desktop). */
-  async function openPromptAfterTap() {
+  /**
+   * After a tap: the prompt on return (phone) or the toast's Log button (desktop). It is the
+   * sheet everywhere except Today, where it opens inline under the task row (spec ui-bright).
+   */
+  async function openPromptAfterTap(where: 'sheet' | 'inline' = 'sheet') {
     if (onPhone) {
       await leaveAndReturn(page, 5_500);
     } else {
       await page.getByRole('button', { name: m.phoneLoop.intent.log, exact: true }).click();
     }
-    const sheet = page.getByRole('dialog');
-    await expect(sheet.getByText(m.phoneLoop.sheet.title.replace('{name}', caller))).toBeVisible();
-    return sheet;
+    const title = m.phoneLoop.sheet.title.replace('{name}', caller);
+    const prompt = where === 'sheet' ? page.getByRole('dialog') : page.getByRole('group', { name: title });
+    await expect(prompt.getByText(title)).toBeVisible();
+    if (where === 'inline') await expect(page.getByRole('dialog')).toHaveCount(0);
+    return prompt;
   }
 
   // 1. A new inquiry with a BG mobile number.
@@ -228,7 +233,7 @@ test('a broker calls an inquiry, retries from Today and sees both calls on the d
     .filter({ has: page.getByText(retryTitle, { exact: true }) })
     .filter({ has: page.getByRole('button', { name: m.TaskCard.complete }) }).last();
   await retryCard.getByRole('link', { name: callAria }).click();
-  sheet = await openPromptAfterTap();
+  sheet = await openPromptAfterTap('inline');
   await sheet.getByRole('button', { name: m.phoneLoop.sheet.answered, exact: true }).click();
   await expect(sheet.getByText(m.phoneLoop.sheet.completes.replace('{title}', retryTitle))).toBeVisible();
   await sheet.getByLabel(m.phoneLoop.sheet.outcomeLabel).fill('Wants a viewing on Saturday.');

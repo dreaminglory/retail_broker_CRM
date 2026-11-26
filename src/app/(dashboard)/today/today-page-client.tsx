@@ -8,6 +8,7 @@ import Link from "next/link";
 import { TaskCard } from "@/components/domain/tasks/task-card";
 import { TaskCompleteDialog } from "@/components/domain/tasks/task-complete-dialog";
 import { TaskActionsMenu } from "@/components/domain/tasks/task-actions-menu";
+import { PostCallInline, useClaimPostCallTasks } from "@/components/domain/calls/post-call-inline";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
@@ -89,8 +90,12 @@ export function TodayPageClient({
         onComplete={() => setCompletingTask(task)}
         menu={<TaskActionsMenu task={task} timeZone={timeZone} brokers={brokers} />}
       />
+      <PostCallInline taskId={task.id} timeZone={timeZone} />
     </li>
   );
+
+  // A call on any task shown here opens its prompt under the row, not as a sheet (spec ui-bright).
+  useClaimPostCallTasks([...overdue, ...dueToday, ...upcoming].map((task) => task.id));
 
   const totalItems = overdue.length + dueToday.length + newInquiries.length;
   const hasWork = totalItems > 0 || atRisk.length > 0 || upcoming.length > 0;

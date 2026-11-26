@@ -165,11 +165,35 @@ export type CallIntentApi = {
   register: (target: CallIntentTarget) => void;
   /** Open the prompt now ("Log call", the toast's Log button). */
   open: (target: PostCallTarget) => void;
+  /** Saved, "Not now" or closed: the intent is done either way. */
+  close: () => void;
+  /**
+   * A page that shows these tasks renders the prompt for a call on one of them itself (Today,
+   * inline under the task row); the sheet stays shut for it. Returns the release.
+   */
+  claim: (taskIds: readonly string[]) => () => void;
 };
 
 export const CallIntentContext = createContext<CallIntentApi | null>(null);
 
+/** The prompt's current target, for a page that renders it inline. */
+export const PostCallTargetContext = createContext<PostCallTarget | null>(null);
+
+/** What the sheet shows: nothing while a page claims the call's task (ui-bright T9). */
+export function sheetTarget(
+  target: PostCallTarget | null,
+  claims: readonly (readonly string[])[],
+): PostCallTarget | null {
+  const taskId = target?.context.task_id;
+  if (taskId && claims.some((ids) => ids.includes(taskId))) return null;
+  return target;
+}
+
 /** Null outside the dashboard (and in tests): links then just open. */
 export function useCallIntent(): CallIntentApi | null {
   return useContext(CallIntentContext);
+}
+
+export function usePostCallTarget(): PostCallTarget | null {
+  return useContext(PostCallTargetContext);
 }
