@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { User, Users, Radio, Settings as SettingsIcon, Upload, MapPin } from "lucide-react";
+import { User, Users, Radio, Settings as SettingsIcon, Upload, MapPin, ShieldAlert, Link2 } from "lucide-react";
+import { ComingSoonBadge } from "@/components/layout/coming-soon";
 import { useTranslations } from "next-intl";
 import { CONFIG_ROLES, hasRole } from "@/lib/roles";
 
@@ -24,9 +25,11 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
   const t = useTranslations("settings");
 
   type NavItem = {
-    i18nKey: "profile" | "team" | "leadSources" | "pipelineStages" | "areas" | "import";
+    i18nKey: "profile" | "team" | "leadSources" | "pipelineStages" | "areas" | "import" | "rules" | "portals";
     href: string;
     icon: typeof User;
+    /** A Скоро placeholder (spec ui-bright, phase 4). */
+    comingSoon?: boolean;
   };
   type NavGroup = { key: "personal" | "agency" | "work" | "data"; items: NavItem[] };
 
@@ -44,9 +47,16 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
           { i18nKey: "leadSources", href: "/settings/lead-sources", icon: Radio },
           { i18nKey: "pipelineStages", href: "/settings/stages", icon: SettingsIcon },
           { i18nKey: "areas", href: "/settings/areas", icon: MapPin },
+          { i18nKey: "rules", href: "/settings/rules", icon: ShieldAlert, comingSoon: true },
         ],
       },
-      { key: "data", items: [{ i18nKey: "import", href: "/settings/import", icon: Upload }] },
+      {
+        key: "data",
+        items: [
+          { i18nKey: "import", href: "/settings/import", icon: Upload },
+          { i18nKey: "portals", href: "/settings/portals", icon: Link2, comingSoon: true },
+        ],
+      },
     );
   }
 
@@ -70,8 +80,9 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
             </p>
             {group.items.map((item) => (
               <Link key={item.href} href={item.href} className={navLink(pathname.startsWith(item.href))}>
-                <item.icon className="size-4" aria-hidden />
+                <item.icon className="size-4 shrink-0" aria-hidden />
                 {t(item.i18nKey)}
+                {item.comingSoon && <ComingSoonBadge className="ml-auto" />}
               </Link>
             ))}
           </div>

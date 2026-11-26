@@ -423,9 +423,9 @@ control disabled, no Supabase import; Отчети·Скоро in the Агенц
 **Description:** `/settings/rules` and `/settings/portals` as their PNGs, sub-nav entries with
 Скоро.
 **Acceptance criteria:**
-- [ ] Same placeholder rules as Task 26
+- [x] Same placeholder rules as Task 26
 **Verification:**
-- [ ] Browser; nav-config test updated
+- [x] Browser; nav-config test updated
 **Dependencies:** Task 26 · **Files:** `src/app/(dashboard)/settings/{rules,portals}/page.tsx`, `settings-sidebar.tsx`, messages · **Scope:** S
 
 ## Task 28: Табло Скоро section
